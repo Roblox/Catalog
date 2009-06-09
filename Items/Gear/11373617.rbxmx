@@ -154,12 +154,12 @@ WoodWalk.Volume = .7
 WoodWalk.Parent = Tool.Handle
 
 function setTrans(root, trans, character)
-	if (root:IsDescendantOf(character) == false) then return end
+	if (root:IsDescendantOf(character) == false and root ~= character) then return end
 	local c = root:GetChildren()
 	for i=1,#c do
 		setTrans(c[i], trans, character)
-		if (c[i].className == &quot;Part&quot; and c[i]:IsDescendantOf(character)) then
-			p[c[i]] = c[i].Transparency
+		if (c[i].className == &quot;Part&quot; and c[i]:IsDescendantOf(character)) then -- concurrency hell
+			p[c[i]] = c[i].Transparency 
 			c[i].Transparency = trans
 		end
 	end
@@ -172,9 +172,9 @@ function resetTrans()
 	end
 end
 
-function SetTransparency(root, trans)
+function SetTransparency(root, trans, character)
 	p = {}
-	setTrans(root, trans)
+	setTrans(root, trans, character)
 	WoodWalk:Play()
 end
 
@@ -220,6 +220,7 @@ function onActivated()
 	staffOut()
 	wait(.5)
 	staffUp()
+	print(Tool.Parent, &quot;  &quot;, character)
 	SetTransparency(Tool.Parent, trans, character)
 	wait(8)
 	resetTrans()
