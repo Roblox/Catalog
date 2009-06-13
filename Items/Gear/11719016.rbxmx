@@ -4,7 +4,7 @@
 	<Item class="Tool" referent="RBX0">
 		<Properties>
 			<int name="ActivationState">0</int>
-			<int name="BackendToolState">2</int>
+			<int name="BackendToolState">1</int>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0.5</X>
@@ -123,8 +123,10 @@ end
 
 
 
-
+Tool.Enabled = true
 function onActivated(mouse)
+	if (Tool.Enabled == false) then return end
+	Tool.Enabled = false
 	if reloadtime &gt; 0 then return end
 	if shooting == true then return end
 	print(&quot;start shooting&quot;)
@@ -168,7 +170,7 @@ function onActivated(mouse)
 	wait(reloadtime)
 	reloadtime = 0
 
-
+	Tool.Enabled = true
 end
 
 function onDeactivated(mouse)
@@ -290,16 +292,31 @@ script.Parent.Deactivated:connect(onDeactivated)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
-				<string name="Source">Tool=script.Parent
-function onEquippedLocal(mouse)
-	if mouse == nil then
-		print(&quot;Mouse not found&quot;)
-		return 
+				<string name="Source">local Tool = script.Parent;
+
+
+function UpdateIcon(mouse)
+	if (mouse == nil) then return end
+	if (Tool.Enabled == true) then
+		mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	else
+		mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
 	end
-	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
 end
 
-Tool.Equipped:connect(onEquippedLocal)</string>
+
+function onButton1Down(mouse)
+	UpdateIcon(mouse)
+end
+
+function onEquippedLocal(mouse)
+
+	UpdateIcon(mouse)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</string>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
