@@ -2771,7 +2771,248 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX78">
+		<Item class="LocalScript" referent="RBX78">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Material Picker Local</string>
+				<string name="Source">local Tool = script.Parent
+
+
+enabled = true
+
+local selectionBox
+local selectionLasso
+local inGui = false
+local inPalette = false
+
+local selectedButton = nil
+local oldButton = nil
+function onMouseLeave(hoverSelection)
+	if oldButton ~= nil then
+		local notSelected = true
+		local selectionText = &quot;&quot;
+		if selectedButton ~= nil  then
+			if oldButton == selectedButton then
+				notSelected = false
+			else
+				selectionText = selectedButton.Name
+			end
+		end
+		if notSelected then
+			hoverSelection.Text = selectionText
+			oldButton.Parent.BackgroundColor = BrickColor.Black()
+		end
+	end
+	oldButton = nil
+end
+
+function onMouseEnter(hoverSelection, guiButton)
+	onMouseLeave(hoverSelection)
+	hoverSelection.Text = guiButton.Name
+	if guiButton ~= selectedButton then
+		guiButton.Parent.BackgroundColor = BrickColor.White()
+		oldButton = guiButton
+	end
+end
+
+function onMouseUp(paletteFrame, guiButton)
+	if selectedButton ~= nil then
+		selectedButton.Parent.BackgroundColor = BrickColor.Black()
+	end
+	guiButton.Parent.BackgroundColor = BrickColor.Yellow()
+	selectedButton = guiButton
+	
+	onMouseLeavePalette(paletteFrame)
+	
+	print(&quot;Selected Material: &quot; .. guiButton.Name)
+end
+
+function setSelectionBox(part) 
+	unsetSelectionBox()
+	selectionBox.Adornee = part
+	selectionLasso.Part = part
+end
+function unsetSelectionBox() 
+	selectionBox.Adornee = nil
+	selectionLasso.Part = nil
+end
+
+function onMouseEnterGui(mouse)
+	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
+	unsetSelectionBox()
+	inGui = true
+end
+function onMouseLeaveGui(mouse)
+	inGui = false
+end
+
+function onMouseEnterPalette(mouse)
+	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
+	unsetSelectionBox()
+	inPalette = true
+end
+function onMouseLeavePalette(paletteFrame, mouse)
+	inPalette = false
+end
+	
+local MaterialEnum = {}
+MaterialEnum[&quot;Plastic&quot;] = Enum.Material.Plastic
+MaterialEnum[&quot;Wood&quot;] = Enum.Material.Wood
+MaterialEnum[&quot;Slate&quot;] = Enum.Material.Slate
+MaterialEnum[&quot;Corroded Metal&quot;] = Enum.Material.CorrodedMetal
+MaterialEnum[&quot;Ice&quot;] = Enum.Material.Ice
+MaterialEnum[&quot;Grass&quot;] = Enum.Material.Grass
+MaterialEnum[&quot;Foil&quot;] = Enum.Material.Foil
+MaterialEnum[&quot;Diamond Plate&quot;] = Enum.Material.DiamondPlate
+MaterialEnum[&quot;Concrete&quot;] = Enum.Material.Concrete
+
+
+function buildGui(root, mouse)
+
+	local mainFrame = Instance.new(&quot;Frame&quot;)
+	mainFrame.Name = &quot;Main Material Frame&quot;
+	mainFrame.Position = UDim2.new(0.0, 0, 1.0, -50)
+	mainFrame.Size = UDim2.new(0.0, 50 * 12, 0.0, 50)
+	mainFrame.Transparency = 1.0
+	mainFrame.Parent = root
+	
+
+	local paletteFrame = Instance.new(&quot;Frame&quot;)
+	paletteFrame.Position = UDim2.new(0.0, 0, 0.0, 0)
+	paletteFrame.Size = UDim2.new(.75, 0, 1.0, 0)
+	paletteFrame.BackgroundColor = BrickColor.Black()
+	paletteFrame.Parent = mainFrame
+	paletteFrame.MouseEnter:connect(function() onMouseEnterPalette(mouse) end)
+	paletteFrame.MouseLeave:connect(function() onMouseLeavePalette(paletteFrame, mouse) end)
+
+	local hoverSelection = Instance.new(&quot;TextLabel&quot;)
+	hoverSelection.Position = UDim2.new(0.75, 0, 0, 0)
+	hoverSelection.Size = UDim2.new(.25, 0, 1.0, 0)
+	hoverSelection.BackgroundColor = BrickColor.Black()
+	hoverSelection.TextColor = BrickColor.White()
+	hoverSelection.Text = &quot;Plastic&quot;
+	hoverSelection.Parent = mainFrame
+
+	local materials= {}
+	materials[&quot;Plastic&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169981&quot;
+	materials[&quot;Wood&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169971&quot;
+	materials[&quot;Slate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169975&quot;
+	materials[&quot;Corroded Metal&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169978&quot;
+	materials[&quot;Ice&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169985&quot;
+	materials[&quot;Grass&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169988&quot;
+	materials[&quot;Foil&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169991&quot;
+	materials[&quot;Diamond Plate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169998&quot;
+	materials[&quot;Concrete&quot;] = &quot;http://www.roblox.com/Asset/?ID=16170001&quot;
+
+	local order = {&quot;Plastic&quot;, &quot;Wood&quot;, &quot;Slate&quot;, &quot;Corroded Metal&quot;, &quot;Ice&quot;, &quot;Grass&quot;, &quot;Foil&quot;, &quot;Diamond Plate&quot;, &quot;Concrete&quot;}
+
+	local x 
+	for x=1, #order do
+		local key = order[x]
+		local value = materials[key]
+
+		local guiFrame = Instance.new(&quot;Frame&quot;)
+		guiFrame.Position = UDim2.new(1.0/9 * (x-1), 0, 0.0, 0)
+		guiFrame.Size = UDim2.new(1.0/9, 0, 1.0, 0)
+		guiFrame.BackgroundColor = BrickColor.Black()
+		--guiFrame.BorderSizePixel = 0
+		guiFrame.Parent = paletteFrame
+
+		local guiButton = Instance.new(&quot;ImageButton&quot;)
+		guiButton.Position = UDim2.new(0.0, 2, 0.0, 2)
+		guiButton.Size = UDim2.new(1.0, -4, 1.0, -4)
+		guiButton.Image = value
+		guiButton.Name = key
+		--guiButton.BorderSizePixel = 0
+		guiButton.AutoButtonColor = false
+		guiButton.MouseEnter:connect(function() onMouseEnter(hoverSelection, guiButton) end)
+		guiButton.MouseButton1Up:connect(function() onMouseUp(paletteFrame, guiButton) end)
+		guiButton.Parent = guiFrame
+
+		if hoverSelection.Text == guiButton.Name then
+			selectedButton = guiButton
+			guiFrame.BackgroundColor = BrickColor.Yellow()
+		end
+	end
+
+	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)
+
+end
+
+function on3dButton1Down(mouse) 
+	local part = mouse.Target
+	if part and not (part.Locked) then
+		if Instance.Lock(part) then
+			part.Material = MaterialEnum[selectedButton.Name]
+			Instance.Unlock(part)
+		end
+	end
+end
+
+function canSelectObject(part)
+	return part and not (part.Locked) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60
+end
+
+
+function on3dMouseMove(mouse) 
+	if not(inGui) and not(inPalette) then
+		mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
+		local part = mouse.Target
+		if canSelectObject(part) then
+			setSelectionBox(part)
+		else
+			unsetSelectionBox()
+		end
+	end
+end
+
+local guiMain
+function onEquippedLocal(mouse)
+
+	local character = script.Parent.Parent
+	local player = game.Players:GetPlayerFromCharacter(character)
+	guiMain = Instance.new(&quot;ScreenGui&quot;)
+	guiMain.Parent = player.PlayerGui
+
+	inGui = false
+	inPalette = false
+
+	mouse.Button1Down:connect(function() on3dButton1Down(mouse) end)
+	mouse.Move:connect(function() on3dMouseMove(mouse) end)
+	mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
+
+	selectionBox = Instance.new(&quot;SelectionBox&quot;)
+	selectionBox.Color = BrickColor.Yellow()
+	selectionBox.Adornee = nil
+	selectionBox.Parent = player.PlayerGui
+
+	selectionLasso = Instance.new(&quot;SelectionPartLasso&quot;)
+	selectionLasso.Name = &quot;Model Delete Lasso&quot;
+	selectionLasso.Humanoid = character.Humanoid
+	selectionLasso.Parent = game.workspace
+	selectionLasso.Part = nil
+	selectionLasso.Visible = true
+	selectionLasso.archivable = false
+	selectionLasso.Color = BrickColor.Red()
+
+	buildGui(guiMain, mouse)
+end
+
+function onUnequippedLocal()
+	guiMain:Remove()
+	selectionBox:Remove()
+	selectionLasso:Remove()
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX79">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -2781,72 +3022,18 @@
 r = game:service(&quot;RunService&quot;)
 
 
-local damage = 18
+local damage = 0
 
 
-local slash_damage = 18
+local slash_damage = 0
 
 
 sword = script.Parent.Handle
 Tool = script.Parent
 
 
-local SlashSound = Instance.new(&quot;Sound&quot;)
-SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
-SlashSound.Parent = sword
-SlashSound.Volume = 1
-
-
-local UnsheathSound = Instance.new(&quot;Sound&quot;)
-UnsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
-UnsheathSound.Parent = sword
-UnsheathSound.Volume = 1
-
-
-function blow(hit)
-	local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-	local vCharacter = Tool.Parent
-	local vPlayer = game.Players:playerFromCharacter(vCharacter)
-	local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
-	if humanoid~=nil and humanoid ~= hum and hum ~= nil then
-		-- final check, make sure sword is in-hand
-
-		local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-		if (right_arm ~= nil) then
-			local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
-			if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
-				tagHumanoid(humanoid, vPlayer)
-				humanoid:TakeDamage(damage)
-				wait(1)
-				untagHumanoid(humanoid)
-			end
-		end
-
-
-	end
-end
-
-
-function tagHumanoid(humanoid, player)
-	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-	creator_tag.Value = player
-	creator_tag.Name = &quot;creator&quot;
-	creator_tag.Parent = humanoid
-end
-
-function untagHumanoid(humanoid)
-	if humanoid ~= nil then
-		local tag = humanoid:findFirstChild(&quot;creator&quot;)
-		if tag ~= nil then
-			tag.Parent = nil
-		end
-	end
-end
-
 
 function attack()
-	damage = slash_damage
-	SlashSound:play()
 	local anim = Instance.new(&quot;StringValue&quot;)
 	anim.Name = &quot;toolanim&quot;
 	anim.Value = &quot;Slash&quot;
@@ -2896,236 +3083,12 @@ end
 
 
 function onEquipped()
-	UnsheathSound:play()
 end
 
 
 script.Parent.Activated:connect(onActivated)
 script.Parent.Equipped:connect(onEquipped)
 
-
-connection = sword.Touched:connect(blow)
-
-
-</string>
-				<bool name="archivable">true</bool>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX79">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Material Picker Local</string>
-				<string name="Source">local Tool = script.Parent;
-
-
-enabled = true
-
-local selectionBox;
-local inGui = false;
-local inPalette = false;
-
-local selectedButton = nil;
-local oldButton = nil
-function onMouseLeave(hoverSelection)
-	if oldButton ~= nil then
-		local notSelected = true;
-		local selectionText = &quot;&quot;;
-		if selectedButton ~= nil  then
-			if oldButton == selectedButton then
-				notSelected = false
-			else
-				selectionText = selectedButton.Name;
-			end
-		end
-		if notSelected then
-			hoverSelection.Text = selectionText;
-			oldButton.Parent.BackgroundColor = BrickColor.Black();
-		end
-	end
-	oldButton = nil
-end
-
-function onMouseEnter(hoverSelection, guiButton)
-	onMouseLeave(hoverSelection)
-	hoverSelection.Text = guiButton.Name
-	if guiButton ~= selectedButton then
-		guiButton.Parent.BackgroundColor = BrickColor.White();
-		oldButton = guiButton
-	end
-end
-
-function onMouseUp(paletteFrame, guiButton)
-	if selectedButton ~= nil then
-		selectedButton.Parent.BackgroundColor = BrickColor.Black();
-	end
-	guiButton.Parent.BackgroundColor = BrickColor.Yellow();
-	selectedButton = guiButton
-	
-	onMouseLeavePalette(paletteFrame)
-	
-	print(&quot;Selected Material: &quot; .. guiButton.Name)
-end
-
-function setSelectionBox(part) 
-	unsetSelectionBox()
-	selectionBox.Adornee = part;
-end
-function unsetSelectionBox() 
-	selectionBox.Adornee = nil
-end
-
-function onMouseEnterGui(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionBox()
-	inGui = true;
-end
-function onMouseLeaveGui(mouse)
-	inGui = false;
-end
-
-function onMouseEnterPalette(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionBox()
-	inPalette = true;
-end
-function onMouseLeavePalette(paletteFrame, mouse)
-	inPalette = false;
-end
-	
-local MaterialEnum = {}
-MaterialEnum[&quot;Plastic&quot;] = Enum.Material.Plastic
-MaterialEnum[&quot;Wood&quot;] = Enum.Material.Wood
-MaterialEnum[&quot;Slate&quot;] = Enum.Material.Slate
-MaterialEnum[&quot;Corroded Metal&quot;] = Enum.Material.CorrodedMetal
-MaterialEnum[&quot;Ice&quot;] = Enum.Material.Ice
-MaterialEnum[&quot;Grass&quot;] = Enum.Material.Grass
-MaterialEnum[&quot;Foil&quot;] = Enum.Material.Foil
-MaterialEnum[&quot;Diamond Plate&quot;] = Enum.Material.DiamondPlate
-MaterialEnum[&quot;Concrete&quot;] = Enum.Material.Concrete
-
-
-function buildGui(root, mouse)
-
-	local mainFrame = Instance.new(&quot;Frame&quot;)
-	mainFrame.Name = &quot;Main Material Frame&quot;
-	mainFrame.Position = UDim2.new(0.0, 0, 0.80, 0)
-	mainFrame.Size = UDim2.new(0.04 * 12, 0, 0.08, 0)
-	mainFrame.Transparency = 1.0
-	mainFrame.Parent = root;
-	
-
-	local paletteFrame = Instance.new(&quot;Frame&quot;)
-	paletteFrame.Position = UDim2.new(0.0, 0, 0.0, 0)
-	paletteFrame.Size = UDim2.new(.75, 0, 1.0, 0)
-	paletteFrame.BackgroundColor = BrickColor.Black()
-	paletteFrame.Parent = mainFrame
-	paletteFrame.MouseEnter:connect(function() onMouseEnterPalette(mouse) end)
-	paletteFrame.MouseLeave:connect(function() onMouseLeavePalette(paletteFrame, mouse) end)
-
-	local hoverSelection = Instance.new(&quot;TextLabel&quot;)
-	hoverSelection.Position = UDim2.new(0.75, 0, 0, 0)
-	hoverSelection.Size = UDim2.new(.25, 0, 1.0, 0)
-	hoverSelection.BackgroundColor = BrickColor.Black()
-	hoverSelection.TextColor = BrickColor.White()
-	hoverSelection.Text = &quot;Plastic&quot;
-	hoverSelection.Parent = mainFrame
-
-	local materials= {}
-	materials[&quot;Plastic&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169981&quot;
-	materials[&quot;Wood&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169971&quot;
-	materials[&quot;Slate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169975&quot;
-	materials[&quot;Corroded Metal&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169978&quot;
-	materials[&quot;Ice&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169985&quot;
-	materials[&quot;Grass&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169988&quot;
-	materials[&quot;Foil&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169991&quot;
-	materials[&quot;Diamond Plate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169998&quot;
-	materials[&quot;Concrete&quot;] = &quot;http://www.roblox.com/Asset/?ID=16170001&quot;
-
-	local x = 0;
-	for key, value in pairs(materials) do
-		local guiFrame = Instance.new(&quot;Frame&quot;)
-		guiFrame.Position = UDim2.new(1.0/9 * x, 0, 0.0, 0)
-		guiFrame.Size = UDim2.new(1.0/9, 0, 1.0, 0)
-		guiFrame.BackgroundColor = BrickColor.Black();
-		--guiFrame.BorderSizePixel = 0
-		guiFrame.Parent = paletteFrame;
-
-		local guiButton = Instance.new(&quot;ImageButton&quot;)
-		guiButton.Position = UDim2.new(0.0, 2, 0.0, 2)
-		guiButton.Size = UDim2.new(1.0, -4, 1.0, -4)
-		guiButton.Image = value
-		guiButton.Name = key
-		--guiButton.BorderSizePixel = 0
-		guiButton.AutoButtonColor = false
-		guiButton.MouseEnter:connect(function() onMouseEnter(hoverSelection, guiButton) end)
-		guiButton.MouseButton1Up:connect(function() onMouseUp(paletteFrame, guiButton) end)
-		guiButton.Parent = guiFrame
-
-		if hoverSelection.Text == guiButton.Name then
-			selectedButton = guiButton
-			guiFrame.BackgroundColor = BrickColor.Yellow()
-		end
-
-		x = x + 1
-	end
-
-	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)
-
-end
-
-function on3dButton1Down(mouse) 
-	local part = mouse.Target
-	if part and not (part.Locked) then
-		if Instance.Lock(part) then
-			part.Material = MaterialEnum[selectedButton.Name];
-			Instance.Unlock(part)
-		end
-	end
-end
-
-function on3dMouseMove(mouse) 
-	if not(inGui) and not(inPalette) then
-		mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
-		local part = mouse.Target
-		if part and not (part.Locked) then
-			setSelectionBox(part)
-		else
-			unsetSelectionBox()
-		end
-	end
-end
-
-local guiMain;
-function onEquippedLocal(mouse)
-
-	local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
-	guiMain = Instance.new(&quot;GuiMain&quot;)
-	guiMain.Parent = player.PlayerGui;
-
-	inGui = false
-	inPalette = false
-
-	mouse.Button1Down:connect(function() on3dButton1Down(mouse) end)
-	mouse.Move:connect(function() on3dMouseMove(mouse) end)
-	mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
-
-	selectionBox = Instance.new(&quot;SelectionBox&quot;)
-	selectionBox.Color = BrickColor.Yellow()
-	selectionBox.Adornee = nil
-	selectionBox.Parent = player.PlayerGui;
-
-	buildGui(guiMain, mouse);
-end
-
-function onUnequippedLocal()
-	guiMain.Parent = nil
-	selectionBox.Parent = nil
-end
-
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)
 </string>
 				<bool name="archivable">true</bool>
 			</Properties>
