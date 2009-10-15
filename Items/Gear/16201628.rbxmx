@@ -22,147 +22,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=16198783</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
-		<Item class="Script" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SwordScript</string>
-				<string name="Source">-------- OMG HAX
-
-r = game:service(&quot;RunService&quot;)
-
-
-local damage = 3
-
-
-local slash_damage = 6
-
-
-sword = script.Parent.Handle
-Tool = script.Parent
-
-
-local SlashSound = Instance.new(&quot;Sound&quot;)
-SlashSound.SoundId = &quot;http://www.roblox.com/Asset/?ID=12135982&quot;
-SlashSound.Parent = sword
-SlashSound.Volume = .7
-
-function isTurbo(character)
-	return character:FindFirstChild(&quot;PaperHat&quot;) ~= nil
-end
-
-
-function blow(hit)
-	local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-	local vCharacter = Tool.Parent
-	local vPlayer = game.Players:playerFromCharacter(vCharacter)
-	local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
-	if humanoid~=nil and humanoid ~= hum and hum ~= nil then
-		-- final check, make sure sword is in-hand
-
-		local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-		if (right_arm ~= nil) then
-			local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
-			if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
-				local d = damage
-				if (isTurbo(vCharacter) == true) then d = d * 2.5 end
-				tagHumanoid(humanoid, vPlayer)
-				humanoid:TakeDamage(d)
-				wait(1)
-				untagHumanoid(humanoid)
-			end
-		end
-
-
-	end
-end
-
-
-function tagHumanoid(humanoid, player)
-	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-	creator_tag.Value = player
-	creator_tag.Name = &quot;creator&quot;
-	creator_tag.Parent = humanoid
-end
-
-function untagHumanoid(humanoid)
-	if humanoid ~= nil then
-		local tag = humanoid:findFirstChild(&quot;creator&quot;)
-		if tag ~= nil then
-			tag.Parent = nil
-		end
-	end
-end
-
-
-function attack()
-	damage = slash_damage
-	SlashSound:play()
-	local anim = Instance.new(&quot;StringValue&quot;)
-	anim.Name = &quot;toolanim&quot;
-	anim.Value = &quot;Slash&quot;
-	anim.Parent = Tool
-end
-
-
-function swordUp()
-	Tool.GripForward = Vector3.new(-1,0,0)
-	Tool.GripRight = Vector3.new(0,1,0)
-	Tool.GripUp = Vector3.new(0,0,1)
-end
-
-function swordOut()
-	Tool.GripForward = Vector3.new(0,0,1)
-	Tool.GripRight = Vector3.new(0,-1,0)
-	Tool.GripUp = Vector3.new(-1,0,0)
-end
-
-
-
-Tool.Enabled = true
-
-function onActivated()
-
-	if not Tool.Enabled then
-		return
-	end
-
-	Tool.Enabled = false
-
-	local character = Tool.Parent;
-	local humanoid = character.Humanoid
-	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
-		return 
-	end
-
-	
-
-	attack()
-
-	wait(.4)
-
-	Tool.Enabled = true
-end
-
-
-function onEquipped()
-	SlashSound:play()
-end
-
-
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
-
-
-connection = sword.Touched:connect(blow)
-
-
-</string>
-				<bool name="archivable">true</bool>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBX2">
+		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -232,7 +92,7 @@ connection = sword.Touched:connect(blow)
 					<Z>3</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -258,7 +118,7 @@ connection = sword.Touched:connect(blow)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Sound" referent="RBX3">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Sound</string>
@@ -271,20 +131,21 @@ connection = sword.Touched:connect(blow)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBX4">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Model Delete Local</string>
-				<string name="Source">local Tool = script.Parent;
+				<string name="Source">local Tool = script.Parent
 
 enabled = true
 
-local selectionBox;
-local currentSelection;
-local currentSelectionColors = {};
-local inGui = false;
-local inPalette = false;
+local selectionBox
+local currentSelection
+local currentSelectionColors = {}
+local selectionLasso
+local inGui = false
+local inPalette = false
 
 function canSelectObject(part)
 	return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; 60
@@ -293,7 +154,7 @@ end
 function findModel(part)
 	while part ~= nil do
 		if part.className == &quot;Model&quot; then
-			return part;
+			return part
 		end
 		part = part.Parent
 	end
@@ -305,7 +166,7 @@ function cleanOrphanedModel(parent)
 	if parent.className == &quot;Model&quot; then
 		local children = parent:GetChildren()
 		if #children == 0 then
-			local oldParent = parent.Parent;
+			local oldParent = parent.Parent
 			parent:Remove()
 			cleanOrphanedModel(oldParent)
 		end
@@ -316,16 +177,16 @@ function on3dButton1Down(mouse)
 	local part = mouse.Target
 	if canSelectObject(part) then
 		local model = findModel(part)
-		local oldParent;
+		local oldParent
 		if model then 
 			if Instance.Lock(model) then
-				oldParent = model.Parent;
+				oldParent = model.Parent
 				model:Remove()
 				--The lock will expire in 5 seconds, which is good enough since we deleted the model
 			end
 		else
 			if Instance.Lock(part) then
-				oldParent = part.Parent;
+				oldParent = part.Parent
 				part:Remove()
 				--The lock will expire in 5 seconds, which is good enough since we deleted the part
 			end
@@ -337,7 +198,11 @@ end
 function saveSelectionColor(instance)
 	if instance:IsA(&quot;BasePart&quot;) then
 		currentSelectionColors[instance] = instance.BrickColor
-		instance.BrickColor = BrickColor.Red()
+		if instance.BrickColor == BrickColor.Red() then
+			instance.BrickColor = BrickColor.new(&quot;Really red&quot;)
+		else
+			instance.BrickColor = BrickColor.Red()
+		end
 	end
 
 	local children = instance:GetChildren() 
@@ -349,8 +214,8 @@ function saveSelectionColor(instance)
 end
 	
 function setSelection(partOrModel)
-	if partOrModel ~= currentSelectino then
-		clearSelection();
+	if partOrModel ~= currentSelection then
+		clearSelection()
 		currentSelection = partOrModel
 		if currentSelection.className == &quot;Model&quot; then
 			saveSelectionColor(currentSelection)
@@ -372,11 +237,13 @@ function clearSelection()
 	end
 	currentSelectionColors = {}
 	currentSelection = nil
+	selectionLasso.Part = nil
 end
 function on3dMouseMove(mouse) 
 	if not(inGui) and not(inPalette) then
-		local part = mouse.Target;
+		local part = mouse.Target
 		if canSelectObject(part) then
+			selectionLasso.Part = part
 			local model = findModel(part)
 			if model then 		
 				setSelection(model)
@@ -391,9 +258,10 @@ end
 
 function onEquippedLocal(mouse)
 
-	local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
-	guiMain = Instance.new(&quot;GuiMain&quot;)
-	guiMain.Parent = player.PlayerGui;
+	local character = script.Parent.Parent
+	local player = game.Players:GetPlayerFromCharacter(character)
+	guiMain = Instance.new(&quot;ScreenGui&quot;)
+	guiMain.Parent = player.PlayerGui
 
 	inGui = false
 	inPalette = false
@@ -403,20 +271,112 @@ function onEquippedLocal(mouse)
 	mouse.Icon =&quot;rbxasset://textures\\HammerCursor.png&quot;
 
 	selectionBox = Instance.new(&quot;SelectionBox&quot;)
+	selectionBox.Name = &quot;Model Delete Selection&quot;
 	selectionBox.Color = BrickColor.Red()
 	selectionBox.Adornee = nil
-	selectionBox.Parent = player.PlayerGui;
+	selectionBox.Parent = player.PlayerGui
 
-	--buildGui(guiMain, mouse);
+	selectionLasso = Instance.new(&quot;SelectionPartLasso&quot;)
+	selectionLasso.Name = &quot;Model Delete Lasso&quot;
+	selectionLasso.Humanoid = character.Humanoid
+	selectionLasso.archivable = false
+	selectionLasso.Visible = true
+	selectionLasso.Parent = game.workspace
+	selectionLasso.Color = BrickColor.Red()
+
+	--buildGui(guiMain, mouse)
 end
 
 function onUnequippedLocal()
-	clearSelection();
+	clearSelection()
+	selectionBox:Remove()
+	selectionLasso:Remove()
 end
 
 
 Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)
+</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<string name="Source">-------- OMG HAX
+
+r = game:service(&quot;RunService&quot;)
+
+
+local damage = 0
+
+
+local slash_damage = 0
+
+
+sword = script.Parent.Handle
+Tool = script.Parent
+
+
+
+function attack()
+	local anim = Instance.new(&quot;StringValue&quot;)
+	anim.Name = &quot;toolanim&quot;
+	anim.Value = &quot;Slash&quot;
+	anim.Parent = Tool
+end
+
+
+function swordUp()
+	Tool.GripForward = Vector3.new(-1,0,0)
+	Tool.GripRight = Vector3.new(0,1,0)
+	Tool.GripUp = Vector3.new(0,0,1)
+end
+
+function swordOut()
+	Tool.GripForward = Vector3.new(0,0,1)
+	Tool.GripRight = Vector3.new(0,-1,0)
+	Tool.GripUp = Vector3.new(-1,0,0)
+end
+
+
+
+Tool.Enabled = true
+
+function onActivated()
+
+	if not Tool.Enabled then
+		return
+	end
+
+	Tool.Enabled = false
+
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print(&quot;Humanoid not found&quot;)
+		return 
+	end
+
+	
+
+	attack()
+
+	wait(1)
+
+	Tool.Enabled = true
+end
+
+
+function onEquipped()
+end
+
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+
 </string>
 				<bool name="archivable">true</bool>
 			</Properties>
