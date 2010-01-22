@@ -60,6 +60,8 @@ local Mouse
 
 local SetCache = {}
 
+local soloGame = game:FindFirstChild(&quot;NetworkClient&quot;) == nil
+
 --Constants
 local useAssetVersionId = true
 local BaseUrl = &quot;http://www.roblox.com/&quot;
@@ -380,6 +382,19 @@ function selectCategoryPage(buttons, page)
 
 	end
 end
+function filterSet(set)
+	if soloGame then
+		return set
+	end
+
+	local result = {}
+	for pos, object in pairs(set) do
+		if object.IsTrusted then
+			result[#result+1] = object
+		end
+	end
+	return result
+end
 function selectSet(buttonFrame, setName, setId, setIndex)
 	if buttonFrame then
 		if buttonFrame.Button ~= Data.Category[Data.CurrentCategory].Button then
@@ -397,7 +412,7 @@ function selectSet(buttonFrame, setName, setId, setIndex)
 			Data.Category[Data.CurrentCategory].Button.AutoButtonColor = false
 		
 			if SetCache[setId] == nil then
-				SetCache[setId] = game:GetService(&quot;InsertService&quot;):GetCollection(setId)
+				SetCache[setId] = filterSet(game:GetService(&quot;InsertService&quot;):GetCollection(setId))
 			end
 			Data.Category[Data.CurrentCategory].Contents = SetCache[setId]
 			Window.Main.Title.Text = setName
