@@ -1,0 +1,428 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-0.300000012</X>
+				<Y>-1</Y>
+				<Z>-0.5</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>-0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">NuclearWinterGun</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=22971044</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Icicle</string>
+				<ProtectedString name="Source">debris = game:GetService(&quot;Debris&quot;)
+ball = script.Parent
+damage = 15
+
+local blues = {23,107,102,11,45,135}
+
+--removedLength = 8
+function onTouched(hit)
+	if hit.Parent == nil then return end
+	humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+	if(ball.Name==&quot;Icicle&quot;) then
+		-- make a splat
+		for i=1,3 do
+			local s = Instance.new(&quot;Part&quot;)
+			s.Name = &quot;Shard&quot;
+			s.Shape = 1 -- block
+			s.formFactor = 2 -- plate
+			s.Size = Vector3.new(1,.4,1)
+			s.BrickColor = BrickColor.new(blues[math.random(#blues)])
+			s.Material = Enum.Material.Ice
+			local v = Vector3.new(math.random(-1,1), math.random(0,1), math.random(-1,1))
+			s.Velocity = 50 * v
+			s.CFrame = CFrame.new(ball.Position + v, v)
+			local new_script = script:clone()
+			new_script.Disabled = false
+			new_script.Parent = s
+			s.Parent = game.Workspace
+
+			local tag = ball:findFirstChild(&quot;creator&quot;)
+			if tag~= nil then
+				local new_tag = tag:clone()
+				new_tag.Parent = s
+			end
+
+			debris:AddItem(s, 2)  ---NICK I THINK THIS IS IT
+
+			if humanoid ~= nil then
+				tagHumanoid(humanoid)
+				humanoid:TakeDamage(damage)
+				wait(2)
+				untagHumanoid(humanoid)
+			end
+
+			connection:disconnect()
+			ball.Parent = nil
+		end
+
+	else
+		if humanoid ~= nil then
+				tagHumanoid(humanoid)
+				humanoid:TakeDamage(10)
+				wait(2)
+				untagHumanoid(humanoid)
+				ball.Parent = nil
+		end
+		--removedLength = 2
+		connection:disconnect()
+	end
+	
+end
+
+function tagHumanoid(humanoid)
+	-- todo: make tag expire
+	local tag = ball:findFirstChild(&quot;creator&quot;)
+	if tag ~= nil then
+		local new_tag = tag:clone()
+		new_tag.Parent = humanoid
+	end
+end
+
+
+function untagHumanoid(humanoid)
+	if humanoid ~= nil then
+		local tag = humanoid:findFirstChild(&quot;creator&quot;)
+		if tag ~= nil then
+			tag.Parent = nil
+		end
+	end
+end
+
+connection = ball.Touched:connect(onTouched)
+
+wait(8)
+--if ball.Parent~=nil then
+ball.Parent = nil
+--end </ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+
+	enabled = false
+	mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+	wait(1)
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	enabled = true
+
+end
+
+function onEquippedLocal(mouse)
+
+	if mouse == nil then
+		print(&quot;Mouse not found&quot;)
+		return 
+	end
+
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX3">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">IcicleShooter</string>
+				<ProtectedString name="Source">Tool = script.Parent
+
+function fire(v)
+
+	Tool.Handle.Fire:play()
+	
+
+	local vCharacter = Tool.Parent
+	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+
+	Tool.Parent.Torso[&quot;Right Shoulder&quot;].DesiredAngle = 3.6			--moves your arm as if firing.
+	Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 0.5
+
+	local missile = Instance.new(&quot;Part&quot;)
+
+	local m = Tool.Mesh:Clone()	
+	m.Parent = missile
+        
+
+	local spawnPos = vCharacter.PrimaryPart.Position
+	
+
+
+	spawnPos  = spawnPos + (v * 8)
+
+	missile.CFrame = CFrame.new(spawnPos, spawnPos + v)
+	missile.Position = spawnPos
+	missile.Size = Vector3.new(1,1,1)
+	missile.Velocity = v * 80
+	missile.BrickColor = BrickColor.new(23)
+	missile.Shape = 0
+	missile.BottomSurface = 0
+	missile.TopSurface = 0
+	missile.Name = &quot;Icicle&quot;
+	missile.Elasticity = 0
+	missile.Reflectance = 0
+	missile.Friction = .4
+
+	local force = Instance.new(&quot;BodyForce&quot;)
+	force.force = Vector3.new(0,98,0)
+	force.Parent = missile
+	
+
+	local new_script = script.Parent.Icicle:clone()
+	new_script.Disabled = false
+	new_script.Parent = missile
+
+	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+	creator_tag.Value = vPlayer
+	creator_tag.Name = &quot;creator&quot;
+	creator_tag.Parent = missile
+	
+
+
+	missile.Parent = game.Workspace
+
+end
+
+
+
+Tool.Enabled = true
+function onActivated()
+
+	if not Tool.Enabled then
+		return
+	end
+
+	Tool.Enabled = false
+
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print(&quot;Humanoid not found&quot;)
+		return 
+	end
+
+	local targetPos = humanoid.TargetPoint
+	local lookAt = (targetPos - character.Head.Position).unit
+
+	fire(lookAt)
+
+	wait(1)
+
+	Tool.Enabled = true
+end
+
+
+script.Parent.Activated:connect(onActivated)
+
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX4">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.5</X>
+					<Y>0.500003755</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>2.55913728e-011</R01>
+					<R02>-1.21490699e-011</R02>
+					<R10>-1.21490699e-011</R10>
+					<R11>8.70675805e-014</R11>
+					<R12>1</R12>
+					<R20>-2.55913728e-011</R20>
+					<R21>-1</R21>
+					<R22>-8.70675805e-014</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<bool name="DraggingV1">false</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">2</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>3.20000005</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX5">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=19280156</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.800000012</X>
+						<Y>0.800000012</Y>
+						<Z>0.800000012</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=22971093</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX6">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Fire</string>
+					<float name="Pitch">0.899999976</float>
+					<int name="PlayCount">-1</int>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=11900833</url></Content>
+					<float name="Volume">1</float>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="SpecialMesh" referent="RBX7">
+			<Properties>
+				<token name="LODX">2</token>
+				<token name="LODY">2</token>
+				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=20518365</url></Content>
+				<token name="MeshType">5</token>
+				<string name="Name">Mesh</string>
+				<Vector3 name="Offset">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<Vector3 name="Scale">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+				<Content name="TextureId"><url>http://www.roblox.com/asset/?id=22971093</url></Content>
+				<Vector3 name="VertexColor">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX8">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>3.42235017</X>
+					<Y>-4.23245525</Y>
+					<Z>-2.77827096</Z>
+					<R00>-0.578009009</R00>
+					<R01>0.572517216</R01>
+					<R02>0.581489205</R02>
+					<R10>-0</R10>
+					<R11>0.712582827</R11>
+					<R12>-0.701588035</R12>
+					<R20>-0.816030502</R20>
+					<R21>-0.405524194</R21>
+					<R22>-0.411879241</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>-0.5</X>
+					<Y>0.500003815</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
