@@ -18,8 +18,8 @@
 				<R21>0</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
-			<string name="Name">Insert Tool</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=18715856</url></Content>
+			<string name="Name">Insert</string>
+			<Content name="TextureId"><url>rbxasset://icons/insert.png</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
 		<Item class="LocalScript" referent="RBX1">
@@ -34,6 +34,8 @@
 --game:GetService(&quot;InsertService&quot;):SetAssetUrl(&quot;http://test.roblox.com/Asset/?id=%d&quot;)
  
 enabled = true
+local origTexture = 	Tool.TextureId
+game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/insert_sel.png&quot;)
 
 local height = 20
 local width = UDim.new(0.25, 0)
@@ -804,7 +806,14 @@ function beginInsertAsset(assetName, assetId, image, stampMode)
 			elseif instance:IsA(&quot;Tool&quot;) then
 				-- Ask them if it should go in StarterPack? 
 			elseif instance:IsA(&quot;Sky&quot;) then
-				--Prompt to decide if we should change the sky... for now we can&apos;t do this from Lua
+				local lightingService = game:GetService(&quot;Lighting&quot;)
+				for index,child in pairs(lightingService:GetChildren()) do
+					if child:IsA(&quot;Sky&quot;) then
+						child:Remove();
+					end
+				end
+				instance.Parent = lightingService
+				return
 			else
 				
 			end
@@ -1213,6 +1222,8 @@ end
 local CancelDuringLoad
 local LoadScreen 
 function onEquippedLocal(mouse)
+	Tool.TextureId = &quot;rbxasset://icons/insert_sel.png&quot;
+
 	Mouse = mouse
 	if Tool.SavedState.Value and Tool.PlayerOwner.Value == getPlayer() and Data and Data.FullyLoaded then
 		guiMain = Tool.SavedState.Value
@@ -1266,6 +1277,8 @@ function onEquippedLocal(mouse)
 end
 
 function onUnequippedLocal()
+	Tool.TextureId = origTexture
+
 	pcall(function()
 		cancelAssetPlacement()
 		cancelAssetLoad()
