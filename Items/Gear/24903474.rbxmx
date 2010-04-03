@@ -32,16 +32,20 @@
 -- finds direction to point compass at for rare egg
 
 function findNearestRareEgg(pos)
-	local list = game.Workspace.eggroot:GetChildren()
 	local temp = nil
 	local rareEgg = nil
-	for x = 1, #list do
-		local temp = list[x]
-		eggNum = tonumber(temp.Name)
-		if rareEgg == nil then
-			rareEgg = temp
-		elseif (eggNum &gt; tonumber(rareEgg.Name)) then
-			rareEgg = temp
+	local list = game.Workspace:FindFirstChild(&quot;eggroot&quot;)
+
+	if list ~= nil then
+		list = list:GetChildren()
+		for x = 1, #list do
+			local temp = list[x]
+			eggNum = tonumber(temp.Name)
+			if rareEgg == nil then
+				rareEgg = temp
+			elseif (eggNum &gt; tonumber(rareEgg.Name)) then
+				rareEgg = temp
+			end
 		end
 	end
 	return rareEgg
@@ -49,49 +53,52 @@ end
 
 local closeRareEgg = findNearestRareEgg(script.Parent.EggCompass.Handle.Position)
 
+if closeRareEgg ~= nil then
+
 local pointDirection = nil
 
 if closeRareEgg ~= nil then
-	if(closeRareEgg.className == &quot;Part&quot;) then
-		pointDirection =  closeRareEgg.Position - script.Parent.Torso.Position
-	else
-		pointDirection =  closeRareEgg.Handle.Position - script.Parent.Torso.Position
+		if(closeRareEgg.className == &quot;Part&quot;) then
+			pointDirection =  closeRareEgg.Position - script.Parent.Torso.Position
+		else
+			pointDirection =  closeRareEgg.Handle.Position - script.Parent.Torso.Position
+		end
 	end
+
+	-- create arrow
+	local p = Instance.new(&quot;Part&quot;)
+	p.formFactor = 2
+	p.Size = Vector3.new(1,.4,1)
+	p.Transparency = .5
+	p.BrickColor = BrickColor.new(104)
+	p.CanCollide = false
+	p.Locked = true
+	p.RotVelocity = Vector3.new(math.random(), math.random(), math.random()) * 10
+	local v = Vector3.new(script.Parent.Torso.CFrame.lookVector.x, 0, script.Parent.Torso.CFrame.lookVector.z)
+
+	p.CFrame = CFrame.new(script.Parent.Torso.CFrame.p + v  * 4, v.unit)
+
+	local m = script.ArrowMesh:Clone() -- NASTY
+	m.Parent = p
+
+
+
+	local b = Instance.new(&quot;BodyPosition&quot;)
+	b.position = p.Position
+	b.Parent = p
+
+	local g = Instance.new(&quot;BodyGyro&quot;)
+	g.cframe = CFrame.new(Vector3.new(0,0,0), pointDirection.unit) -- point towards egg
+	g.maxTorque = Vector3.new(7e8, 7e8, 7e8)
+	g.Parent = p
+
+	p.Parent = game.Workspace
+
+	debris:AddItem(p, 10)
+
+
+	wait(3)
 end
-
--- create arrow
-local p = Instance.new(&quot;Part&quot;)
-p.formFactor = 2
-p.Size = Vector3.new(1,.4,1)
-p.Transparency = .5
-p.BrickColor = BrickColor.new(104)
-p.CanCollide = false
-p.Locked = true
-p.RotVelocity = Vector3.new(math.random(), math.random(), math.random()) * 10
-local v = Vector3.new(script.Parent.Torso.CFrame.lookVector.x, 0, script.Parent.Torso.CFrame.lookVector.z)
-
-p.CFrame = CFrame.new(script.Parent.Torso.CFrame.p + v  * 4, v.unit)
-
-local m = script.ArrowMesh:Clone() -- NASTY
-m.Parent = p
-
-
-
-local b = Instance.new(&quot;BodyPosition&quot;)
-b.position = p.Position
-b.Parent = p
-
-local g = Instance.new(&quot;BodyGyro&quot;)
-g.cframe = CFrame.new(Vector3.new(0,0,0), pointDirection.unit) -- point towards egg
-g.maxTorque = Vector3.new(7e8, 7e8, 7e8)
-g.Parent = p
-
-p.Parent = game.Workspace
-
-debris:AddItem(p, 10)
-
-
-wait(3)
 
 script.Parent = nil
 </ProtectedString>
