@@ -136,17 +136,17 @@
 				<ProtectedString name="Source">-------- OMG HAX
 
 r = game:service(&quot;RunService&quot;)
+local sword = script.Parent.Handle
+local Tool = script.Parent
 
+local damage = 5
+local epicKatana = false
+local p = nil
+local humanoid = nil
 
-local damage = 15
-
-
-local slash_damage = 8
-local lunge_damage = 12
-
-sword = script.Parent.Handle
-Tool = script.Parent
-
+local slash_damage = 10
+local lunge_damage = 15
+local regularWalk = 23
 
 local SlashSound = Instance.new(&quot;Sound&quot;)
 SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
@@ -154,7 +154,7 @@ SlashSound.Parent = sword
 SlashSound.Volume = .7
 
 local LungeSound = Instance.new(&quot;Sound&quot;)
-LungeSound.SoundId = &quot;rbxasset://sounds\\swordlunge.wav&quot;
+LungeSound.SoundId = &quot;http://www.roblox.com/asset/?id=26771744&quot;
 LungeSound.Parent = sword
 LungeSound.Volume = .6
 
@@ -205,35 +205,42 @@ function untagHumanoid(humanoid)
 end
 
 
-function attack()
+function attack(humanoid)
 	damage = slash_damage
 	SlashSound:play()
-	local anim = Instance.new(&quot;StringValue&quot;)
-	anim.Name = &quot;toolanim&quot;
-	anim.Value = &quot;Slash&quot;
-	anim.Parent = Tool
+
+	local animation = game:GetService(&quot;InsertService&quot;):LoadAsset(27298473)
+	animation = animation:FindFirstChild(&quot;twohandedswordhit&quot;)
+	animation.Parent = humanoid.Parent
+
+	local anim = humanoid:LoadAnimation(animation)
+	anim:Play(0.1,1,1)
+	anim.KeyframeReached:connect(function(string)
+		if string == &quot;throwdown&quot; then
+			anim:Stop()
+			anim:remove()
+			animation:remove()
+		end
+	end)
 end
 
-function lunge()
+function lunge(humanoid)
 	damage = lunge_damage
-
 	LungeSound:play()
 
-	local anim = Instance.new(&quot;StringValue&quot;)
-	anim.Name = &quot;toolanim&quot;
-	anim.Value = &quot;Lunge&quot;
-	anim.Parent = Tool
-	
-	
-	force = Instance.new(&quot;BodyVelocity&quot;)
-	force.velocity = Vector3.new(0,10,0) --Tool.Parent.Torso.CFrame.lookVector * 80
-	force.Parent = Tool.Parent.Torso
-	wait(.2)
-	swordOut()
-	wait(.2)
-	force.Parent = nil
-	wait(.4)
-	swordUp()
+	local animation = game:GetService(&quot;InsertService&quot;):LoadAsset(27299726)
+	animation = animation:FindFirstChild(&quot;bigtwohandhit&quot;)
+	animation.Parent = humanoid.Parent
+
+	local anim = humanoid:LoadAnimation(animation)
+	anim:Play(0.1,1,5)
+	anim.KeyframeReached:connect(function(string)
+		if string == &quot;throwdown&quot; then
+			anim:Stop()
+			anim:remove()
+			animation:remove()
+		end
+	end)
 
 	damage = slash_damage
 end
@@ -275,9 +282,9 @@ function onActivated()
 	t = r.Stepped:wait()
 
 	if (t - last_attack &lt; .2) then
-		lunge()
+		lunge(humanoid)
 	else
-		attack()
+		attack(humanoid)
 	end
 
 	last_attack = t
@@ -287,18 +294,20 @@ function onActivated()
 	Tool.Enabled = true
 end
 
-
 function onEquipped()
+	
 	UnsheathSound:play()
-end
+	if epicKatana == true then
+		humanoid.WalkSpeed = regularWalk + 2
+	end
+	p = game.Players:GetPlayerFromCharacter(Tool.Parent)
 
+end
 
 script.Parent.Activated:connect(onActivated)
 script.Parent.Equipped:connect(onEquipped)
 
-
 connection = sword.Touched:connect(blow)
-
 
 </ProtectedString>
 				<bool name="archivable">true</bool>
