@@ -35,15 +35,15 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>-258.399994</X>
-					<Y>17.2000008</Y>
-					<Z>-218</Z>
+					<X>-274</X>
+					<Y>15.6000004</Y>
+					<Z>-230</Z>
 					<R00>0</R00>
-					<R01>-1</R01>
-					<R02>0</R02>
+					<R01>0</R01>
+					<R02>-1</R02>
 					<R10>0</R10>
-					<R11>0</R11>
-					<R12>-1</R12>
+					<R11>1</R11>
+					<R12>0</R12>
 					<R20>1</R20>
 					<R21>0</R21>
 					<R22>0</R22>
@@ -118,44 +118,8 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Sound</string>
-					<float name="Pitch">1</float>
-					<int name="PlayCount">-1</int>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds\swordslash.wav</url></Content>
-					<float name="Volume">0.699999988</float>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX4">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Sound</string>
-					<float name="Pitch">1</float>
-					<int name="PlayCount">-1</int>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds\swordlunge.wav</url></Content>
-					<float name="Volume">0.600000024</float>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX5">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Sound</string>
-					<float name="Pitch">1</float>
-					<int name="PlayCount">-1</int>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds\unsheath.wav</url></Content>
-					<float name="Volume">1</float>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
+		<Item class="LocalScript" referent="RBX3">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><url>http://www.roblox.com/asset/?id=1014476</url></Content>
@@ -164,7 +128,7 @@
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX7">
+		<Item class="LocalScript" referent="RBX4">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -172,17 +136,16 @@
 				<ProtectedString name="Source">-------- OMG HAX
 
 r = game:service(&quot;RunService&quot;)
+local sword = script.Parent.Handle
+local Tool = script.Parent
 
-
-local damage = 15
-
+local damage = 5
+local p = nil
+local humanoid = nil
 
 local slash_damage = 8
 local lunge_damage = 12
-
-sword = script.Parent.Handle
-Tool = script.Parent
-
+local regularWalk = 23
 
 local SlashSound = Instance.new(&quot;Sound&quot;)
 SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
@@ -190,7 +153,7 @@ SlashSound.Parent = sword
 SlashSound.Volume = .7
 
 local LungeSound = Instance.new(&quot;Sound&quot;)
-LungeSound.SoundId = &quot;rbxasset://sounds\\swordlunge.wav&quot;
+LungeSound.SoundId = &quot;http://www.roblox.com/asset/?id=26771744&quot;
 LungeSound.Parent = sword
 LungeSound.Volume = .6
 
@@ -241,30 +204,33 @@ function untagHumanoid(humanoid)
 end
 
 
-function attack()
+function attack(humanoid)
 	damage = slash_damage
 	SlashSound:play()
-	local anim = Instance.new(&quot;StringValue&quot;)
-	anim.Name = &quot;toolanim&quot;
-	anim.Value = &quot;Slash&quot;
-	anim.Parent = Tool
+
+
+	local animation = humanoid:LoadAnimation(Tool.twohandedswordhit)
+	animation:Play()
+	animation.KeyframeReached:connect(function(string)
+		if string == &quot;throwdown&quot; then
+			animation:Stop()
+			animation:remove()
+		end
+	end)
 end
 
-function lunge()
+function lunge(humanoid)
 	damage = lunge_damage
-
 	LungeSound:play()
-
-	local anim = Instance.new(&quot;StringValue&quot;)
-	anim.Name = &quot;toolanim&quot;
-	anim.Value = &quot;Lunge&quot;
-	anim.Parent = Tool
 	
-	
-	force = Instance.new(&quot;BodyVelocity&quot;)
-	force.velocity = Vector3.new(0,10,0) --Tool.Parent.Torso.CFrame.lookVector * 80
-	force.Parent = Tool.Parent.Torso
-	force.Parent = nil
+	local anim = humanoid:LoadAnimation(Tool.bigtwohandhit)
+	anim:Play(0.1,1,4)
+	anim.KeyframeReached:connect(function(string)
+		if string == &quot;throwdown&quot; then
+			anim:Stop()
+			anim:remove()
+		end
+	end)
 
 	damage = slash_damage
 end
@@ -306,32 +272,45 @@ function onActivated()
 	t = r.Stepped:wait()
 
 	if (t - last_attack &lt; .2) then
-		lunge()
+		lunge(humanoid)
 	else
-		attack()
+		attack(humanoid)
 	end
 
 	last_attack = t
 
-	--wait(.5)
-
 	Tool.Enabled = true
 end
 
-
 function onEquipped()
+	
 	UnsheathSound:play()
-end
+	local humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;,false)
+	animation = humanoid:loadAnimation(Tool.twohandedswordhit)
+	p = game.Players:GetPlayerFromCharacter(Tool.Parent)
 
+end
 
 script.Parent.Activated:connect(onActivated)
 script.Parent.Equipped:connect(onEquipped)
 
-
 connection = sword.Touched:connect(blow)
 
-
 </ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=27432559</url></Content>
+				<string name="Name">twohandedswordhit</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=27441775</url></Content>
+				<string name="Name">bigtwohandhit</string>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
