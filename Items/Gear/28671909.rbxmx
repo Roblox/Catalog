@@ -136,7 +136,9 @@
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">CardScript</string>
-				<ProtectedString name="Source">card = script.Parent
+				<ProtectedString name="Source">local card = script.Parent
+
+local debris = game:GetService(&quot;Debris&quot;)
 
 HitSound = Instance.new(&quot;Sound&quot;)
 HitSound.Name = &quot;HitSound&quot;
@@ -144,7 +146,7 @@ HitSound.SoundId = &quot;http://www.roblox.com/asset/?id=28509434&quot;
 HitSound.Parent = card
 HitSound.Volume = 1
 
-local debris = game:GetService(&quot;Debris&quot;)
+wait(0.1)
 
 function onTouched(hit)
 	local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
@@ -152,8 +154,6 @@ function onTouched(hit)
 	if humanoid ~= nil then
 		tagHumanoid(humanoid)
 		
-		
-
 		-- first yellow card, just do warning
 		if card.Name == &quot;YellowCard&quot; and humanoid.Parent:FindFirstChild(&quot;YellowHit&quot;) == nil then
 
@@ -169,12 +169,12 @@ function onTouched(hit)
 			local player = game.Players:GetPlayerFromCharacter(humanoid.Parent)
 			message.Parent = player
 
-			card.Parent = nil
 			debris:AddItem(message, 4)
+			connection:disconnect()
 
 		-- red card time!
 		else
-			if humanoid.Sit == false then
+			if humanoid.Parent:FindFirstChild(&quot;TimeOutScript&quot;) == nil then
 				
 				HitSound.Pitch = math.random(0.8,1)
 				HitSound:Play()
@@ -184,11 +184,9 @@ function onTouched(hit)
 				message.Parent = player
 				debris:AddItem(message, 4)
 
-				humanoid.Sit = true
-				humanoid.Parent.Torso.Anchored = true
-				wait(10)
-				humanoid.Sit = false
-				humanoid.Parent.Torso.Anchored = false
+				local script = card:FindFirstChild(&quot;TimeOutScript&quot;):clone()
+				script.Parent = humanoid.Parent
+				script.Disabled = false
 
 				local yellowCard = humanoid.Parent:FindFirstChild(&quot;YellowHit&quot;)
 				if yellowCard ~= nil then
@@ -196,14 +194,15 @@ function onTouched(hit)
 					yellowCard:remove()
 				end
 
-				card.Parent = nil
-
 			end
+			connection:disconnect()
 
 		end
 
 		untagHumanoid(humanoid)
 	end
+	wait(2)
+	card:remove()
 end
 
 function tagHumanoid(humanoid)
@@ -225,9 +224,7 @@ function untagHumanoid(humanoid)
 	end
 end
 
-connection = card.Touched:connect(onTouched)
-
-debris:AddItem(card, 16)</ProtectedString>
+connection = card.Touched:connect(onTouched)</ProtectedString>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
@@ -246,8 +243,6 @@ function fire(v)
 	local vPlayer = game.Players:playerFromCharacter(vCharacter)
 
 	local missile = Instance.new(&quot;Part&quot;)
-
-	--local cardColor = math.random(1,20)
 
 	if cardColor &gt;= 1 and cardColor &lt;= 17 then
 		missile.BrickColor = BrickColor.new(&quot;Bright yellow&quot;)
@@ -281,6 +276,9 @@ function fire(v)
 	new_script.Disabled = false
 	new_script.Parent = missile
 
+	local timeOutScript = Tool.TimeOutScript:clone()
+	timeOutScript.Parent = missile
+
 	missile.Parent = game.Workspace
 
 end
@@ -308,11 +306,10 @@ function onActivated()
 	local targetPos = humanoid.TargetPoint
 	local lookAt = (targetPos - character.Head.Position).unit
 
-	local reload = .5
+	local reload = 2
 
 	fire(lookAt)
 	Tool.Handle.Transparency = 1
-	wait(reload)
 	wait(reload)
 	Tool.Handle.Transparency = 0
 	cardColor = math.random(1,20)
@@ -372,6 +369,23 @@ end
 
 Tool.Equipped:connect(onEquippedLocal)
 </ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">TimeOutScript</string>
+				<ProtectedString name="Source">local humanoid = script.Parent:FindFirstChild(&quot;Humanoid&quot;)
+
+humanoid.Sit = true
+humanoid.Parent.Torso.Anchored = true
+wait(8)
+humanoid.Sit = false
+humanoid.Parent.Torso.Anchored = false
+
+script:remove()</ProtectedString>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
