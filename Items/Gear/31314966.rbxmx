@@ -1,7 +1,43 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Camera" referent="RBX0">
+		<Properties>
+			<Ref name="CameraSubject">null</Ref>
+			<token name="CameraType">0</token>
+			<CoordinateFrame name="CoordinateFrame">
+				<X>0.325715065</X>
+				<Y>3.27555847</Y>
+				<Z>-4.0634613</Z>
+				<R00>-0.997954309</R00>
+				<R01>-0.0136203337</R01>
+				<R02>0.0624636598</R02>
+				<R10>-0</R10>
+				<R11>0.977042198</R11>
+				<R12>0.213046104</R12>
+				<R20>-0.0639313906</R20>
+				<R21>0.212610275</R21>
+				<R22>-0.975043416</R22>
+			</CoordinateFrame>
+			<CoordinateFrame name="Focus">
+				<X>-0.923558235</X>
+				<Y>-0.98536396</Y>
+				<Z>15.4374084</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">ThumbnailCamera</string>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+	<Item class="Tool" referent="RBX1">
 		<Properties>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
@@ -22,7 +58,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=31310254</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX2">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -35,9 +71,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-40.5</X>
-					<Y>14.9000006</Y>
-					<Z>56.5</Z>
+					<X>-0.5</X>
+					<Y>2.70000005</Y>
+					<Z>0.5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -92,7 +128,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX3">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -118,7 +154,7 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX4">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">InitialThrust</string>
@@ -130,7 +166,7 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Sound" referent="RBX5">
 				<Properties>
 					<bool name="Looped">true</bool>
 					<string name="Name">LowFuelWarning</string>
@@ -142,7 +178,7 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBX6">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">EngineFail</string>
@@ -154,7 +190,7 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX6">
+			<Item class="Sound" referent="RBX7">
 				<Properties>
 					<bool name="Looped">true</bool>
 					<string name="Name">Thrusting</string>
@@ -167,7 +203,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX7">
+		<Item class="LocalScript" referent="RBX8">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -206,6 +242,7 @@ local Flame = nil
 function onEquippedLocal(mouse)
 
 	player = Tool.Parent
+	equipPack()
 	mass = recursiveGetLift(player)
 	force.P = mass * 10
 	force.maxForce = Vector3.new(0,force.P,0)
@@ -217,7 +254,6 @@ function onEquippedLocal(mouse)
 	gui = Tool.FuelGui:clone()
 	updateGUI()
 	gui.Parent = game.Players:GetPlayerFromCharacter(player).PlayerGui
-	equipPack()
 
 	regen = true
 	regenFuel()
@@ -273,11 +309,19 @@ end
 function onUnequippedLocal()
 
 	regen = false
-	force:remove()
-	bodyGyro:remove()
-	anim:Stop()
-	anim:remove()
-	gui:remove()
+	if force ~= nil then
+		force:remove()
+	end
+	if bodyGyro ~= nil then
+		bodyGyro:remove()
+	end
+	if anim ~= nil then
+		anim:Stop()
+		anim:remove()
+	end
+	if gui ~= nil then
+		gui:remove()
+	end
 	if jetPack ~= nil then
 		jetPack:remove()
 		jetPack = nil
@@ -366,12 +410,12 @@ end
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="ScreenGui" referent="RBX8">
+		<Item class="ScreenGui" referent="RBX9">
 			<Properties>
 				<string name="Name">FuelGui</string>
 				<bool name="archivable">true</bool>
 			</Properties>
-			<Item class="Frame" referent="RBX9">
+			<Item class="Frame" referent="RBX10">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Color3 name="BackgroundColor3">4294927872</Color3>
@@ -397,10 +441,10 @@ end
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="ImageLabel" referent="RBX10">
+			<Item class="ImageLabel" referent="RBX11">
 				<Properties>
 					<bool name="Active">false</bool>
-					<Color3 name="BackgroundColor3">4294901247</Color3>
+					<Color3 name="BackgroundColor3">4294967295</Color3>
 					<float name="BackgroundTransparency">1</float>
 					<Color3 name="BorderColor3">4279970357</Color3>
 					<int name="BorderSizePixel">1</int>
@@ -425,7 +469,7 @@ end
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX11">
+		<Item class="Animation" referent="RBX12">
 			<Properties>
 				<Content name="AnimationId"><binary>PHJvYmxveCB4bWxuczp4bWltZT0iaHR0cDovL3d3dy53My5vcmcvMjAwNS8wNS94bWxtaW1l
 IiB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNl
@@ -505,10 +549,46 @@ CgkJCQk8L0l0ZW0+CgkJCTwvSXRlbT4KCQk8L0l0ZW0+Cgk8L0l0ZW0+Cjwvcm9ibG94Pg==</binary
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="NumberValue" referent="RBX12">
+		<Item class="NumberValue" referent="RBX13">
 			<Properties>
 				<string name="Name">CurrFuel</string>
 				<double name="Value">1000</double>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX0">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>0.325715065</X>
+					<Y>3.27555847</Y>
+					<Z>-4.0634613</Z>
+					<R00>-0.997954309</R00>
+					<R01>-0.0136203337</R01>
+					<R02>0.0624636598</R02>
+					<R10>-0</R10>
+					<R11>0.977042198</R11>
+					<R12>0.213046104</R12>
+					<R20>-0.0639313906</R20>
+					<R21>0.212610275</R21>
+					<R22>-0.975043416</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>-0.923558235</X>
+					<Y>-0.98536396</Y>
+					<Z>15.4374084</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
