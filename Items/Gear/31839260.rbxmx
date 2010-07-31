@@ -18,8 +18,8 @@
 				<R21>0</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
-			<string name="Name">BarrelOfMonkeys</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=31310688</url></Content>
+			<string name="Name">ThrowingBarrel</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=29874079</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
 		<Item class="Part" referent="RBX1">
@@ -35,9 +35,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-39.5</X>
+					<X>-9.5</X>
 					<Y>2.9000001</Y>
-					<Z>25.5</Z>
+					<Z>43.5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -51,7 +51,7 @@
 				<bool name="CanCollide">true</bool>
 				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">2</token>
+				<token name="FormFactor">1</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -125,6 +125,7 @@
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
 				<ProtectedString name="Source">local Tool = script.Parent;
+local anim = nil
 
 enabled = true
 function onButton1Down(mouse)
@@ -134,8 +135,8 @@ function onButton1Down(mouse)
 
 	enabled = false
 	mouse.Icon = &quot;rbxasset://textures\\ArrowFarCursor.png&quot;
-
-	wait(3)
+	anim:Play()
+	wait(1)
 	mouse.Icon = &quot;rbxasset://textures\\ArrowCursor.png&quot;
 	enabled = true
 
@@ -147,6 +148,8 @@ function onEquippedLocal(mouse)
 		print(&quot;Mouse not found&quot;)
 		return 
 	end
+
+	anim = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;):LoadAnimation(Tool.barrelthrow)
 
 	mouse.Icon = &quot;rbxasset://textures\\ArrowCursor.png&quot;
 	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
@@ -161,95 +164,102 @@ Tool.Equipped:connect(onEquippedLocal)
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">PlantBomb</string>
-				<ProtectedString name="Source">bombScript = script.Parent.Bomb
-Tool = script.Parent
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local humanoid = nil
+local enabled = false
 
-function plant(pos)
-	
-	local vCharacter = Tool.Parent
-	local vPlayer = game.Players:playerFromCharacter(vCharacter)
-
-	local spawnPos = vCharacter.PrimaryPart.Position
-
-	local bomb = Tool.Handle:clone()
-
-	bomb.CanCollide = true
-	bomb.Transparency = 0
-	bomb.Position = pos
-	bomb.Size = Vector3.new(2,2,2)
-	bomb.Name = &quot;FuseBomb&quot;
-	bomb.Locked = true
-
-	local spark = Instance.new(&quot;Sparkles&quot;)
-	spark.Name = &quot;Fuse&quot;
-	spark.Parent = bomb
-
-	--This call will cause a &quot;wait&quot; until the data comes back
-	local monkey = game:GetService(&quot;InsertService&quot;):LoadAsset(31044315)
-
-	local instances = monkey:GetChildren()
-	if #instances == 0 then
-		monkey:Remove()
-		return
-	end
-
-	monkey = monkey:FindFirstChild(&quot;Monkey&quot;)
-
-	--Continue the insert process
-
-	monkey.Parent = bomb
-
-	local sound = Instance.new(&quot;Sound&quot;)
-	sound.SoundId = &quot;http://www.roblox.com/asset/?id=31044217&quot;
-	sound.Name = &quot;Explosion&quot;
-	sound.Parent = bomb
-
-	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-	creator_tag.Value = vPlayer
-	creator_tag.Name = &quot;creator&quot;
-	creator_tag.Parent = bomb
-
-	bomb.Parent = game.Workspace
-
-	local new_script = bombScript:clone()
-	new_script.Disabled = false
-	new_script.Parent = bomb
-
-	local monkeyScript = Tool.MonkeyScript:clone()
-	monkeyScript.Parent = bomb
-
-end
-
-
-Tool.Enabled = true
 function onActivated()
 
-	if not Tool.Enabled then
+	if enabled then
 		return
 	end
 
-	Tool.Enabled = false
+	enabled = true
 
-	local character = Tool.Parent;
-	local humanoid = character.Humanoid
-	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
-		return 
-	end
+	humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
 
-	local targetPos = humanoid.TargetPoint
+	Tool.GripForward = Vector3.new(1,0,0)
+	Tool.GripRight = Vector3.new(0,-1,0)
+	Tool.GripUp = Vector3.new(0,0,1)
+	Tool.GripPos = Vector3.new(-1,-1.5,0)
 
+	Tool.Handle.Mesh.Scale = Vector3.new(1,1,1)
+
+	local amountInFront = 13
+	local lookVector = humanoid.Parent.Torso.CFrame.lookVector
+	local denom = math.abs(lookVector.x) + math.abs(lookVector.z)
+	local xFactor =  (lookVector.x/denom)
+	local zFactor = (lookVector.z/denom)
+	local posX = amountInFront * xFactor
+	local posZ = amountInFront * zFactor
+
+	local barrel = Tool.Handle:Clone()
+	barrel.CanCollide = true
+	barrel.Name = &quot;Barrel&quot;
+	barrel.Shape = 1
+	barrel.formFactor = 1
+	barrel.Size = Vector3.new(2,3.6,2)
+	barrel.Position = Vector3.new(posX + barrel.Position.x,humanoid.Parent.Torso.Position.y,posZ + barrel.Position.z)
+	barrel.CFrame = CFrame.new(barrel.Position,Vector3.new(humanoid.Torso.Position.x,barrel.Position.y + 10, humanoid.Torso.Position.z))
+	barrel.CFrame = barrel.CFrame * CFrame.Angles(0,0,math.pi/2)
+
+	local sound = Instance.new(&quot;Sound&quot;)
+	sound.SoundId = &quot;http://www.roblox.com/asset/?id=31033396&quot;
+	sound.Name = &quot;GameOver&quot;
+	sound.Parent = barrel
+
+	local roll = Instance.new(&quot;Sound&quot;)
+	roll.SoundId = &quot;http://www.roblox.com/asset/?id=31036019&quot;
+	roll.Name = &quot;Roll&quot;
+	roll.Looped = true
+	roll.Parent = barrel
+	roll:Play()
+
+	wait(0.6)
 	Tool.Handle.Transparency = 1
-	plant(Tool.Handle.Position)
-	wait(3)
-	Tool.Handle.Transparency = 0
+	barrel.Parent = game.Workspace
+	barrel.Velocity = Tool.Parent.Torso.CFrame.lookVector * 80
 
-	Tool.Enabled = true
+	local force = Instance.new(&quot;BodyForce&quot;)
+	force.force = Vector3.new(0,2600,0)
+	force.Parent = barrel
+
+	local script = Tool.BarrelScript:clone()
+	script.Parent = barrel
+	script.Disabled = false
+
+	wait(0.4)
+
+	Tool.Handle.Transparency = 0
+	Tool.Handle.Mesh.Scale = Vector3.new(0.45,0.45,0.45)
+	Tool.GripPos = Vector3.new(-0.4, -0.05, 0.11)
+
+	Tool.GripUp = Vector3.new(0,1,0)
+	Tool.GripRight = Vector3.new(0,0,1)
+	Tool.GripForward = Vector3.new(1,0,0)
+
+	Tool.GripRight = Vector3.new(0,0,1)
+	Tool.GripUp = Vector3.new(0,1,0)
+	Tool.GripForward = Vector3.new(1,0,0)
+
+	enabled = false
+
 end
 
 
-script.Parent.Activated:connect(onActivated)</ProtectedString>
+function onEquipped()
+	humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+end
+
+function onUnequipped()
+	humanoid = nil
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
@@ -257,150 +267,97 @@ script.Parent.Activated:connect(onActivated)</ProtectedString>
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">MonkeyScript</string>
-				<ProtectedString name="Source">local monkey = script.Parent
-local connections = {}
-local touched = nil
+				<string name="Name">BarrelScript</string>
+				<ProtectedString name="Source">local Barrel = script.Parent
+local force = Barrel:FindFirstChild(&quot;BodyForce&quot;)
+local touching = false
+local con = nil
+local particles = 8
+
+function killBarrel()
+
+	Barrel.Roll.Looped = false
+	Barrel.Roll:Stop()
+	Barrel:remove()
+
+end
+
+local debris = game:GetService(&quot;Debris&quot;)
+Delay(15,killBarrel)
+
+local plank = Instance.new(&quot;Part&quot;)
+plank.Name = &quot;Plank&quot;
+plank.Material = 512 -- wood
+plank.BrickColor = BrickColor.new(&quot;Reddish brown&quot;)
+plank.Shape = 1
+plank.formFactor = 2
+plank.Size = Vector3.new(1,0.4,4)
+plank.BottomSurface = 0
+plank.TopSurface = 0
 
 function onTouched(part)
 
+	if touching then
+		return
+	end
+	
+	touching = true
+
 	local human = part.Parent:FindFirstChild(&quot;Humanoid&quot;)
-	if human ~= nil then
+	if human ~= nil and Barrel.Velocity.magnitude &gt; 20 then
+
+		human:TakeDamage(25)
+		human.Jump = true
+
+		local angularVelo = Instance.new(&quot;BodyAngularVelocity&quot;)
+		angularVelo.P = 500000
+		angularVelo.angularvelocity = Vector3.new(math.random(-5,5),22,math.random(-5,5))
+		angularVelo.maxTorque = Vector3.new(angularVelo.P,angularVelo.P,angularVelo.P)
+		angularVelo.Parent = human.Parent.Torso
+		debris:AddItem(angularVelo, 1)
+
+		local force = Instance.new(&quot;BodyForce&quot;)
+		force.force = Barrel.Velocity * 50
+		force.Parent = human.Parent.Torso
+		debris:AddItem(force, 0.5)
+		Barrel.GameOver:Play()
+		con:disconnect()
+
+		for i = 1, particles do
 		
-		monkey.CanCollide = false
-		local torso =  human.Parent.Torso
-		local weld = Instance.new(&quot;Weld&quot;)
-		weld.Parent = monkey
-		weld.Part0 = monkey
-		weld.Part1 = torso
-		weld.C0 = CFrame.new(math.random(-1,1),math.random(-0.5,0.5),-0.7)
-		local con = human.Jumping:connect(function()
-			local force = Instance.new(&quot;BodyForce&quot;)
-			force.force = Vector3.new(0,-10000,0)
-			force.Parent = part
-			wait(0.1)
-			force:remove()
-		end)
-		table.insert(connections,con)
-		touched:disconnect()
+			local clone = plank:Clone()
+			clone.Position = Barrel.Position
+			clone.Parent = game.Workspace
+			debris:AddItem(clone, 5)
+
+		end
+		killBarrel()
+
 	end
+
+	touching = false
 
 end
 
-function removeMonkey()
+con = Barrel.Touched:connect(onTouched)
 
-	if #connections &gt; 0 then
-		wait(5)
+wait(1)
+while true do
+	if force.Parent ~= nil then
+		force.force = force.force * 0.5
 	end
-
-	for i = 1, #connections do
-		connections[i]:disconnect()
-	end
-
-	monkey:remove()
+	wait(1)
+	force.force = force.force * 2
+	wait(3)
 end
-
-touched = monkey.Touched:connect(onTouched)
-delay(10, removeMonkey)
-
 </ProtectedString>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX6">
+		<Item class="Animation" referent="RBX6">
 			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Bomb</string>
-				<ProtectedString name="Source">FuseSound = Instance.new(&quot;Sound&quot;)
-FuseSound.SoundId = &quot;http://www.roblox.com/asset/?id=31046267&quot;
-FuseSound.Parent = script.Parent
-FuseSound:Play()
-
-local debris = game:GetService(&quot;Debris&quot;)
-
-local fragment = Instance.new(&quot;Part&quot;)
-fragment.BrickColor = BrickColor.new(&quot;Deep blue&quot;)
-fragment.Material = Enum.Material.Wood
-fragment.formFactor = 2
-fragment.Size = Vector3.new(1,0.4,1)
-fragment.BottomSurface = 0
-fragment.TopSurface = 0
-
-local total_time = 5 -- seconds
-local cur_time = 0
-
-function update(frac)
-	script.Parent.Fuse.Color = Color3.new(1,1 - frac,0)
-end
-
-local barrel = script.Parent
-
-function blowUp()
-	script.Parent.Explosion:Play()
-
-	for j = 1, 6 do
-	
-		local barrelPiece = fragment:clone()
-		barrelPiece.Position = barrel.Position
-		barrelPiece.Parent = game.Workspace
-		debris:AddItem(barrelPiece, 10)
-
-	end
-
-	for i = 1, 20 do
-
-		local monkey = barrel.Monkey:clone()
-		monkey.Transparency = 0
-		monkey.Parent = game.Workspace
-		monkey.Position = Vector3.new(barrel.Position.x + math.random(-3,3),barrel.Position.y + math.random(0,3),barrel.Position.z + math.random(-3,3))
-		monkey.Velocity = Vector3.new(math.random(-50,50),math.random(0,100),math.random(-50,50))
-		
-		local monkeyScript = barrel.MonkeyScript:clone()
-		monkeyScript.Parent = monkey
-		monkeyScript.Disabled = false
-
-	end
-
-	script.Parent.Transparency = 1
-end
-
-function onPlayerBlownUp(part, distance, creator)
-	if part.Name == &quot;Head&quot; then
-		local humanoid = part.Parent.Humanoid
-		tagHumanoid(humanoid, creator)
-	end
-end
-
-function tagHumanoid(humanoid, creator)
-	-- tag does not need to expire iff all explosions lethal
-	
-	if creator ~= nil then
-		local new_tag = creator:clone()
-		new_tag.Parent = humanoid
-	end
-end
-
-function untagHumanoid(humanoid)
-	if humanoid ~= nil then
-		local tag = humanoid:findFirstChild(&quot;creator&quot;)
-		if tag ~= nil then
-			tag.Parent = nil
-		end
-	end
-end
-
-while cur_time &lt; total_time do
-	update(cur_time / total_time)
-	local e,g = wait(.5)
-	cur_time = cur_time + e
-end
-
-
-blowUp()
-wait(.1)
-script.Parent:remove()
-</ProtectedString>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=31020869</url></Content>
+				<string name="Name">barrelthrow</string>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
