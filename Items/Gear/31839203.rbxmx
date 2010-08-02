@@ -1,7 +1,77 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="LocalScript" referent="RBX0">
+		<Properties>
+			<bool name="Disabled">false</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">ToolScript</string>
+			<ProtectedString name="Source">local Tool = script.Parent
+local planeObject = Tool.Plane
+local plane = Tool.Plane.Value
+local velocityConstant = Tool.VelocityConstant.Value
+local player = nil
+
+local smoke = Instance.new(&quot;Smoke&quot;)
+
+local maxForwardSpeed = 60
+local maxReverseSpeed = -40
+
+function killSmoke()
+	smoke.Parent = nil
+	plane.squealTires.Looped = false
+	plane.squealTires:Stop()
+end
+
+
+planeObject.Changed:connect(function()
+	plane = Tool.Plane.Value
+	player.PlayerGui.PaperPlaneGui.MainFrame.ThrowPlane.TXT.Text = &quot;End Flight&quot;
+	Tool.CamFocus.Value = plane
+	plane.Fly.maxForce = Vector3.new(4000, 0, 4000)
+	plane.Velocity = Vector3.new(0, 0, 0)
+	plane.Fly.velocity = Vector3.new(0, 0, 0)
+	plane.Turn.angularvelocity = Vector3.new(0, 0, 0)
+	while plane do
+		velocityConstant = Tool.VelocityConstant.Value
+		plane.Fly.velocity = velocityConstant * plane.CFrame.lookVector.unit
+		plane.idleSound.Volume = 1 * math.abs(velocityConstant/(maxForwardSpeed/2))
+		plane.idleSound.Pitch = (math.abs(velocityConstant/(maxForwardSpeed/2)) * 2) + 1
+		plane.Bank.maxTorque = Vector3.new(40000, 0, 40000)
+		local cf = plane.CFrame
+		plane.Bank.cframe = CFrame.new(cf.p, cf.p+Vector3.new(cf.lookVector.x, 0, cf.lookVector.z))*CFrame.fromEulerAnglesXYZ(0, 0, plane.RotVelocity.y*0.5)
+
+		if player.PlayerGui.PaperPlaneGui.MainFrame.Gas.Selected and player.PlayerGui.PaperPlaneGui.MainFrame.Brake.Selected then
+			smoke.Parent = plane
+			plane.squealTires.Volume = 1
+			plane.squealTires.Looped = true
+			plane.squealTires:Play()
+		else
+			delay(2,killSmoke)
+		end
+		wait()
+	end
+
+end)
+
+
+function onEquipped()
+	player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+end
+
+
+function onUnequipped()
+	player = nil
+end
+
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+	<Item class="Tool" referent="RBX1">
 		<Properties>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
@@ -22,7 +92,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=31595675</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX2">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -35,9 +105,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-62</X>
+					<X>0</X>
 					<Y>25.6000004</Y>
-					<Z>169.5</Z>
+					<Z>-0.5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -92,7 +162,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Weld" referent="RBX2">
+			<Item class="Weld" referent="RBX3">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-0.490033299</X>
@@ -128,7 +198,7 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX3">
+			<Item class="Weld" referent="RBX4">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0.490033299</X>
@@ -164,7 +234,7 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBX5">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -190,14 +260,14 @@
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="ObjectValue" referent="RBX5">
+			<Item class="ObjectValue" referent="RBX6">
 				<Properties>
 					<string name="Name">creator</string>
 					<Ref name="Value">null</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Script" referent="RBX6">
+			<Item class="Script" referent="RBX7">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -214,7 +284,7 @@ end
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="BodyForce" referent="RBX7">
+			<Item class="BodyForce" referent="RBX8">
 				<Properties>
 					<string name="Name">Float</string>
 					<bool name="archivable">true</bool>
@@ -225,7 +295,7 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="BodyVelocity" referent="RBX8">
+			<Item class="BodyVelocity" referent="RBX9">
 				<Properties>
 					<string name="Name">Fly</string>
 					<float name="P">1250</float>
@@ -242,7 +312,7 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="BodyGyro" referent="RBX9">
+			<Item class="BodyGyro" referent="RBX10">
 				<Properties>
 					<float name="D">500</float>
 					<string name="Name">Bank</string>
@@ -269,7 +339,7 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="BodyAngularVelocity" referent="RBX10">
+			<Item class="BodyAngularVelocity" referent="RBX11">
 				<Properties>
 					<string name="Name">Turn</string>
 					<float name="P">1250</float>
@@ -287,14 +357,14 @@ end
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="ObjectValue" referent="RBX11">
+		<Item class="ObjectValue" referent="RBX12">
 			<Properties>
 				<string name="Name">CamFocus</string>
 				<Ref name="Value">null</Ref>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX12">
+		<Item class="LocalScript" referent="RBX13">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -322,14 +392,14 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 </ProtectedString>
 				<bool name="archivable">true</bool>
 			</Properties>
-			<Item class="ObjectValue" referent="RBX13">
+			<Item class="ObjectValue" referent="RBX14">
 				<Properties>
 					<string name="Name">Target</string>
 					<Ref name="Value">null</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="ObjectValue" referent="RBX14">
+			<Item class="ObjectValue" referent="RBX15">
 				<Properties>
 					<string name="Name">Tool</string>
 					<Ref name="Value">null</Ref>
@@ -337,12 +407,12 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="ScreenGui" referent="RBX15">
+		<Item class="ScreenGui" referent="RBX16">
 			<Properties>
 				<string name="Name">PaperPlaneGui</string>
 				<bool name="archivable">true</bool>
 			</Properties>
-			<Item class="ImageLabel" referent="RBX16">
+			<Item class="ImageLabel" referent="RBX17">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Color3 name="BackgroundColor3">4294967295</Color3>
@@ -368,7 +438,7 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 					<int name="ZIndex">1</int>
 					<bool name="archivable">true</bool>
 				</Properties>
-				<Item class="ImageButton" referent="RBX17">
+				<Item class="ImageButton" referent="RBX18">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="AutoButtonColor">true</bool>
@@ -396,7 +466,7 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 						<int name="ZIndex">1</int>
 						<bool name="archivable">true</bool>
 					</Properties>
-					<Item class="TextLabel" referent="RBX18">
+					<Item class="TextLabel" referent="RBX19">
 						<Properties>
 							<bool name="Active">false</bool>
 							<Color3 name="BackgroundColor3">4294967295</Color3>
@@ -429,7 +499,7 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="ImageButton" referent="RBX19">
+				<Item class="ImageButton" referent="RBX20">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="AutoButtonColor">true</bool>
@@ -458,7 +528,7 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
-				<Item class="ImageButton" referent="RBX20">
+				<Item class="ImageButton" referent="RBX21">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="AutoButtonColor">true</bool>
@@ -487,7 +557,7 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
-				<Item class="ImageButton" referent="RBX21">
+				<Item class="ImageButton" referent="RBX22">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="AutoButtonColor">true</bool>
@@ -516,7 +586,7 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
-				<Item class="ImageButton" referent="RBX22">
+				<Item class="ImageButton" referent="RBX23">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="AutoButtonColor">true</bool>
@@ -547,14 +617,14 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 				</Item>
 			</Item>
 		</Item>
-		<Item class="ObjectValue" referent="RBX23">
+		<Item class="ObjectValue" referent="RBX24">
 			<Properties>
 				<string name="Name">Plane</string>
 				<Ref name="Value">null</Ref>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX24">
+		<Item class="LocalScript" referent="RBX25">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -684,7 +754,7 @@ script.Parent.Equipped:connect(function(mouse)
 			player.Character.Torso.Anchored = true
 			plane.AncestryChanged:connect(function(child,parent)
 				if parent == nil then
-					player.Torso.Humanoid.Anchored = false
+					player.Character.Torso.Humanoid.Anchored = false
 					if keyUp then keyUp:disconnect() end
 					if keyDown then keyDown:disconnect() end
 					plane = nil
@@ -801,7 +871,7 @@ end)
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX25">
+		<Item class="Script" referent="RBX26">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -871,14 +941,14 @@ Tool.Unequipped:connect(onUnequipped)
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="NumberValue" referent="RBX26">
+		<Item class="NumberValue" referent="RBX27">
 			<Properties>
 				<string name="Name">VelocityConstant</string>
 				<double name="Value">0</double>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX27">
+		<Item class="LocalScript" referent="RBX0">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
