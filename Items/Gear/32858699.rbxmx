@@ -1,0 +1,603 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-2.79999995</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">FireSword</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=31758193</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">FireSwordScript</string>
+				<ProtectedString name="Source">-------- OMG HAX
+
+r = game:service(&quot;RunService&quot;)
+
+
+local damage = 20
+
+local debris = game:GetService(&quot;Debris&quot;)
+
+sword = script.Parent.Handle
+Tool = script.Parent
+
+local humanoid = nil
+
+local SlashSound = Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId = &quot;http://www.roblox.com/asset/?id=31758934&quot;
+SlashSound.Parent = sword
+SlashSound.Volume = .7
+
+local LungeSound = Instance.new(&quot;Sound&quot;)
+LungeSound.SoundId = &quot;http://www.roblox.com/asset/?id=31758956&quot;
+LungeSound.Parent = sword
+LungeSound.Volume = .6
+
+local Fireball = Instance.new(&quot;Sound&quot;)
+Fireball.SoundId = &quot;http://www.roblox.com/asset/?id=31758982&quot;
+Fireball.Parent = sword
+Fireball.Volume = 1
+
+function setOnFire(humanoid)
+
+	local stuff = humanoid.Parent.Torso:GetChildren()
+	for i = 1, #stuff do
+		if stuff[i].className == &quot;Fire&quot; then
+			return false
+		end
+	end
+	if Tool.Handle:FindFirstChild(&quot;Fire&quot;) ~= nil then
+		local fire = Tool.Handle.Fire:clone()
+		fire.Parent = humanoid.Parent.Torso
+		debris:AddItem(fire,10)
+	end
+	
+end
+
+function checkForFireAndX(part)
+	local children = part:GetChildren()
+	for i = 1, #children do
+		if children[i].className == &quot;Fire&quot; then
+			children[i]:remove()
+		end
+	end
+end
+
+local hitting = false
+
+function blow(hit)
+
+	if hit.Parent == nil then
+		return
+	end
+
+	local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+	local vCharacter = Tool.Parent
+	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+	local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
+	if humanoid~=nil and humanoid ~= hum and hum ~= nil then
+		-- final check, make sure sword is in-hand
+
+		local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+		if (right_arm ~= nil) then
+			local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
+			if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) and hitting == false then
+				hitting = true
+				tagHumanoid(humanoid, vPlayer)
+				humanoid:TakeDamage(damage)
+				checkForFireAndX(hit)
+				setOnFire(humanoid)
+				wait(1)
+				untagHumanoid(humanoid)
+				hitting = false
+			end
+		end
+
+	end
+end
+
+
+function tagHumanoid(humanoid, player)
+	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+	creator_tag.Value = player
+	creator_tag.Name = &quot;creator&quot;
+	creator_tag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+	if humanoid ~= nil then
+		local tag = humanoid:findFirstChild(&quot;creator&quot;)
+		if tag ~= nil then
+			tag.Parent = nil
+		end
+	end
+end
+
+
+function attack()
+	local sound = math.random(1,2)
+	if sound == 1 then
+		SlashSound:play()
+	else
+		LungeSound:play()
+	end
+end
+
+function lunge()
+
+	Tool.Lunge.Value = true
+
+	wait(0.2)
+	
+	--This call will cause a &quot;wait&quot; until the data comes back
+	local root = game:GetService(&quot;InsertService&quot;):LoadAsset(31518609)
+
+	local instances = root:GetChildren()
+	if #instances == 0 then
+		root:Remove()
+		return
+	end
+
+	Fireball:Play()
+
+	--Continue the insert process
+	root = root:FindFirstChild(&quot;Fireball&quot;)
+	root.Position = Tool.Handle.Position + humanoid.Parent.Torso.CFrame.lookVector * 5
+	root.Velocity = (humanoid.TargetPoint - Tool.Parent.Head.Position).unit * 100
+	root.Parent = game.Workspace
+	root.Locked = true
+
+	local script = Tool.FireballScript:clone()
+	script.Parent = root
+	script.Disabled = false
+
+	local force = Instance.new(&quot;BodyForce&quot;)
+	force.force = Vector3.new(0,root:GetMass() * 187, 0)
+	force.Parent = root
+
+	local bodyGyro = Instance.new(&quot;BodyGyro&quot;)
+	bodyGyro.cframe = root.CFrame
+	bodyGyro.P = 10000
+	bodyGyro.D = 1000
+	bodyGyro.maxTorque  = Vector3.new(1,1,1) * bodyGyro.P
+	bodyGyro.Parent = root
+
+	debris:AddItem(root,10)
+
+	wait(.6)
+end
+
+Tool.Enabled = true
+local last_attack = -5
+function onActivated()
+
+	if not Tool.Enabled then
+		return
+	end
+
+	Tool.Enabled = false
+
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print(&quot;Humanoid not found&quot;)
+		return 
+	end
+
+	t = r.Stepped:wait()
+
+	if (t - last_attack &lt; .2) then
+		lunge()
+	else
+		attack()
+	end
+
+	last_attack = t
+
+	wait(.1)
+
+	Tool.Enabled = true
+end
+
+
+function onEquipped()
+	humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+	sword.Sound:Play()
+	sword.Fire.Enabled = true
+end
+
+function onUnequipped()
+	sword.Fire.Enabled = false
+end
+
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+
+connection = sword.Touched:connect(blow)
+
+
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">199</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.5</X>
+					<Y>33.4000015</Y>
+					<Z>0.5</Z>
+					<R00>-0</R00>
+					<R01>0</R01>
+					<R02>1</R02>
+					<R10>-0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>-1</R20>
+					<R21>0</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<bool name="DraggingV1">false</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">0</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>6</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=31758253</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.400000006</X>
+						<Y>0.400000006</Y>
+						<Z>0.400000006</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=31758217</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Fire" referent="RBX4">
+				<Properties>
+					<Color3 name="Color">4294967091</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Fire</string>
+					<Color3 name="SecondaryColor">4294901760</Color3>
+					<bool name="archivable">true</bool>
+					<float name="heat_xml">25</float>
+					<float name="size_xml">3.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Sound</string>
+					<float name="Pitch">1</float>
+					<int name="PlayCount">-1</int>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31760113</url></Content>
+					<float name="Volume">0.300000012</float>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX6">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Sound</string>
+					<float name="Pitch">1</float>
+					<int name="PlayCount">-1</int>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31758934</url></Content>
+					<float name="Volume">0.699999988</float>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX7">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Sound</string>
+					<float name="Pitch">1</float>
+					<int name="PlayCount">-1</int>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31758956</url></Content>
+					<float name="Volume">0.600000024</float>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX8">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Sound</string>
+					<float name="Pitch">1</float>
+					<int name="PlayCount">-1</int>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31758982</url></Content>
+					<float name="Volume">1</float>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX9">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0.5</X>
+						<Y>-3</Y>
+						<Z>0.5</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>0</R11>
+						<R12>-1</R12>
+						<R20>-0</R20>
+						<R21>1</R21>
+						<R22>0</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>1</X>
+						<Y>1.20000076</Y>
+						<Z>-13</Z>
+						<R00>7.4505806e-009</R00>
+						<R01>1</R01>
+						<R02>3.7403327e-012</R02>
+						<R10>4.14893814e-013</R10>
+						<R11>3.36629596e-013</R11>
+						<R12>-1</R12>
+						<R20>-1</R20>
+						<R21>1.49011612e-008</R21>
+						<R22>2.15725493e-011</R22>
+					</CoordinateFrame>
+					<string name="Name">Handle-to-Part Weld</string>
+					<Ref name="Part0">null</Ref>
+					<Ref name="Part1">null</Ref>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX10">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+
+local swingWithOut = nil
+local swingJump = nil
+local swordThrust = nil
+
+local humanoid = nil
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+
+	enabled = false
+
+	wait()
+
+	if Tool.Lunge.Value == true then
+		humanoid.Jump = true
+		swingJump:Play()
+		wait(0.8)
+		Tool.Lunge.Value = false
+	else
+		local anim = math.random(2,3)
+		if anim == 2 then
+			swingWithOut:Play()
+		else
+			swordThrust:Play()
+		end
+	end
+
+	enabled = true
+
+end
+
+function onEquippedLocal(mouse)
+
+	if mouse == nil then
+		print(&quot;Mouse not found&quot;)
+		return 
+	end
+
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+	
+	humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+
+	swingWithOut = humanoid:LoadAnimation(Tool.twohandswordwithswingout)
+	swingJump = humanoid:LoadAnimation(Tool.swordswingjump)
+	swordThrust = humanoid:LoadAnimation(Tool.swordthrust)
+
+end
+
+function onUnequippedLocal()
+
+	swingWithOut:remove()
+	swingJump:remove()
+	swordThrust:remove()
+
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX11">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=32659699</url></Content>
+				<string name="Name">swordswingjump</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX12">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=32659703</url></Content>
+				<string name="Name">swordthrust</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX13">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=32659706</url></Content>
+				<string name="Name">twohandswordwithswingout</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX14">
+			<Properties>
+				<string name="Name">Lunge</string>
+				<bool name="Value">true</bool>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX15">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">FireballScript</string>
+				<ProtectedString name="Source">local fireball = script.Parent
+local debris = game:GetService(&quot;Debris&quot;)
+
+local ember = Instance.new(&quot;Part&quot;)
+ember.Transparency = 1
+ember.Shape = 0
+ember.formFactor = 0
+ember.Size = Vector3.new(0,0,0)
+ember.TopSurface = 0
+ember.BottomSurface = 0
+ember.Locked = true
+
+local emberFire = Instance.new(&quot;Fire&quot;)
+emberFire.Color = Color3.new(1,160/255,51/255)
+emberFire.Size = 2
+emberFire.Parent = ember
+
+local force = Instance.new(&quot;BodyForce&quot;)
+force.force = Vector3.new(0,90,0)
+force.Parent = ember
+
+function makeEmbers()
+
+	for i = 1, 5 do
+		local er = ember:clone()
+		er.Position = fireball.Position
+		er.Velocity = Vector3.new(math.random(-20,20),math.random(10,25),math.random(-20,20))
+		er.Parent = game.Workspace
+		debris:AddItem(er,2)
+	end
+
+end
+
+local touching = false
+
+fireball.Touched:connect(function(part)
+	
+	local human = part.Parent:FindFirstChild(&quot;Humanoid&quot;)
+	if human ~= nil and touching == false then
+		script.Parent = human.Parent
+		touching = true
+		makeEmbers()
+		local fire = fireball.Fire:clone()
+		fireball.Fire:remove()
+		fire.Parent = part
+		debris:AddItem(fire, 10)
+		fireball:remove()
+		for i = 1, 100 do
+			if fire.Enabled == true then human:TakeDamage(0.59) end
+			wait(0.1)
+		end
+		script:remove()
+		touching = false
+	end
+
+end)
+
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
