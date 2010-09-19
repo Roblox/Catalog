@@ -1,0 +1,380 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.800000012</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>-0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">RoboArm</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=35231485</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RoboArm</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+Tool.Enabled = true
+
+local rocketSmoke = Instance.new(&quot;Smoke&quot;)
+rocketSmoke.Color = Color3.new(.5,.5,.5)
+
+local rocketFire = Instance.new(&quot;Fire&quot;)
+rocketFire.Color = Color3.new(1,.3,0)
+rocketFire.SecondaryColor = Color3.new(1,0,1)
+rocketFire.Heat = 5
+
+local realArm = nil
+local fakeArm = nil
+
+function throwArm(lookAt)
+	local vCharacter = Tool.Parent
+	realArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+	if realArm == nil then return end
+	fakeArm = realArm:Clone()
+	fakeArm.Parent = vCharacter
+
+	realArm.Transparency = 1
+	realArm.Name = &quot;Part&quot;
+
+	-- put roboarm on fake arm  (below loop is what is messing up CFrame assignment later on... stupid welds...)
+	m = fakeArm:GetMass()
+	grabbedStuff = realArm:GetChildren()
+	
+	for i = 1,#grabbedStuff do
+		if (grabbedStuff[i].Name == &quot;RightGrip&quot;) then 
+			print(&quot;Transfering stuff to fake arm&quot;)
+			grabbedStuff[i].Part0 = fakeArm
+			grabbedStuff[i].Parent = fakeArm
+
+			m = m + grabbedStuff[i].Part1:GetMass()
+		end
+	end
+
+	print(vCharacter.PrimaryPart.Name)
+
+	-- actually fire the arm away
+	fakeArm.Velocity = Vector3.new(0,0,0)
+	fakeArm.RotVelocity = Vector3.new(0,0,0)
+	newBF = Instance.new(&quot;BodyForce&quot;)
+	--newBF.force = Vector3.new(0,196*fakeArm:GetMass(), 0)
+	newBF.force = Vector3.new(0,196*m, 0)
+	newBF.Parent = fakeArm
+	-- add smoke&amp;fire here
+	-- cFrame.Angles(pitch, roll, yaw) for the arm
+	humanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+	if humanoid == nil then return end
+	--fakeArm.CFrame = CFrame.new(fakeArm.Position)*CFrame.new(Vector3.new(0,0,0), lookAt)*CFrame.Angles(math.pi/2,0,0) is ending point
+	--fakeArm.CFrame = CFrame.new(fakeArm.Position)*CFrame.new(Vector3.new(0,0,0), Vector3.new(0,0,1))*CFrame.Angles(math.pi/2, 0, 0) is starting point...
+	
+	newSmoke = rocketSmoke:Clone()
+	newSmoke.Parent = fakeArm
+
+	local numSteps = 20
+	--currVect = Vector3.new(0,0,1)
+	if fakeArm ~= nil then 
+		currVect = fakeArm.CFrame:vectorToWorldSpace(Vector3.new(0,-1,0))
+		lookStep = (lookAt - currVect)/numSteps
+	end
+	print(currVect)
+	print(lookAt)
+	print(lookStep)
+	for i = 1,numSteps do
+		if fakeArm == nil then return
+		else
+			currVect = currVect + lookStep
+			fakeArm.CFrame = CFrame.new(fakeArm.Position)*CFrame.new(Vector3.new(0,0,0), currVect)*CFrame.Angles(math.pi/2, 0, 0)
+			--fakeArm.CFrame = CFrame.new(fakeArm.Position, realArm.CFrame*currVect)
+			--fakeArm.CFrame = realArm.CFrame*CFrame.new(Vector3.new(0,0,0), currVect)
+			wait(1/numSteps)
+		end
+	end
+	--wait(1)
+
+	rsound = Tool.Parent:FindFirstChild(&quot;RocketSound&quot;)
+	if rsound == nil then
+		rsound = Instance.new(&quot;Sound&quot;)
+		rsound.Name = &quot;RocketSound&quot;
+		rsound.Volume = .5
+		rsound.SoundId = &quot;http://www.roblox.com/asset/?id=32791582&quot;
+		rsound.Parent = Tool.Parent
+	end
+	
+	rsound:Play()
+
+
+	newFire = rocketFire:Clone()
+	newFire.Parent = fakeArm
+
+	--newBF.force = Vector3.new(0, 196*fakeArm:GetMass(),0) + lookAt*fakeArm:GetMass()*5
+	newBF.force = Vector3.new(0, 196*m,0) + lookAt*m*5
+	wait(1)
+	rsound:Play()
+	--newBF.force = Vector3.new(0, 196*fakeArm:GetMass(),0) + lookAt*fakeArm:GetMass()*30
+	newBF.force = Vector3.new(0, 196*m,0) + lookAt*m*30
+	wait(1)
+	--newBF.force = Vector3.new(0, 196*fakeArm:GetMass(),0) + lookAt*fakeArm:GetMass()*180
+	newBF.force = Vector3.new(0, 196*m,0) + lookAt*m*180
+	wait(1)
+
+	-- put things back
+	--if realArm == nil then realArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;) end
+	if realArm == nil then return end
+	realArm.Name = &quot;Right Arm&quot;
+	realArm.Transparency = 0
+	if fakeArm ~= nil then 
+		grabbedStuff = fakeArm:GetChildren()
+		for i = 1,#grabbedStuff do
+			if (grabbedStuff[i].Name == &quot;RightGrip&quot;) then 
+				print(&quot;Grabbed Something&quot;)
+				--grabbedStuff[i]:Clone().Parent = realArm 
+				grabbedStuff[i].Part0 = realArm
+				grabbedStuff[i].Parent = realArm
+			end
+		end
+		fakeArm.Parent = nil
+		fakeArm = nil
+	end
+end
+
+
+function gunUp()
+	drill = Tool.Parent:FindFirstChild(&quot;DrillSound&quot;)
+	if drill == nil then
+		drill = Instance.new(&quot;Sound&quot;)
+		drill.Name = &quot;DrillSound&quot;
+		drill.SoundId = &quot;http://www.roblox.com/asset/?id=35275806&quot;
+		drill.Parent = Tool.Parent
+		drill.Volume = .5
+	end
+
+	drill:Play()
+
+	for i = 1,20 do
+		angle = i*math.pi/5
+		Tool.GripRight = Vector3.new(math.cos(angle),0,math.sin(angle))
+		Tool.GripUp = Vector3.new(-math.sin(angle),0,math.cos(angle))
+		wait(.04)
+	end
+end
+
+function onActivated()
+	if not Tool.Enabled  then
+		return
+	end
+
+	Tool.Enabled = false
+
+
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print(&quot;Humanoid not found&quot;)
+		return 
+	end
+
+	local targetPos = humanoid.TargetPoint
+	local lookAt = (targetPos - character.Head.Position).unit
+
+	local reload = 2
+
+	gunUp()
+	throwArm(lookAt)
+	wait(reload)
+
+	Tool.Enabled = true
+end
+
+
+function onUnequipped()
+	local vCharacter = Tool.Parent
+	if fakeArm ~= nil then
+		--need to clean up
+		grabbedStuff = fakeArm:GetChildren()
+		--if realArm == nil then realArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;) end
+		if realArm == nil then return end
+		for i = 1,#grabbedStuff do
+			if (grabbedStuff[i].Name == &quot;RightGrip&quot;) then 
+				print(&quot;Grabbed Something&quot;)
+				--grabbedStuff[i]:Clone().Parent = realArm 
+				grabbedStuff[i].Part0 = realArm
+				grabbedStuff[i].Parent = realArm
+			end
+		end
+		if fakeArm ~= nil then fakeArm.Parent = nil end
+		fakeArm = nil
+		realArm.Name = &quot;Right Arm&quot;
+		realArm.Transparency = 0
+	end
+end
+
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Unequipped:connect(onUnequipped)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+	print(&quot;ending&quot;)
+	enabled = false
+
+	while Tool.Enabled do
+		wait(.01)
+	end
+
+	print(&quot;Setting Mouse To Wait&quot;)
+	mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+	while not Tool.Enabled do
+		wait(.01)
+	end
+
+	print(&quot;Setting Mouse to Go&quot;)
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+
+	enabled = true
+end
+
+function onEquippedLocal(mouse)
+
+	if mouse == nil then
+		print(&quot;Mouse not found&quot;)
+		return 
+	end
+
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-11.5</X>
+					<Y>4.9000001</Y>
+					<Z>-25.2000046</Z>
+					<R00>1</R00>
+					<R01>-0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>-0</R11>
+					<R12>1</R12>
+					<R20>0</R20>
+					<R21>-1</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<bool name="DraggingV1">false</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">2</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>2.4000001</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=35231406</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=35231444</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
