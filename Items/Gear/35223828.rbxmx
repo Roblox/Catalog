@@ -2785,53 +2785,10 @@ game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/mate
 
 local selectionBox
 local selectionLasso
-local inGui
-local inPalette
 
 local selectedButton
-local oldButton
 
 local value = nil
-
-function onMouseLeave(hoverSelection)
-	if oldButton ~= nil then
-		local notSelected = true
-		local selectionText = &quot;&quot;
-		if selectedButton ~= nil  then
-			if oldButton == selectedButton then
-				notSelected = false
-			else
-				selectionText = selectedButton.Name
-			end
-		end
-		if notSelected then
-			hoverSelection.Text = selectionText
-			if oldButton.Parent then
-				oldButton.Parent.BackgroundColor = BrickColor.Black()
-			end
-		end
-	end
-	oldButton = nil
-end
-
-function onMouseEnter(hoverSelection, guiButton)
-	onMouseLeave(hoverSelection)
-	hoverSelection.Text = guiButton.Name
-	if guiButton ~= selectedButton then
-		guiButton.Parent.BackgroundColor = BrickColor.White()
-		oldButton = guiButton
-	end
-end
-
-function onMouseUp(guiButton)
-	--[[if selectedButton ~= nil then
-		selectedButton.Parent.BackgroundColor = BrickColor.Black()
-	end]]
-	--guiButton.Parent.BackgroundColor = BrickColor.Yellow()
-	selectedButton = guiButton
-	
-	print(&quot;Selected Material: &quot; .. guiButton.Name)
-end
 
 function setSelectionBox(part) 
 	unsetSelectionBox()
@@ -2843,24 +2800,6 @@ function unsetSelectionBox()
 	selectionLasso.Part = nil
 end
 
-function onMouseEnterGui(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionBox()
-	inGui = true
-end
-function onMouseLeaveGui(mouse)
-	inGui = false
-end
-
-function onMouseEnterPalette(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionBox()
-	inPalette = true
-end
-function onMouseLeavePalette(paletteFrame, mouse)
-	inPalette = false
-end
-	
 local MaterialEnum = {}
 MaterialEnum[&quot;Plastic&quot;] = Enum.Material.Plastic
 MaterialEnum[&quot;Wood&quot;] = Enum.Material.Wood
@@ -2871,36 +2810,6 @@ MaterialEnum[&quot;Grass&quot;] = Enum.Material.Grass
 MaterialEnum[&quot;Foil&quot;] = Enum.Material.Foil
 MaterialEnum[&quot;Diamond Plate&quot;] = Enum.Material.DiamondPlate
 MaterialEnum[&quot;Concrete&quot;] = Enum.Material.Concrete
-
-
-function buildGui()
-
-	--[[local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
-player.PlayerGui.GameGui.BuildTools.Frame.PropertyTools.MaterialSelector.MaterialMenu
-	while mainFrame == nil do
-		local mainFrame =  player.PlayerGui.GameGui.BuildTools.Frame.PropertyTools.MaterialSelector.MaterialMenu
-		wait()
-	end]]
-
---[[	local buttons = mainFrame:GetChildren()
-	for i = 1, #buttons do
-		buttons[i].Changed:connect(function(property)
-			if property ~= &quot;Selected&quot; then return end
-
-			onMouseUp(buttons[i])
-		end)
-	end
-]]
-	Tool.SelectedButton.Changed:connect(function(property)
-
-		if value == Tool.SelectedButton.Value then return end
-		value = Tool.SelectedButton.Value
-
-		selectedButton = Tool.SelectedButton.Value
-		print(&quot;Selected Material: &quot; .. Tool.SelectedButton.Value.Name)
-
-	end)
-end
 
 function on3dButton1Down(mouse) 
 	if selectedButton == nil then return end
@@ -2919,18 +2828,15 @@ end
 
 
 function on3dMouseMove(mouse) 
-	if not(inGui) and not(inPalette) then
-		mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
-		local part = mouse.Target
-		if canSelectObject(part) then
-			setSelectionBox(part)
-		else
-			unsetSelectionBox()
-		end
+	mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
+	local part = mouse.Target
+	if canSelectObject(part) then
+		setSelectionBox(part)
+	else
+		unsetSelectionBox()
 	end
 end
 
---local guiMain
 function onEquippedLocal(mouse)
 	Tool.TextureId = &quot;rbxasset://icons/material_sel.png&quot;
 	value = nil
@@ -2938,12 +2844,7 @@ function onEquippedLocal(mouse)
 
 	local character = script.Parent.Parent
 	local player = game.Players:GetPlayerFromCharacter(character)
-	--guiMain = Instance.new(&quot;ScreenGui&quot;)
-	--guiMain.Parent = player.PlayerGui
 
-	inGui = false
-	inPalette = false
-	oldButton = nil
 	selectedButton = nil
 
 	mouse.Button1Down:connect(function() on3dButton1Down(mouse) end)
@@ -2964,12 +2865,17 @@ function onEquippedLocal(mouse)
 	selectionLasso.archivable = false
 	selectionLasso.Color = BrickColor.Red()
 
-	buildGui()
+	Tool.SelectedButton.Changed:connect(function(property)
+
+		if value == Tool.SelectedButton.Value then return end
+		value = Tool.SelectedButton.Value
+
+		selectedButton = Tool.SelectedButton.Value
+	end)
 end
 
 function onUnequippedLocal()
 	Tool.TextureId = origTexture
-	--guiMain:Remove()
 	if selectionBox then selectionBox:Remove() end
 	if selectionLasso then selectionLasso:Remove() end
 end
