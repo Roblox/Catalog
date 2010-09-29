@@ -1,283 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="LocalScript" referent="RBX0">
-		<Properties>
-			<bool name="Disabled">false</bool>
-			<Content name="LinkedSource"><null></null></Content>
-			<string name="Name">Material Picker Local</string>
-			<ProtectedString name="Source">local Tool = script.Parent
-
-
-enabled = true
-local origTexture = 	Tool.TextureId
-game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/material_sel.png&quot;)
-
-local selectionBox
-local selectionLasso
-local inGui
-local inPalette
-
-local selectedButton
-local oldButton
-
-function onMouseLeave(hoverSelection)
-	if oldButton ~= nil then
-		local notSelected = true
-		local selectionText = &quot;&quot;
-		if selectedButton ~= nil  then
-			if oldButton == selectedButton then
-				notSelected = false
-			else
-				selectionText = selectedButton.Name
-			end
-		end
-		if notSelected then
-			hoverSelection.Text = selectionText
-			if oldButton.Parent then
-				oldButton.Parent.BackgroundColor = BrickColor.Black()
-			end
-		end
-	end
-	oldButton = nil
-end
-
-function onMouseEnter(hoverSelection, guiButton)
-	onMouseLeave(hoverSelection)
-	hoverSelection.Text = guiButton.Name
-	if guiButton ~= selectedButton then
-		guiButton.Parent.BackgroundColor = BrickColor.White()
-		oldButton = guiButton
-	end
-end
-
-function onMouseUp(paletteFrame, guiButton)
-	if selectedButton ~= nil then
-		selectedButton.Parent.BackgroundColor = BrickColor.Black()
-	end
-	guiButton.Parent.BackgroundColor = BrickColor.Yellow()
-	selectedButton = guiButton
-	
-	onMouseLeavePalette(paletteFrame)
-	
-	print(&quot;Selected Material: &quot; .. guiButton.Name)
-end
-
-function setSelectionBox(part) 
-	unsetSelectionBox()
-	selectionBox.Adornee = part
-	selectionLasso.Part = part
-end
-function unsetSelectionBox() 
-	selectionBox.Adornee = nil
-	selectionLasso.Part = nil
-end
-
-function onMouseEnterGui(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionBox()
-	inGui = true
-end
-function onMouseLeaveGui(mouse)
-	inGui = false
-end
-
-function onMouseEnterPalette(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionBox()
-	inPalette = true
-end
-function onMouseLeavePalette(paletteFrame, mouse)
-	inPalette = false
-end
-	
-local MaterialEnum = {}
-MaterialEnum[&quot;Plastic&quot;] = Enum.Material.Plastic
-MaterialEnum[&quot;Wood&quot;] = Enum.Material.Wood
-MaterialEnum[&quot;Slate&quot;] = Enum.Material.Slate
-MaterialEnum[&quot;Corroded Metal&quot;] = Enum.Material.CorrodedMetal
-MaterialEnum[&quot;Ice&quot;] = Enum.Material.Ice
-MaterialEnum[&quot;Grass&quot;] = Enum.Material.Grass
-MaterialEnum[&quot;Foil&quot;] = Enum.Material.Foil
-MaterialEnum[&quot;Diamond Plate&quot;] = Enum.Material.DiamondPlate
-MaterialEnum[&quot;Concrete&quot;] = Enum.Material.Concrete
-
-local speed =  25
-function pushInGui(frame)
-	while frame.Position.X.Offset &lt; 50 do
-		frame.Position = UDim2.new(frame.Position.X.Scale,frame.Position.X.Offset + speed,frame.Position.Y.Scale,frame.Position.Y.Offset)
-		wait()
-	end
-end
-
-function pushOutGui(frame)
-	while frame.Position.X.Offset &gt; -100 do
-		frame.Position = UDim2.new(frame.Position.X.Scale,frame.Position.X.Offset - speed,frame.Position.Y.Scale,frame.Position.Y.Offset)
-		wait()
-	end
-end
-
-local mainFrame
-function buildGui(root, mouse)
-
-	mainFrame = Instance.new(&quot;ImageLabel&quot;)
-	mainFrame.Name = &quot;Main Material Frame&quot;
-	mainFrame.Image = &quot;http://www.roblox.com/asset/?id=35238121&quot;
-	mainFrame.Position = UDim2.new(0.0, -100, 0, 0)
-	mainFrame.Size = UDim2.new(0.0, 102, 0.0, 265)
-	mainFrame.BackgroundTransparency = 1
-	mainFrame.Parent = root.NewGuiDemo.BuildTools.Frame.PropertyTools.MaterialSelector
-	
---[[
-	local paletteFrame = Instance.new(&quot;Frame&quot;)
-	paletteFrame.Position = UDim2.new(0.0, 0, 0.0, 0)
-	paletteFrame.Size = UDim2.new(1, 0, 1.0, 0)
-	paletteFrame.BackgroundColor3 = Color3.new(8,8,8)
-	paletteFrame.Parent = mainFrame
-	paletteFrame.MouseEnter:connect(function() onMouseEnterPalette(mouse) end)
-	paletteFrame.MouseLeave:connect(function() onMouseLeavePalette(paletteFrame, mouse) end)
-
-	local hoverSelection = Instance.new(&quot;TextLabel&quot;)
-	hoverSelection.Position = UDim2.new(0, 0, 1, 0)
-	hoverSelection.Size = UDim2.new(1.49, 0, 1.0, 0)
-	hoverSelection.BackgroundColor3 = Color3.new(0,0,0)
-	hoverSelection.BackgroundTransparency = 0.2
-	hoverSelection.TextColor = BrickColor.White()
-	hoverSelection.Text = &quot;Plastic&quot;
-	hoverSelection.Parent = mainFrame
-
-	local materials= {}
-	materials[&quot;Plastic&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169981&quot;
-	materials[&quot;Wood&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169971&quot;
-	materials[&quot;Slate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169975&quot;
-	materials[&quot;Corroded Metal&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169978&quot;
-	materials[&quot;Ice&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169985&quot;
-	materials[&quot;Grass&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169988&quot;
-	materials[&quot;Foil&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169991&quot;
-	materials[&quot;Diamond Plate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169998&quot;
-	materials[&quot;Concrete&quot;] = &quot;http://www.roblox.com/Asset/?ID=16170001&quot;
-
-	local order = {&quot;Plastic&quot;, &quot;Wood&quot;, &quot;Slate&quot;, &quot;Corroded Metal&quot;, &quot;Ice&quot;, &quot;Grass&quot;, &quot;Foil&quot;, &quot;Diamond Plate&quot;, &quot;Concrete&quot;}
-
-	local yPos = 0
-	local xPos = 0
-	local x 
-	for x=1, #order do
-		local key = order[x]
-		local value = materials[key]
-
-		local guiFrame = Instance.new(&quot;Frame&quot;)
-		guiFrame.Position = UDim2.new(xPos,0,yPos,0)
-		guiFrame.Size = UDim2.new(0,32,0,32)
-		guiFrame.BackgroundColor3 = Color3.new(0,0,0)
-		--guiFrame.BorderSizePixel = 0
-		guiFrame.BorderColor3 = Color3.new(0,0,0)
-		guiFrame.Parent = paletteFrame
-
-		local guiButton = Instance.new(&quot;ImageButton&quot;)
-		guiButton.Position = UDim2.new(0.0, 2, 0.0, 2)
-		guiButton.Size = UDim2.new(1.0, -4, 1.0, -4)
-		guiButton.Image = value
-		guiButton.Name = key
-		--guiButton.BorderSizePixel = 0
-		guiButton.AutoButtonColor = false
-		guiButton.MouseEnter:connect(function() onMouseEnter(hoverSelection, guiButton) end)
-		guiButton.MouseButton1Up:connect(function() onMouseUp(paletteFrame, guiButton) end)
-		guiButton.Parent = guiFrame
-
-		if hoverSelection.Text == guiButton.Name then
-			selectedButton = guiButton
-			guiFrame.BackgroundColor = BrickColor.Yellow()
-		end
-		xPos = xPos + 0.5
-		if xPos &gt; 1 then
-			yPos = yPos -1
-			xPos = 0
-		end
-	end
-
-	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)
-]]
---	pushInGui(mainFrame)
-
-end
-
-function on3dButton1Down(mouse) 
-	local part = mouse.Target
-	if part and not (part.Locked) then
-		if Instance.Lock(part) then
-			part.Material = MaterialEnum[selectedButton.Name]
-			Instance.Unlock(part)
-		end
-	end
-end
-
-function canSelectObject(part)
-	return part and not (part.Locked) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60
-end
-
-
-function on3dMouseMove(mouse) 
-	if not(inGui) and not(inPalette) then
-		mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
-		local part = mouse.Target
-		if canSelectObject(part) then
-			setSelectionBox(part)
-		else
-			unsetSelectionBox()
-		end
-	end
-end
-
-
-function onEquippedLocal(mouse)
-	Tool.TextureId = &quot;rbxasset://icons/material_sel.png&quot;
-
-	local character = script.Parent.Parent
-	local player = game.Players:GetPlayerFromCharacter(character)
-
-	inGui = false
-	inPalette = false
-	oldButton = nil
-	selectedButton = nil
-
-	mouse.Button1Down:connect(function() on3dButton1Down(mouse) end)
-	mouse.Move:connect(function() on3dMouseMove(mouse) end)
-	mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
-
-	selectionBox = Instance.new(&quot;SelectionBox&quot;)
-	selectionBox.Color = BrickColor.Yellow()
-	selectionBox.Adornee = nil
-	selectionBox.Parent = player.PlayerGui
-
-	selectionLasso = Instance.new(&quot;SelectionPartLasso&quot;)
-	selectionLasso.Name = &quot;Model Delete Lasso&quot;
-	selectionLasso.Humanoid = character.Humanoid
-	selectionLasso.Parent = game.workspace
-	selectionLasso.Part = nil
-	selectionLasso.Visible = true
-	selectionLasso.archivable = false
-	selectionLasso.Color = BrickColor.Red()
-
---	buildGui(player.PlayerGui, mouse)
-end
-
-function onUnequippedLocal()
-	Tool.TextureId = origTexture
-	--pushOutGui(mainFrame)
-	mainFrame:Remove()
-	selectionBox:Remove()
-	selectionLasso:Remove()
-end
-
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)
-</ProtectedString>
-			<bool name="archivable">true</bool>
-		</Properties>
-	</Item>
-	<Item class="Tool" referent="RBX1">
+	<Item class="Tool" referent="RBX0">
 		<Properties>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
@@ -298,7 +22,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 			<Content name="TextureId"><url>rbxasset://icons/material.png</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
-		<Item class="Part" referent="RBX2">
+		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -368,7 +92,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -394,7 +118,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX4">
+			<Item class="Weld" referent="RBX3">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-4.71828389e-006</X>
@@ -423,6 +147,42 @@ Tool.Unequipped:connect(onUnequippedLocal)
 						<R20>-1</R20>
 						<R21>4.01852024e-011</R21>
 						<R22>-2.64911593e-010</R22>
+					</CoordinateFrame>
+					<string name="Name">Weld</string>
+					<Ref name="Part0">null</Ref>
+					<Ref name="Part1">null</Ref>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX4">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>-1.34138972e-007</X>
+						<Y>-6.91051537e-006</Y>
+						<Z>0</Z>
+						<R00>-3.91537502e-021</R00>
+						<R01>0.999999106</R01>
+						<R02>-0.00133771845</R02>
+						<R10>2.81109586e-022</R10>
+						<R11>0.00133771845</R11>
+						<R12>0.999999106</R12>
+						<R20>1</R20>
+						<R21>3.91499535e-021</R21>
+						<R22>-2.86346992e-022</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>-1.34138972e-007</X>
+						<Y>-6.91051537e-006</Y>
+						<Z>0</Z>
+						<R00>-3.91537502e-021</R00>
+						<R01>0.999999106</R01>
+						<R02>-0.00133771845</R02>
+						<R10>2.81109586e-022</R10>
+						<R11>0.00133771845</R11>
+						<R12>0.999999106</R12>
+						<R20>1</R20>
+						<R21>3.91499535e-021</R21>
+						<R22>-2.86346992e-022</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
 					<Ref name="Part0">null</Ref>
@@ -433,32 +193,32 @@ Tool.Unequipped:connect(onUnequippedLocal)
 			<Item class="Weld" referent="RBX5">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>-1.34138972e-007</X>
-						<Y>-6.91051537e-006</Y>
-						<Z>0</Z>
-						<R00>-3.91537502e-021</R00>
-						<R01>0.999999106</R01>
-						<R02>-0.00133771845</R02>
-						<R10>2.81109586e-022</R10>
-						<R11>0.00133771845</R11>
-						<R12>0.999999106</R12>
+						<X>3.64912034e-006</X>
+						<Y>-1.13236744e-007</Y>
+						<Z>-2.01656292e-008</Z>
+						<R00>-7.08486672e-011</R00>
+						<R01>0.000798657886</R01>
+						<R02>-0.999999702</R02>
+						<R10>1.55140234e-010</R10>
+						<R11>0.999999702</R11>
+						<R12>0.000793890678</R12>
 						<R20>1</R20>
-						<R21>3.91499535e-021</R21>
-						<R22>-2.86346992e-022</R22>
+						<R21>1.55083765e-010</R21>
+						<R22>7.09721865e-011</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>-1.34138972e-007</X>
-						<Y>-6.91051537e-006</Y>
-						<Z>0</Z>
-						<R00>-3.91537502e-021</R00>
-						<R01>0.999999106</R01>
-						<R02>-0.00133771845</R02>
-						<R10>2.81109586e-022</R10>
-						<R11>0.00133771845</R11>
-						<R12>0.999999106</R12>
+						<X>3.64912034e-006</X>
+						<Y>-1.13236744e-007</Y>
+						<Z>-2.01656292e-008</Z>
+						<R00>-7.08486672e-011</R00>
+						<R01>0.000798657886</R01>
+						<R02>-0.999999702</R02>
+						<R10>1.55140234e-010</R10>
+						<R11>0.999999702</R11>
+						<R12>0.000793890678</R12>
 						<R20>1</R20>
-						<R21>3.91499535e-021</R21>
-						<R22>-2.86346992e-022</R22>
+						<R21>1.55083765e-010</R21>
+						<R22>7.09721865e-011</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
 					<Ref name="Part0">null</Ref>
@@ -469,32 +229,32 @@ Tool.Unequipped:connect(onUnequippedLocal)
 			<Item class="Weld" referent="RBX6">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>3.64912034e-006</X>
-						<Y>-1.13236744e-007</Y>
-						<Z>-2.01656292e-008</Z>
-						<R00>-7.08486672e-011</R00>
-						<R01>0.000798657886</R01>
-						<R02>-0.999999702</R02>
-						<R10>1.55140234e-010</R10>
-						<R11>0.999999702</R11>
-						<R12>0.000793890678</R12>
+						<X>1.6321755e-007</X>
+						<Y>3.49538391e-006</Y>
+						<Z>0</Z>
+						<R00>-3.9252309e-021</R00>
+						<R01>0.996502578</R01>
+						<R02>-0.0835621059</R02>
+						<R10>-4.1799742e-023</R10>
+						<R11>0.0835621059</R11>
+						<R12>0.996502578</R12>
 						<R20>1</R20>
-						<R21>1.55083765e-010</R21>
-						<R22>7.09721865e-011</R22>
+						<R21>3.91499535e-021</R21>
+						<R22>-2.86346992e-022</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>3.64912034e-006</X>
-						<Y>-1.13236744e-007</Y>
-						<Z>-2.01656292e-008</Z>
-						<R00>-7.08486672e-011</R00>
-						<R01>0.000798657886</R01>
-						<R02>-0.999999702</R02>
-						<R10>1.55140234e-010</R10>
-						<R11>0.999999702</R11>
-						<R12>0.000793890678</R12>
+						<X>1.6321755e-007</X>
+						<Y>3.49538391e-006</Y>
+						<Z>0</Z>
+						<R00>-3.9252309e-021</R00>
+						<R01>0.996502578</R01>
+						<R02>-0.0835621059</R02>
+						<R10>-4.1799742e-023</R10>
+						<R11>0.0835621059</R11>
+						<R12>0.996502578</R12>
 						<R20>1</R20>
-						<R21>1.55083765e-010</R21>
-						<R22>7.09721865e-011</R22>
+						<R21>3.91499535e-021</R21>
+						<R22>-2.86346992e-022</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
 					<Ref name="Part0">null</Ref>
@@ -505,32 +265,32 @@ Tool.Unequipped:connect(onUnequippedLocal)
 			<Item class="Weld" referent="RBX7">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>1.6321755e-007</X>
-						<Y>3.49538391e-006</Y>
-						<Z>0</Z>
-						<R00>-3.9252309e-021</R00>
-						<R01>0.996502578</R01>
-						<R02>-0.0835621059</R02>
-						<R10>-4.1799742e-023</R10>
-						<R11>0.0835621059</R11>
-						<R12>0.996502578</R12>
+						<X>5.25072437e-006</X>
+						<Y>-9.04979558e-008</Y>
+						<Z>-6.02840373e-008</Z>
+						<R00>-2.12544884e-010</R00>
+						<R01>0.000803425093</R01>
+						<R02>-0.999999702</R02>
+						<R10>4.65420175e-010</R10>
+						<R11>0.999999702</R11>
+						<R12>0.000789123471</R12>
 						<R20>1</R20>
-						<R21>3.91499535e-021</R21>
-						<R22>-2.86346992e-022</R22>
+						<R21>4.6525081e-010</R21>
+						<R22>2.12915421e-010</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>1.6321755e-007</X>
-						<Y>3.49538391e-006</Y>
-						<Z>0</Z>
-						<R00>-3.9252309e-021</R00>
-						<R01>0.996502578</R01>
-						<R02>-0.0835621059</R02>
-						<R10>-4.1799742e-023</R10>
-						<R11>0.0835621059</R11>
-						<R12>0.996502578</R12>
+						<X>5.25072437e-006</X>
+						<Y>-9.04979558e-008</Y>
+						<Z>-6.02840373e-008</Z>
+						<R00>-2.12544884e-010</R00>
+						<R01>0.000803425093</R01>
+						<R02>-0.999999702</R02>
+						<R10>4.65420175e-010</R10>
+						<R11>0.999999702</R11>
+						<R12>0.000789123471</R12>
 						<R20>1</R20>
-						<R21>3.91499535e-021</R21>
-						<R22>-2.86346992e-022</R22>
+						<R21>4.6525081e-010</R21>
+						<R22>2.12915421e-010</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
 					<Ref name="Part0">null</Ref>
@@ -539,42 +299,6 @@ Tool.Unequipped:connect(onUnequippedLocal)
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX8">
-				<Properties>
-					<CoordinateFrame name="C0">
-						<X>5.25072437e-006</X>
-						<Y>-9.04979558e-008</Y>
-						<Z>-6.02840373e-008</Z>
-						<R00>-2.12544884e-010</R00>
-						<R01>0.000803425093</R01>
-						<R02>-0.999999702</R02>
-						<R10>4.65420175e-010</R10>
-						<R11>0.999999702</R11>
-						<R12>0.000789123471</R12>
-						<R20>1</R20>
-						<R21>4.6525081e-010</R21>
-						<R22>2.12915421e-010</R22>
-					</CoordinateFrame>
-					<CoordinateFrame name="C1">
-						<X>5.25072437e-006</X>
-						<Y>-9.04979558e-008</Y>
-						<Z>-6.02840373e-008</Z>
-						<R00>-2.12544884e-010</R00>
-						<R01>0.000803425093</R01>
-						<R02>-0.999999702</R02>
-						<R10>4.65420175e-010</R10>
-						<R11>0.999999702</R11>
-						<R12>0.000789123471</R12>
-						<R20>1</R20>
-						<R21>4.6525081e-010</R21>
-						<R22>2.12915421e-010</R22>
-					</CoordinateFrame>
-					<string name="Name">Weld</string>
-					<Ref name="Part0">null</Ref>
-					<Ref name="Part1">null</Ref>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
-			<Item class="Weld" referent="RBX9">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -610,7 +334,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX10">
+			<Item class="Weld" referent="RBX9">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -646,7 +370,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX11">
+			<Item class="Weld" referent="RBX10">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -682,7 +406,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX12">
+			<Item class="Weld" referent="RBX11">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -718,7 +442,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX13">
+			<Item class="Weld" referent="RBX12">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -754,7 +478,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX14">
+			<Item class="Weld" referent="RBX13">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -790,7 +514,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX15">
+			<Item class="Weld" referent="RBX14">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -826,7 +550,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX16">
+			<Item class="Weld" referent="RBX15">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -862,7 +586,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX17">
+			<Item class="Weld" referent="RBX16">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -898,7 +622,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX18">
+			<Item class="Weld" referent="RBX17">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -934,7 +658,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX19">
+			<Item class="Weld" referent="RBX18">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.25072437e-006</X>
@@ -970,7 +694,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX20">
+			<Item class="Weld" referent="RBX19">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1006,7 +730,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX21">
+			<Item class="Weld" referent="RBX20">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1042,7 +766,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX22">
+			<Item class="Weld" referent="RBX21">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1078,7 +802,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX23">
+			<Item class="Weld" referent="RBX22">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1114,7 +838,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX24">
+			<Item class="Weld" referent="RBX23">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1150,7 +874,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX25">
+			<Item class="Weld" referent="RBX24">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1186,7 +910,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX26">
+			<Item class="Weld" referent="RBX25">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1222,7 +946,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX27">
+			<Item class="Weld" referent="RBX26">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1258,7 +982,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX28">
+			<Item class="Weld" referent="RBX27">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1294,7 +1018,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX29">
+			<Item class="Weld" referent="RBX28">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1330,7 +1054,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX30">
+			<Item class="Weld" referent="RBX29">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1366,7 +1090,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX31">
+			<Item class="Weld" referent="RBX30">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>4.58660736e-007</X>
@@ -1402,7 +1126,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX32">
+			<Item class="Weld" referent="RBX31">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1438,7 +1162,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX33">
+			<Item class="Weld" referent="RBX32">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1474,7 +1198,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX34">
+			<Item class="Weld" referent="RBX33">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1510,7 +1234,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX35">
+			<Item class="Weld" referent="RBX34">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1546,7 +1270,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX36">
+			<Item class="Weld" referent="RBX35">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1582,7 +1306,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX37">
+			<Item class="Weld" referent="RBX36">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1618,7 +1342,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX38">
+			<Item class="Weld" referent="RBX37">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1654,7 +1378,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX39">
+			<Item class="Weld" referent="RBX38">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1690,7 +1414,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX40">
+			<Item class="Weld" referent="RBX39">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1726,7 +1450,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX41">
+			<Item class="Weld" referent="RBX40">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1762,7 +1486,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX42">
+			<Item class="Weld" referent="RBX41">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1798,7 +1522,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX43">
+			<Item class="Weld" referent="RBX42">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>5.53692553e-006</X>
@@ -1834,7 +1558,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX44">
+			<Item class="Weld" referent="RBX43">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -1870,7 +1594,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX45">
+			<Item class="Weld" referent="RBX44">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -1906,7 +1630,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX46">
+			<Item class="Weld" referent="RBX45">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -1942,7 +1666,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX47">
+			<Item class="Weld" referent="RBX46">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -1978,7 +1702,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX48">
+			<Item class="Weld" referent="RBX47">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2014,7 +1738,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX49">
+			<Item class="Weld" referent="RBX48">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2050,7 +1774,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX50">
+			<Item class="Weld" referent="RBX49">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2086,7 +1810,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX51">
+			<Item class="Weld" referent="RBX50">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2122,7 +1846,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX52">
+			<Item class="Weld" referent="RBX51">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2158,7 +1882,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX53">
+			<Item class="Weld" referent="RBX52">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2194,7 +1918,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX54">
+			<Item class="Weld" referent="RBX53">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2230,7 +1954,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX55">
+			<Item class="Weld" referent="RBX54">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-3.95431243e-007</X>
@@ -2266,7 +1990,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX56">
+			<Item class="Weld" referent="RBX55">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2302,7 +2026,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX57">
+			<Item class="Weld" referent="RBX56">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2338,7 +2062,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX58">
+			<Item class="Weld" referent="RBX57">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2374,7 +2098,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX59">
+			<Item class="Weld" referent="RBX58">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2410,7 +2134,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX60">
+			<Item class="Weld" referent="RBX59">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2446,7 +2170,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX61">
+			<Item class="Weld" referent="RBX60">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2482,7 +2206,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX62">
+			<Item class="Weld" referent="RBX61">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2518,7 +2242,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX63">
+			<Item class="Weld" referent="RBX62">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2554,7 +2278,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX64">
+			<Item class="Weld" referent="RBX63">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2590,7 +2314,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX65">
+			<Item class="Weld" referent="RBX64">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2626,7 +2350,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX66">
+			<Item class="Weld" referent="RBX65">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2662,7 +2386,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX67">
+			<Item class="Weld" referent="RBX66">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>1.14122267e-005</X>
@@ -2698,7 +2422,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX68">
+			<Item class="Weld" referent="RBX67">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>2.73681553e-006</X>
@@ -2729,266 +2453,266 @@ Tool.Unequipped:connect(onUnequippedLocal)
 						<R22>-1</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX68">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>2.58500165e-007</X>
+						<Y>1.47510104e-006</Y>
+						<Z>9.1201764e-007</Z>
+						<R00>-0.0304826926</R00>
+						<R01>-0.998224854</R01>
+						<R02>0.0511664115</R02>
+						<R10>-0.997482359</R10>
+						<R11>0.027100971</R11>
+						<R12>-0.0655324385</R12>
+						<R20>0.0640294328</R20>
+						<R21>-0.0530351698</R21>
+						<R22>-0.996537805</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>2.58500165e-007</X>
+						<Y>1.47510104e-006</Y>
+						<Z>9.1201764e-007</Z>
+						<R00>-0.0304826926</R00>
+						<R01>-0.998224854</R01>
+						<R02>0.0511664115</R02>
+						<R10>-0.997482359</R10>
+						<R11>0.027100971</R11>
+						<R12>-0.0655324385</R12>
+						<R20>0.0640294328</R20>
+						<R21>-0.0530351698</R21>
+						<R22>-0.996537805</R22>
+					</CoordinateFrame>
+					<string name="Name">Weld</string>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX69">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>2.58500165e-007</X>
-						<Y>1.47510104e-006</Y>
-						<Z>9.1201764e-007</Z>
-						<R00>-0.0304826926</R00>
-						<R01>-0.998224854</R01>
-						<R02>0.0511664115</R02>
-						<R10>-0.997482359</R10>
-						<R11>0.027100971</R11>
-						<R12>-0.0655324385</R12>
-						<R20>0.0640294328</R20>
-						<R21>-0.0530351698</R21>
-						<R22>-0.996537805</R22>
+						<X>5.81937775e-006</X>
+						<Y>3.66444342e-009</Y>
+						<Z>4.0117655e-007</Z>
+						<R00>-1</R00>
+						<R01>1.83190277e-005</R01>
+						<R02>1.62574338e-007</R02>
+						<R10>1.82680233e-005</R10>
+						<R11>1</R11>
+						<R12>-5.43802935e-006</R12>
+						<R20>-1.05692934e-007</R20>
+						<R21>-5.39845632e-006</R21>
+						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>2.58500165e-007</X>
-						<Y>1.47510104e-006</Y>
-						<Z>9.1201764e-007</Z>
-						<R00>-0.0304826926</R00>
-						<R01>-0.998224854</R01>
-						<R02>0.0511664115</R02>
-						<R10>-0.997482359</R10>
-						<R11>0.027100971</R11>
-						<R12>-0.0655324385</R12>
-						<R20>0.0640294328</R20>
-						<R21>-0.0530351698</R21>
-						<R22>-0.996537805</R22>
+						<X>5.81937775e-006</X>
+						<Y>3.66444342e-009</Y>
+						<Z>4.0117655e-007</Z>
+						<R00>-1</R00>
+						<R01>1.83190277e-005</R01>
+						<R02>1.62574338e-007</R02>
+						<R10>1.82680233e-005</R10>
+						<R11>1</R11>
+						<R12>-5.43802935e-006</R12>
+						<R20>-1.05692934e-007</R20>
+						<R21>-5.39845632e-006</R21>
+						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX70">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>5.81937775e-006</X>
-						<Y>3.66444342e-009</Y>
-						<Z>4.0117655e-007</Z>
-						<R00>-1</R00>
-						<R01>1.83190277e-005</R01>
-						<R02>1.62574338e-007</R02>
-						<R10>1.82680233e-005</R10>
+						<X>5.19993637e-006</X>
+						<Y>-2.07580495e-008</Y>
+						<Z>-4.3925632e-009</Z>
+						<R00>-0.99999994</R00>
+						<R01>-7.85102384e-006</R01>
+						<R02>1.626222e-007</R02>
+						<R10>-7.9020283e-006</R10>
 						<R11>1</R11>
-						<R12>-5.43802935e-006</R12>
-						<R20>-1.05692934e-007</R20>
-						<R21>-5.39845632e-006</R21>
+						<R12>-7.75445642e-006</R12>
+						<R20>-1.05581343e-007</R20>
+						<R21>-7.71488703e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>5.81937775e-006</X>
-						<Y>3.66444342e-009</Y>
-						<Z>4.0117655e-007</Z>
-						<R00>-1</R00>
-						<R01>1.83190277e-005</R01>
-						<R02>1.62574338e-007</R02>
-						<R10>1.82680233e-005</R10>
+						<X>5.19993637e-006</X>
+						<Y>-2.07580495e-008</Y>
+						<Z>-4.3925632e-009</Z>
+						<R00>-0.99999994</R00>
+						<R01>-7.85102384e-006</R01>
+						<R02>1.626222e-007</R02>
+						<R10>-7.9020283e-006</R10>
 						<R11>1</R11>
-						<R12>-5.43802935e-006</R12>
-						<R20>-1.05692934e-007</R20>
-						<R21>-5.39845632e-006</R21>
+						<R12>-7.75445642e-006</R12>
+						<R20>-1.05581343e-007</R20>
+						<R21>-7.71488703e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX71">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>5.19993637e-006</X>
-						<Y>-2.07580495e-008</Y>
-						<Z>-4.3925632e-009</Z>
-						<R00>-0.99999994</R00>
-						<R01>-7.85102384e-006</R01>
-						<R02>1.626222e-007</R02>
-						<R10>-7.9020283e-006</R10>
+						<X>-4.51719643e-007</X>
+						<Y>1.87397453e-009</Y>
+						<Z>-3.76758157e-006</Z>
+						<R00>-0.999999821</R00>
+						<R01>-3.77100787e-006</R01>
+						<R02>-6.00899241e-009</R02>
+						<R10>-3.82201188e-006</R10>
 						<R11>1</R11>
-						<R12>-7.75445642e-006</R12>
-						<R20>-1.05581343e-007</R20>
-						<R21>-7.71488703e-006</R21>
+						<R12>-4.80523522e-006</R12>
+						<R20>6.30072776e-008</R20>
+						<R21>-4.76566538e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>5.19993637e-006</X>
-						<Y>-2.07580495e-008</Y>
-						<Z>-4.3925632e-009</Z>
-						<R00>-0.99999994</R00>
-						<R01>-7.85102384e-006</R01>
-						<R02>1.626222e-007</R02>
-						<R10>-7.9020283e-006</R10>
+						<X>-4.51719643e-007</X>
+						<Y>1.87397453e-009</Y>
+						<Z>-3.76758157e-006</Z>
+						<R00>-0.999999821</R00>
+						<R01>-3.77100787e-006</R01>
+						<R02>-6.00899241e-009</R02>
+						<R10>-3.82201188e-006</R10>
 						<R11>1</R11>
-						<R12>-7.75445642e-006</R12>
-						<R20>-1.05581343e-007</R20>
-						<R21>-7.71488703e-006</R21>
+						<R12>-4.80523522e-006</R12>
+						<R20>6.30072776e-008</R20>
+						<R21>-4.76566538e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX72">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>-4.51719643e-007</X>
-						<Y>1.87397453e-009</Y>
-						<Z>-3.76758157e-006</Z>
-						<R00>-0.999999821</R00>
-						<R01>-3.77100787e-006</R01>
-						<R02>-6.00899241e-009</R02>
-						<R10>-3.82201188e-006</R10>
+						<X>1.26816673e-007</X>
+						<Y>-2.34453221e-008</Y>
+						<Z>5.90223294e-007</Z>
+						<R00>-0.999999762</R00>
+						<R01>-1.85550198e-005</R01>
+						<R02>-5.83594151e-009</R02>
+						<R10>-1.86060279e-005</R10>
 						<R11>1</R11>
-						<R12>-4.80523522e-006</R12>
-						<R20>6.30072776e-008</R20>
-						<R21>-4.76566538e-006</R21>
+						<R12>-8.11173049e-006</R12>
+						<R20>6.29660306e-008</R20>
+						<R21>-8.07215929e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>-4.51719643e-007</X>
-						<Y>1.87397453e-009</Y>
-						<Z>-3.76758157e-006</Z>
-						<R00>-0.999999821</R00>
-						<R01>-3.77100787e-006</R01>
-						<R02>-6.00899241e-009</R02>
-						<R10>-3.82201188e-006</R10>
+						<X>1.26816673e-007</X>
+						<Y>-2.34453221e-008</Y>
+						<Z>5.90223294e-007</Z>
+						<R00>-0.999999762</R00>
+						<R01>-1.85550198e-005</R01>
+						<R02>-5.83594151e-009</R02>
+						<R10>-1.86060279e-005</R10>
 						<R11>1</R11>
-						<R12>-4.80523522e-006</R12>
-						<R20>6.30072776e-008</R20>
-						<R21>-4.76566538e-006</R21>
+						<R12>-8.11173049e-006</R12>
+						<R20>6.29660306e-008</R20>
+						<R21>-8.07215929e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX73">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>1.26816673e-007</X>
-						<Y>-2.34453221e-008</Y>
-						<Z>5.90223294e-007</Z>
-						<R00>-0.999999762</R00>
-						<R01>-1.85550198e-005</R01>
-						<R02>-5.83594151e-009</R02>
-						<R10>-1.86060279e-005</R10>
+						<X>8.01678993e-007</X>
+						<Y>-1.1426212e-008</Y>
+						<Z>-1.10775409e-006</Z>
+						<R00>-0.999999702</R00>
+						<R01>-1.59489209e-005</R01>
+						<R02>-5.85270321e-009</R02>
+						<R10>-1.5999929e-005</R10>
 						<R11>1</R11>
-						<R12>-8.11173049e-006</R12>
-						<R20>6.29660306e-008</R20>
-						<R21>-8.07215929e-006</R21>
+						<R12>-9.83655082e-006</R12>
+						<R20>6.29892654e-008</R20>
+						<R21>-9.79697961e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>1.26816673e-007</X>
-						<Y>-2.34453221e-008</Y>
-						<Z>5.90223294e-007</Z>
-						<R00>-0.999999762</R00>
-						<R01>-1.85550198e-005</R01>
-						<R02>-5.83594151e-009</R02>
-						<R10>-1.86060279e-005</R10>
+						<X>8.01678993e-007</X>
+						<Y>-1.1426212e-008</Y>
+						<Z>-1.10775409e-006</Z>
+						<R00>-0.999999702</R00>
+						<R01>-1.59489209e-005</R01>
+						<R02>-5.85270321e-009</R02>
+						<R10>-1.5999929e-005</R10>
 						<R11>1</R11>
-						<R12>-8.11173049e-006</R12>
-						<R20>6.29660306e-008</R20>
-						<R21>-8.07215929e-006</R21>
+						<R12>-9.83655082e-006</R12>
+						<R20>6.29892654e-008</R20>
+						<R21>-9.79697961e-006</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX74">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>8.01678993e-007</X>
-						<Y>-1.1426212e-008</Y>
-						<Z>-1.10775409e-006</Z>
-						<R00>-0.999999702</R00>
-						<R01>-1.59489209e-005</R01>
-						<R02>-5.85270321e-009</R02>
-						<R10>-1.5999929e-005</R10>
+						<X>1.07855703e-006</X>
+						<Y>-1.98978043e-008</Y>
+						<Z>-4.36352309e-007</Z>
+						<R00>-0.999999642</R00>
+						<R01>-1.87142232e-005</R01>
+						<R02>-3.42939558e-007</R02>
+						<R10>-1.87652277e-005</R10>
 						<R11>1</R11>
-						<R12>-9.83655082e-006</R12>
-						<R20>6.29892654e-008</R20>
-						<R21>-9.79697961e-006</R21>
+						<R12>-1.32089617e-005</R12>
+						<R20>4.00166499e-007</R20>
+						<R21>-1.31693841e-005</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>8.01678993e-007</X>
-						<Y>-1.1426212e-008</Y>
-						<Z>-1.10775409e-006</Z>
-						<R00>-0.999999702</R00>
-						<R01>-1.59489209e-005</R01>
-						<R02>-5.85270321e-009</R02>
-						<R10>-1.5999929e-005</R10>
+						<X>1.07855703e-006</X>
+						<Y>-1.98978043e-008</Y>
+						<Z>-4.36352309e-007</Z>
+						<R00>-0.999999642</R00>
+						<R01>-1.87142232e-005</R01>
+						<R02>-3.42939558e-007</R02>
+						<R10>-1.87652277e-005</R10>
 						<R11>1</R11>
-						<R12>-9.83655082e-006</R12>
-						<R20>6.29892654e-008</R20>
-						<R21>-9.79697961e-006</R21>
+						<R12>-1.32089617e-005</R12>
+						<R20>4.00166499e-007</R20>
+						<R21>-1.31693841e-005</R21>
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Weld" referent="RBX75">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>1.07855703e-006</X>
-						<Y>-1.98978043e-008</Y>
-						<Z>-4.36352309e-007</Z>
-						<R00>-0.999999642</R00>
-						<R01>-1.87142232e-005</R01>
-						<R02>-3.42939558e-007</R02>
-						<R10>-1.87652277e-005</R10>
-						<R11>1</R11>
-						<R12>-1.32089617e-005</R12>
-						<R20>4.00166499e-007</R20>
-						<R21>-1.31693841e-005</R21>
-						<R22>-1.00000012</R22>
-					</CoordinateFrame>
-					<CoordinateFrame name="C1">
-						<X>1.07855703e-006</X>
-						<Y>-1.98978043e-008</Y>
-						<Z>-4.36352309e-007</Z>
-						<R00>-0.999999642</R00>
-						<R01>-1.87142232e-005</R01>
-						<R02>-3.42939558e-007</R02>
-						<R10>-1.87652277e-005</R10>
-						<R11>1</R11>
-						<R12>-1.32089617e-005</R12>
-						<R20>4.00166499e-007</R20>
-						<R21>-1.31693841e-005</R21>
-						<R22>-1.00000012</R22>
-					</CoordinateFrame>
-					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
-			<Item class="Weld" referent="RBX76">
-				<Properties>
-					<CoordinateFrame name="C0">
 						<X>-2.96131202e-006</X>
 						<Y>1.15200116e-008</Y>
 						<Z>-5.08313747e-008</Z>
@@ -3017,12 +2741,12 @@ Tool.Unequipped:connect(onUnequippedLocal)
 						<R22>-1.00000012</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX2</Ref>
-					<Ref name="Part1">RBX2</Ref>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX1</Ref>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX77">
+			<Item class="Sound" referent="RBX76">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">OpenSound</string>
@@ -3034,7 +2758,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX78">
+			<Item class="Sound" referent="RBX77">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">DrinkSound</string>
@@ -3047,7 +2771,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX0">
+		<Item class="LocalScript" referent="RBX78">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -3097,14 +2821,12 @@ function onMouseEnter(hoverSelection, guiButton)
 	end
 end
 
-function onMouseUp(paletteFrame, guiButton)
-	if selectedButton ~= nil then
+function onMouseUp(guiButton)
+	--[[if selectedButton ~= nil then
 		selectedButton.Parent.BackgroundColor = BrickColor.Black()
-	end
-	guiButton.Parent.BackgroundColor = BrickColor.Yellow()
+	end]]
+	--guiButton.Parent.BackgroundColor = BrickColor.Yellow()
 	selectedButton = guiButton
-	
-	onMouseLeavePalette(paletteFrame)
 	
 	print(&quot;Selected Material: &quot; .. guiButton.Name)
 end
@@ -3148,46 +2870,35 @@ MaterialEnum[&quot;Foil&quot;] = Enum.Material.Foil
 MaterialEnum[&quot;Diamond Plate&quot;] = Enum.Material.DiamondPlate
 MaterialEnum[&quot;Concrete&quot;] = Enum.Material.Concrete
 
-local speed =  25
-function pushInGui(frame)
-	while frame.Position.X.Offset &lt; 50 do
-		frame.Position = UDim2.new(frame.Position.X.Scale,frame.Position.X.Offset + speed,frame.Position.Y.Scale,frame.Position.Y.Offset)
-		wait()
-	end
-end
 
-function pushOutGui(frame)
-	while frame.Position.X.Offset &gt; -100 do
-		frame.Position = UDim2.new(frame.Position.X.Scale,frame.Position.X.Offset - speed,frame.Position.Y.Scale,frame.Position.Y.Offset)
-		wait()
-	end
-end
-
-local mainFrame
 function buildGui(root, mouse)
 
-	mainFrame = Instance.new(&quot;ImageLabel&quot;)
+	local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
+	local mainFrame =  player.PlayerGui.GameGui.BuildTools.Frame.PropertyTools.MaterialSelector.MaterialMenu
+	while mainFrame == nil do
+		local mainFrame =  player.PlayerGui.GameGui.BuildTools.Frame.PropertyTools.MaterialSelector.MaterialMenu
+		wait()
+	end
+	--[[ = Instance.new(&quot;Frame&quot;)
 	mainFrame.Name = &quot;Main Material Frame&quot;
-	mainFrame.Image = &quot;http://www.roblox.com/asset/?id=35238121&quot;
-	mainFrame.Position = UDim2.new(0.0, -100, 0, 0)
-	mainFrame.Size = UDim2.new(0.0, 102, 0.0, 265)
-	mainFrame.BackgroundTransparency = 1
-	mainFrame.Parent = root.NewGuiDemo.BuildTools.Frame.PropertyTools.MaterialSelector
+	mainFrame.Position = UDim2.new(0.0, 0, 1.0, -50)
+	mainFrame.Size = UDim2.new(0.0, 50 * 12, 0.0, 50)
+	mainFrame.Transparency = 1.0
+	mainFrame.Parent = root]]
 	
---[[
-	local paletteFrame = Instance.new(&quot;Frame&quot;)
+
+--[[	local paletteFrame = Instance.new(&quot;Frame&quot;)
 	paletteFrame.Position = UDim2.new(0.0, 0, 0.0, 0)
-	paletteFrame.Size = UDim2.new(1, 0, 1.0, 0)
-	paletteFrame.BackgroundColor3 = Color3.new(8,8,8)
+	paletteFrame.Size = UDim2.new(.75, 0, 1.0, 0)
+	paletteFrame.BackgroundColor = BrickColor.Black()
 	paletteFrame.Parent = mainFrame
 	paletteFrame.MouseEnter:connect(function() onMouseEnterPalette(mouse) end)
 	paletteFrame.MouseLeave:connect(function() onMouseLeavePalette(paletteFrame, mouse) end)
 
 	local hoverSelection = Instance.new(&quot;TextLabel&quot;)
-	hoverSelection.Position = UDim2.new(0, 0, 1, 0)
-	hoverSelection.Size = UDim2.new(1.49, 0, 1.0, 0)
-	hoverSelection.BackgroundColor3 = Color3.new(0,0,0)
-	hoverSelection.BackgroundTransparency = 0.2
+	hoverSelection.Position = UDim2.new(0.75, 0, 0, 0)
+	hoverSelection.Size = UDim2.new(.25, 0, 1.0, 0)
+	hoverSelection.BackgroundColor = BrickColor.Black()
 	hoverSelection.TextColor = BrickColor.White()
 	hoverSelection.Text = &quot;Plastic&quot;
 	hoverSelection.Parent = mainFrame
@@ -3203,21 +2914,18 @@ function buildGui(root, mouse)
 	materials[&quot;Diamond Plate&quot;] = &quot;http://www.roblox.com/Asset/?ID=16169998&quot;
 	materials[&quot;Concrete&quot;] = &quot;http://www.roblox.com/Asset/?ID=16170001&quot;
 
-	local order = {&quot;Plastic&quot;, &quot;Wood&quot;, &quot;Slate&quot;, &quot;Corroded Metal&quot;, &quot;Ice&quot;, &quot;Grass&quot;, &quot;Foil&quot;, &quot;Diamond Plate&quot;, &quot;Concrete&quot;}
+	local order = {&quot;Plastic&quot;, &quot;Wood&quot;, &quot;Slate&quot;, &quot;Corroded Metal&quot;, &quot;Ice&quot;, &quot;Grass&quot;, &quot;Foil&quot;, &quot;Diamond Plate&quot;, &quot;Concrete&quot;}]]
 
-	local yPos = 0
-	local xPos = 0
-	local x 
+--[[	local x 
 	for x=1, #order do
 		local key = order[x]
 		local value = materials[key]
 
 		local guiFrame = Instance.new(&quot;Frame&quot;)
-		guiFrame.Position = UDim2.new(xPos,0,yPos,0)
-		guiFrame.Size = UDim2.new(0,32,0,32)
-		guiFrame.BackgroundColor3 = Color3.new(0,0,0)
+		guiFrame.Position = UDim2.new(1.0/9 * (x-1), 0, 0.0, 0)
+		guiFrame.Size = UDim2.new(1.0/9, 0, 1.0, 0)
+		guiFrame.BackgroundColor = BrickColor.Black()
 		--guiFrame.BorderSizePixel = 0
-		guiFrame.BorderColor3 = Color3.new(0,0,0)
 		guiFrame.Parent = paletteFrame
 
 		local guiButton = Instance.new(&quot;ImageButton&quot;)
@@ -3235,20 +2943,22 @@ function buildGui(root, mouse)
 			selectedButton = guiButton
 			guiFrame.BackgroundColor = BrickColor.Yellow()
 		end
-		xPos = xPos + 0.5
-		if xPos &gt; 1 then
-			yPos = yPos -1
-			xPos = 0
-		end
 	end
-
-	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)
 ]]
---	pushInGui(mainFrame)
+	local buttons = mainFrame:GetChildren()
+	for i = 1, #buttons do
+		buttons[i].Changed:connect(function(property)
+			if property ~= &quot;Selected&quot; then return end
+
+			onMouseUp(buttons[i])
+		end)
+	end
+	--mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)
 
 end
 
 function on3dButton1Down(mouse) 
+	if selectedButton == nil then return end
 	local part = mouse.Target
 	if part and not (part.Locked) then
 		if Instance.Lock(part) then
@@ -3275,12 +2985,14 @@ function on3dMouseMove(mouse)
 	end
 end
 
-
+local guiMain
 function onEquippedLocal(mouse)
 	Tool.TextureId = &quot;rbxasset://icons/material_sel.png&quot;
 
 	local character = script.Parent.Parent
 	local player = game.Players:GetPlayerFromCharacter(character)
+	guiMain = Instance.new(&quot;ScreenGui&quot;)
+	guiMain.Parent = player.PlayerGui
 
 	inGui = false
 	inPalette = false
@@ -3305,13 +3017,12 @@ function onEquippedLocal(mouse)
 	selectionLasso.archivable = false
 	selectionLasso.Color = BrickColor.Red()
 
---	buildGui(player.PlayerGui, mouse)
+	buildGui(guiMain, mouse)
 end
 
 function onUnequippedLocal()
 	Tool.TextureId = origTexture
-	--pushOutGui(mainFrame)
-	mainFrame:Remove()
+	guiMain:Remove()
 	selectionBox:Remove()
 	selectionLasso:Remove()
 end
