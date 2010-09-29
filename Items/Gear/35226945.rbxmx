@@ -2778,61 +2778,16 @@
 				<string name="Name">Surface Picker Local</string>
 				<ProtectedString name="Source">local Tool = script.Parent
 
-
 enabled = true
 local origTexture = 	Tool.TextureId
 game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/surface_sel.png&quot;)
 
 local selectionSurface
 local selectionLasso
-local inGui = false
-local inPalette = false
 
 local value = nil
 
 local selectedButton = nil
-local oldButton = nil
-function onMouseLeave(hoverSelection)
-	if oldButton ~= nil then
-		local notSelected = true
-		local selectionText = &quot;&quot;
-		if selectedButton ~= nil  then
-			if oldButton == selectedButton then
-				notSelected = false
-			else
-				selectionText = selectedButton.Name
-			end
-		end
-		if notSelected then
-			hoverSelection.Text = selectionText
-			if oldButton.Parent then
-				oldButton.Parent.BackgroundColor = BrickColor.Black()
-			end
-		end
-	end
-	oldButton = nil
-end
-
-function onMouseEnter(hoverSelection, guiButton)
-	onMouseLeave(hoverSelection)
-	hoverSelection.Text = guiButton.Name
-	if guiButton ~= selectedButton then
-		guiButton.Parent.BackgroundColor = BrickColor.White()
-		oldButton = guiButton
-	end
-end
-
-function onMouseUp(paletteFrame, guiButton)
-	if selectedButton ~= nil then
-		selectedButton.Parent.BackgroundColor = BrickColor.Black()
-	end
-	guiButton.Parent.BackgroundColor = BrickColor.Yellow()
-	selectedButton = guiButton
-	
-	onMouseLeavePalette(paletteFrame)
-	
-	print(&quot;Selected SurfaceType : &quot; .. guiButton.Name)
-end
 
 function setSelectionSurface(part, surface) 
 	unsetSelectionSurface()
@@ -2845,24 +2800,6 @@ function unsetSelectionSurface()
 	selectionLasso.Part = nil
 end
 
-function onMouseEnterGui(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionSurface()
-	inGui = true
-end
-function onMouseLeaveGui(mouse)
-	inGui = false
-end
-
-function onMouseEnterPalette(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
-	unsetSelectionSurface()
-	inPalette = true
-end
-function onMouseLeavePalette(paletteFrame, mouse)
-	inPalette = false
-end
-	
 local SurfaceEnum = {}
 SurfaceEnum[&quot;Smooth&quot;] = Enum.SurfaceType.Smooth
 SurfaceEnum[&quot;Studs&quot;] = Enum.SurfaceType.Studs
@@ -2872,87 +2809,6 @@ SurfaceEnum[&quot;Glue&quot;] = Enum.SurfaceType.Glue
 SurfaceEnum[&quot;Weld&quot;] = Enum.SurfaceType.Weld
 SurfaceEnum[&quot;Hinge&quot;] = Enum.SurfaceType.Hinge
 SurfaceEnum[&quot;Motor&quot;] = Enum.SurfaceType.Motor
-
-
-
-function buildGui()
---[[
-	local mainFrame = Instance.new(&quot;Frame&quot;)
-	mainFrame.Name = &quot;Main Surface Frame&quot;
-	mainFrame.Position = UDim2.new(0.0, 0, 1.0, -50)
-	mainFrame.Size = UDim2.new(0.0, 50 * 10, 0.00, 50)
-	mainFrame.Transparency = 1.0
-	mainFrame.Parent = root
-	
-	local paletteFrame = Instance.new(&quot;Frame&quot;)
-	paletteFrame.Name = &quot;Palette&quot;
-	paletteFrame.Position = UDim2.new(0.0, 0, 0.0, 0)
-	paletteFrame.Size = UDim2.new(.8, 0, 1.0, 0)
-	paletteFrame.BackgroundColor = BrickColor.Black()
-	paletteFrame.MouseEnter:connect(function() onMouseEnterPalette(mouse) end)
-	paletteFrame.MouseLeave:connect(function() onMouseLeavePalette(paletteFrame, mouse) end)
-	paletteFrame.Parent = mainFrame
-	
-	local hoverSelection = Instance.new(&quot;TextLabel&quot;)
-	hoverSelection.Position = UDim2.new(0.8, 0, 0.0, 0)
-	hoverSelection.Size = UDim2.new(.2, 0, 1.0, 0)
-	hoverSelection.BackgroundColor = BrickColor.Black()
-	hoverSelection.TextColor = BrickColor.White()
-	hoverSelection.Text = &quot;Studs&quot;
-	hoverSelection.Parent = mainFrame
-
-	local surfaces = {}
-	surfaces[&quot;Smooth&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171076&quot;
-	surfaces[&quot;Studs&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171077&quot;
-	surfaces[&quot;Inlets&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171066&quot;
-	surfaces[&quot;Universal&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171136&quot;
-	surfaces[&quot;Glue&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171062&quot;
-	surfaces[&quot;Weld&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171080&quot;
-	surfaces[&quot;Hinge&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171065&quot;
-	surfaces[&quot;Motor&quot;] = &quot;http://www.roblox.com/Asset/?ID=16171070&quot;
-	
-	local order = {&quot;Smooth&quot;, &quot;Studs&quot;, &quot;Inlets&quot;, &quot;Universal&quot;, &quot;Glue&quot;, &quot;Weld&quot;, &quot;Hinge&quot;, &quot;Motor&quot;}
-
-	local x 
-	for x=1, #order do
-		local key = order[x]
-		local value = surfaces[key]
-		local guiFrame = Instance.new(&quot;Frame&quot;)
-		guiFrame.Position = UDim2.new(1.0/8 * (x-1), 0, 0.0, 0)
-		guiFrame.Size = UDim2.new(1.0/8, 0, 1.0, 0)
-		guiFrame.BackgroundColor = BrickColor.Black()
-		--guiFrame.BorderSizePixel = 0
-		guiFrame.Parent = paletteFrame
-
-		local guiButton = Instance.new(&quot;ImageButton&quot;)
-		guiButton.Position = UDim2.new(0.0, 2, 0.0, 2)
-		guiButton.Size = UDim2.new(1.0, -4, 1.0, -4)
-		guiButton.Image = value
-		guiButton.Name = key
-		--guiButton.BorderSizePixel = 0
-		guiButton.AutoButtonColor = false
-		guiButton.MouseEnter:connect(function() onMouseEnter(hoverSelection, guiButton) end)
-		guiButton.MouseButton1Up:connect(function() onMouseUp(paletteFrame, guiButton) end)
-		guiButton.Parent = guiFrame
-
-		if hoverSelection.Text == guiButton.Name then
-			selectedButton = guiButton
-			guiFrame.BackgroundColor = BrickColor.Yellow()
-		end
-	end
-
-	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)]]
-	Tool.SelectedButton.Changed:connect(function(property)
-
-		if value == Tool.SelectedButton.Value then return end
-		value = Tool.SelectedButton.Value
-
-		selectedButton = Tool.SelectedButton.Value
-		print(&quot;Selected Surface: &quot; .. Tool.SelectedButton.Value.Name)
-
-	end)
-
-end
 
 
 function canSelectObject(part, surface)
@@ -2976,6 +2832,7 @@ function on3dButton1Down(mouse)
 	if part then
 		local normalId = selectionSurface.TargetSurface
 		local surface = SurfaceEnum[selectedButton.Name]
+		if surface == nil then return end
 		--Apply the selected surface to the current parts
 		if normalId == Enum.NormalId.Top then
 			part.TopSurface = surface
@@ -2993,21 +2850,13 @@ function on3dButton1Down(mouse)
 	end
 end
 
---local guiMain
 function onEquippedLocal(mouse)
 	Tool.TextureId = &quot;rbxasset://icons/surface_sel.png&quot;
 	local character = script.Parent.Parent
 	local player = game.Players:GetPlayerFromCharacter(character)
 
-	--guiMain = Instance.new(&quot;ScreenGui&quot;)
-	--guiMain.Parent = player.PlayerGui
-
-	inGui = false
-	inPalette = false
-
 	mouse.Move:connect(function() on3dMouseMove(mouse) end)
 	mouse.Button1Down:connect(function() on3dButton1Down(mouse) end)
-	--mouse.Icon =&quot;rbxasset://textures\\MaterialCursor.png&quot;
 
 	selectionSurface = Instance.new(&quot;SurfaceSelection&quot;)
 	selectionSurface.Color = BrickColor.Red()
@@ -3023,12 +2872,18 @@ function onEquippedLocal(mouse)
 	selectionLasso.archivable = false
 	selectionLasso.Color = BrickColor.Red()
 
-	buildGui()
+	Tool.SelectedButton.Changed:connect(function(property)
+
+		if value == Tool.SelectedButton.Value then return end
+		value = Tool.SelectedButton.Value
+
+		selectedButton = Tool.SelectedButton.Value
+
+	end)
 end
 
 function onUnequippedLocal()
 	Tool.TextureId = origTexture
-	--guiMain:Remove()
 	if selectionBox then selectionBox:Remove() end
 	if selectionLasso then selectionLasso:Remove() end
 end
