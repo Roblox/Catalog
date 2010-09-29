@@ -19,7 +19,7 @@
 				<R22>0</R22>
 			</CoordinateFrame>
 			<string name="Name">BuildSurfaceTest</string>
-			<Content name="TextureId"><url>rbxasset://icons/surface_sel.png</url></Content>
+			<Content name="TextureId"><url>rbxasset://icons/surface.png</url></Content>
 			<bool name="archivable">true</bool>
 		</Properties>
 		<Item class="Part" referent="RBX1">
@@ -35,20 +35,20 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">1002</int>
 				<CoordinateFrame name="CFrame">
-					<X>-47.676693</X>
-					<Y>7.61727381</Y>
-					<Z>60.5890579</Z>
-					<R00>-0.792279661</R00>
-					<R01>0.000630850205</R01>
-					<R02>-0.610157847</R02>
-					<R10>0.000796246924</R10>
-					<R11>0.999999642</R11>
-					<R12>-3.1476402e-010</R12>
-					<R20>0.610157609</R20>
-					<R21>-0.000485836499</R21>
-					<R22>-0.792279899</R22>
+					<X>-26.437748</X>
+					<Y>2.68985486</Y>
+					<Z>-31.5000267</Z>
+					<R00>-0.999999523</R00>
+					<R01>-9.04471017e-006</R01>
+					<R02>2.48451997e-005</R02>
+					<R10>-8.99407678e-006</R10>
+					<R11>1</R11>
+					<R12>-1.47936089e-005</R12>
+					<R20>-2.47880726e-005</R20>
+					<R21>-1.48334029e-005</R21>
+					<R22>-1.00000012</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
 				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
 				<token name="FormFactor">2</token>
@@ -70,9 +70,9 @@
 				<token name="RightSurface">0</token>
 				<token name="RightSurfaceInput">0</token>
 				<Vector3 name="RotVelocity">
-					<X>5.89139127e-005</X>
-					<Y>-2.98990926e-005</Y>
-					<Z>-2.87930925e-005</Z>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
@@ -80,9 +80,9 @@
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
-					<X>-0.000102147969</X>
-					<Y>-0.00491566537</Y>
-					<Z>-0.0160986632</Z>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
 				</Vector3>
 				<bool name="archivable">true</bool>
 				<token name="shape">1</token>
@@ -2787,7 +2787,8 @@ local selectionSurface
 local selectionLasso
 local inGui = false
 local inPalette = false
-local mainFrame = nil
+
+local value = nil
 
 local selectedButton = nil
 local oldButton = nil
@@ -2872,46 +2873,30 @@ SurfaceEnum[&quot;Weld&quot;] = Enum.SurfaceType.Weld
 SurfaceEnum[&quot;Hinge&quot;] = Enum.SurfaceType.Hinge
 SurfaceEnum[&quot;Motor&quot;] = Enum.SurfaceType.Motor
 
-local speed = 25
-function pushInFrame(frame)
-	while frame.Position.X.Offset &lt; 75 do
-		frame.Position = UDim2.new(frame.Position.X.Scale,frame.Position.X.Offset + speed,frame.Position.Y.Scale,frame.Position.Y.Offset)
-		wait()
-	end
-end
-
-function pushOutFrame(frame)
-	while frame.Position.X.Offset &gt; -102 do
-		frame.Position = UDim2.new(frame.Position.X.Scale,frame.Position.X.Offset - speed,frame.Position.Y.Scale,frame.Position.Y.Offset)
-		wait()
-	end
-end
 
 
-function buildGui(root, mouse)
-
-	mainFrame = Instance.new(&quot;ImageLabel&quot;)
+function buildGui()
+--[[
+	local mainFrame = Instance.new(&quot;Frame&quot;)
 	mainFrame.Name = &quot;Main Surface Frame&quot;
-	mainFrame.Image = &quot;http://www.roblox.com/asset/?id=35238561&quot;
-	mainFrame.Position = UDim2.new(0,-102,0,0)
-	mainFrame.Size = UDim2.new(0.0, 102,0,217)
+	mainFrame.Position = UDim2.new(0.0, 0, 1.0, -50)
+	mainFrame.Size = UDim2.new(0.0, 50 * 10, 0.00, 50)
 	mainFrame.Transparency = 1.0
-	mainFrame.Parent = root.NewGuiDemo.BuildTools.Frame.PropertyTools.InputSelector
-	--[[
+	mainFrame.Parent = root
+	
 	local paletteFrame = Instance.new(&quot;Frame&quot;)
 	paletteFrame.Name = &quot;Palette&quot;
-	paletteFrame.Position = UDim2.new(0.0, -102, 0.0, 0)
-	paletteFrame.Size = UDim2.new(0,102,0,217)
+	paletteFrame.Position = UDim2.new(0.0, 0, 0.0, 0)
+	paletteFrame.Size = UDim2.new(.8, 0, 1.0, 0)
 	paletteFrame.BackgroundColor = BrickColor.Black()
 	paletteFrame.MouseEnter:connect(function() onMouseEnterPalette(mouse) end)
 	paletteFrame.MouseLeave:connect(function() onMouseLeavePalette(paletteFrame, mouse) end)
 	paletteFrame.Parent = mainFrame
 	
 	local hoverSelection = Instance.new(&quot;TextLabel&quot;)
-	hoverSelection.Position = UDim2.new(0,0,1,0)
-	hoverSelection.Size = UDim2.new(0.505,0,0.5,0)
-	hoverSelection.BackgroundColor3 = Color3.new(0,0,0)
-	hoverSelection.BackgroundTransparency = 0.2
+	hoverSelection.Position = UDim2.new(0.8, 0, 0.0, 0)
+	hoverSelection.Size = UDim2.new(.2, 0, 1.0, 0)
+	hoverSelection.BackgroundColor = BrickColor.Black()
 	hoverSelection.TextColor = BrickColor.White()
 	hoverSelection.Text = &quot;Studs&quot;
 	hoverSelection.Parent = mainFrame
@@ -2928,16 +2913,14 @@ function buildGui(root, mouse)
 	
 	local order = {&quot;Smooth&quot;, &quot;Studs&quot;, &quot;Inlets&quot;, &quot;Universal&quot;, &quot;Glue&quot;, &quot;Weld&quot;, &quot;Hinge&quot;, &quot;Motor&quot;}
 
-	local xPos = 0
-	local yPos = 0
 	local x 
 	for x=1, #order do
 		local key = order[x]
 		local value = surfaces[key]
 		local guiFrame = Instance.new(&quot;Frame&quot;)
-		guiFrame.Position = UDim2.new(xPos, 0, yPos, 0)
-		guiFrame.Size = UDim2.new(0,32,0,32)
-		guiFrame.BackgroundColor3 = Color3.new(0,0,0)
+		guiFrame.Position = UDim2.new(1.0/8 * (x-1), 0, 0.0, 0)
+		guiFrame.Size = UDim2.new(1.0/8, 0, 1.0, 0)
+		guiFrame.BackgroundColor = BrickColor.Black()
 		--guiFrame.BorderSizePixel = 0
 		guiFrame.Parent = paletteFrame
 
@@ -2956,17 +2939,18 @@ function buildGui(root, mouse)
 			selectedButton = guiButton
 			guiFrame.BackgroundColor = BrickColor.Yellow()
 		end
-
-		xPos = xPos + 0.25
-		if xPos &gt; 0.75 then
-			xPos = 0
-			yPos = 0.5
-		end
 	end
 
-	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)
-]]
-	pushInFrame(mainFrame)
+	mainFrame.MouseLeave:connect(function() onMouseLeave(hoverSelection) end)]]
+	Tool.SelectedButton.Changed:connect(function(property)
+
+		if value == Tool.SelectedButton.Value then return end
+		value = Tool.SelectedButton.Value
+
+		selectedButton = Tool.SelectedButton.Value
+		print(&quot;Selected Surface: &quot; .. Tool.SelectedButton.Value.Name)
+
+	end)
 
 end
 
@@ -3009,11 +2993,14 @@ function on3dButton1Down(mouse)
 	end
 end
 
-
+--local guiMain
 function onEquippedLocal(mouse)
 	Tool.TextureId = &quot;rbxasset://icons/surface_sel.png&quot;
 	local character = script.Parent.Parent
 	local player = game.Players:GetPlayerFromCharacter(character)
+
+	--guiMain = Instance.new(&quot;ScreenGui&quot;)
+	--guiMain.Parent = player.PlayerGui
 
 	inGui = false
 	inPalette = false
@@ -3036,13 +3023,12 @@ function onEquippedLocal(mouse)
 	selectionLasso.archivable = false
 	selectionLasso.Color = BrickColor.Red()
 
---	buildGui(player.PlayerGui, mouse)
+	buildGui()
 end
 
 function onUnequippedLocal()
 	Tool.TextureId = origTexture
-	--pushOutFrame(mainFrame)
-	mainFrame:remove()
+	--guiMain:Remove()
 	selectionSurface:Remove()
 	selectionLasso:Remove()
 end
