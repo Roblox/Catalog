@@ -44,6 +44,8 @@ local buttonTransparency = 0.1
 local insertButtonTransparency = 0.25
 local transparency = 0.25
 
+local dropDownSelected = false
+
 local selectedButtonColor = Color3.new(.1255, .4078, .1961)
 local selectedButtonTextColor = Color3.new(1.0,1.0,1.0)
 
@@ -77,6 +79,7 @@ end
 local InsertRows = 7
 local InsertColumns = 3
 local highlight = true
+local minYSize = 8
 
 --Static variables used for creating sizes
 function getPlayer()
@@ -489,7 +492,7 @@ function createDropDownMenu(parent, Window)
 	droppedDownMenu.BackgroundTransparency = 1
 	droppedDownMenu.Visible = false
 	droppedDownMenu.Active = false
-	droppedDownMenu.Position = UDim2.new(xPos,0,0.02,0)
+	droppedDownMenu.Position = UDim2.new(xPos,0,0.09,0)
 	droppedDownMenu.Size = UDim2.new(width,0,0.97,0)
 	droppedDownMenu.Parent = dropDownMenu.Parent
 	droppedDownMenu.ZIndex = 3
@@ -530,15 +533,26 @@ function createDropDownMenu(parent, Window)
 	categories = categories + #Data.UserCategoryButtons
 
 	local spacing = 0.1
-	buttonFrame.Size = UDim2.new(0.9,0,(1 -  spacing)/categories,0)
+	buttonFrame.Size = UDim2.new(0.9,0,(1 -  spacing)/(categories + 2),0) 
+
+
+	-- make sure buttons are big enough
+	local testButton = buttonFrame:clone()
+	testButton.Parent = droppedDownMenu
+	while testButton.AbsoluteSize.Y &lt; minYSize do
+		droppedDownMenu.Size = UDim2.new(width,0,droppedDownMenu.Size.Y.Scale + 0.01,0)
+	end
+	testButton:remove()
+	testButton = nil
+
 
 	local masterCategory = 1
-	
+	print(categories)
 	for i = 1, categories do
 		-- needed to maintain local scope for categories in event listeners below
 		local userCategory = masterCategory
 		local button = buttonFrame:clone()
-		button.Position = UDim2.new(0.05,0,(i - 1)/categories,0)
+		button.Position = UDim2.new(0.05,0,(i - 1)/(categories + 2),0)
 		button.Parent = droppedDownMenu
 		if i &lt;= robloxMaxCat then
 			button.Button.Text = &quot;Roblox Set: &quot; .. tostring(Data.BaseCategoryButtons[i].SetName.Value)
@@ -549,23 +563,76 @@ function createDropDownMenu(parent, Window)
 
 		button.Button.MouseButton1Click:connect(function()
 			titleFrame.Text = button.Button.Text
+			parent.InsertTab.SearchFrame.Visible = false
 			if i &lt;= robloxMaxCat then
 				selectSet(button, button.Button.Text, Data.BaseCategoryButtons[i].SetId.Value, 0)
 			else
 				selectSet(button, button.Button.Text, Data.UserCategoryButtons[userCategory].SetId.Value, 0)
 			end
-			dropDownMenu.Visible = not dropDownMenu.Visible
+			--dropDownMenu.Visible = not dropDownMenu.Visible
+			dropDownSelected = not dropDownSelected
+			if not dropDownSelected then
+				dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36361347&quot;
+			else
+				dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36701740&quot;
+			end
 			droppedDownMenu.Visible = not droppedDownMenu.Visible
 			droppedDownMenu.Active = not droppedDownMenu.Active
 			highlight = true
 		end)
 		if i &gt; robloxMaxCat then masterCategory = masterCategory + 1 end
 	end
+
+	local freeModels = buttonFrame:clone()
+	freeModels.Position = UDim2.new(0.05,0,categories/(categories +2),0)
+	freeModels.Button.Text = &quot;Free Models&quot;
+	freeModels.Parent = droppedDownMenu
+	freeModels.Button.MouseButton1Click:connect(function()
+		titleFrame.Text = freeModels.Button.Text
+		parent.InsertTab.SearchFrame.Visible = true
+		--dropDownMenu.Visible = not dropDownMenu.Visible
+		dropDownSelected = not dropDownSelected
+		if not dropDownSelected then
+			dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36361347&quot;
+		else
+			dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36701740&quot;
+		end
+		droppedDownMenu.Visible = not droppedDownMenu.Visible
+		droppedDownMenu.Active = not droppedDownMenu.Active
+		highlight = true
+	end)
+
+	local freeDecals = buttonFrame:clone()
+	freeDecals.Position = UDim2.new(0.05,0,(categories + 1)/(categories +2),0)
+	freeDecals.Button.Text = &quot;Free Decals&quot;
+	freeDecals.Parent = droppedDownMenu
+	freeDecals.Button.MouseButton1Click:connect(function()
+		titleFrame.Text = freeDecals.Button.Text
+		parent.InsertTab.SearchFrame.Visible = true
+		--dropDownMenu.Visible = not dropDownMenu.Visible
+		dropDownSelected = not dropDownSelected
+		if not dropDownSelected then
+			dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36361347&quot;
+		else
+			dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36701740&quot;
+		end
+
+		droppedDownMenu.Visible = not droppedDownMenu.Visible
+		droppedDownMenu.Active = not droppedDownMenu.Active
+		highlight = true
+	end)
 	
 
 	dropDownMenu.MouseButton1Click:connect(function()
 		Window.Main.RolloverText.Text = &quot;&quot;
-		dropDownMenu.Visible = not dropDownMenu.Visible
+		--dropDownMenu.Visible = not dropDownMenu.Visible
+		dropDownSelected = not dropDownSelected
+		if not dropDownSelected then
+			dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36361347&quot;
+		else
+			dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36701740&quot;
+		end
+
 		droppedDownMenu.Visible = not droppedDownMenu.Visible
 		droppedDownMenu.Active = not droppedDownMenu.Active
 		highlight = false
@@ -599,6 +666,38 @@ function buildMainGui(root, userId)
 	insertTab.Size = UDim2.new(1, 0, 1.0, 0)
 	insertTab.BackgroundTransparency = 1.0
 	insertTab.Parent = mainFrame
+
+
+	local searchFrame = Instance.new(&quot;Frame&quot;)
+	searchFrame.Name = &quot;SearchFrame&quot;
+	searchFrame.Size = UDim2.new(1,0,0.1,0)
+	searchFrame.Position = UDim2.new(0.12,0,1.11,0)
+	searchFrame.BackgroundTransparency = 1
+	searchFrame.Visible = false
+	searchFrame.Parent = insertTab
+	
+	local searchGraphicBox = Instance.new(&quot;ImageLabel&quot;)
+	searchGraphicBox.Image = &quot;http://www.roblox.com/asset/?id=36337274&quot;
+	searchGraphicBox.Name = &quot;SearchGraphicBox&quot;
+	searchGraphicBox.BackgroundTransparency = 1
+	searchGraphicBox.Size = UDim2.new(0.7,0,1,0)
+	searchGraphicBox.Parent = searchFrame
+
+	local searchBox = Instance.new(&quot;TextBox&quot;)
+	searchBox.Name = &quot;SearchBox&quot;
+	searchBox.Text = &quot;Enter Text Here&quot;
+	searchBox.TextWrap = true
+	searchBox.TextColor = BrickColor.White()
+	searchBox.BackgroundTransparency = 1
+	searchBox.Size = UDim2.new(1,0,1,0)
+	searchBox.Parent = searchGraphicBox
+
+	local searchButton = Instance.new(&quot;ImageButton&quot;)
+	searchButton.Name = &quot;SearchButton&quot;
+	searchButton.Size = UDim2.new(0.4,0,1,0)
+	searchButton.Position = UDim2.new(0.71,0,0)
+	searchButton.Parent = searchFrame
+
 	
 	Data.BaseCategoryButtons = processCategory(game:GetService(&quot;InsertService&quot;):GetBaseCategories(), setPanel)
 	local userData = game:GetService(&quot;InsertService&quot;):GetUserCategories(userId)
