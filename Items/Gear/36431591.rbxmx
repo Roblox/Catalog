@@ -44,6 +44,13 @@ local buttonTransparency = 0.1
 local insertButtonTransparency = 0.25
 local transparency = 0.25
 
+local freeIndex = 1
+local freeViewing = false
+local viewingModels = false
+local currentSearchText = &quot;&quot;
+local freeModels
+local freeSets
+
 local dropDownSelected = false
 
 local selectedButtonColor = Color3.new(.1255, .4078, .1961)
@@ -283,14 +290,54 @@ function buildSetButton(name, setId, setImageId, i,  count)
 	return buttonFrame
 end
 
-function previousSetPage() 
-	local newIndex = math.max(1, Data.Category[Data.CurrentCategory].Index - (Data.Main.InsertRows * Data.Main.InsertColumns))
-	setSetIndex(newIndex) 
+function previousSetPage()
+	if freeViewing == false then
+		local newIndex = math.max(1, Data.Category[Data.CurrentCategory].Index - (Data.Main.InsertRows * Data.Main.InsertColumns))
+		setSetIndex(newIndex)
+	else
+		freeIndex = math.max(freeIndex - 1,1)
+		if viewingModels then
+			loadFreeSets(freeModels,&quot;Models&quot;,currentSearchText)
+		else
+			loadFreeSets(freeDecals,&quot;Decals&quot;,currentSearchText)
+		end
+		Window.Main.NextPageButton.Visible = true
+		Window.Main.PreviousPageButton.Visible = true
+		if freeIndex == 1 then
+			Window.Main.PreviousPageButton.Visible = false
+		end
+	end
 end
 
 function nextSetPage()
-	local newIndex = math.max(0, Data.Category[Data.CurrentCategory].Index + (Data.Main.InsertRows * Data.Main.InsertColumns))
-	setSetIndex(newIndex)
+	if freeViewing == false then
+		local newIndex = math.max(0, Data.Category[Data.CurrentCategory].Index + (Data.Main.InsertRows * Data.Main.InsertColumns))
+		setSetIndex(newIndex)
+	else
+		freeIndex = freeIndex + 1
+		local models
+		if viewingModels then
+			loadFreeSets(freeModels,&quot;Models&quot;,currentSearchText)
+			models = game:GetService(&quot;InsertService&quot;):GetFreeModels(currentSearchText,freeIndex)
+		else
+			loadFreeSets(freeDecals,&quot;Decals&quot;,currentSearchText)
+			models = game:GetService(&quot;InsertService&quot;):GetFreeDecals(currentSearchText,freeIndex)
+		end
+		local totalCount = 21
+
+		for ndx,catinfo in ipairs( models ) do 
+			for k,v in pairs(catinfo) do 
+				if k == &quot;TotalCount&quot; then totalCount = v end
+			end 
+		end
+
+		-- we&apos;ve reach the end if true
+		if tonumber(totalCount) &lt; 21 then
+			Window.Main.NextPageButton.Visible = false
+		end
+
+		Window.Main.PreviousPageButton.Visible = true
+	end
 end
 
 function setSetIndex(dataOffset)
@@ -434,14 +481,17 @@ function filterSet(set)
 end
 function selectSet(buttonFrame, setName, setId, setIndex)
 	if buttonFrame and Data.Category[Data.CurrentCategory] ~= nil then
-		if buttonFrame.Button ~= Data.Category[Data.CurrentCategory].Button then
+		if buttonFrame.Button ~= Data.Category[Data.CurrentCategory].Button or type(setId) ~= &quot;number&quot;  then
 			
 			Data.Category[Data.CurrentCategory].Button = buttonFrame.Button
 		
-			if SetCache[setId] == nil then
+			Data.Category[Data.CurrentCategory].Contents = setId
+
+			if type(setId) == &quot;number&quot; then
 				SetCache[setId] = filterSet(game:GetService(&quot;InsertService&quot;):GetCollection(setId))
+				Data.Category[Data.CurrentCategory].Contents = SetCache[setId]
 			end
-			Data.Category[Data.CurrentCategory].Contents = SetCache[setId]
+			
 			Window.Main.Title.Text = setName
 			print(setName)
 
@@ -470,6 +520,26 @@ function processCategory(sets, setPanel)
 		setButtons[index].Parent = setPanel	
 	end
 	return setButtons
+end
+
+function loadFreeSets(button,type,search)
+	
+	local stuff
+	if type == &quot;Models&quot; then
+		stuff = game:GetService(&quot;InsertService&quot;):GetFreeModels(search,freeIndex)
+	elseif type == &quot;Decals&quot; then
+		stuff = game:GetService(&quot;InsertService&quot;):GetFreeDecals(search,freeIndex)
+	end
+
+	for ndx,catinfo in ipairs( stuff ) do 
+		for k,v in pairs(catinfo) do 
+			if k == &quot;Results&quot; then
+				selectSet(button, button.Button.Text, v, 0)
+				return
+			end
+		end 
+	end
+
 end
 
 function createDropDownMenu(parent, Window)
@@ -562,6 +632,7 @@ function createDropDownMenu(parent, Window)
 
 
 		button.Button.MouseButton1Click:connect(function()
+			freeViewing = false
 			titleFrame.Text = button.Button.Text
 			parent.InsertTab.SearchFrame.Visible = false
 			if i &lt;= robloxMaxCat then
@@ -569,7 +640,6 @@ function createDropDownMenu(parent, Window)
 			else
 				selectSet(button, button.Button.Text, Data.UserCategoryButtons[userCategory].SetId.Value, 0)
 			end
-			--dropDownMenu.Visible = not dropDownMenu.Visible
 			dropDownSelected = not dropDownSelected
 			if not dropDownSelected then
 				dropDownMenu.Image = &quot;http://www.roblox.com/asset/?id=36361347&quot;
@@ -583,12 +653,16 @@ function createDropDownMenu(parent, Window)
 		if i &gt; robloxMaxCat then masterCategory = masterCategory + 1 end
 	end
 
-	local freeModels = buttonFrame:clone()
+	freeModels = buttonFrame:clone()
 	freeModels.Position = UDim2.new(0.05,0,categories/(categories +2),0)
 	freeModels.Button.Text = &quot;Free Models&quot;
 	freeModels.Parent = droppedDownMenu
 	freeModels.Button.MouseButton1Click:connect(function()
+		freeViewing = true
+		viewingModels = true
+		freeIndex = 1
 		titleFrame.Text = freeModels.Button.Text
+		loadFreeSets(freeModels,&quot;Models&quot;,&quot;&quot;)
 		parent.InsertTab.SearchFrame.Visible = true
 		--dropDownMenu.Visible = not dropDownMenu.Visible
 		dropDownSelected = not dropDownSelected
@@ -602,12 +676,16 @@ function createDropDownMenu(parent, Window)
 		highlight = true
 	end)
 
-	local freeDecals = buttonFrame:clone()
+	freeDecals = buttonFrame:clone()
 	freeDecals.Position = UDim2.new(0.05,0,(categories + 1)/(categories +2),0)
 	freeDecals.Button.Text = &quot;Free Decals&quot;
 	freeDecals.Parent = droppedDownMenu
 	freeDecals.Button.MouseButton1Click:connect(function()
+		freeViewing = true
+		viewingModels = false
+		freeIndex = 1
 		titleFrame.Text = freeDecals.Button.Text
+		loadFreeSets(freeDecals,&quot;Decals&quot;,&quot;&quot;)
 		parent.InsertTab.SearchFrame.Visible = true
 		--dropDownMenu.Visible = not dropDownMenu.Visible
 		dropDownSelected = not dropDownSelected
@@ -694,9 +772,21 @@ function buildMainGui(root, userId)
 
 	local searchButton = Instance.new(&quot;ImageButton&quot;)
 	searchButton.Name = &quot;SearchButton&quot;
+	searchButton.Image = &quot;http://www.roblox.com/asset/?id=37272267&quot;
+	searchButton.BackgroundTransparency = 1
 	searchButton.Size = UDim2.new(0.4,0,1,0)
 	searchButton.Position = UDim2.new(0.71,0,0)
 	searchButton.Parent = searchFrame
+
+	searchButton.MouseButton1Down:connect(function() 
+		currentSearchText = searchBox.Text
+		freeIndex = 1
+		if viewingModels then
+			loadFreeSets(freeModels,&quot;Models&quot;,searchBox.Text)
+		else
+			loadFreeSets(freeDecals,&quot;Decals&quot;,searchBox.Text)
+		end
+	end)
 
 	
 	Data.BaseCategoryButtons = processCategory(game:GetService(&quot;InsertService&quot;):GetBaseCategories(), setPanel)
@@ -949,6 +1039,7 @@ function beginInsertAsset(assetName, assetId, image, stampMode)
 				root:Remove()
 				
 				Window.Stamp.Frame.Visible = true
+				Window.Loading.Frame.Visible = false
 				return
 			elseif instance:IsA(&quot;Team&quot;) then
 				instance.Parent = game:GetService(&quot;Teams&quot;)
@@ -1795,8 +1886,8 @@ script.Parent.Equipped:connect(onEquipped)
 		</Item>
 		<Item class="BoolValue" referent="RBX11">
 			<Properties>
-				<string name="Name">RobloxBuildTool</string>
-				<bool name="Value">false</bool>
+				<string name="Name">IsRobloxBuildTool</string>
+				<bool name="Value">true</bool>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
