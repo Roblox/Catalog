@@ -1,0 +1,414 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.200000003</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>-0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">HeadShot</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=37241858</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">WheresYourHeadAt</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+Tool.Enabled = true
+
+function throwHead()
+	local vCharacter = Tool.Parent
+	-- animation is below
+	-- http://www.roblox.com/Asset?ID=35154961
+
+	headSound = Tool.Handle:FindFirstChild(&quot;HeadSound&quot;)
+	if headSound == nil then
+		headSound = Instance.new(&quot;Sound&quot;)
+		headSound.Volume = 1
+		headSound.Name = &quot;HeadSound&quot;
+		headSound.SoundId = &quot;http://www.roblox.com/asset/?id=35935204&quot;
+		headSound.Parent = Tool.Handle
+	end
+	headSound:Play()
+
+	humanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+	if humanoid == nil then return end
+	headshot = humanoid:LoadAnimation(Tool.headThrow)
+	--Tool.DanceObject.Value = dancer
+	headshot:Play()
+	--Tool.Handle.SongLoop:Play()
+	wait(2.65)
+	--Tool.Handle.SongLoop:Stop()
+	--root:remove()
+
+	local targetPos = humanoid.TargetPoint
+	local lookAt = (targetPos - vCharacter.Head.Position).unit
+
+--[[function onEquipped()
+	Tool.Handle.EquipSound:play()
+end
+
+function onUnequipped()
+	Tool.Handle.EquipSound:stop()
+	if dancer ~= nil then
+		dancer:Stop()
+		dancer:remove()
+	end
+end]]--
+
+
+	-- first we make a fake head and make the real head (and all accompanying accoutrements) disappear
+	realHead = vCharacter:FindFirstChild(&quot;Head&quot;)
+	if realHead == nil then return end
+	realHead.Transparency = 1
+	realHead.CanCollide = false
+
+	fakeHead = realHead:Clone()
+	--fakeHead.CanCollide = true --for starters we keep it false, to avoid weird self-collisions
+	fakeHead.CanCollide = false
+	fakeHead.Transparency = 0
+	--fakeHead.Parent = vCharacter
+	fakeHead.Parent = vCharacter.Parent
+	--fakeHead.Name = &quot;ZOMGITHREWMYHEADATYOU!&quot;
+
+	-- temporarily turn off collision with parts involved in the throwing, so we don&apos;t get weird behavior
+	--vCharacter.Torso.CanCollide = false
+	--rightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+	--if rightArm ~= nil then rightArm.CanCollide = false end
+	--if Tool ~= nil then
+		--if Tool.Handle ~= nil then
+			--Tool.Handle.CanCollide = false
+		--end
+	--end
+	
+	newHats = {}
+	newHatTransforms = {}
+	oldHats = {}
+	
+	numHatsSoFar = 1
+	charParts = vCharacter:GetChildren()
+	for i = 1,#charParts do
+		if charParts[i].className == &quot;Hat&quot; then
+			myHat = charParts[i]
+			myHat = charParts[i]
+			newHandle = myHat.Handle:Clone()
+			--newHandle.Parent = vCharacter
+			newHandle.Parent = vCharacter.Parent
+			newHats[numHatsSoFar] = newHandle
+			oldHats[numHatsSoFar] = myHat.Handle
+
+			--newHatTransforms[numHatsSoFar] = myHat.Handle.CFrame:inverse()*vParts[2].CFrame
+			--newHatTransforms[numHatsSoFar] = myHat.Handle.CFrame*(vParts[2].CFrame:inverse())
+			newHatTransforms[numHatsSoFar] = realHead.CFrame:inverse()*myHat.Handle.CFrame
+			newHats[numHatsSoFar].Anchored = true
+
+			myHat.Handle.Transparency = 1
+			numHatsSoFar = numHatsSoFar + 1
+		end
+	end
+
+
+	--myFace = vCharacter.Head.face -- make face go away
+	--myFace.Parent = nil
+	myFace = vCharacter.Head:FindFirstChild(&quot;face&quot;)
+	if myFace ~= nil then myFace.Parent = nil end
+
+	-- make head FLYYY
+	--throwHeadHere(lookAt)
+	--wait(2)
+	
+	boom = Instance.new(&quot;BodyForce&quot;)
+	boom.force = Vector3.new(0,fakeHead:GetMass()*190,0)
+	boom.Parent = fakeHead
+	fakeHead.Velocity = lookAt*30
+	fakeHead.RotVelocity = Vector3.new(10*(math.random()-.5), 10*(math.random()-.5), 10*(math.random()-.5))
+
+	
+	for i = 1,5 do
+		for j = 1, #newHats do
+			newHats[j].CFrame = fakeHead.CFrame*newHatTransforms[j]
+			newHats[j].Velocity = fakeHead.Velocity
+			newHats[j].RotVelocity = fakeHead.RotVelocity
+		end
+		wait(.05)
+	end
+
+	-- turn back on collision with throwing parts after .5 seconds (can probably cut this down to like .2 seconds)
+	--vCharacter.Torso.CanCollide = true
+	--rightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+	--if rightArm ~= nil then rightArm.CanCollide = true end
+	--if Tool ~= nil then
+		--if Tool.Handle ~= nil then
+			--Tool.Handle.CanCollide = false
+		--end
+	--end
+
+	fakeHead.CanCollide = true --might not want to have this in here, since this means head can pick up items?!
+
+	for i = 6,80 do
+		for j = 1, #newHats do
+			newHats[j].CFrame = fakeHead.CFrame*newHatTransforms[j]
+			newHats[j].Velocity = fakeHead.Velocity
+			newHats[j].RotVelocity = fakeHead.RotVelocity
+		end
+		wait(.05)
+	end
+
+--	headshot = script.headScript:Clone()
+--	headshot.Parent = fakeHead
+--
+--	headTransform = Instance.new(&quot;CFrameValue&quot;)
+--	headTransform.Value = 
+
+	-- reset to normal
+	fakeHead.Parent = nil -- make fake head disappear
+	for i = 1,#newHats do
+		newHats[i].Parent = nil -- make fake hats disappear
+	end
+	for i = 1,#oldHats do
+		oldHats[i].Transparency = 0  -- make real hats reappear
+	end
+
+	if myFace ~= nil then myFace.Parent = vCharacter.Head end -- put back face on real head
+	realHead.Transparency = 0
+
+	headshot:Stop()
+	headshot:remove()
+end
+
+
+function gunUp()
+	Tool.GripForward = Vector3.new(0,.981,-.196)
+	Tool.GripRight = Vector3.new(1,0,0)
+	Tool.GripUp = Vector3.new(0,.196,.981)
+end
+
+function gunOut()
+	Tool.GripForward = Vector3.new(0,1,0)
+	Tool.GripRight = Vector3.new(1,0,0)
+	Tool.GripUp = Vector3.new(0,0,1)
+end
+
+
+function onActivated()
+	if not Tool.Enabled  then
+		return
+	end
+
+	Tool.Enabled = false
+
+
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print(&quot;Humanoid not found&quot;)
+		return 
+	end
+
+	local targetPos = humanoid.TargetPoint
+	local lookAt = (targetPos - character.Head.Position).unit
+
+	local reload = .5
+
+	gunUp()
+	throwHead()
+	wait(reload)
+	gunOut()
+	wait(reload)
+
+	Tool.Enabled = true
+end
+
+function onEquipped()
+	headSound = Tool.Handle:FindFirstChild(&quot;HeadSound&quot;)
+	if headSound == nil then
+		headSound = Instance.new(&quot;Sound&quot;)
+		headSound.Volume = 1
+		headSound.Name = &quot;HeadSound&quot;
+		headSound.SoundId = &quot;http://www.roblox.com/asset/?id=35935204&quot;
+		headSound.Parent = Tool.Handle
+	end
+end
+
+function onUnequipped()
+	headSound = Tool.Handle:FindFirstChild(&quot;HeadSound&quot;)
+	if headSound ~= nil then headSound.Parent = nil end
+end
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+	print(&quot;ending&quot;)
+	enabled = false
+
+	while Tool.Enabled do
+		wait(.01)
+	end
+
+	print(&quot;Setting Mouse To Wait&quot;)
+	mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+	while not Tool.Enabled do
+		wait(.01)
+	end
+
+	print(&quot;Setting Mouse to Go&quot;)
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+
+	enabled = true
+end
+
+function onEquippedLocal(mouse)
+
+	if mouse == nil then
+		print(&quot;Mouse not found&quot;)
+		return 
+	end
+
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-80.999939</X>
+					<Y>58.1006584</Y>
+					<Z>-303.799927</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>0</R11>
+					<R12>1</R12>
+					<R20>0</R20>
+					<R21>-1</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<bool name="DraggingV1">false</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">2</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1.20000005</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=37241605</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=37241842</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=35154961</url></Content>
+				<string name="Name">headThrow</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
