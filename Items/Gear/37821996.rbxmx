@@ -1,0 +1,492 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>2.5</Z>
+				<R00>-1</R00>
+				<R01>-0</R01>
+				<R02>-0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>0</R20>
+				<R21>-1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">RiddlingSkullSword</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=36323942</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">-------- OMG HAX
+
+r = game:service(&quot;RunService&quot;)
+local sword = script.Parent.Handle
+local Tool = script.Parent
+
+local damage = 5
+local p = nil
+local humanoid = nil
+
+local slash_damage = 5
+local regularWalk = 23
+
+local hasRiddleSkull = false
+
+local debris = game:GetService(&quot;Debris&quot;)
+
+--local SlashSound = Instance.new(&quot;Sound&quot;)
+--SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+--SlashSound.Parent = sword
+--SlashSound.Volume = .7
+--
+--local LungeSound = Instance.new(&quot;Sound&quot;)
+--LungeSound.SoundId = &quot;rbxasset://sounds\\swordlunge.wav&quot;
+--LungeSound.Parent = sword
+--LungeSound.Volume = .6
+
+local UnsheathSound = Instance.new(&quot;Sound&quot;)
+UnsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
+UnsheathSound.Parent = sword
+UnsheathSound.Volume = 1
+
+-- magical sword sound has id of 25256253...  for fast slashes, like swordslash.wav (SlashSound)
+
+
+function blow(hit)
+	local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+	local vCharacter = Tool.Parent
+	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+	local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
+	if humanoid~=nil and humanoid ~= hum and hum ~= nil then
+		-- final check, make sure sword is in-hand
+
+		local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+		if (right_arm ~= nil) then
+			local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
+			if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
+				tagHumanoid(humanoid, vPlayer)
+				humanoid:TakeDamage(damage)
+				wait(1)
+				untagHumanoid(humanoid)
+			end
+		end
+
+
+	end
+end
+
+
+function tagHumanoid(humanoid, player)
+	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+	creator_tag.Value = player
+	creator_tag.Name = &quot;creator&quot;
+	creator_tag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+	if humanoid ~= nil then
+		local tag = humanoid:findFirstChild(&quot;creator&quot;)
+		if tag ~= nil then
+			tag.Parent = nil
+		end
+	end
+end
+
+
+function spinAttack(vChar)
+	humanoid = vChar:FindFirstChild(&quot;Humanoid&quot;)
+	if humanoid == nil then return end
+	local torso = humanoid.Parent:FindFirstChild(&quot;Torso&quot;)
+	if torso ~= nil then
+
+		local spinForce = Instance.new(&quot;BodyAngularVelocity&quot;)
+		spinForce.P = 1000000
+		spinForce.angularvelocity = Vector3.new(0,-20,0)
+		spinForce.maxTorque = Vector3.new(spinForce.P,spinForce.P,spinForce.P)
+		spinForce.Parent = torso
+		if hasRiddleSkull then debris:AddItem(spinForce, 5)
+		else debris:AddItem(spinForce, 1) end
+
+		if hasRiddleSkull then
+			local strikeForce = Instance.new(&quot;BodyVelocity&quot;)
+			strikeForce.velocity = (humanoid.TargetPoint - vChar.Head.Position).unit * 50
+			strikeForce.maxForce = Vector3.new(100000, 0, 100000)
+			strikeForce.Name = &quot;StrikeForce&quot;
+			strikeForce.Parent = torso
+			
+			debris:AddItem(strikeForce, 5)
+		end
+	end
+end
+
+function attack()
+SlashSound = sword:FindFirstChild(&quot;SlashSound&quot;)
+if SlashSound ~= nil then SlashSound:play() end
+	vCharacter = Tool.Parent
+	if vCharacter ~= nil and vCharacter.Name ~= &quot;Backpack&quot; then 
+		--vPlay = game.Players:GetPlayerFromCharacter(vCharacter)
+		--if vPlay == nil then return end
+		--if (vPlay.Backpack:FindFirstChild(&quot;RiddlingSkull&quot;) ~= nil) then hasRiddleSkull = true
+		if vCharacter:FindFirstChild(&quot;RiddlingSkull&quot;) ~= nil then hasRiddleSkull = true
+		else hasRiddleSkull = false end
+		spinAttack(vCharacter) 
+	else return end
+	damage = slash_damage
+	wait(.75)
+	SlashSound = sword:FindFirstChild(&quot;SlashSound&quot;)
+if SlashSound ~= nil then SlashSound:play() end
+	--if SlashSound == nil then
+	--	SlashSound = Instance.new(&quot;Sound&quot;)
+	--	SlashSound.Volume = .7
+	--	SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+	--	SlashSound.Name = &quot;SlashSound&quot;
+	--	SlashSound.Parent = sword
+	--end
+end
+
+function swordUp()
+	Tool.GripForward = Vector3.new(-1,0,0)
+	Tool.GripRight = Vector3.new(0,1,0)
+	Tool.GripUp = Vector3.new(0,0,1)
+end
+
+function swordOut()
+	Tool.GripForward = Vector3.new(0,0,1)
+	Tool.GripRight = Vector3.new(0,1,0)
+	Tool.GripUp = Vector3.new(1,0,0)
+end
+
+
+Tool.Enabled = true
+function onActivated()
+
+	if not Tool.Enabled then
+		return
+	end
+
+	Tool.Enabled = false
+
+	local character = Tool.Parent;
+	if character.Name == &quot;Backpack&quot; or character == nil then return end
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print(&quot;Humanoid not found&quot;)
+		return 
+	end
+
+	attack()
+
+	wait(.5)
+	local count = 0
+	if hasRiddleSkull then 
+		for i = 1, 35 do
+			torso = character:FindFirstChild(&quot;Torso&quot;)
+			if torso ~= nil then
+				strikeForce = torso:FindFirstChild(&quot;StrikeForce&quot;)
+				if strikeForce ~= nil then strikeForce.velocity = (humanoid.TargetPoint - character.Head.Position).unit * 50 end
+			end
+			wait(.1) 
+			count = count + 1
+			if count &gt; 7 then
+				SlashSound = sword:FindFirstChild(&quot;SlashSound&quot;)
+				if SlashSound ~= nil then SlashSound:play() end
+				count = 0
+			end
+		end
+	end  --4 more seconds of slashing
+	Tool.Enabled = true
+end
+
+function onEquipped()
+	SlashSound = sword:FindFirstChild(&quot;SlashSound&quot;)
+	if SlashSound == nil then
+		SlashSound = Instance.new(&quot;Sound&quot;)
+		SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+		SlashSound.Parent = sword
+		SlashSound.Volume = .7
+		SlashSound.Name = &quot;SlashSound&quot;
+	end
+
+	UnsheathSound:play()
+end
+
+function onUnequipped()
+	SlashSound = sword:FindFirstChild(&quot;SlashSound&quot;)
+	if SlashSound ~= nil then
+		SlashSound:Stop()
+		SlashSound.Parent = nil
+		SlashSound = nil
+	end
+end	
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+
+connection = sword.Touched:connect(blow)
+
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+	print(&quot;ending&quot;)
+	enabled = false
+
+	while Tool.Enabled do
+		wait(.01)
+	end
+
+	print(&quot;Setting Mouse To Wait&quot;)
+	mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+	while not Tool.Enabled do
+		wait(.01)
+	end
+
+	print(&quot;Setting Mouse to Go&quot;)
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+
+	enabled = true
+end
+
+function onEquippedLocal(mouse)
+
+	if mouse == nil then
+		print(&quot;Mouse not found&quot;)
+		return 
+	end
+
+	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="ObjectValue" referent="RBX3">
+			<Properties>
+				<string name="Name">DanceObject</string>
+				<Ref name="Value">null</Ref>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX4">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">UnequipScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local humanoid = nil
+
+function onEquipped()
+
+	humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+
+end
+
+function onUnequipped()
+
+	if humanoid ~= nil then
+		if Tool.DanceObject.Value ~= nil then
+			Tool.DanceObject.Value:Stop()
+			Tool.DanceObject.Value:remove()
+		end
+	end
+
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">PotionScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+local dancer = nil
+
+local hasRiddleSkull = false
+
+enabled = true
+function onActivated()
+	if not enabled then return end
+	enabled = false
+	local humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+	local torso = Tool.Parent:FindFirstChild(&quot;Torso&quot;)
+
+	local vCharacter = Tool.Parent
+	if vCharacter ~= nil and vCharacter.Name ~= &quot;Backpack&quot; then
+		--local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
+		--if vPlayer ~= nil then
+--			if (vPlayer.Backpack:FindFirstChild(&quot;RiddlingSkull&quot;) ~= nil) then hasRiddleSkull = true
+			if vCharacter:FindFirstChild(&quot;RiddlingSkull&quot;) ~= nil then hasRiddleSkull = true
+			else hasRiddleSkull = false end
+		--end
+	end
+
+	dancer = humanoid:LoadAnimation(Tool.staffspin)
+	Tool.DanceObject.Value = dancer
+	dancer:Play()
+	if hasRiddleSkull then wait(2) dancer:Play() wait(2) dancer:Play() wait(1)
+	else wait(1) end
+	dancer:Stop()
+	dancer:remove()
+	--root:remove()
+	wait(.3)
+	enabled = true
+end
+
+function onEquipped()
+	--Tool.Handle.EquipSound:play()
+end
+
+function onUnequipped()
+	--Tool.Handle.EquipSound:stop()
+	if dancer ~= nil then
+		dancer:Stop()
+		dancer:remove()
+	end
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=27763939</url></Content>
+				<string name="Name">staffspin</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX7">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">107</int>
+				<CoordinateFrame name="CFrame">
+					<X>-104.5</X>
+					<Y>14.1999779</Y>
+					<Z>-226.300003</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<bool name="DraggingV1">false</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">1</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1.20000005</Y>
+					<Z>7</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX8">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=36322553</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2.20000005</X>
+						<Y>2.20000005</Y>
+						<Z>2.20000005</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=36324329</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
