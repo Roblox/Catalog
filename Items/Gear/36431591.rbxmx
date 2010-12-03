@@ -28,11 +28,7 @@
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Insert Local</string>
 				<ProtectedString name="Source">local Tool = script.Parent
-
---game:GetService(&quot;InsertService&quot;):SetCollectionUrl(&quot;http://test.roblox.com/Game/Tools/insertasset.ashx?sid=%d&quot;)
---game:GetService(&quot;InsertService&quot;):SetBaseCategoryUrl(&quot;http://test.roblox.com/Game/Tools/insertasset.ashx?nsets=10&quot;)
---game:GetService(&quot;InsertService&quot;):SetAssetUrl(&quot;http://test.roblox.com/Asset/?id=%d&quot;)
---foobardoakoljldkjfakdjsfasdlfjalksdjfaksdlfjlkasjdf
+ 
 enabled = true
 local origTexture = 	Tool.TextureId
 game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/insert_sel.png&quot;)
@@ -50,6 +46,8 @@ local viewingModels = false
 local currentSearchText = &quot;&quot;
 local freeModels
 local freeSets
+
+local loading = false
 
 local dropDownSelected = false
 
@@ -1025,18 +1023,50 @@ function beginInsertAsset(assetName, assetId, image, stampMode)
 	Data.Loading.Cancelled = false
 
 	--This call will cause a &quot;wait&quot; until the data comes back
+	local id = math.random(5,500)
+	print(&quot;loading id = &quot; .. tostring(id))
 	local root
+	local loader
+	loading = true
 	if useAssetVersionId then
-		root = game:GetService(&quot;InsertService&quot;):LoadAssetVersion(assetId)
+		loader = coroutine.create(function()	
+			root = game:GetService(&quot;InsertService&quot;):LoadAssetVersion(assetId)
+			loading = false
+		end)
+		coroutine.resume(loader)
+		--root = game:GetService(&quot;InsertService&quot;):LoadAssetVersion(assetId)
 	else
-		root = game:GetService(&quot;InsertService&quot;):LoadAsset(assetId)
+		loader = coroutine.create(function()	
+			root = game:GetService(&quot;InsertService&quot;):LoadAsset(assetId)
+			loading = false
+		end)
+		coroutine.resume(loader)
+		--root = game:GetService(&quot;InsertService&quot;):LoadAsset(assetId)
+	end
+	local count = 0
+	while loading and count &lt; 5 do
+		count = count + 1
+		wait(1)
+	end
+	loading = false
+
+	if count &gt;= 5 then
+		print(&quot;failed loading id = &quot; .. tostring(id))
+	else
+		print(&quot;finished loading id = &quot; .. tostring(id))
 	end
 
-	if Data.Loading.Cancelled then
+	if Data.Loading.Cancelled or count &gt;=5 then
 		--The user got bored and wandered off
 
 		--Just delete the model from the world... a shame we loaded it when they got bored
-		root:Remove()
+		if root then
+			root:Remove()
+		end
+		Window.Loading.Frame.Visible = false
+		Window.Main.Frame.Visible = true
+		return
+
 	else		
 		local instances = root:GetChildren()
 		if #instances == 0 then
@@ -1528,16 +1558,15 @@ function onEquippedLocal(mouse)
 	Tool.TextureId = &quot;rbxasset://icons/insert_sel.png&quot;
 
 	Mouse = mouse
-	--[[if Tool.SavedState.Value and Tool.PlayerOwner.Value == getPlayer() and Data and Data.FullyLoaded then
+	if Tool.SavedState.Value and Tool.PlayerOwner.Value == getPlayer() and Data and Data.FullyLoaded then
 		guiMain = Tool.SavedState.Value
-		guiMain.Parent = getPlayer().PlayerGui.GameGui.BuildTools.Frame
+		guiMain.Parent = script.Parent.SelectedButton.Value
 
 		Window.Stamp.Frame.Visible = false
-		Window.Minimized.Frame.Visible = false
 		Window.Loading.Frame.Visible = false
 		Window.Main.Frame.Visible = true
 
-	else]]
+	else
 		CancelDuringLoad = false
 
 		guiMain = Instance.new(&quot;Frame&quot;)
@@ -1572,7 +1601,7 @@ function onEquippedLocal(mouse)
 		end
 
 		Data.FullyLoaded = true
-	--end
+	end
 
 	Mouse.Move:connect(onInsertMouseMove)
 	Mouse.Button1Down:connect(onInsertMouseButton1Down)
@@ -1582,7 +1611,8 @@ function onEquippedLocal(mouse)
 end
 
 function onUnequippedLocal()
-	print(&quot;called unequip&quot;)
+	Mouse:remove()
+
 	Tool.TextureId = origTexture
 
 	guiMain.Parent = nil
@@ -1639,20 +1669,20 @@ Tool.AncestryChanged:connect(onAncestryChanged)</ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.39999998</X>
-					<Y>3.79783773</Y>
-					<Z>1.09999943</Z>
-					<R00>1.88344199e-021</R00>
+					<X>-0.399999976</X>
+					<Y>2.19886017</Y>
+					<Z>0.0999994278</Z>
+					<R00>1.30803791e-021</R00>
 					<R01>0.999999881</R01>
-					<R02>-3.93735912e-021</R02>
+					<R02>-3.00027274e-021</R02>
 					<R10>-0.000796274282</R10>
-					<R11>3.93885717e-021</R11>
+					<R11>3.00131297e-021</R11>
 					<R12>0.999999642</R12>
 					<R20>0.999999642</R20>
-					<R21>-1.88030593e-021</R21>
+					<R21>-1.30564835e-021</R21>
 					<R22>0.000796274282</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
 				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
 				<token name="FormFactor">2</token>
@@ -1770,32 +1800,8 @@ Tool.AncestryChanged:connect(onAncestryChanged)</ProtectedString>
 					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX9">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Sound</string>
-					<float name="Pitch">1</float>
-					<int name="PlayCount">-1</int>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=18716629</url></Content>
-					<float name="Volume">0.5</float>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX10">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Sound</string>
-					<float name="Pitch">1</float>
-					<int name="PlayCount">1</int>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=18716629</url></Content>
-					<float name="Volume">0.5</float>
-					<bool name="archivable">true</bool>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Script" referent="RBX11">
+		<Item class="Script" referent="RBX9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -1923,24 +1929,17 @@ script.Parent.Equipped:connect(onEquipped)
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="ObjectValue" referent="RBX12">
+		<Item class="ObjectValue" referent="RBX10">
 			<Properties>
 				<string name="Name">PlayerOwner</string>
 				<Ref name="Value">null</Ref>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX13">
+		<Item class="BoolValue" referent="RBX11">
 			<Properties>
 				<string name="Name">RobloxBuildTool</string>
 				<bool name="Value">true</bool>
-				<bool name="archivable">true</bool>
-			</Properties>
-		</Item>
-		<Item class="ObjectValue" referent="RBX14">
-			<Properties>
-				<string name="Name">SelectedButton</string>
-				<Ref name="Value">RBX15</Ref>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
