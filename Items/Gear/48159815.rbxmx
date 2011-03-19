@@ -1,0 +1,607 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>1.79999995</Z>
+				<R00>0</R00>
+				<R01>0</R01>
+				<R02>1</R02>
+				<R10>-1</R10>
+				<R11>0</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>-1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">ShadowDancer</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id= 48047493 </url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ShadowScript</string>
+				<ProtectedString name="Source">Tool = script.Parent
+Sword = Tool.Handle
+
+Tool.Enabled = true
+
+-- damage
+damage = 10
+cloneDamage = 5
+
+local swordClone
+
+-- Sounds
+local slashSound
+local spinSound
+--
+
+-- Animations 
+local slashAnim
+local initiateCloneAnim
+
+--connection
+local connection
+
+-- ShadowActive
+local shadowActive = Tool:FindFirstChild(&quot;ShadowActive&quot;)
+
+function blow(hit)
+	local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+	local vCharacter = Tool.Parent	
+	local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)	
+	local myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)	
+	if humanoid ~= nil and myHumanoid ~= nil and humanoid ~= myHumanoid then 
+		local rightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+		if rightArm ~= nil then 
+			local joint = rightArm:FindFirstChild(&quot;RightGrip&quot;)
+			if joint ~= nil and (joint.Part0 == Sword or joint.Part1 == Sword) then 
+				tagHumanoid(humanoid, vPlayer)				
+				humanoid:TakeDamage(damage)
+				wait(1.0)
+				untagHumanoid(humanoid)
+			end
+		end		
+	end	
+end
+
+function cloneBlow(hit)
+	local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+	local vCharacter = Tool.Parent	
+	local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)	
+	local myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)	
+	if humanoid ~= nil and myHumanoid ~= nil and humanoid ~= myHumanoid then 
+		local rightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+		if rightArm ~= nil then 
+			local joint = rightArm:FindFirstChild(&quot;RightGrip&quot;)
+			if joint ~= nil and (joint.Part0 == Sword or joint.Part1 == Sword) then 
+				tagHumanoid(humanoid, vPlayer)				
+				humanoid:TakeDamage(cloneDamage)
+				if myHumanoid ~= nil then 
+					if myHumanoid.MaxHealth &gt; myHumanoid.Health + cloneDamage then 
+						myHumanoid.Health = myHumanoid.Health + cloneDamage
+					else
+						myHumanoid.Health = myHumanoid.MaxHealth
+					end
+				end
+				wait(1.0)
+				untagHumanoid(humanoid)
+			end
+		end		
+	end
+end
+
+function tagHumanoid(humanoid, player)
+	if humanoid ~= nil and player ~= nil then 
+		local creatorTag = Instance.new(&quot;ObjectValue&quot;)
+		creatorTag.Name = &quot;creator&quot;
+		creatorTag.Value = player
+		creatorTag.Parent = humanoid
+	end
+end
+
+function untagHumanoid(humanoid)
+	if humanoid ~= nil then 
+		local tag = humanoid:FindFirstChild(&quot;creator&quot;)
+		if tag ~= nil then 
+			tag:Remove()
+		end			
+	end
+end
+
+local debounce = true
+function onActivated()
+
+	if debounce == false then 
+		return
+	end
+	vChar = Tool.Parent
+	debounce = false
+	if vChar == nil then 
+		print(&quot;Character not found&quot;)
+		return
+	end
+
+	myHumanoid = vChar:FindFirstChild(&quot;Humanoid&quot;)
+	if myHumanoid == nil then 
+		print(&quot;Humanoid not found&quot;)
+		return
+	end
+
+	myTorso = vChar:FindFirstChild(&quot;Torso&quot;)
+	if myTorso == nil then 
+		print(&quot;Torso not found&quot;)
+		return
+	end
+	--Tool.Enabled = false	
+	shadowActive = Tool:FindFirstChild(&quot;ShadowActive&quot;)
+	if shadowActive.Value == 1 then 
+		swordClone = vChar:FindFirstChild(&quot;ShadowSwordClone&quot;)		
+		if connection == nil then connection = swordClone.Touched:connect(cloneBlow) print(&quot;connected&quot;) end
+	end
+	--Tool.Enabled = true
+	debounce = true
+end
+
+function onEquipped()
+end
+
+function onUnequipped()	
+	if swordClone then 
+		swordClone:Remove()		
+		Tool:FindFirstChild(&quot;ShadowActive&quot;).Value = 0
+	end
+	if connection then connection:disconnect() connection = nil end
+	Sword.Transparency = 0.0
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+
+Sword.Touched:connect(blow)</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">199</int>
+				<CoordinateFrame name="CFrame">
+					<X>-1.50147665</X>
+					<Y>24.8278961</Y>
+					<Z>9.00128651</Z>
+					<R00>-1.05824744e-021</R00>
+					<R01>-0.999999881</R01>
+					<R02>-1.7668384e-021</R02>
+					<R10>0.000796274282</R10>
+					<R11>-1.76768032e-021</R11>
+					<R12>0.999999642</R12>
+					<R20>-0.999999642</R20>
+					<R21>1.05684016e-021</R21>
+					<R22>0.000796274282</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">2</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0.400000006</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>0.800000012</Y>
+					<Z>5.46000147</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=48047550 </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.699999988</X>
+						<Y>0.699999988</Y>
+						<Z>0.699999988</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=48047390 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SlashSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=45885030</url></Content>
+					<float name="Volume">1</float>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent
+local stillEquipped = true
+
+function onEquippedLocal(mouse)
+	stillEquipped = true
+	if mouse == nil then 
+		print(&quot;NO MOUSE&quot;)
+		return
+	end
+
+	while stillEquipped do 
+		print(&quot;Setting Mouse to go&quot;)
+		mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+		while Tool.Enabled and stillEquipped do
+			wait(0.01)
+		end
+		print(&quot;Setting Mouse to wait&quot;)
+		mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+		while not Tool.Enabled and stillEquipped do 
+			wait(0.01)
+		end
+	end
+end
+
+function onUnequippedLocal()
+	stillEquipped = false
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=47919724</url></Content>
+				<string name="Name">initiateCloneAnim</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalShadowScript</string>
+				<ProtectedString name="Source">Tool = script.Parent
+Sword = Tool.Handle
+
+local shadowActive = Tool:FindFirstChild(&quot;ShadowActive&quot;)
+
+-- Animations
+local initiateCloneAnim
+local shadowLungeAnim
+local slashAnim
+local dualSlashAnim
+
+-- swordClone
+local swordClone
+
+-- To gauge key presses
+local lungeTime = 0
+local spinTime = 0
+
+-- game service
+local r = game:GetService(&quot;RunService&quot;)
+
+local lastKeyDown = 0
+local dashTime = 0
+local lastSlash = 0
+
+local newBV = nil
+
+local connection
+
+local dashSound = Tool.Handle.SlashSound
+keyConnection = nil
+
+local slashSound = Instance.new(&quot;Sound&quot;)
+slashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+slashSound.Parent = Sword
+slashSound.Volume = 1
+
+local dualSlashSound
+
+function slashIt(hum, torso)
+	nsAnim = hum:LoadAnimation(Tool[&quot;Shadow Slash&quot;])
+	if nsAnim == nil then Tool.Enabled = true return end
+	
+	nsAnim:Play()
+
+	local target = hum.TargetPoint
+	local direction = (target - torso.Position) * Vector3.new(1, 0, 1)
+	newBV = nil
+	if direction.magnitude &gt; .01 then 
+		-- make &apos;em dash forwards too
+		direction = direction.unit
+		newBV = Instance.new(&quot;BodyVelocity&quot;)
+		newBV.P = 100000
+		newBV.maxForce = Vector3.new(newBV.P, 0, newBV.P)
+		newBV.velocity = direction * 50
+		newBV.Parent = torso
+
+		torso.CFrame = CFrame.new(torso.Position, target * Vector3.new(1, 0, 1) + Vector3.new(0, torso.Position.Y, 0))
+	end
+	
+	wait(.5)
+	dashSound:Play()
+	if newBV ~= nil then newBV:remove() end
+	wait(.5)
+end
+
+
+function initiateShadowBlade(key)
+	key = key:lower()
+	if key == &quot;q&quot; then		
+		vChar = Tool.Parent
+		myHumanoid = vChar:FindFirstChild(&quot;Humanoid&quot;)
+		if myHumanoid == nil then 
+			print(&quot;Humanoid not found&quot;)		
+			return
+		end
+		
+		if shadowActive.Value == 0 then 			
+			initiateCloneAnim = myHumanoid:LoadAnimation(Tool.initiateCloneAnim)
+			initiateCloneAnim:Play(0, 1.0, 1.0)
+			wait(0.4)
+			swordClone = Sword:Clone()
+			swordClone.CanCollide = false
+			swordClone.Name = &quot;ShadowSwordClone&quot;
+			swordClone.Parent = vChar
+
+			Sword.Transparency = 0.20
+			swordClone.Transparency = 0.20
+
+			leftArm = vChar:FindFirstChild(&quot;Left Arm&quot;)
+			
+			if Tool.Parent:FindFirstChild(&quot;Humanoid&quot;) ~= nil then
+				local leftWeld = Instance.new(&quot;Weld&quot;)
+				leftWeld.Name = &quot;LeftGrip&quot;
+				leftWeld.Parent = leftArm
+				leftWeld.Part0 = leftArm
+				leftWeld.Part1 = swordClone
+				leftWeld.C1 =  CFrame.new(Vector3.new(-0.75, 0.0, 1.75))  * CFrame.Angles(0.0, 0.0, math.pi/2.0)
+				shadowActive.Value = 1
+				--connection = swordClone.Touched:connect(blow)
+			else	
+				swordClone:Remove()
+				--if connection then connection:disconnect() end
+			end	
+		end
+	end
+
+	if key == &quot;w&quot; then 
+		t = r.Stepped:wait()
+		if (t - lastKeyDown &lt; 0.2) then dashTime = t end 
+		lastKeyDown = t
+	end
+end
+
+function attack()	
+	slashSound:Play()
+	local anim = Instance.new(&quot;StringValue&quot;)
+	anim.Name = &quot;toolanim&quot;
+	anim.Value = &quot;Slash&quot;
+	anim.Parent = Tool
+end
+
+
+amAnimating = false
+function onActivatedL()
+	vCharacter = Tool.Parent
+	if vCharacter == nil then 
+		return
+	end
+	myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+	if myHumanoid == nil then 
+		return
+	end
+
+	if amAnimating then return end
+	Tool.Enabled = false
+	amAnimating = true
+	
+	myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+	if myTorso == nil then Tool.Enabled = true return end	
+
+	if Tool:FindFirstChild(&quot;ShadowActive&quot;).Value == 1 then
+		t = r.Stepped:wait()
+		if t - dashTime &lt; 0.2 then 		
+			slashIt(myHumanoid, myTorso)
+			wait(0.5)
+			amAnimating = false	
+		else
+			dualSlashAnim = myHumanoid:LoadAnimation(Tool.DualSlash)
+			dualSlashAnim:Play()
+			dualSlashSound = Tool:FindFirstChild(&quot;DualSlashSound&quot;)
+			if dualSlashSound then dualSlashSound:Play() end
+			wait(1.0)
+			amAnimating = false
+		end
+	else
+		--slashAnim = myHumanoid:LoadAnimation(Tool.Slash)
+		--slashAnim:Play()
+		attack()
+		wait(0.3)
+		amAnimating = false
+	end
+	if not amAnimating then Tool.Enabled = true end
+end
+
+
+function onEquippedL(mouse)
+	print(&quot;IN EQUIP&quot;)
+	Tool:FindFirstChild(&quot;ShadowActive&quot;).Value = 0
+	if mouse then 
+		keyConnection = mouse.KeyDown:connect(initiateShadowBlade) 		
+	else 
+		print(&quot;No Mouse&quot;) 
+	end
+end
+
+function onUnequippedL()
+	amAnimating = false
+	if swordClone then 
+		swordClone:Remove() 
+		Tool:FindFirstChild(&quot;ShadowActive&quot;).Value = 0
+	end	
+	if connection then connection:disconnect() end
+	Sword.Transparency = 0.0
+	if dashSound then dashSound:Stop() end
+	if slashSound then slashSound:Stop() end
+	if dualSlashSound then dualSlashSound:Stop() end
+	if newBV ~= nil then newBV:Remove() end
+	
+end
+
+
+
+Tool.Equipped:connect(onEquippedL)
+Tool.Unequipped:connect(onUnequippedL)
+Tool.Activated:connect(onActivatedL)
+
+</ProtectedString>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBX8">
+			<Properties>
+				<string name="Name">ShadowActive</string>
+				<double name="Value">0</double>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=45873069</url></Content>
+				<string name="Name">Shadow Slash</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX10">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=48146273</url></Content>
+				<string name="Name">DualSlash</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX11">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=48146960</url></Content>
+				<string name="Name">Slash</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Sound" referent="RBX12">
+			<Properties>
+				<bool name="Looped">false</bool>
+				<string name="Name">DualSlashSound</string>
+				<float name="Pitch">1</float>
+				<bool name="PlayOnRemove">false</bool>
+				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=48156432 </url></Content>
+				<float name="Volume">1</float>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX13">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-6.77010202</X>
+					<Y>23.7852345</Y>
+					<Z>7.85006285</Z>
+					<R00>-0.221552178</R00>
+					<R01>-0.204997838</R01>
+					<R02>-0.953357518</R02>
+					<R10>-0</R10>
+					<R11>0.977653682</R11>
+					<R12>-0.210222155</R12>
+					<R20>0.975148559</R20>
+					<R21>-0.0465751775</R21>
+					<R22>-0.216601297</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>12.2970486</X>
+					<Y>27.9896774</Y>
+					<Z>12.1820889</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
