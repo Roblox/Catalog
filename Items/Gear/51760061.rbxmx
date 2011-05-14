@@ -6,23 +6,23 @@
 			<Ref name="CameraSubject">null</Ref>
 			<token name="CameraType">0</token>
 			<CoordinateFrame name="CoordinateFrame">
-				<X>-0.602853298</X>
-				<Y>9.14805984</Y>
-				<Z>-3.85575676</Z>
-				<R00>-0.965016901</R00>
-				<R01>-0.0102232145</R01>
-				<R02>-0.261988521</R02>
-				<R10>-1.86264537e-009</R10>
-				<R11>0.999239564</R11>
-				<R12>-0.0389919244</R12>
-				<R20>0.262187958</R20>
-				<R21>-0.0376278646</R21>
-				<R22>-0.96428293</R22>
+				<X>3.0263648</X>
+				<Y>9.17087364</Y>
+				<Z>-0.165794298</Z>
+				<R00>-0.0209398959</R00>
+				<R01>0.153558418</R01>
+				<R02>0.987917662</R02>
+				<R10>-0</R10>
+				<R11>0.988134325</R11>
+				<R12>-0.153592095</R12>
+				<R20>-0.999780774</R20>
+				<R21>-0.00321620237</R21>
+				<R22>-0.0206914302</R22>
 			</CoordinateFrame>
 			<CoordinateFrame name="Focus">
-				<X>4.63691759</X>
-				<Y>9.92789841</Y>
-				<Z>15.429903</Z>
+				<X>-16.7319889</X>
+				<Y>12.2427158</Y>
+				<Z>0.248034313</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -74,15 +74,15 @@
 					<X>0.151420325</X>
 					<Y>9.43729496</Y>
 					<Z>0.369855314</Z>
-					<R00>-0.988218904</R00>
-					<R01>0.153059244</R01>
-					<R02>-6.28653142e-005</R02>
-					<R10>-0.00274004694</R10>
-					<R11>-0.0172803663</R11>
-					<R12>0.999845803</R12>
-					<R20>0.153034478</R20>
-					<R21>0.988069773</R21>
-					<R22>0.017496055</R22>
+					<R00>0.0490194261</R00>
+					<R01>-0.990233898</R01>
+					<R02>0.130531937</R02>
+					<R10>-0.0115896966</R10>
+					<R11>0.130115703</R11>
+					<R12>0.991430044</R12>
+					<R20>-0.998735011</R20>
+					<R21>-0.0501123741</R21>
+					<R22>-0.00509813102</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -198,9 +198,7 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">DaggerScript</string>
-				<ProtectedString name="Source">-- FIX ANIMATION --
-
-r = game:service(&quot;RunService&quot;)
+				<ProtectedString name="Source">r = game:service(&quot;RunService&quot;)
 local sword = script.Parent.Handle
 local Tool = script.Parent
 
@@ -397,48 +395,52 @@ function createZombie()
 	--model = game:GetService(&quot;InsertService&quot;):LoadAsset(51731605)
 	model = game:GetService(&quot;InsertService&quot;):LoadAsset(51761755)
 	if model then 
-	print(&quot;Found Model&quot;)
-	children = model:GetChildren() 
-	if children then zombie = children[1] end
+		print(&quot;Found Model&quot;)
+		children = model:GetChildren() 
+		if children then zombie = children[1] end
+	else print(&quot;Model Fetch failed&quot;)
 	end	 
 
-	unAnchoredParts = {} 
+	if zombie then
+		unAnchoredParts = {} 
 
-	offsetVector = (target.Value - zombie.Torso.Position) --+ Vector3.new(0, 4, 0)
-	offsetModelBy(zombie, offsetVector)
+		offsetVector = (target.Value - zombie.Torso.Position) --+ Vector3.new(0, 4, 0)
+		offsetModelBy(zombie, offsetVector)
 
-	zombie.Parent = game.Workspace 
+		zombie.Parent = game.Workspace 
 
-	neck = zombie.Torso.Neck
-	neck.Part0 = zombie.Head
-	neck.Part1 = zombie.Torso
-	
+		neck = zombie.Torso.Neck
+		neck.Part0 = zombie.Head
+		neck.Part1 = zombie.Torso		
 
-	-- HotThoth&apos;s Unholy Hack to prevent the zombie from dying while spawning
-	-- There is a more reliable way to do this, by making the entire Zombie in script
-	-- but of course thats ugly in its own right! 
-	for j = 1, 10 do 
-	-- Insane script below!
-	zombie.Humanoid.MaxHealth = 100 
-	zombie.Humanoid.Health = 100 
-	zombie:MakeJoints() 
-	wait(.1) 
-	end 
+		-- HotThoth&apos;s Unholy Hack to prevent the zombie from dying while spawning
+		-- There is a more reliable way to do this, by making the entire Zombie in script
+		-- but of course thats ugly in its own right! 
+		for j = 1, 10 do 
+		-- Insane script below!
+		zombie.Humanoid.MaxHealth = 100 
+		zombie.Humanoid.Health = 100 
+		zombie:MakeJoints() 
+		wait(.1) 
+		end 
 
-	-- unanchor everything 
-	for u = 1, #unAnchoredParts do unAnchoredParts[u].Anchored = false end 
+		-- unanchor everything 
+		for u = 1, #unAnchoredParts do unAnchoredParts[u].Anchored = false end 
 
-	zombieOwner = script.Owner
-	zombieOwner.Parent = zombie
+		zombieOwner = script.Owner
+		zombieOwner.Parent = zombie
 
-	actionScript = script.ActionScript
-	actionScript.Parent = zombie
-	actionScript.Disabled = false
-	
-	animateScript = script.Animate 
-	animateScript.Parent = zombie
-	animateScript.Disabled = false
+		actionScript = script.ActionScript
+		actionScript.Parent = zombie
+		actionScript.Disabled = false
+		
+		animateScript = script.Animate 
+		animateScript.Parent = zombie
+		animateScript.Disabled = false
 
+	else 
+		print(&quot;Zombie Failed&quot;)
+	end
 end
 
 createZombie()
@@ -510,7 +512,6 @@ end
 connection = zombie.Torso.Touched:connect(blow)
 
 while zombieLife &gt; 0 do
-	print(zombieLife)
 
 	zombieOwner = zombie:FindFirstChild(&quot;Owner&quot;).Value	
 	
@@ -806,23 +807,23 @@ end</ProtectedString>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.602853298</X>
-					<Y>9.14805984</Y>
-					<Z>-3.85575676</Z>
-					<R00>-0.965016901</R00>
-					<R01>-0.0102232145</R01>
-					<R02>-0.261988521</R02>
-					<R10>-1.86264537e-009</R10>
-					<R11>0.999239564</R11>
-					<R12>-0.0389919244</R12>
-					<R20>0.262187958</R20>
-					<R21>-0.0376278646</R21>
-					<R22>-0.96428293</R22>
+					<X>3.0263648</X>
+					<Y>9.17087364</Y>
+					<Z>-0.165794298</Z>
+					<R00>-0.0209398959</R00>
+					<R01>0.153558418</R01>
+					<R02>0.987917662</R02>
+					<R10>-0</R10>
+					<R11>0.988134325</R11>
+					<R12>-0.153592095</R12>
+					<R20>-0.999780774</R20>
+					<R21>-0.00321620237</R21>
+					<R22>-0.0206914302</R22>
 				</CoordinateFrame>
 				<CoordinateFrame name="Focus">
-					<X>4.63691759</X>
-					<Y>9.92789841</Y>
-					<Z>15.429903</Z>
+					<X>-16.7319889</X>
+					<Y>12.2427158</Y>
+					<Z>0.248034313</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
