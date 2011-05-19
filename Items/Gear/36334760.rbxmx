@@ -35,21 +35,20 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.5</X>
-					<Y>1</Y>
-					<Z>0</Z>
-					<R00>0</R00>
-					<R01>0</R01>
-					<R02>-1</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>-0</R12>
-					<R20>1</R20>
-					<R21>0</R21>
-					<R22>-0</R22>
+					<X>28.4643021</X>
+					<Y>4.09870195</Y>
+					<Z>-73.2421799</Z>
+					<R00>-0.78568238</R00>
+					<R01>0.618630171</R01>
+					<R02>0.000492599502</R02>
+					<R10>-1.7499957e-021</R10>
+					<R11>-0.000796274282</R11>
+					<R12>0.999999642</R12>
+					<R20>0.61863035</R20>
+					<R21>0.785682201</R21>
+					<R22>0.000625618792</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
 				<token name="FormFactor">2</token>
 				<float name="Friction">0.300000012</float>
@@ -70,9 +69,9 @@
 				<token name="RightSurface">0</token>
 				<token name="RightSurfaceInput">0</token>
 				<Vector3 name="RotVelocity">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
@@ -137,6 +136,9 @@ local selectionLasso
 local inGui = false
 local inPalette = false
 local lockTime = 0
+local Mouse = nil
+
+local instances = {}
 
 function canSelectObject(part)
 	return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; 60
@@ -151,6 +153,259 @@ function findModel(part)
 	end
 
 	return nil
+end
+
+function positionPartsAtCFrame3(collection, aCFrame)
+
+	local insertCFrame
+	if collection[1]:IsA(&quot;Model&quot;) then
+		-- we assume model has at least one part in it; need to find first part
+		i = 1
+		while (i &lt; (#collection[1]:GetChildren()) and not collection[1]:GetChildren()[i]:IsA(&quot;Part&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;TrussPart&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;WedgePart&quot;)) do
+			i = i + 1
+		end
+		insertCFrame = collection[1]:GetChildren()[i].CFrame
+
+		for i, object in pairs(collection[1]:GetChildren()) do
+			if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
+				local posPartInWorld = object.Position
+				local posPart1InWorld = insertCFrame.p
+				local newPosPartInWorld = posPartInWorld - posPart1InWorld + aCFrame.p
+	
+				local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = object.CFrame:components()
+				object.CFrame = CFrame.new(newPosPartInWorld.x, newPosPartInWorld.y, newPosPartInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+			end
+		end
+	else
+		collection[1].CFrame = aCFrame
+	end
+
+end
+
+function getBoundingBox2(partOrModel)
+
+-- for models, the bounding box is defined as the minimum and maximum individual part bounding boxes
+-- relative to the first part&apos;s coordinate frame.
+
+	local minVec = Vector3.new(math.huge, math.huge, math.huge)
+	local maxVec = Vector3.new(-math.huge, -math.huge, -math.huge)
+
+	if partOrModel:IsA(&quot;Part&quot;) or partOrModel:IsA(&quot;WedgePart&quot;) or partOrModel:IsA(&quot;TrussPart&quot;)then
+		minVec = -0.5 * partOrModel.Size
+		maxVec = -minVec
+	else
+		local part1 = partOrModel:GetChildren()[1]
+		for i, object in pairs(partOrModel:GetChildren()) do
+			if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
+				boxMinInWorld = object.CFrame:pointToWorldSpace(-0.5 * object.Size)
+				boxMinInPart1 = part1.CFrame:pointToObjectSpace(boxMinInWorld)
+				boxMaxInWorld = object.CFrame:pointToWorldSpace(0.5 * object.Size)
+				boxMaxInPart1 = part1.CFrame:pointToObjectSpace(boxMaxInWorld)
+
+				local minX = minVec.x
+				local minY = minVec.y
+				local minZ = minVec.z
+				local maxX = maxVec.x
+				local maxY = maxVec.y
+				local maxZ = maxVec.z
+				if boxMinInPart1.x &lt; minVec.x then
+					minX = boxMinInPart1.x
+				end
+				if boxMinInPart1.y &lt; minVec.y then
+					minY = boxMinInPart1.y
+				end
+				if boxMinInPart1.z &lt; minVec.z then
+					minZ = boxMinInPart1.z
+				end
+				if boxMaxInPart1.x &lt; minX then
+					minX = boxMaxInPart1.x
+				end
+				if boxMaxInPart1.y &lt; minY then
+					minY = boxMaxInPart1.y
+				end
+				if boxMaxInPart1.z &lt; minZ then
+					minZ = boxMaxInPart1.z
+				end
+
+				if boxMinInPart1.x &gt; maxVec.x then
+					maxX = boxMinInPart1.x
+				end
+				if boxMinInPart1.y &gt; maxVec.y then
+					maxY = boxMinInPart1.y
+				end
+				if boxMinInPart1.z &gt; maxVec.z then
+					maxZ = boxMinInPart1.z
+				end
+				if boxMaxInPart1.x &gt; maxX then
+					maxX = boxMaxInPart1.x
+				end
+				if boxMaxInPart1.y &gt; maxY then
+					maxY = boxMaxInPart1.y
+				end
+				if boxMaxInPart1.z &gt; maxZ then
+					maxZ = boxMaxInPart1.z
+				end
+
+				minVec = Vector3.new(minX, minY, minZ)
+				maxVec = Vector3.new(maxX, maxY, maxZ)
+			end
+		end
+	end
+
+	return minVec, maxVec
+
+end
+
+function getTargetPartBoundingBox(targetPart)
+
+	if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
+		return getBoundingBox2(targetPart.Parent)
+	else
+		return getBoundingBox2(targetPart)
+	end
+
+end
+
+function getMouseTargetCFrame(targetPart)
+
+	if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
+		return targetPart.Parent:GetChildren()[1].CFrame
+	else
+		return targetPart.CFrame
+	end
+
+end
+
+function getClosestAlignedWorldDirection(aVector3InWorld)
+
+	local xDir = Vector3.new(1,0,0)
+	local yDir = Vector3.new(0,1,0)
+	local zDir = Vector3.new(0,0,1)
+	local xDot = aVector3InWorld.x * xDir.x + aVector3InWorld.y * xDir.y + aVector3InWorld.z * xDir.z
+	local yDot = aVector3InWorld.x * yDir.x + aVector3InWorld.y * yDir.y + aVector3InWorld.z * yDir.z
+	local zDot = aVector3InWorld.x * zDir.x + aVector3InWorld.y * zDir.y + aVector3InWorld.z * zDir.z
+
+	if math.abs(xDot) &gt; math.abs(yDot) and math.abs(xDot) &gt; math.abs(zDot) then
+		if xDot &gt; 0 then
+			return 0
+		else
+			return 3
+		end
+	elseif math.abs(yDot) &gt; math.abs(xDot) and math.abs(yDot) &gt; math.abs(zDot) then
+		if yDot &gt; 0 then
+			return 1
+		else
+			return 4
+		end
+	else
+		if zDot &gt; 0 then
+			return 2
+		else
+			return 5
+		end
+	end 
+
+end
+
+
+
+function findConfigAtMouseTarget(collection)
+
+-- *Critical Assumption* :
+--				This function assumes the target CF axes are orthogonal with the target bounding box faces
+--				And, it assumes the insert CF axes are orthongonal with the insert bounding box faces
+--				Therefore, insertion will not work with angled faces on wedges or other &quot;non-block&quot; parts, nor
+--				will it work for parts in a model that are not orthogonally aligned with the model&apos;s CF.
+
+	local grid = 4.0
+	local admissibleConfig = false
+	local targetConfig = CFrame.new(0,0,0)
+
+	local minBB, maxBB = getBoundingBox2(collection[1])
+	local diagBB = maxBB - minBB
+
+	local insertCFrame
+	if collection[1]:IsA(&quot;Model&quot;) then
+		i = 1
+		while (i &lt; (#collection[1]:GetChildren()) and not collection[1]:GetChildren()[i]:IsA(&quot;Part&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;TrussPart&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;WedgePart&quot;)) do
+			i = i + 1
+		end
+		insertCFrame = collection[1]:GetChildren()[i].CFrame
+	else
+		insertCFrame = collection[1].CFrame
+	end
+
+	Mouse.TargetFilter = collection[1]
+
+	local targetPart = Mouse.Target
+
+	if targetPart == nil then
+		return admissibleConfig, targetConfig
+	end
+
+	-- test mouse hit location
+	local minBBTarget, maxBBTarget = getTargetPartBoundingBox(targetPart)
+	local diagBBTarget = maxBBTarget - minBBTarget
+	local targetCFrame = getMouseTargetCFrame(targetPart)
+	local hitCFrame = Mouse.Hit
+	local mouseHitInWorld = hitCFrame.p
+	local mouseHitInTarget = targetCFrame:pointToObjectSpace(mouseHitInWorld)
+
+	-- find which axis of the insertion objects should match with the target surface
+	-- this should use targetPart CFrame, not the model CFrame
+	local targetVectorInWorld = targetPart.CFrame:vectorToWorldSpace(Vector3.FromNormalId(Mouse.TargetSurface))
+
+	local targetRefPointInTarget
+	local clampToSurface
+
+	if getClosestAlignedWorldDirection(targetVectorInWorld) == 0 then
+		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(1, -1, 1))
+		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+		clampToSurface = Vector3.new(0,1,1)
+	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 3 then
+		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, -1))
+		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(1, -1, -1))
+		clampToSurface = Vector3.new(0,1,1)
+	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 1 then
+		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, 1, 1))
+		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+		clampToSurface = Vector3.new(1,0,1)		
+	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 4 then
+		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, 1, 1))
+		clampToSurface = Vector3.new(1,0,1)
+	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 2 then
+		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, -1))
+		clampToSurface = Vector3.new(1,1,0)
+	else
+		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(1, -1, -1))
+		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(1, -1, 1))
+		clampToSurface = Vector3.new(1,1,0)
+	end
+
+	targetRefPointInTarget = targetRefPointInTarget * (0.5 * diagBBTarget) + 0.5 * (maxBBTarget + minBBTarget)
+	insertRefPointInInsert = insertRefPointInInsert * (0.5 * diagBB) + 0.5 * (maxBB + minBB)
+	
+	-- To Do: For cases that are not aligned to the world grid, account for the minimal rotation
+	-- needed to bring the Insert part(s) into alignment with the Target Part
+	-- Apply the rotation here
+
+	local delta = mouseHitInTarget - targetRefPointInTarget
+	local deltaClamped = Vector3.new(grid * math.modf(delta.x/grid), grid * math.modf(delta.y/grid), grid * math.modf(delta.z/grid))
+	deltaClamped = deltaClamped * clampToSurface
+	local targetTouchInTarget = deltaClamped + targetRefPointInTarget
+
+	local TargetTouchRelToWorld = targetCFrame:pointToWorldSpace(targetTouchInTarget)
+	local InsertTouchInWorld = insertCFrame:vectorToWorldSpace(insertRefPointInInsert)
+	local posInsertOriginInWorld = TargetTouchRelToWorld - InsertTouchInWorld
+
+	local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = insertCFrame:components()
+	targetConfig = CFrame.new(posInsertOriginInWorld.x, posInsertOriginInWorld.y, posInsertOriginInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+	admissibleConfig = true
+
+	return admissibleConfig, targetConfig
+
 end
 
 
@@ -175,7 +430,7 @@ function onMouseDown(mouse)
 	if canSelectObject(part) then
 		local hitPoint = mouse.Hit:toObjectSpace(part.CFrame).p
 		if trySelection(part) then
-			local instances = {}
+			instances = {}
 			collectBaseParts(currentSelection, instances)
 			startDrag(part, hitPoint, instances)
 			return
@@ -191,8 +446,9 @@ end
 function onMouseUp(mouse)
 	mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
 	if dragger ~= nil then
-		pcall(function() dragger:MouseUp() end)
+		Mouse.TargetFilter = nil
 		dragger = nil
+		pcall(function() dragger:MouseUp() end)
 	end
 end
 
@@ -220,7 +476,8 @@ function onKeyDown(key)
 		end
 	end
 end
-local alreadyMoving
+
+local alreadyMoving = false
 function onMouseMove(mouse)
 	if alreadyMoving then
 		return
@@ -235,7 +492,14 @@ function onMouseMove(mouse)
 		end
 		
 		--Then drag
-		pcall(function() dragger:MouseMove(mouse.UnitRay) end)
+		local thingToDrag = {}
+		thingToDrag[1] = currentSelection 
+
+		configFound, targetCFrame = findConfigAtMouseTarget(thingToDrag)
+		if configFound then
+			positionPartsAtCFrame3(thingToDrag, targetCFrame)
+		end
+	--	pcall(function() dragger:MouseMove(mouse.UnitRay) end)
 	else
 		trySelection(mouse.Target)
 	end
@@ -315,6 +579,8 @@ function onEquippedLocal(mouse)
 	wait(0.1)
 	Tool.TextureId = &quot;rbxasset://icons/freemove_sel.png&quot;
 
+	Mouse = mouse
+
 	local character = script.Parent.Parent
 	local player = game.Players:GetPlayerFromCharacter(character)
 	guiMain = Instance.new(&quot;ScreenGui&quot;)
@@ -344,7 +610,6 @@ function onEquippedLocal(mouse)
 	selectionLasso.Color = BrickColor.Blue()
 
 	alreadyMoving = false
-	print(&quot;group move equipped locally&quot;)
 	--buildGui(guiMain, mouse)
 end
 
@@ -442,10 +707,17 @@ script.Parent.Equipped:connect(onEquipped)
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="StringValue" referent="RBX5">
+		<Item class="ObjectValue" referent="RBX5">
+			<Properties>
+				<string name="Name">SelectedButton</string>
+				<Ref name="Value">null</Ref>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX6">
 			<Properties>
 				<string name="Name">RobloxBuildTool</string>
-				<string name="Value"></string>
+				<bool name="Value">false</bool>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
