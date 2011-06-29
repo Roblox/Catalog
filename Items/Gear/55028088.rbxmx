@@ -1,14 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="BoolValue" referent="RBX0">
-		<Properties>
-			<bool name="Archivable">true</bool>
-			<string name="Name">IsRestricted</string>
-			<bool name="Value">false</bool>
-		</Properties>
-	</Item>
-	<Item class="Tool" referent="RBX1">
+	<Item class="Tool" referent="RBX0">
 		<Properties>
 			<bool name="Archivable">true</bool>
 			<bool name="Enabled">true</bool>
@@ -29,7 +22,7 @@
 			<string name="Name">StamperTool</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=51257475</url></Content>
 		</Properties>
-		<Item class="Part" referent="RBX2">
+		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<bool name="Archivable">true</bool>
@@ -98,7 +91,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<bool name="Archivable">true</bool>
 					<token name="LODX">2</token>
@@ -125,21 +118,21 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="ObjectValue" referent="RBX4">
+		<Item class="ObjectValue" referent="RBX3">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<string name="Name">PlayerOwner</string>
 				<Ref name="Value">null</Ref>
 			</Properties>
 		</Item>
-		<Item class="ObjectValue" referent="RBX5">
+		<Item class="ObjectValue" referent="RBX4">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<string name="Name">SavedState</string>
 				<Ref name="Value">null</Ref>
 			</Properties>
 		</Item>
-		<Item class="Model" referent="RBX6">
+		<Item class="Model" referent="RBX5">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<CoordinateFrame name="ModelInPrimary">
@@ -159,7 +152,7 @@
 				<string name="Name">LuaGlobalVariables</string>
 				<Ref name="PrimaryPart">null</Ref>
 			</Properties>
-			<Item class="BoolValue" referent="RBX0">
+			<Item class="BoolValue" referent="RBX6">
 				<Properties>
 					<bool name="Archivable">true</bool>
 					<string name="Name">IsRestricted</string>
@@ -783,7 +776,7 @@ local Data = {}
 Data.Stamp = {}
 Data.Loading = {}
 
-local eyeDropperConnection, eyeDropperMoveConnection
+local eyeDropperConnection, eyeDropperMoveConnection--[[, deleteMoveConnection, deleteButtonDownConnection]]
 
 local playerModel
 local player
@@ -795,8 +788,6 @@ local isRestricted = variables.IsRestricted.Value
 local selectionBox
 local currentSelection
 local currentSelectionColors = {}
-
-local region3BugFixed = false
 
 if isRestricted then waitForChild(game.Workspace, &quot;BaseplateBumpers&quot;) end
 ----------------------------------------------------------------------------------------
@@ -1495,7 +1486,7 @@ function setupDraggableClone()
 		end
 		-- to show joints during the mouse move
       game.JointsService:SetJoinAfterMoveInstance(Data.Stamp.CurrentParts[1])
-      if Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) == nil then
+      if Mouse.Target and Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) == nil then
 			game.JointsService:SetJoinAfterMoveTarget(Mouse.Target)
       else
 			game.JointsService:SetJoinAfterMoveTarget(nil)
@@ -1535,6 +1526,7 @@ function noManualWelds(part)
 	return true
 end
 
+local debris = game:GetService(&quot;Debris&quot;)
 function flashRedBox()
 	errorBox.Parent = player.PlayerGui
 	errorBox.Adornee = Data.Stamp.CurrentParts[1]
@@ -1580,7 +1572,7 @@ function onInsertMouseButton1Up()
 			local minBB, maxBB = getBoundingBox2(Data.Stamp.CurrentParts[1])
 			local configFound, targetCFrame = findConfigAtMouseTarget(Data.Stamp.TransparencyTable)
 
-			if configFound and (region3BugFixed or isRestricted) then
+			if configFound then
 				local blockingParts = game.Workspace:FindPartsInRegion3(Region3.new(minBB+targetCFrame.p+insertBoundingBoxOverlapVector, maxBB+targetCFrame.p-insertBoundingBoxOverlapVector), Data.Stamp.CurrentParts[1], 100)
 				for b = 1, #blockingParts do
 					-- below if we only want to block stamping on self
