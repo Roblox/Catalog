@@ -35,18 +35,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>28.4643021</X>
-					<Y>4.09870195</Y>
-					<Z>-73.2421799</Z>
-					<R00>-0.78568238</R00>
-					<R01>0.618630171</R01>
-					<R02>0.000492599502</R02>
-					<R10>-1.7499957e-021</R10>
+					<X>20.8999996</X>
+					<Y>22.0991096</Y>
+					<Z>-166.700073</Z>
+					<R00>-0.999999881</R00>
+					<R01>4.79017799e-022</R01>
+					<R02>-2.12471337e-021</R02>
+					<R10>-2.12509404e-021</R10>
 					<R11>-0.000796274282</R11>
 					<R12>0.999999642</R12>
-					<R20>0.61863035</R20>
-					<R21>0.785682201</R21>
-					<R22>0.000625618792</R22>
+					<R20>4.77325724e-022</R20>
+					<R21>0.999999642</R21>
+					<R22>0.000796274282</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -125,23 +125,18 @@
 				<string name="Name">Dragger Local</string>
 				<ProtectedString name="Source">local Tool = script.Parent
 
-enabled = true
-local origTexture = 	Tool.TextureId
 game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/freemove_sel.png&quot;)
 
 local selectionBox
 local currentSelection
 local currentSelectionColors = {}
-local selectionLasso
-local inGui = false
-local inPalette = false
-local lockTime = 0
 local Mouse = nil
 
 local instances = {}
+local maxDragDistance = 60
 
 function canSelectObject(part)
-	return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; 60
+	return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; maxDragDistance
 end
 
 function findModel(part)
@@ -155,19 +150,23 @@ function findModel(part)
 	return nil
 end
 
+function isPart(object)
+	return (object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;VehicleSeat&quot;))
+end
+
 function positionPartsAtCFrame3(collection, aCFrame)
 
 	local insertCFrame
 	if collection[1]:IsA(&quot;Model&quot;) then
 		-- we assume model has at least one part in it; need to find first part
 		i = 1
-		while (i &lt; (#collection[1]:GetChildren()) and not collection[1]:GetChildren()[i]:IsA(&quot;Part&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;TrussPart&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;WedgePart&quot;)) do
+		while (i &lt; (#collection[1]:GetChildren()) and not isPart(collection[1]:GetChildren()[i])) do
 			i = i + 1
 		end
 		insertCFrame = collection[1]:GetChildren()[i].CFrame
 
 		for i, object in pairs(collection[1]:GetChildren()) do
-			if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
+			if isPart(object) then
 				local posPartInWorld = object.Position
 				local posPart1InWorld = insertCFrame.p
 				local newPosPartInWorld = posPartInWorld - posPart1InWorld + aCFrame.p
@@ -190,13 +189,13 @@ function getBoundingBox2(partOrModel)
 	local minVec = Vector3.new(math.huge, math.huge, math.huge)
 	local maxVec = Vector3.new(-math.huge, -math.huge, -math.huge)
 
-	if partOrModel:IsA(&quot;Part&quot;) or partOrModel:IsA(&quot;WedgePart&quot;) or partOrModel:IsA(&quot;TrussPart&quot;)then
+	if isPart(partOrModel) then
 		minVec = -0.5 * partOrModel.Size
 		maxVec = -minVec
 	else
 		local part1 = partOrModel:GetChildren()[1]
 		for i, object in pairs(partOrModel:GetChildren()) do
-			if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
+			if isPart(object) then
 				boxMinInWorld = object.CFrame:pointToWorldSpace(-0.5 * object.Size)
 				boxMinInPart1 = part1.CFrame:pointToObjectSpace(boxMinInWorld)
 				boxMaxInWorld = object.CFrame:pointToWorldSpace(0.5 * object.Size)
@@ -327,7 +326,7 @@ function findConfigAtMouseTarget(collection)
 	local insertCFrame
 	if collection[1]:IsA(&quot;Model&quot;) then
 		i = 1
-		while (i &lt; (#collection[1]:GetChildren()) and not collection[1]:GetChildren()[i]:IsA(&quot;Part&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;TrussPart&quot;) and not collection[1]:GetChildren()[i]:IsA(&quot;WedgePart&quot;)) do
+		while (i &lt; (#collection[1]:GetChildren()) and not isPart(collection[1]:GetChildren()[i])) do
 			i = i + 1
 		end
 		insertCFrame = collection[1]:GetChildren()[i].CFrame
@@ -416,7 +415,8 @@ end
 
 function collectBaseParts(object, collection)
 	if object == nil then return end
-	if object:IsA(&quot;BasePart&quot;) then
+	--if object:IsA(&quot;BasePart&quot;) then
+	if isPart(object) then
 		collection[#collection+1] = object
 	end
 	for index,child in pairs(object:GetChildren()) do
@@ -431,30 +431,28 @@ function onMouseDown(mouse)
 		local hitPoint = mouse.Hit:toObjectSpace(part.CFrame).p
 		if trySelection(part) then
 			instances = {}
+			game.JointsService:ClearJoinAfterMoveJoints()
+			game.JointsService:SetJoinAfterMoveInstance(mouse.Target)
 			collectBaseParts(currentSelection, instances)
 			startDrag(part, hitPoint, instances)
 			return
 		end
 	end
-
-	--Clear the selection if we weren&apos;t able to lock succesfullu
-	onMouseUp(mouse)
 end
-
 
 
 function onMouseUp(mouse)
 	mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
 	if dragger ~= nil then
 		Mouse.TargetFilter = nil
-		dragger = nil
 		pcall(function() dragger:MouseUp() end)
+		game.JointsService:CreateJoinAfterMoveJoints()
+		dragger = nil
 	end
 end
 
 function trySelection(part)
 	if canSelectObject(part) then
-		selectionLasso.Part = part
 		local model = findModel(part)
 		if model then 		
 			return setSelection(model)
@@ -470,9 +468,9 @@ end
 function onKeyDown(key)
 	if dragger ~= nil then
 		if key == &apos;R&apos; or key == &apos;r&apos;  then
-			dragger:AxisRotate(Enum.Axis.Y)
+			pcall(function() dragger:AxisRotate(Enum.Axis.Y) end)
 		elseif key == &apos;T&apos; or key == &apos;t&apos; then
-			dragger:AxisRotate(Enum.Axis.Z)
+			pcall(function() dragger:AxisRotate(Enum.Axis.Z) end)
 		end
 	end
 end
@@ -485,21 +483,14 @@ function onMouseMove(mouse)
 
 	alreadyMoving = true
 	if dragger ~= nil then
-		--Maintain the lock
-		if time() - lockTime &gt; 3 then
-			Instance.Lock(currentSelection)
-			lockTime = time()
-		end
-		
-		--Then drag
 		local thingToDrag = {}
 		thingToDrag[1] = currentSelection 
-
+	
+		pcall(function() dragger:MouseMove(mouse.UnitRay) end)-- needed to break welds properly
 		configFound, targetCFrame = findConfigAtMouseTarget(thingToDrag)
 		if configFound then
 			positionPartsAtCFrame3(thingToDrag, targetCFrame)
 		end
-	--	pcall(function() dragger:MouseMove(mouse.UnitRay) end)
 	else
 		trySelection(mouse.Target)
 	end
@@ -528,32 +519,16 @@ end
 function setSelection(partOrModel)
 	if partOrModel ~= currentSelection then
 		clearSelection()
-		if Instance.Lock(partOrModel) then
-			lockTime = time()
-			currentSelection = partOrModel
-			saveSelectionColor(currentSelection)
-			selectionBox.Adornee = currentSelection
-			return true
-		end
-	else
-		if currentSelection ~= nil then
-			if time() - lockTime &gt; 2 then
-				--Maintain the lock
-				if not(Instance.Lock(currentSelection)) then
-					--we lost the lock
-					clearSelection()
-					return false
-				else
-					lockTime = time()
-					return true
-				end
-			else
-				return true
-			end
-		end
+		currentSelection = partOrModel
+		saveSelectionColor(currentSelection)
+		selectionBox.Adornee = currentSelection
+		return true
+	elseif partOrModel == nil then
+		clearSelection()
+		return false
 	end
 
-	return false
+	return partOrModel == currentSelection
 end
 
 function clearSelection()
@@ -562,32 +537,20 @@ function clearSelection()
 			part.BrickColor = color
 		end
 		selectionBox.Adornee = nil
-		Instance.Unlock(currentSelection)
 	end
 	currentSelectionColors = {}
 	currentSelection = nil
-	
-	if(selectionLasso) then
-		selectionLasso.Part = nil
-	end
+
 	if(selectionBox) then
 		selectionBox.Adornee = nil
 	end
 end
 
 function onEquippedLocal(mouse)
-	wait(0.1)
-	Tool.TextureId = &quot;rbxasset://icons/freemove_sel.png&quot;
-
 	Mouse = mouse
 
 	local character = script.Parent.Parent
 	local player = game.Players:GetPlayerFromCharacter(character)
-	guiMain = Instance.new(&quot;ScreenGui&quot;)
-	guiMain.Parent = player.PlayerGui
-
-	inGui = false
-	inPalette = false
 
 	mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
 	mouse.Button1Down:connect(function() onMouseDown(mouse) end)
@@ -601,23 +564,12 @@ function onEquippedLocal(mouse)
 	selectionBox.Adornee = nil
 	selectionBox.Parent = player.PlayerGui
 
-	selectionLasso = Instance.new(&quot;SelectionPartLasso&quot;)
-	selectionLasso.Name = &quot;Model Drag Lasso&quot;
-	selectionLasso.Humanoid = character.Humanoid
-	selectionLasso.archivable = false
-	selectionLasso.Visible = true
-	selectionLasso.Parent = game.workspace
-	selectionLasso.Color = BrickColor.Blue()
-
 	alreadyMoving = false
-	--buildGui(guiMain, mouse)
 end
 
 function onUnequippedLocal()
-	Tool.TextureId = origTexture
 	clearSelection()
 	selectionBox:Remove()
-	selectionLasso:Remove()
 end
 
 
@@ -631,21 +583,8 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">-------- OMG HAX
-
-r = game:service(&quot;RunService&quot;)
-
-
-local damage = 0
-
-
-local slash_damage = 0
-
-
-sword = script.Parent.Handle
+				<ProtectedString name="Source">sword = script.Parent.Handle
 Tool = script.Parent
-
-
 
 function attack()
 	local anim = Instance.new(&quot;StringValue&quot;)
@@ -653,21 +592,6 @@ function attack()
 	anim.Value = &quot;Slash&quot;
 	anim.Parent = Tool
 end
-
-
-function swordUp()
-	Tool.GripForward = Vector3.new(-1,0,0)
-	Tool.GripRight = Vector3.new(0,1,0)
-	Tool.GripUp = Vector3.new(0,0,1)
-end
-
-function swordOut()
-	Tool.GripForward = Vector3.new(0,0,1)
-	Tool.GripRight = Vector3.new(0,-1,0)
-	Tool.GripUp = Vector3.new(-1,0,0)
-end
-
-
 
 Tool.Enabled = true
 
@@ -682,42 +606,15 @@ function onActivated()
 	local character = Tool.Parent;
 	local humanoid = character.Humanoid
 	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
 		return 
 	end
 
-	
-
 	attack()
-
-	wait(1)
 
 	Tool.Enabled = true
 end
 
-
-function onEquipped()
-end
-
-
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
-
-</ProtectedString>
-				<bool name="archivable">true</bool>
-			</Properties>
-		</Item>
-		<Item class="ObjectValue" referent="RBX5">
-			<Properties>
-				<string name="Name">SelectedButton</string>
-				<Ref name="Value">null</Ref>
-				<bool name="archivable">true</bool>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX6">
-			<Properties>
-				<string name="Name">RobloxBuildTool</string>
-				<bool name="Value">false</bool>
+script.Parent.Activated:connect(onActivated)</ProtectedString>
 				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
