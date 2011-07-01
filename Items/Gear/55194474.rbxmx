@@ -1,0 +1,894 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Archivable">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>-1.5</Z>
+				<R00>0</R00>
+				<R01>0</R01>
+				<R02>-1</R02>
+				<R10>-1</R10>
+				<R11>0</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">DragonSword</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=55049158</url></Content>
+		</Properties>
+		<Item class="Part" referent="RBX1">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="Archivable">true</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.600000024</X>
+					<Y>1.5</Y>
+					<Z>-14.1000004</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">3</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.19000113</X>
+					<Y>0.200000003</Y>
+					<Z>3.76999927</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX2">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=54421380</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1.5</X>
+						<Y>1.5</Y>
+						<Z>1.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=54421328</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX3">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">DragonSword LS</string>
+				<ProtectedString name="Source">-- Aspects of group damage are copied from / based heavily on the Trident&apos;s
+
+math.randomseed(tick())
+
+local Tool = script.Parent
+local Sword = Tool.Handle
+
+local TOUCH_DAMAGE = 5
+local SLASH_DAMAGE = 10
+local STAB_DAMAGE = 5
+local FIRE_DAMAGE = 5
+local CLOSE_RAGE_DAMAGE = 75
+local FAR_RAGE_DAMAGE = 40
+local CLOSE_FIRE_PROB = 1.0
+local FAR_FIRE_PROB = 0.5
+local RAGE_AOE = 10
+local damage = TOUCH_DAMAGE
+
+local toDamage = {}
+
+local oldTheta
+local oldPhi
+local oldPsi
+local newTheta
+local newPhi
+local newPsi
+local theta
+local phi
+local psi
+
+-- Using standard unsheath and slash sounds, from EelSword (or MahjongSword, etc.)
+local unsheathSound = Instance.new(&quot;Sound&quot;)
+unsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
+unsheathSound.Parent = Sword
+unsheathSound.Volume = 0.5
+local stabSound = Instance.new(&quot;Sound&quot;)
+stabSound.SoundId = &quot;http://www.roblox.com/asset/?id=45941860&quot;
+stabSound.Parent = Tool
+stabSound.Volume = 1.0
+local slashSound = Instance.new(&quot;Sound&quot;)
+slashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+slashSound.Parent = Sword
+slashSound.Volume = 0.7
+local shotSound
+local chingSound
+local ignitionSound
+
+local rageVelocity = Instance.new(&quot;BodyVelocity&quot;)
+rageVelocity.P = 10000
+rageVelocity.Name = &quot;DragonSwordRageVelocity&quot;
+rageVelocity.maxForce = Vector3.new(10000, 10000, 10000)
+
+local recoilVelocity = rageVelocity:Clone()
+recoilVelocity.Name = &quot;DragonSwordRecoilVelocity&quot;
+
+local slashAnim
+local stabAnim
+local rageAnim
+
+local shootScript
+
+local runServ = game:service(&quot;RunService&quot;) -- To keep track of time between attacks, so double-clicks work.
+local debris = game:service(&quot;Debris&quot;)
+local co45	-- Wait(45) coroutine; ensures that rage can be used only once every 45 seconds
+
+local myCharacter
+local myHumanoid
+local myPlayer
+local RightArm
+local RightGrip
+local Torso
+local initialTorsoPos
+local initialTorsoFrame
+local otherHum
+local distance
+local radiusVector
+
+-- We need a transparent part on the sword&apos;s tip from which to shoot off fireballs, too.
+local Tip
+local TipWeld
+local TipFire
+local Projectile
+
+Tool.Enabled = true
+
+local lastAttackTime = 0
+
+-- Standard tagging and untagging functions for kill-counting purposes
+function tagHumanoid(humanoid, player)
+	local creatorTag = Instance.new(&quot;ObjectValue&quot;)
+	creatorTag.Value = player
+	creatorTag.Name = &quot;creator&quot;
+	creatorTag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+	if not humanoid then return end
+	local creatorTag = humanoid:FindFirstChild(&quot;creator&quot;)
+	if creatorTag then creatorTag:Remove() end
+end
+
+-- Typical slash attack
+function blow(hit)
+	if not hit or not hit.Parent then return end
+
+	myCharacter = Tool.Parent
+	myPlayer = game.Players:GetPlayerFromCharacter(myCharacter)
+	if not myCharacter or not myPlayer then return end
+
+	myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+	local hitHumanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+
+	if myHumanoid and hitHumanoid and myHumanoid ~= hitHumanoid then
+		RightArm = myCharacter:FindFirstChild(&quot;Right Arm&quot;)
+		if not RightArm then return end
+		RightGrip = RightArm:FindFirstChild(&quot;RightGrip&quot;)
+		if RightGrip and (RightGrip.Part0 == Sword or RightGrip.Part1 == Sword) then
+			tagHumanoid(hitHumanoid, myPlayer)
+			hitHumanoid:TakeDamage(damage)
+			wait(1)
+			untagHumanoid(hitHumanoid, myPlayer)
+		end
+	end
+end 
+
+-- Damage and knockback from dragonRage
+function rageDamage(center, radius, attackDamage, fireProb)
+	myCharacter = Tool.Parent
+	if not myCharacter then return end
+	myPlayer = game.Players:GetPlayerFromCharacter(myCharacter)
+	if not myPlayer then return end
+
+	toDamage = {}
+
+	-- Find all parts in a cube of side length 2*radius about the center of explosion...
+	radiusVector = Vector3.new(radius, radius, radius)
+	parts = game.Workspace:FindPartsInRegion3(Region3.new(center - radiusVector, center + radiusVector), myCharacter, 150)
+	for i = 1, #parts do
+		-- First find the humanoids among them.
+		local possibleCharacter = parts[i].Parent
+		local possibleHumanoid = possibleCharacter:FindFirstChild(&quot;Humanoid&quot;)
+		if possibleHumanoid then
+			toDamage[possibleCharacter] = 1
+		end
+		-- Then send all of them (except the sword user) flying!
+		local newVel = rageVelocity:Clone()
+		newVel.velocity = (parts[i].Position - center).unit * 50
+		newVel.Parent = parts[i]
+	end
+	-- Now actually do damage.
+	for key, val in pairs(toDamage) do
+		local otherHumanoid = key:FindFirstChild(&quot;Humanoid&quot;)
+		if otherHumanoid then
+			tagHumanoid(otherHumanoid, myPlayer)
+			otherHumanoid:TakeDamage(attackDamage)
+			if (math.random() &lt; fireProb) then
+				local damageScript = key:FindFirstChild(&quot;FireDamageScript&quot;)
+				if damageScript == nil then
+					damageScript = script.FireDamageScript:Clone()
+					damageScript.Parent = key
+					damageScript.Disabled = false
+				end
+			end
+		end
+	end
+	wait(1.0)
+	for i = 1, #parts do
+		-- Remove the velocities.
+		local vel = parts[i]:FindFirstChild(&quot;DragonSwordRageVelocity&quot;)
+		if vel then vel:Remove() end
+	end
+	for key, val in pairs(toDamage) do
+		local otherHum = key:FindFirstChild(&quot;Humanoid&quot;)
+		if otherHum then untagHumanoid(otherHum, myPlayer) end
+	end
+end
+
+-- Create the projectile-shooting sword tip.
+function instantiateTipAndWeld()
+	Tip = Instance.new(&quot;Part&quot;)
+	Tip.Name = &quot;DragonSwordTip&quot;
+	Tip.CanCollide = false
+	Tip.formFactor = 3	--Custom
+	Tip.Shape = 0	--Ball
+	Tip.Size = Vector3.new(.5, .5, .5)
+	Tip.Locked = true
+	Tip.Parent = game.Workspace
+	Tip.CFrame = CFrame.new(Vector3.new(-0.15, 0, -1.85))
+	Tip.Transparency = 1.0
+	Tip.BrickColor = BrickColor.new(106)	-- Bright orange
+	Tip.Material = Enum.Material.CorrodedMetal
+	
+	TipWeld = Instance.new(&quot;Weld&quot;)
+	TipWeld.Name = &quot;DragonSwordTipWeld&quot;
+	TipWeld.Part0 = Sword
+	TipWeld.Part1 = Tip
+	TipWeld.C1 = CFrame.new(Vector3.new(-0.15, 0, -1.85))
+	TipWeld.Parent = game.Workspace
+end
+
+-- Not really a stab function as much as part of the shooting attack; shoot() actually fires off the projectile, while
+--   stab() does the animations and sets touch damage during the attack
+function stab()
+	if Tip then Tip:Remove() end
+	if TipWeld then TipWeld:Remove() end
+	instantiateTipAndWeld()
+	damage = STAB_DAMAGE	
+	stabAnim = myHumanoid:LoadAnimation(Tool.DragonSwordCharge)
+	if stabAnim then stabAnim:Play() end
+	if stabSound then stabSound:Play() end
+	-- rotate the sword; copied and pasted from Mahjong Sword&apos;s example... AND light the tip on fire.
+	TipFire = Instance.new(&quot;Fire&quot;)
+	TipFire.Size = .5
+	TipFire.Parent = Tip
+	for i = 1, 5 do
+		-- These are the angles we need to rotate the sword by as the animation plays; modified slightly. (These are more... correct? than the ones in EelSword.)
+		phi = i*math.pi/10
+		theta = 3*math.pi/8 + i *math.pi/30
+		psi = 17*math.pi/20+ i *math.pi/20
+		Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+		Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+		Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))		
+		TipFire.Size = i/5 + 1/2
+		wait(.1)
+	end
+	-- The animation stays in stab position for two seconds, so the fire can still grow...
+	for i = 1, 10 do
+		TipFire.Size = i/5 + 3/2
+		Tip.Transparency = 1.0 - i/10.0
+		wait(.1)
+	end
+	-- THEN we can shoot it off (on a projectile), removing the actual fire.
+	shootScript = Tool:FindFirstChild(&quot;ShootScript&quot;)
+	if shootScript then 
+		local newShootScript = shootScript:Clone()
+		newShootScript.Parent = Tool
+		newShootScript.Disabled = false
+	end
+	--shoot()
+	Tip.Transparency = 1.0
+	TipFire:Remove()
+	--Reset the sword back to its original Orientation
+	for i = 1, 10 do
+		phi = math.pi/2 - i*math.pi/20
+		theta = 13*math.pi/24 - i*math.pi/60
+		psi = 11*math.pi/10 - i *math.pi/40
+		Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+		Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+		Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))		
+		wait(.01)
+	end
+	Tool.GripForward = Vector3.new(1.0, 0.0, 0.0)
+	Tool.GripRight = Vector3.new(0.0, -1.0, 0.0)
+	Tool.GripUp = Vector3.new(0.0, 0.0, 1.0)
+end
+
+-- Boring rotation functions for the animation in dragonRage
+function rotateSwordUp()
+	oldTheta = 0
+	oldPhi = 0
+	oldPsi = math.pi
+	theta = oldTheta
+	phi = oldPhi
+	psi = oldPsi
+	newTheta = math.pi/2
+	newPhi = -math.pi/2
+	newPsi = math.pi/4
+
+	for i = 1, 10 do
+		theta = theta + (newTheta - oldTheta) / 10.0
+		phi = phi + (newPhi - oldPhi) / 10.0
+		psi = psi + (newPsi - oldPsi) / 10.0
+		Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+		Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+		Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))
+		wait(.02)
+	end
+	-- Just to check
+	theta = newTheta
+	phi = newPhi
+	psi = newPsi
+	Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+	Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+	Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))
+end
+
+function rotateSwordDown()
+	oldTheta = math.pi/2
+	oldPhi = -math.pi/2
+	oldPsi = math.pi/4
+	newTheta = 5*math.pi/16
+	newPhi = -7*math.pi/8
+	newPsi = math.pi/4
+	theta = oldTheta
+	phi = oldPhi
+	psi = oldPsi
+	
+	for i = 0, 5 do
+		theta = theta + (newTheta - oldTheta) / 5.0
+		phi = phi + (newPhi - oldPhi) / 5.0
+		psi = psi + (newPsi - oldPsi) / 5.0
+		Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+		Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+		Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))
+		wait(.01)
+	end
+	-- Just to check
+	theta = newTheta
+	phi = newPhi
+	psi = newPsi
+	Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+	Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+	Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))
+end
+
+function rotateSwordBack()
+	oldTheta = 5*math.pi/16
+	oldPhi = -7*math.pi/8
+	oldPsi = math.pi/4
+	newTheta = 0
+	newPhi = 0
+	newPsi = math.pi
+	theta = oldTheta
+	phi = oldPhi
+	psi = oldPsi
+	
+	for i = 1, 10 do
+		theta = theta + (newTheta - oldTheta) / 10.0
+		phi = phi + (newPhi - oldPhi) / 10.0
+		psi = psi + (newPsi - oldPsi) / 10.0
+		Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+		Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+		Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))
+		wait(.05)
+	end
+	-- Just to check
+	theta = newTheta
+	phi = newPhi
+	psi = newPsi
+	Tool.GripForward = Vector3.new(math.cos(theta) * math.cos(psi), -math.cos(phi) * math.sin(psi) + math.sin(phi) * math.sin(theta) * math.cos(psi), math.sin(phi) * math.sin(psi) + math.cos(phi) * math.sin(theta) * math.cos(psi))
+	Tool.GripRight = Vector3.new(math.sin(psi) * math.cos(theta), math.cos(phi) * math.cos(psi) + math.sin(psi)* math.sin(theta) * math.sin(phi), -math.sin(phi) * math.cos(psi) + math.cos(phi) * math.sin(theta) * math.sin(psi))		
+	Tool.GripUp = Vector3.new(-math.sin(theta), math.sin(phi) * math.cos(theta), math.cos(theta) * math.cos(phi))
+end
+
+-- Special attack, creates two explosions (but not Explosions) around the point at which user is standing
+--   when she starts the attack.
+function dragonRage(key)	-- Please say this isn&apos;t copyright infringement...
+	if not Tool.Enabled then return end
+	if key:lower() ~= &quot;x&quot; then return end
+	
+	if co45 == nil or coroutine.status(co45) == &apos;dead&apos; then
+		co45 = coroutine.create(function() wait(45) end)
+		coroutine.resume(co45)
+
+		myCharacter = Tool.Parent
+		if not myCharacter then return end
+		myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+		if not myHumanoid then return end
+		Torso = myCharacter:FindFirstChild(&quot;Torso&quot;)
+		if not Torso then return end
+		initialTorsoFrame = Torso.CFrame
+		initialTorsoPos = Torso.Position
+
+		rageAnim = myHumanoid:LoadAnimation(Tool.DragonSwordRage)
+		if rageAnim then rageAnim:Play() end
+
+		rotateSwordUp()
+		chingSound = Tool:FindFirstChild(&quot;ChingSound&quot;)
+		if chingSound then chingSound:Play() end
+		wait(0.5)
+		rotateSwordDown()
+
+		ignitionSound = Tool:FindFirstChild(&quot;IgnitionSound&quot;)
+		if ignitionSound then ignitionSound:Play() end
+
+		
+		local FakeExplosion = Instance.new(&quot;Explosion&quot;)
+		FakeExplosion.Position = initialTorsoPos
+		FakeExplosion.BlastPressure = 0
+		FakeExplosion.BlastRadius = 50
+		FakeExplosion.Parent = game.Workspace
+	
+
+		local Fireball = Instance.new(&quot;Part&quot;)
+		Fireball.CanCollide = false
+		Fireball.Anchored = true
+		Fireball.Locked = true
+		Fireball.Transparency = 1.0
+		Fireball.Size = Vector3.new(1, 1, 1)
+		Fireball.CFrame = initialTorsoFrame
+		Fireball.Parent = game.Workspace
+		
+		local Fire = Instance.new(&quot;Fire&quot;)
+		Fire.Size = 30
+		Fire.Heat = 30
+		Fire.Parent = Fireball
+
+		rageDamage(initialTorsoPos, RAGE_AOE, CLOSE_RAGE_DAMAGE, CLOSE_FIRE_PROB)
+		--rageDamage includes a wait(1) inside itself, so we don&apos;t need to wait here.
+
+		rotateSwordBack()
+
+		debris:AddItem(Fireball, 2)
+
+		if ignitionSound then ignitionSound:Play() end
+		for i = 1, 4 do
+			local Fireball = Instance.new(&quot;Part&quot;)
+			Fireball.CanCollide = false
+			Fireball.Anchored = true
+			Fireball.Locked = true
+			Fireball.Transparency = 1.0
+			Fireball.Size = Vector3.new(1, 1, 1)
+			Fireball.CFrame = initialTorsoFrame + Vector3.new(RAGE_AOE * math.cos(i*math.pi/2), 0, RAGE_AOE * math.sin(i*math.pi/2))
+			Fireball.Parent = game.Workspace
+			
+			local Fire = Instance.new(&quot;Fire&quot;)
+			Fire.Size = 30
+			Fire.Heat = 30
+			Fire.Parent = Fireball
+
+			debris:AddItem(Fireball, 1)
+		end
+
+		rageDamage(initialTorsoPos, 2*RAGE_AOE, FAR_RAGE_DAMAGE, FAR_FIRE_PROB)
+		
+	end
+end
+
+function onActivated()
+	-- Checking for double clicks is based on (i.e. copied from) that in EelSword, which was itself from MahjongSword...
+
+	-- Check that tool is enabled,
+	if not Tool.Enabled then return end
+	Tool.Enabled = false
+	-- And that character has use of his right arm.
+	myCharacter = Tool.Parent
+	if not myCharacter then return end
+	myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+	if not myHumanoid then return end
+	RightArm = myCharacter:FindFirstChild(&quot;Right Arm&quot;)
+	if not RightArm then return end
+
+	-- Get the time, to determine whether it was a double click or not.
+	local thisAttackTime = runServ.Stepped:wait()
+
+	if (thisAttackTime - lastAttackTime &lt; 0.2) then	-- It was a double click.
+		if slashSound then slashSound:Stop() end
+		if slashAnim then slashAnim:Stop() end
+
+		stab()
+	else	-- It was a single click.
+		damage = SLASH_DAMAGE
+		slashAnim = myHumanoid:LoadAnimation(Tool.Slash)
+
+		if slashSound then slashSound:Play() end
+		if slashAnim then slashAnim:Play() end
+	end
+	
+	lastAttackTime = thisAttackTime
+	Tool.Enabled = true
+	damage = TOUCH_DAMAGE
+end
+	
+
+function onEquipped(mouse)
+	if mouse then mouse.KeyDown:connect(dragonRage) end
+	if unsheathSound then unsheathSound:Play() end
+end
+
+function onUnequipped()
+	-- Stop sounds and animations
+	if unsheathSound then unsheathSound:Stop() end
+	if slashSound then slashSound:Stop() end
+	if slashAnim then slashAnim:Stop() end
+	if stabSound then stabSound:Stop() end
+	if stabAnim then stabAnim:Stop() end
+	if shotSound then shotSound:Stop() end
+	if chingSound then chingSound:Stop() end
+	if ignitionSound then ignitionSound:Stop() end
+	if rageAnim then rageAnim:Stop() end
+
+	if Tip then Tip:Remove() end
+	if TipWeld then TipWeld:Remove() end
+
+	-- Also reset sword position, just in case we unequipped in the middle of one of the animations.
+	Tool.GripForward = Vector3.new(1.0, 0.0, 0.0)
+	Tool.GripRight = Vector3.new(0.0, -1.0, 0.0)
+	Tool.GripUp = Vector3.new(0.0, 0.0, 1.0)
+end
+	
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+
+Sword.Touched:connect(blow)
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX4">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">FireDamageScript</string>
+					<ProtectedString name="Source">local FIRE_DAMAGE = 5
+
+local hitCharacter = script.Parent
+local hitHumanoid = hitCharacter:FindFirstChild(&quot;Humanoid&quot;)
+local hitTorso = hitCharacter:FindFirstChild(&quot;Torso&quot;)
+
+local Fire = Instance.new(&quot;Fire&quot;)
+Fire.Size = 5
+if hitTorso then Fire.Parent = hitTorso end
+
+
+for i = 1, 5 do
+	wait(1)
+	if hitHumanoid then hitHumanoid:TakeDamage(FIRE_DAMAGE) end
+end
+
+Fire:Remove()
+script:Remove()</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX5">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent
+
+local stillEquipped = false
+
+function onEquippedLocal(mouse)
+	stillEquipped = true
+	if mouse == nil then 
+		print(&quot;Mouse not found&quot;)
+		return
+	end
+	while stillEquipped do 
+		print(&quot;Setting Mouse to go&quot;)
+		mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+		while Tool.Enabled and stillEquipped do 
+			wait(0.01)
+		end
+		print(&quot;Setting Mouse to wait&quot;)
+		mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+		while not Tool.Enabled and stillEquipped do 
+			wait(0.01)
+		end	
+	end
+end
+
+
+function onUnequippedLocal()
+	stillEquipped = false
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=54432537</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">Slash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=54456096</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">DragonSwordCharge</string>
+			</Properties>
+		</Item>
+		<Item class="Sound" referent="RBX8">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Looped">false</bool>
+				<string name="Name">ShotSound</string>
+				<float name="Pitch">1</float>
+				<bool name="PlayOnRemove">false</bool>
+				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=54459328</url></Content>
+				<float name="Volume">0.5</float>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=54504034</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">DragonSwordRage</string>
+			</Properties>
+		</Item>
+		<Item class="Sound" referent="RBX10">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Looped">false</bool>
+				<string name="Name">ChingSound</string>
+				<float name="Pitch">1</float>
+				<bool name="PlayOnRemove">false</bool>
+				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=54516144</url></Content>
+				<float name="Volume">0.5</float>
+			</Properties>
+		</Item>
+		<Item class="Sound" referent="RBX11">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Looped">false</bool>
+				<string name="Name">IgnitionSound</string>
+				<float name="Pitch">1</float>
+				<bool name="PlayOnRemove">false</bool>
+				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=54516223</url></Content>
+				<float name="Volume">1</float>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX12">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ShootScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Sword = Tool.Handle
+
+local myCharacter
+local myPlayer
+local myHumanoid
+local Torso
+
+local shotSound
+
+local connection
+
+local PROJECTILE_DAMAGE = 30
+local FIRE_DAMAGE = 5
+
+local debris = game:service(&quot;Debris&quot;)
+
+-- Standard tagging and untagging functions for kill-counting purposes
+function tagHumanoid(humanoid, player)
+	local creatorTag = Instance.new(&quot;ObjectValue&quot;)
+	creatorTag.Value = player
+	creatorTag.Name = &quot;creator&quot;
+	creatorTag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+	if not humanoid then return end
+	local creatorTag = humanoid:FindFirstChild(&quot;creator&quot;)
+	if creatorTag then creatorTag:Remove() end
+end
+
+-- Hit from projectile
+function projectileBlow(hit)
+	if not hit or not hit.Parent then return end
+	myCharacter = Tool.Parent
+	myPlayer = game.Players:GetPlayerFromCharacter(myCharacter)
+	if not myCharacter or not myPlayer then return end
+	myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+	local hitHumanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+	print (myCharacter)
+	print (myHumanoid)
+	print (hit.Parent)
+
+	if myHumanoid and hitHumanoid and myHumanoid ~= hitHumanoid then
+		tagHumanoid(hitHumanoid, myPlayer)
+		hitHumanoid:TakeDamage(PROJECTILE_DAMAGE)
+		-- Random chance of lighting victim on fire, as long as they aren&apos;t already on fire.
+		if (math.random() &gt; 0.8 and (hit:FindFirstChild(&quot;DragonSwordHitFire&quot;) == nil)) then
+			local hitHumFire = Instance.new(&quot;Fire&quot;)
+			hitHumFire.Name = &quot;DragonSwordHitFire&quot;
+			hitHumFire.Size = 3.5
+			hitHumFire.Parent = hit
+			for i = 1, 5 do
+				wait(1)
+				hitHumanoid:TakeDamage(FIRE_DAMAGE)
+			end
+			hitHumFire:Remove()
+		else
+			wait(1)	-- To give time to update the leaderboard before we untag.
+		end
+		untagHumanoid(hitHumanoid, myPlayer)
+	end		
+end
+
+-- Shoot a flaming projectile forward.
+
+-- Make sure our person still has a torso, so we can shoot from it.
+myCharacter = Tool.Parent
+if not myCharacter then return end
+Torso = myCharacter:FindFirstChild(&quot;Torso&quot;)
+if not Torso then return end
+
+shotSound = Tool:FindFirstChild(&quot;ShotSound&quot;)
+if shotSound then shotSound:Play() end
+-- Create a new part as the projectile, light it on fire, and send it flying!
+local Projectile = Instance.new(&quot;Part&quot;)
+
+Projectile.CanCollide = false
+Projectile.Transparency = 0
+Projectile.formFactor = 3	--Custom
+Projectile.Shape = 0	--Ball
+Projectile.Size = Vector3.new(.5, .5, .5)
+Projectile.Locked = true
+Projectile.Parent = game.Workspace
+Projectile.CFrame = Torso.CFrame + Torso.CFrame.lookVector.unit * 4
+Projectile.BrickColor = BrickColor.new(106)	-- Bright orange
+Projectile.Material = Enum.Material.CorrodedMetal
+
+local ProjectileFire = Instance.new(&quot;Fire&quot;)
+ProjectileFire.Size = 3.5
+ProjectileFire.Parent = Projectile
+
+local AntiGrav = Instance.new(&quot;BodyForce&quot;)
+AntiGrav.force = Vector3.new(0.0, Projectile:GetMass() * 196.1, 0.0)
+AntiGrav.Parent = Projectile
+
+Projectile.Velocity = Torso.CFrame.lookVector.unit * 50
+connection = Projectile.Touched:connect(projectileBlow)
+for i = 1, 30 do
+	print(connection)
+	wait(1)
+end
+
+Projectile:Remove()
+script:Remove()</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX13">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>0.00304865837</X>
+					<Y>6.44279671</Y>
+					<Z>-15.6728907</Z>
+					<R00>-0.999975741</R00>
+					<R01>-0.00687882397</R01>
+					<R02>0.00108949549</R02>
+					<R10>-1.16415322e-010</R10>
+					<R11>0.156434</R11>
+					<R12>0.987688422</R12>
+					<R20>-0.00696456898</R20>
+					<R21>0.987664461</R21>
+					<R22>-0.156430215</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>-0.01874125</X>
+					<Y>-13.3109703</Y>
+					<Z>-12.5442867</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
