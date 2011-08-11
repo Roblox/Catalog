@@ -123,7 +123,7 @@
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Dragger Local</string>
+				<string name="Name">NewDragger</string>
 				<ProtectedString name="Source">local Tool = script.Parent
 
 game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/freemove_sel.png&quot;)
@@ -136,49 +136,51 @@ local Mouse = nil
 local instances = {}
 local maxDragDistance = 60
 
+local connections = {}
+
 function canSelectObject(part)
-	return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; maxDragDistance
+&#9;return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; maxDragDistance
 end
 
 function findModel(part)
-	while part ~= nil do
-		if part.className == &quot;Model&quot; then
-			return part
-		end
-		part = part.Parent
-	end
+&#9;while part ~= nil do
+&#9;&#9;if part.className == &quot;Model&quot; then
+&#9;&#9;&#9;return part
+&#9;&#9;end
+&#9;&#9;part = part.Parent
+&#9;end
 
-	return nil
+&#9;return nil
 end
 
 function isPart(object)
-	return (object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;VehicleSeat&quot;))
+&#9;return (object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;VehicleSeat&quot;))
 end
 
 function positionPartsAtCFrame3(collection, aCFrame)
 
-	local insertCFrame
-	if collection[1]:IsA(&quot;Model&quot;) then
-		-- we assume model has at least one part in it; need to find first part
-		i = 1
-		while (i &lt; (#collection[1]:GetChildren()) and not isPart(collection[1]:GetChildren()[i])) do
-			i = i + 1
-		end
-		insertCFrame = collection[1]:GetChildren()[i].CFrame
+&#9;local insertCFrame
+&#9;if collection[1]:IsA(&quot;Model&quot;) then
+&#9;&#9;-- we assume model has at least one part in it; need to find first part
+&#9;&#9;i = 1
+&#9;&#9;while (i &lt; (#collection[1]:GetChildren()) and not isPart(collection[1]:GetChildren()[i])) do
+&#9;&#9;&#9;i = i + 1
+&#9;&#9;end
+&#9;&#9;insertCFrame = collection[1]:GetChildren()[i].CFrame
 
-		for i, object in pairs(collection[1]:GetChildren()) do
-			if isPart(object) then
-				local posPartInWorld = object.Position
-				local posPart1InWorld = insertCFrame.p
-				local newPosPartInWorld = posPartInWorld - posPart1InWorld + aCFrame.p
-	
-				local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = object.CFrame:components()
-				object.CFrame = CFrame.new(newPosPartInWorld.x, newPosPartInWorld.y, newPosPartInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
-			end
-		end
-	else
-		collection[1].CFrame = aCFrame
-	end
+&#9;&#9;for i, object in pairs(collection[1]:GetChildren()) do
+&#9;&#9;&#9;if isPart(object) then
+&#9;&#9;&#9;&#9;local posPartInWorld = object.Position
+&#9;&#9;&#9;&#9;local posPart1InWorld = insertCFrame.p
+&#9;&#9;&#9;&#9;local newPosPartInWorld = posPartInWorld - posPart1InWorld + aCFrame.p
+&#9;
+&#9;&#9;&#9;&#9;local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = object.CFrame:components()
+&#9;&#9;&#9;&#9;object.CFrame = CFrame.new(newPosPartInWorld.x, newPosPartInWorld.y, newPosPartInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;else
+&#9;&#9;collection[1].CFrame = aCFrame
+&#9;end
 
 end
 
@@ -187,123 +189,123 @@ function getBoundingBox2(partOrModel)
 -- for models, the bounding box is defined as the minimum and maximum individual part bounding boxes
 -- relative to the first part&apos;s coordinate frame.
 
-	local minVec = Vector3.new(math.huge, math.huge, math.huge)
-	local maxVec = Vector3.new(-math.huge, -math.huge, -math.huge)
+&#9;local minVec = Vector3.new(math.huge, math.huge, math.huge)
+&#9;local maxVec = Vector3.new(-math.huge, -math.huge, -math.huge)
 
-	if isPart(partOrModel) then
-		minVec = -0.5 * partOrModel.Size
-		maxVec = -minVec
-	else
-		local part1 = partOrModel:GetChildren()[1]
-		for i, object in pairs(partOrModel:GetChildren()) do
-			if isPart(object) then
-				boxMinInWorld = object.CFrame:pointToWorldSpace(-0.5 * object.Size)
-				boxMinInPart1 = part1.CFrame:pointToObjectSpace(boxMinInWorld)
-				boxMaxInWorld = object.CFrame:pointToWorldSpace(0.5 * object.Size)
-				boxMaxInPart1 = part1.CFrame:pointToObjectSpace(boxMaxInWorld)
+&#9;if isPart(partOrModel) then
+&#9;&#9;minVec = -0.5 * partOrModel.Size
+&#9;&#9;maxVec = -minVec
+&#9;else
+&#9;&#9;local part1 = partOrModel:GetChildren()[1]
+&#9;&#9;for i, object in pairs(partOrModel:GetChildren()) do
+&#9;&#9;&#9;if isPart(object) then
+&#9;&#9;&#9;&#9;boxMinInWorld = object.CFrame:pointToWorldSpace(-0.5 * object.Size)
+&#9;&#9;&#9;&#9;boxMinInPart1 = part1.CFrame:pointToObjectSpace(boxMinInWorld)
+&#9;&#9;&#9;&#9;boxMaxInWorld = object.CFrame:pointToWorldSpace(0.5 * object.Size)
+&#9;&#9;&#9;&#9;boxMaxInPart1 = part1.CFrame:pointToObjectSpace(boxMaxInWorld)
 
-				local minX = minVec.x
-				local minY = minVec.y
-				local minZ = minVec.z
-				local maxX = maxVec.x
-				local maxY = maxVec.y
-				local maxZ = maxVec.z
-				if boxMinInPart1.x &lt; minVec.x then
-					minX = boxMinInPart1.x
-				end
-				if boxMinInPart1.y &lt; minVec.y then
-					minY = boxMinInPart1.y
-				end
-				if boxMinInPart1.z &lt; minVec.z then
-					minZ = boxMinInPart1.z
-				end
-				if boxMaxInPart1.x &lt; minX then
-					minX = boxMaxInPart1.x
-				end
-				if boxMaxInPart1.y &lt; minY then
-					minY = boxMaxInPart1.y
-				end
-				if boxMaxInPart1.z &lt; minZ then
-					minZ = boxMaxInPart1.z
-				end
+&#9;&#9;&#9;&#9;local minX = minVec.x
+&#9;&#9;&#9;&#9;local minY = minVec.y
+&#9;&#9;&#9;&#9;local minZ = minVec.z
+&#9;&#9;&#9;&#9;local maxX = maxVec.x
+&#9;&#9;&#9;&#9;local maxY = maxVec.y
+&#9;&#9;&#9;&#9;local maxZ = maxVec.z
+&#9;&#9;&#9;&#9;if boxMinInPart1.x &lt; minVec.x then
+&#9;&#9;&#9;&#9;&#9;minX = boxMinInPart1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInPart1.y &lt; minVec.y then
+&#9;&#9;&#9;&#9;&#9;minY = boxMinInPart1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInPart1.z &lt; minVec.z then
+&#9;&#9;&#9;&#9;&#9;minZ = boxMinInPart1.z
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInPart1.x &lt; minX then
+&#9;&#9;&#9;&#9;&#9;minX = boxMaxInPart1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInPart1.y &lt; minY then
+&#9;&#9;&#9;&#9;&#9;minY = boxMaxInPart1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInPart1.z &lt; minZ then
+&#9;&#9;&#9;&#9;&#9;minZ = boxMaxInPart1.z
+&#9;&#9;&#9;&#9;end
 
-				if boxMinInPart1.x &gt; maxVec.x then
-					maxX = boxMinInPart1.x
-				end
-				if boxMinInPart1.y &gt; maxVec.y then
-					maxY = boxMinInPart1.y
-				end
-				if boxMinInPart1.z &gt; maxVec.z then
-					maxZ = boxMinInPart1.z
-				end
-				if boxMaxInPart1.x &gt; maxX then
-					maxX = boxMaxInPart1.x
-				end
-				if boxMaxInPart1.y &gt; maxY then
-					maxY = boxMaxInPart1.y
-				end
-				if boxMaxInPart1.z &gt; maxZ then
-					maxZ = boxMaxInPart1.z
-				end
+&#9;&#9;&#9;&#9;if boxMinInPart1.x &gt; maxVec.x then
+&#9;&#9;&#9;&#9;&#9;maxX = boxMinInPart1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInPart1.y &gt; maxVec.y then
+&#9;&#9;&#9;&#9;&#9;maxY = boxMinInPart1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInPart1.z &gt; maxVec.z then
+&#9;&#9;&#9;&#9;&#9;maxZ = boxMinInPart1.z
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInPart1.x &gt; maxX then
+&#9;&#9;&#9;&#9;&#9;maxX = boxMaxInPart1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInPart1.y &gt; maxY then
+&#9;&#9;&#9;&#9;&#9;maxY = boxMaxInPart1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInPart1.z &gt; maxZ then
+&#9;&#9;&#9;&#9;&#9;maxZ = boxMaxInPart1.z
+&#9;&#9;&#9;&#9;end
 
-				minVec = Vector3.new(minX, minY, minZ)
-				maxVec = Vector3.new(maxX, maxY, maxZ)
-			end
-		end
-	end
+&#9;&#9;&#9;&#9;minVec = Vector3.new(minX, minY, minZ)
+&#9;&#9;&#9;&#9;maxVec = Vector3.new(maxX, maxY, maxZ)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
 
-	return minVec, maxVec
+&#9;return minVec, maxVec
 
 end
 
 function getTargetPartBoundingBox(targetPart)
 
-	if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
-		return getBoundingBox2(targetPart.Parent)
-	else
-		return getBoundingBox2(targetPart)
-	end
+&#9;if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
+&#9;&#9;return getBoundingBox2(targetPart.Parent)
+&#9;else
+&#9;&#9;return getBoundingBox2(targetPart)
+&#9;end
 
 end
 
 function getMouseTargetCFrame(targetPart)
 
-	if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
-		return targetPart.Parent:GetChildren()[1].CFrame
-	else
-		return targetPart.CFrame
-	end
+&#9;if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
+&#9;&#9;return targetPart.Parent:GetChildren()[1].CFrame
+&#9;else
+&#9;&#9;return targetPart.CFrame
+&#9;end
 
 end
 
 function getClosestAlignedWorldDirection(aVector3InWorld)
 
-	local xDir = Vector3.new(1,0,0)
-	local yDir = Vector3.new(0,1,0)
-	local zDir = Vector3.new(0,0,1)
-	local xDot = aVector3InWorld.x * xDir.x + aVector3InWorld.y * xDir.y + aVector3InWorld.z * xDir.z
-	local yDot = aVector3InWorld.x * yDir.x + aVector3InWorld.y * yDir.y + aVector3InWorld.z * yDir.z
-	local zDot = aVector3InWorld.x * zDir.x + aVector3InWorld.y * zDir.y + aVector3InWorld.z * zDir.z
+&#9;local xDir = Vector3.new(1,0,0)
+&#9;local yDir = Vector3.new(0,1,0)
+&#9;local zDir = Vector3.new(0,0,1)
+&#9;local xDot = aVector3InWorld.x * xDir.x + aVector3InWorld.y * xDir.y + aVector3InWorld.z * xDir.z
+&#9;local yDot = aVector3InWorld.x * yDir.x + aVector3InWorld.y * yDir.y + aVector3InWorld.z * yDir.z
+&#9;local zDot = aVector3InWorld.x * zDir.x + aVector3InWorld.y * zDir.y + aVector3InWorld.z * zDir.z
 
-	if math.abs(xDot) &gt; math.abs(yDot) and math.abs(xDot) &gt; math.abs(zDot) then
-		if xDot &gt; 0 then
-			return 0
-		else
-			return 3
-		end
-	elseif math.abs(yDot) &gt; math.abs(xDot) and math.abs(yDot) &gt; math.abs(zDot) then
-		if yDot &gt; 0 then
-			return 1
-		else
-			return 4
-		end
-	else
-		if zDot &gt; 0 then
-			return 2
-		else
-			return 5
-		end
-	end 
+&#9;if math.abs(xDot) &gt; math.abs(yDot) and math.abs(xDot) &gt; math.abs(zDot) then
+&#9;&#9;if xDot &gt; 0 then
+&#9;&#9;&#9;return 0
+&#9;&#9;else
+&#9;&#9;&#9;return 3
+&#9;&#9;end
+&#9;elseif math.abs(yDot) &gt; math.abs(xDot) and math.abs(yDot) &gt; math.abs(zDot) then
+&#9;&#9;if yDot &gt; 0 then
+&#9;&#9;&#9;return 1
+&#9;&#9;else
+&#9;&#9;&#9;return 4
+&#9;&#9;end
+&#9;else
+&#9;&#9;if zDot &gt; 0 then
+&#9;&#9;&#9;return 2
+&#9;&#9;else
+&#9;&#9;&#9;return 5
+&#9;&#9;end
+&#9;end 
 
 end
 
@@ -312,325 +314,634 @@ end
 function findConfigAtMouseTarget(collection)
 
 -- *Critical Assumption* :
---				This function assumes the target CF axes are orthogonal with the target bounding box faces
---				And, it assumes the insert CF axes are orthongonal with the insert bounding box faces
---				Therefore, insertion will not work with angled faces on wedges or other &quot;non-block&quot; parts, nor
---				will it work for parts in a model that are not orthogonally aligned with the model&apos;s CF.
+--&#9;&#9;&#9;&#9;This function assumes the target CF axes are orthogonal with the target bounding box faces
+--&#9;&#9;&#9;&#9;And, it assumes the insert CF axes are orthongonal with the insert bounding box faces
+--&#9;&#9;&#9;&#9;Therefore, insertion will not work with angled faces on wedges or other &quot;non-block&quot; parts, nor
+--&#9;&#9;&#9;&#9;will it work for parts in a model that are not orthogonally aligned with the model&apos;s CF.
 
-	local grid = 4.0
-	local admissibleConfig = false
-	local targetConfig = CFrame.new(0,0,0)
+&#9;local grid = 4.0
+&#9;local admissibleConfig = false
+&#9;local targetConfig = CFrame.new(0,0,0)
 
-	local minBB, maxBB = getBoundingBox2(collection[1])
-	local diagBB = maxBB - minBB
+&#9;local minBB, maxBB = getBoundingBox2(collection[1])
+&#9;local diagBB = maxBB - minBB
 
-	local insertCFrame
-	if collection[1]:IsA(&quot;Model&quot;) then
-		i = 1
-		while (i &lt; (#collection[1]:GetChildren()) and not isPart(collection[1]:GetChildren()[i])) do
-			i = i + 1
-		end
-		insertCFrame = collection[1]:GetChildren()[i].CFrame
-	else
-		insertCFrame = collection[1].CFrame
-	end
+&#9;local insertCFrame
+&#9;if collection[1]:IsA(&quot;Model&quot;) then
+&#9;&#9;i = 1
+&#9;&#9;while (i &lt; (#collection[1]:GetChildren()) and not isPart(collection[1]:GetChildren()[i])) do
+&#9;&#9;&#9;i = i + 1
+&#9;&#9;end
+&#9;&#9;insertCFrame = collection[1]:GetChildren()[i].CFrame
+&#9;else
+&#9;&#9;insertCFrame = collection[1].CFrame
+&#9;end
 
-	Mouse.TargetFilter = collection[1]
+&#9;Mouse.TargetFilter = collection[1]
 
-	local targetPart = Mouse.Target
+&#9;local targetPart = Mouse.Target
 
-	if targetPart == nil then
-		return admissibleConfig, targetConfig
-	end
+&#9;if targetPart == nil then
+&#9;&#9;return admissibleConfig, targetConfig
+&#9;end
 
-	-- test mouse hit location
-	local minBBTarget, maxBBTarget = getTargetPartBoundingBox(targetPart)
-	local diagBBTarget = maxBBTarget - minBBTarget
-	local targetCFrame = getMouseTargetCFrame(targetPart)
-	local hitCFrame = Mouse.Hit
-	local mouseHitInWorld = hitCFrame.p
-	local mouseHitInTarget = targetCFrame:pointToObjectSpace(mouseHitInWorld)
+&#9;-- test mouse hit location
+&#9;local minBBTarget, maxBBTarget = getTargetPartBoundingBox(targetPart)
+&#9;local diagBBTarget = maxBBTarget - minBBTarget
+&#9;local targetCFrame = getMouseTargetCFrame(targetPart)
+&#9;local hitCFrame = Mouse.Hit
+&#9;local mouseHitInWorld = hitCFrame.p
+&#9;local mouseHitInTarget = targetCFrame:pointToObjectSpace(mouseHitInWorld)
 
-	-- find which axis of the insertion objects should match with the target surface
-	-- this should use targetPart CFrame, not the model CFrame
-	local targetVectorInWorld = targetPart.CFrame:vectorToWorldSpace(Vector3.FromNormalId(Mouse.TargetSurface))
+&#9;-- find which axis of the insertion objects should match with the target surface
+&#9;-- this should use targetPart CFrame, not the model CFrame
+&#9;local targetVectorInWorld = targetPart.CFrame:vectorToWorldSpace(Vector3.FromNormalId(Mouse.TargetSurface))
 
-	local targetRefPointInTarget
-	local clampToSurface
+&#9;local targetRefPointInTarget
+&#9;local clampToSurface
 
-	if getClosestAlignedWorldDirection(targetVectorInWorld) == 0 then
-		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(1, -1, 1))
-		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
-		clampToSurface = Vector3.new(0,1,1)
-	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 3 then
-		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, -1))
-		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(1, -1, -1))
-		clampToSurface = Vector3.new(0,1,1)
-	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 1 then
-		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, 1, 1))
-		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
-		clampToSurface = Vector3.new(1,0,1)		
-	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 4 then
-		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
-		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, 1, 1))
-		clampToSurface = Vector3.new(1,0,1)
-	elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 2 then
-		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
-		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, -1))
-		clampToSurface = Vector3.new(1,1,0)
-	else
-		targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(1, -1, -1))
-		insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(1, -1, 1))
-		clampToSurface = Vector3.new(1,1,0)
-	end
+&#9;if getClosestAlignedWorldDirection(targetVectorInWorld) == 0 then
+&#9;&#9;targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(1, -1, 1))
+&#9;&#9;insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+&#9;&#9;clampToSurface = Vector3.new(0,1,1)
+&#9;elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 3 then
+&#9;&#9;targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, -1))
+&#9;&#9;insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(1, -1, -1))
+&#9;&#9;clampToSurface = Vector3.new(0,1,1)
+&#9;elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 1 then
+&#9;&#9;targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, 1, 1))
+&#9;&#9;insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+&#9;&#9;clampToSurface = Vector3.new(1,0,1)&#9;&#9;
+&#9;elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 4 then
+&#9;&#9;targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+&#9;&#9;insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, 1, 1))
+&#9;&#9;clampToSurface = Vector3.new(1,0,1)
+&#9;elseif getClosestAlignedWorldDirection(targetVectorInWorld) == 2 then
+&#9;&#9;targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(-1, -1, 1))
+&#9;&#9;insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(-1, -1, -1))
+&#9;&#9;clampToSurface = Vector3.new(1,1,0)
+&#9;else
+&#9;&#9;targetRefPointInTarget = targetCFrame:vectorToObjectSpace(Vector3.new(1, -1, -1))
+&#9;&#9;insertRefPointInInsert = insertCFrame:vectorToObjectSpace(Vector3.new(1, -1, 1))
+&#9;&#9;clampToSurface = Vector3.new(1,1,0)
+&#9;end
 
-	targetRefPointInTarget = targetRefPointInTarget * (0.5 * diagBBTarget) + 0.5 * (maxBBTarget + minBBTarget)
-	insertRefPointInInsert = insertRefPointInInsert * (0.5 * diagBB) + 0.5 * (maxBB + minBB)
-	
-	-- To Do: For cases that are not aligned to the world grid, account for the minimal rotation
-	-- needed to bring the Insert part(s) into alignment with the Target Part
-	-- Apply the rotation here
+&#9;targetRefPointInTarget = targetRefPointInTarget * (0.5 * diagBBTarget) + 0.5 * (maxBBTarget + minBBTarget)
+&#9;insertRefPointInInsert = insertRefPointInInsert * (0.5 * diagBB) + 0.5 * (maxBB + minBB)
+&#9;
+&#9;-- To Do: For cases that are not aligned to the world grid, account for the minimal rotation
+&#9;-- needed to bring the Insert part(s) into alignment with the Target Part
+&#9;-- Apply the rotation here
 
-	local delta = mouseHitInTarget - targetRefPointInTarget
-	local deltaClamped = Vector3.new(grid * math.modf(delta.x/grid), grid * math.modf(delta.y/grid), grid * math.modf(delta.z/grid))
-	deltaClamped = deltaClamped * clampToSurface
-	local targetTouchInTarget = deltaClamped + targetRefPointInTarget
+&#9;local delta = mouseHitInTarget - targetRefPointInTarget
+&#9;local deltaClamped = Vector3.new(grid * math.modf(delta.x/grid), grid * math.modf(delta.y/grid), grid * math.modf(delta.z/grid))
+&#9;deltaClamped = deltaClamped * clampToSurface
+&#9;local targetTouchInTarget = deltaClamped + targetRefPointInTarget
 
-	local TargetTouchRelToWorld = targetCFrame:pointToWorldSpace(targetTouchInTarget)
-	local InsertTouchInWorld = insertCFrame:vectorToWorldSpace(insertRefPointInInsert)
-	local posInsertOriginInWorld = TargetTouchRelToWorld - InsertTouchInWorld
+&#9;local TargetTouchRelToWorld = targetCFrame:pointToWorldSpace(targetTouchInTarget)
+&#9;local InsertTouchInWorld = insertCFrame:vectorToWorldSpace(insertRefPointInInsert)
+&#9;local posInsertOriginInWorld = TargetTouchRelToWorld - InsertTouchInWorld
 
-	local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = insertCFrame:components()
-	targetConfig = CFrame.new(posInsertOriginInWorld.x, posInsertOriginInWorld.y, posInsertOriginInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
-	admissibleConfig = true
+&#9;local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = insertCFrame:components()
+&#9;targetConfig = CFrame.new(posInsertOriginInWorld.x, posInsertOriginInWorld.y, posInsertOriginInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+&#9;admissibleConfig = true
 
-	return admissibleConfig, targetConfig
+&#9;return admissibleConfig, targetConfig
 
 end
 
 
 function startDrag(mousePart, hitPoint, collection)
-	dragger = Instance.new(&quot;Dragger&quot;)
-	pcall(function() dragger:MouseDown(mousePart, hitPoint, collection) end)
+&#9;dragger = Instance.new(&quot;Dragger&quot;)
+&#9;pcall(function() dragger:MouseDown(mousePart, hitPoint, collection) end)
 end
 
 function collectBaseParts(object, collection)
-	if object == nil then return end
-	--if object:IsA(&quot;BasePart&quot;) then
-	if isPart(object) then
-		collection[#collection+1] = object
-	end
-	for index,child in pairs(object:GetChildren()) do
-		collectBaseParts(child, collection)
-	end
+&#9;if object == nil then return end
+&#9;--if object:IsA(&quot;BasePart&quot;) then
+&#9;if isPart(object) then
+&#9;&#9;collection[#collection+1] = object
+&#9;end
+&#9;for index,child in pairs(object:GetChildren()) do
+&#9;&#9;collectBaseParts(child, collection)
+&#9;end
 end
 
 function onMouseDown(mouse) 
-	mouse.Icon =&quot;rbxasset://textures\\GrabRotateCursor.png&quot;
-	local part = mouse.Target
-	if canSelectObject(part) then
-		local hitPoint = mouse.Hit:toObjectSpace(part.CFrame).p
-		if trySelection(part) then
-			instances = {}
-			game.JointsService:ClearJoinAfterMoveJoints()
-			game.JointsService:SetJoinAfterMoveInstance(mouse.Target)
-			collectBaseParts(currentSelection, instances)
-			startDrag(part, hitPoint, instances)
-			return
-		end
-	end
+&#9;mouse.Icon =&quot;rbxasset://textures\\GrabRotateCursor.png&quot;
+&#9;local part = mouse.Target
+&#9;if canSelectObject(part) then
+&#9;&#9;local hitPoint = mouse.Hit:toObjectSpace(part.CFrame).p
+&#9;&#9;if trySelection(part) then
+&#9;&#9;&#9;instances = {}
+&#9;&#9;&#9;game.JointsService:ClearJoinAfterMoveJoints()
+&#9;&#9;&#9;game.JointsService:SetJoinAfterMoveInstance(mouse.Target)
+&#9;&#9;&#9;collectBaseParts(currentSelection, instances)
+&#9;&#9;&#9;startDrag(part, hitPoint, instances)
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;end
 end
 
 
 function onMouseUp(mouse)
-	mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
-	if dragger ~= nil then
-		Mouse.TargetFilter = nil
-		pcall(function() dragger:MouseUp() end)
-		game.JointsService:CreateJoinAfterMoveJoints()
-		dragger = nil
-	end
+&#9;mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
+&#9;if dragger ~= nil then
+&#9;&#9;Mouse.TargetFilter = nil
+&#9;&#9;pcall(function() dragger:MouseUp() end)
+&#9;&#9;game.JointsService:CreateJoinAfterMoveJoints()
+&#9;&#9;dragger = nil
+&#9;end
 end
 
 function trySelection(part)
-	if canSelectObject(part) then
-		local model = findModel(part)
-		if model then 		
-			return setSelection(model)
-		else
-			return setSelection(part)
-		end
-	else
-		clearSelection()
-		return false
-	end
+&#9;if canSelectObject(part) then
+&#9;&#9;local model = findModel(part)
+&#9;&#9;if model then &#9;&#9;
+&#9;&#9;&#9;return setSelection(model)
+&#9;&#9;else
+&#9;&#9;&#9;return setSelection(part)
+&#9;&#9;end
+&#9;else
+&#9;&#9;clearSelection()
+&#9;&#9;return false
+&#9;end
 end
 
 function onKeyDown(key)
-	if dragger ~= nil then
-		if key == &apos;R&apos; or key == &apos;r&apos;  then
-			pcall(function() dragger:AxisRotate(Enum.Axis.Y) end)
-		elseif key == &apos;T&apos; or key == &apos;t&apos; then
-			pcall(function() dragger:AxisRotate(Enum.Axis.Z) end)
-		end
-	end
+&#9;if dragger ~= nil then
+&#9;&#9;if key == &apos;R&apos; or key == &apos;r&apos;  then
+&#9;&#9;&#9;pcall(function() dragger:AxisRotate(Enum.Axis.Y) end)
+&#9;&#9;elseif key == &apos;T&apos; or key == &apos;t&apos; then
+&#9;&#9;&#9;pcall(function() dragger:AxisRotate(Enum.Axis.Z) end)
+&#9;&#9;end
+&#9;end
 end
 
 local alreadyMoving = false
 function onMouseMove(mouse)
-	if alreadyMoving then
-		return
-	end
+&#9;if alreadyMoving then
+&#9;&#9;return
+&#9;end
 
-	alreadyMoving = true
-	if dragger ~= nil then
-		local thingToDrag = {}
-		thingToDrag[1] = currentSelection 
-	
-		pcall(function() dragger:MouseMove(mouse.UnitRay) end)-- needed to break welds properly
-		configFound, targetCFrame = findConfigAtMouseTarget(thingToDrag)
-		if configFound then
-			positionPartsAtCFrame3(thingToDrag, targetCFrame)
-		end
-	else
-		trySelection(mouse.Target)
-	end
-	alreadyMoving = false
+&#9;alreadyMoving = true
+&#9;if dragger ~= nil then
+&#9;&#9;local thingToDrag = {}
+&#9;&#9;thingToDrag[1] = currentSelection 
+&#9;
+&#9;&#9;pcall(function() dragger:MouseMove(mouse.UnitRay) end)-- needed to break welds properly
+&#9;&#9;configFound, targetCFrame = findConfigAtMouseTarget(thingToDrag)
+&#9;&#9;if configFound then
+&#9;&#9;&#9;positionPartsAtCFrame3(thingToDrag, targetCFrame)
+&#9;&#9;end
+&#9;else
+&#9;&#9;trySelection(mouse.Target)
+&#9;end
+&#9;alreadyMoving = false
 end
 
 
 function saveSelectionColor(instance)
-	if instance:IsA(&quot;BasePart&quot;) then
-		currentSelectionColors[instance] = instance.BrickColor
-		if instance.BrickColor == BrickColor.Blue() then
-			instance.BrickColor = BrickColor.new(&quot;Deep blue&quot;)
-		else
-			instance.BrickColor = BrickColor.Blue()
-		end
-	end
+&#9;if instance:IsA(&quot;BasePart&quot;) then
+&#9;&#9;currentSelectionColors[instance] = instance.BrickColor
+&#9;&#9;if instance.BrickColor == BrickColor.Blue() then
+&#9;&#9;&#9;instance.BrickColor = BrickColor.new(&quot;Deep blue&quot;)
+&#9;&#9;else
+&#9;&#9;&#9;instance.BrickColor = BrickColor.Blue()
+&#9;&#9;end
+&#9;end
 
-	local children = instance:GetChildren() 
-	if children then
-		for pos, child in pairs(children) do
-			saveSelectionColor(child)
-		end
-	end
+&#9;local children = instance:GetChildren() 
+&#9;if children then
+&#9;&#9;for pos, child in pairs(children) do
+&#9;&#9;&#9;saveSelectionColor(child)
+&#9;&#9;end
+&#9;end
 end
-	
+&#9;
 function setSelection(partOrModel)
-	if partOrModel ~= currentSelection then
-		clearSelection()
-		currentSelection = partOrModel
-		saveSelectionColor(currentSelection)
-		selectionBox.Adornee = currentSelection
-		return true
-	elseif partOrModel == nil then
-		clearSelection()
-		return false
-	end
+&#9;if partOrModel ~= currentSelection then
+&#9;&#9;clearSelection()
+&#9;&#9;currentSelection = partOrModel
+&#9;&#9;saveSelectionColor(currentSelection)
+&#9;&#9;selectionBox.Adornee = currentSelection
+&#9;&#9;return true
+&#9;elseif partOrModel == nil then
+&#9;&#9;clearSelection()
+&#9;&#9;return false
+&#9;end
 
-	return partOrModel == currentSelection
+&#9;return partOrModel == currentSelection
 end
 
 function clearSelection()
-	if currentSelection ~= nil then
-		for part, color in pairs(currentSelectionColors) do
-			part.BrickColor = color
-		end
-		selectionBox.Adornee = nil
-	end
-	currentSelectionColors = {}
-	currentSelection = nil
+&#9;if currentSelection ~= nil then
+&#9;&#9;for part, color in pairs(currentSelectionColors) do
+&#9;&#9;&#9;part.BrickColor = color
+&#9;&#9;end
+&#9;&#9;selectionBox.Adornee = nil
+&#9;end
+&#9;currentSelectionColors = {}
+&#9;currentSelection = nil
 
-	if(selectionBox) then
-		selectionBox.Adornee = nil
-	end
+&#9;if(selectionBox) then
+&#9;&#9;selectionBox.Adornee = nil
+&#9;end
 end
 
 function onEquippedLocal(mouse)
-	Mouse = mouse
+&#9;Mouse = mouse
 
-	local character = script.Parent.Parent
-	local player = game.Players:GetPlayerFromCharacter(character)
+&#9;local character = script.Parent.Parent
+&#9;local player = game.Players:GetPlayerFromCharacter(character)
 
-	mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
-	mouse.Button1Down:connect(function() onMouseDown(mouse) end)
-	mouse.Button1Up:connect(function() onMouseUp(mouse) end)
-	mouse.Move:connect(function() onMouseMove(mouse) end)
-	mouse.KeyDown:connect(function(string) onKeyDown(string) end)
+&#9;mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
 
-	selectionBox = Instance.new(&quot;SelectionBox&quot;)
-	selectionBox.Name = &quot;Model Delete Selection&quot;
-	selectionBox.Color = BrickColor.Blue()
-	selectionBox.Adornee = nil
-	selectionBox.Parent = player.PlayerGui
+&#9;local con = mouse.Button1Down:connect(function() onMouseDown(mouse) end)
+&#9;table.insert(connections,con)
+&#9;con = mouse.Button1Up:connect(function() onMouseUp(mouse) end)
+&#9;con = table.insert(connections,con)
+&#9;con = mouse.Move:connect(function() onMouseMove(mouse) end)
+&#9;table.insert(connections,con)
+&#9;con = mouse.KeyDown:connect(function(string) onKeyDown(string) end)
+&#9;table.insert(connections,con)
 
-	alreadyMoving = false
+&#9;selectionBox = Instance.new(&quot;SelectionBox&quot;)
+&#9;selectionBox.Name = &quot;Model Delete Selection&quot;
+&#9;selectionBox.Color = BrickColor.Blue()
+&#9;selectionBox.Adornee = nil
+&#9;selectionBox.Parent = player.PlayerGui
+
+&#9;alreadyMoving = false
 end
 
 function onUnequippedLocal()
-	clearSelection()
-	selectionBox:Remove()
+&#9;for i = 1, #connections do
+&#9;&#9;connections[i]:disconnect()
+&#9;end
+&#9;connections = {}
+
+&#9;clearSelection()
+&#9;selectionBox:Remove()
 end
 
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
+script.Active.Changed:connect(function()
+&#9;if script.Active.Value then
+&#9;&#9;onEquippedLocal(Tool.Mouse.Value)
+&#9;else
+&#9;&#9;onUnequippedLocal()
+&#9;end
+end)</ProtectedString>
 			</Properties>
+			<Item class="BoolValue" referent="RBX4">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<string name="Name">Active</string>
+					<bool name="Value">false</bool>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="LocalScript" referent="RBX5">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">sword = script.Parent.Handle
-Tool = script.Parent
+				<string name="Name">DraggerController</string>
+				<ProtectedString name="Source">local Tool = script.Parent
 
-function attack()
-	local anim = Instance.new(&quot;StringValue&quot;)
-	anim.Name = &quot;toolanim&quot;
-	anim.Value = &quot;Slash&quot;
-	anim.Parent = Tool
+local gui = nil
+
+local connections = {}
+
+function deactivateTool(script)
+&#9;local enable = script:FindFirstChild(&quot;Active&quot;)
+&#9;if enable and enable:IsA(&quot;BoolValue&quot;) then
+&#9;&#9;enable.Value = false
+&#9;end
 end
 
-Tool.Enabled = true
-
-function onActivated()
-
-	if not Tool.Enabled then
-		return
-	end
-
-	Tool.Enabled = false
-
-	local character = Tool.Parent;
-	local humanoid = character.Humanoid
-	if humanoid == nil then
-		return 
-	end
-
-	attack()
-
-	Tool.Enabled = true
+function deactivateAllTools()
+&#9;local toolChildren = Tool:GetChildren()
+&#9;for i = 1, #toolChildren do
+&#9;&#9;if toolChildren[i]:IsA(&quot;BaseScript&quot;) and toolChildren[i] ~= script then
+&#9;&#9;&#9;deactivateTool(toolChildren[i])
+&#9;&#9;end
+&#9;end
 end
 
-script.Parent.Activated:connect(onActivated)</ProtectedString>
+function switchGrid()
+&#9;deactivateAllTools()
+
+&#9;wait()
+
+&#9;if gui.DraggerButton.Text == &quot;1x1 Grid&quot; then
+&#9;&#9;Tool.OldDragger.Active.Value = true
+&#9;&#9;gui.DraggerButton.Text = &quot;4x4 Grid&quot;
+&#9;else
+&#9;&#9;Tool.NewDragger.Active.Value = true
+&#9;&#9;gui.DraggerButton.Text = &quot;1x1 Grid&quot;
+&#9;end
+end
+
+function makeTextButton(buttonName, text, position, parent)
+&#9;local button = Instance.new(&quot;TextButton&quot;)
+&#9;button.Name = buttonName
+&#9;button.Style = Enum.ButtonStyle.RobloxButton
+&#9;button.Size = UDim2.new(0,100,0,40)
+&#9;if position then button.Position = position end
+&#9;button.Parent = parent
+
+&#9;button.Text = text
+&#9;button.Font = Enum.Font.ArialBold
+&#9;button.FontSize = Enum.FontSize.Size18
+&#9;button.TextColor3 = Color3.new(1,1,1)
+
+&#9;return button
+end
+
+function makeDraggerGui()
+&#9;local draggerGui = Instance.new(&quot;ScreenGui&quot;)
+&#9;draggerGui.Name = &quot;DraggerGui&quot;
+
+&#9;local draggerButton = makeTextButton(&quot;DraggerButton&quot;,&quot;1x1 Grid&quot;,UDim2.new(0.5,-50,1,-135),draggerGui)
+&#9;local con = draggerButton.MouseButton1Click:connect(function() switchGrid() end)
+&#9;table.insert(connections,con)
+
+&#9;return draggerGui
+end
+
+
+function onEquippedLocal(mouse)
+&#9;Tool.Mouse.Value = mouse
+&#9;if not gui then
+&#9;&#9;gui = makeDraggerGui()
+&#9;end
+&#9;gui.Parent = game.Players.LocalPlayer.PlayerGui
+&#9;Tool.NewDragger.Active.Value = true
+end
+
+function onUnequippedLocal()
+&#9;for i = 1, #connections do
+&#9;&#9;connections[i]:disconnect()
+&#9;end
+&#9;connections = {}
+
+&#9;gui:remove()
+&#9;gui = nil
+&#9;deactivateAllTools()
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+
+</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="ObjectValue" referent="RBX5">
+		<Item class="ObjectValue" referent="RBX6">
 			<Properties>
 				<bool name="Archivable">true</bool>
-				<string name="Name">SelectedButton</string>
+				<string name="Name">Mouse</string>
 				<Ref name="Value">null</Ref>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX6">
+		<Item class="LocalScript" referent="RBX7">
 			<Properties>
 				<bool name="Archivable">true</bool>
-				<string name="Name">RobloxBuildTool</string>
-				<bool name="Value">true</bool>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">OldDragger</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+
+enabled = true
+local origTexture = &#9;Tool.TextureId
+game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/freemove_sel.png&quot;)
+
+local selectionBox
+local currentSelection
+local currentSelectionColors = {}
+local selectionLasso
+local inGui = false
+local inPalette = false
+
+local connections = {}
+
+function canSelectObject(part)
+&#9;return part and not (part.Locked) and (part.Position - script.Parent.Parent.Head.Position).Magnitude &lt; 60
+end
+
+function findModel(part)
+&#9;while part ~= nil do
+&#9;&#9;if part.className == &quot;Model&quot; then
+&#9;&#9;&#9;return part
+&#9;&#9;end
+&#9;&#9;part = part.Parent
+&#9;end
+
+&#9;return nil
+end
+
+
+function startDrag(mousePart, hitPoint, collection)
+&#9;dragger = Instance.new(&quot;Dragger&quot;)
+&#9;pcall(function() dragger:MouseDown(mousePart, hitPoint, collection) end)
+end
+
+function collectBaseParts(object, collection)
+&#9;if object == nil then return end
+&#9;if object:IsA(&quot;BasePart&quot;) then
+&#9;&#9;collection[#collection+1] = object
+&#9;end
+&#9;for index,child in pairs(object:GetChildren()) do
+&#9;&#9;collectBaseParts(child, collection)
+&#9;end
+end
+
+function onMouseDown(mouse) 
+&#9;mouse.Icon =&quot;rbxasset://textures\\GrabRotateCursor.png&quot;
+&#9;local part = mouse.Target
+&#9;if canSelectObject(part) then
+&#9;&#9;local hitPoint = mouse.Hit:toObjectSpace(part.CFrame).p
+&#9;&#9;if trySelection(part) then
+&#9;&#9;&#9;local instances = {}
+&#9;&#9;&#9;collectBaseParts(currentSelection, instances)
+&#9;&#9;&#9;startDrag(part, hitPoint, instances)
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;end
+&#9;onMouseUp(mouse)
+end
+
+
+
+function onMouseUp(mouse)
+&#9;mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
+&#9;if dragger ~= nil then
+&#9;&#9;pcall(function() dragger:MouseUp() end)
+&#9;&#9;dragger = nil
+&#9;end
+end
+
+function trySelection(part)
+&#9;if canSelectObject(part) then
+&#9;&#9;selectionLasso.Part = part
+&#9;&#9;local model = findModel(part)
+&#9;&#9;if model then &#9;&#9;
+&#9;&#9;&#9;return setSelection(model)
+&#9;&#9;else
+&#9;&#9;&#9;return setSelection(part)
+&#9;&#9;end
+&#9;else
+&#9;&#9;clearSelection()
+&#9;&#9;return false
+&#9;end
+end
+
+function onKeyDown(key)
+&#9;if dragger ~= nil then
+&#9;&#9;if key == &apos;R&apos; or key == &apos;r&apos;  then
+&#9;&#9;&#9;dragger:AxisRotate(Enum.Axis.Y)
+&#9;&#9;elseif key == &apos;T&apos; or key == &apos;t&apos; then
+&#9;&#9;&#9;dragger:AxisRotate(Enum.Axis.Z)
+&#9;&#9;end
+&#9;end
+end
+local alreadyMoving
+function onMouseMove(mouse)
+&#9;if alreadyMoving then
+&#9;&#9;return
+&#9;end
+
+&#9;alreadyMoving = true
+&#9;if dragger ~= nil then
+&#9;&#9;pcall(function() dragger:MouseMove(mouse.UnitRay) end)
+&#9;else
+&#9;&#9;trySelection(mouse.Target)
+&#9;end
+&#9;alreadyMoving = false
+end
+
+
+function saveSelectionColor(instance)
+&#9;if instance:IsA(&quot;BasePart&quot;) then
+&#9;&#9;currentSelectionColors[instance] = instance.BrickColor
+&#9;&#9;if instance.BrickColor == BrickColor.Blue() then
+&#9;&#9;&#9;instance.BrickColor = BrickColor.new(&quot;Deep blue&quot;)
+&#9;&#9;else
+&#9;&#9;&#9;instance.BrickColor = BrickColor.Blue()
+&#9;&#9;end
+&#9;end
+
+&#9;local children = instance:GetChildren() 
+&#9;if children then
+&#9;&#9;for pos, child in pairs(children) do
+&#9;&#9;&#9;saveSelectionColor(child)
+&#9;&#9;end
+&#9;end
+end
+&#9;
+function setSelection(partOrModel)
+&#9;if partOrModel ~= currentSelection then
+&#9;&#9;clearSelection()
+&#9;&#9;currentSelection = partOrModel
+&#9;&#9;saveSelectionColor(currentSelection)
+&#9;&#9;selectionBox.Adornee = currentSelection
+&#9;&#9;return true
+&#9;else
+&#9;&#9;if currentSelection ~= nil then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+
+&#9;return false
+end
+
+function clearSelection()
+&#9;if currentSelection ~= nil then
+&#9;&#9;for part, color in pairs(currentSelectionColors) do
+&#9;&#9;&#9;part.BrickColor = color
+&#9;&#9;end
+&#9;&#9;selectionBox.Adornee = nil
+&#9;end
+&#9;currentSelectionColors = {}
+&#9;currentSelection = nil
+&#9;
+&#9;if(selectionLasso) then
+&#9;&#9;selectionLasso.Part = nil
+&#9;end
+&#9;if(selectionBox) then
+&#9;&#9;selectionBox.Adornee = nil
+&#9;end
+end
+
+function onEquippedLocal(mouse)
+&#9;wait(0.1)
+&#9;Tool.TextureId = &quot;rbxasset://icons/freemove_sel.png&quot;
+
+&#9;local character = script.Parent.Parent
+&#9;local player = game.Players:GetPlayerFromCharacter(character)
+&#9;guiMain = Instance.new(&quot;ScreenGui&quot;)
+&#9;guiMain.Parent = player.PlayerGui
+
+&#9;inGui = false
+&#9;inPalette = false
+
+&#9;mouse.Icon =&quot;rbxasset://textures\\GrabCursor.png&quot;
+
+&#9;local con = mouse.Button1Down:connect(function() onMouseDown(mouse) end)
+&#9;table.insert(connections,con)
+&#9;con = mouse.Button1Up:connect(function() onMouseUp(mouse) end)
+&#9;con = table.insert(connections,con)
+&#9;con = mouse.Move:connect(function() onMouseMove(mouse) end)
+&#9;table.insert(connections,con)
+&#9;con = mouse.KeyDown:connect(function(string) onKeyDown(string) end)
+&#9;table.insert(connections,con)
+
+&#9;selectionBox = Instance.new(&quot;SelectionBox&quot;)
+&#9;selectionBox.Name = &quot;Model Delete Selection&quot;
+&#9;selectionBox.Color = BrickColor.Blue()
+&#9;selectionBox.Adornee = nil
+&#9;selectionBox.Parent = player.PlayerGui
+
+&#9;selectionLasso = Instance.new(&quot;SelectionPartLasso&quot;)
+&#9;selectionLasso.Name = &quot;Model Drag Lasso&quot;
+&#9;selectionLasso.Humanoid = character.Humanoid
+&#9;selectionLasso.archivable = false
+&#9;selectionLasso.Visible = true
+&#9;selectionLasso.Parent = game.workspace
+&#9;selectionLasso.Color = BrickColor.Blue()
+
+&#9;alreadyMoving = false
+end
+
+function onUnequippedLocal()
+&#9;for i = 1, #connections do
+&#9;&#9;connections[i]:disconnect()
+&#9;end
+&#9;connections = {}
+
+&#9;Tool.TextureId = origTexture
+&#9;clearSelection()
+&#9;selectionBox:Remove()
+&#9;selectionLasso:Remove()
+end
+
+
+script.Active.Changed:connect(function()
+&#9;if script.Active.Value then
+&#9;&#9;onEquippedLocal(Tool.Mouse.Value)
+&#9;else
+&#9;&#9;onUnequippedLocal()
+&#9;end
+end)
+</ProtectedString>
 			</Properties>
+			<Item class="BoolValue" referent="RBX8">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<string name="Name">Active</string>
+					<bool name="Value">false</bool>
+				</Properties>
+			</Item>
 		</Item>
 	</Item>
 </roblox>
