@@ -36,9 +36,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-39.901165</X>
-					<Y>51.074173</Y>
-					<Z>-412.195801</Z>
+					<X>165.098831</X>
+					<Y>0.274171323</Y>
+					<Z>-445.195801</Z>
 					<R00>0.995120585</R00>
 					<R01>-7.11792454e-005</R01>
 					<R02>0.0986662284</R02>
@@ -808,7 +808,7 @@ local mouseButton1UpCon
 local pressedEsc = false
 
 local gInitial90DegreeRotations = 0
-local gStaticTrans = 0.9
+local gStaticTrans = 0.7
 
 local useAssetVersionId = true
 
@@ -1067,7 +1067,7 @@ end
 function positionPartsAtCFrame3(partOrModel, aCFrame)
 
 	local insertCFrame
-	if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) then
+	if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then
 		--insertCFrame = Data.Stamp.CurrentParts[1]:GetChildren()[1].CFrame
 		-- we assume model has at least one part in it; need to find first part
 		i = 1
@@ -1077,6 +1077,7 @@ function positionPartsAtCFrame3(partOrModel, aCFrame)
 		insertCFrame = Data.Stamp.CurrentParts[1]:GetChildren()[i].CFrame
 
 		for i, object in pairs(Data.Stamp.CurrentParts[1]:GetChildren()) do
+			if object:IsA(&quot;Flag&quot;) then object = object.Handle end
 			if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;Seat&quot;) or object:IsA(&quot;VehicleSeat&quot;)) then
 				local posPartInWorld = object.Position
 				local posPart1InWorld = insertCFrame.p
@@ -1233,16 +1234,18 @@ function cancelAssetPlacement()
 end
 
 
-function collectParts(object, baseParts, scripts)
+function collectParts(object, baseParts, scripts, decals)
 
 	if object:IsA(&quot;BasePart&quot;) then
 		baseParts[#baseParts+1] = object
 	elseif object:IsA(&quot;Script&quot;) then
 		scripts[#scripts+1] = object
+	elseif object:IsA(&quot;Decal&quot;) then
+		decals[#decals+1] = object
 	end
 
 	for index,child in pairs(object:GetChildren()) do
-		collectParts(child, baseParts, scripts)
+		collectParts(child, baseParts, scripts, decals)
 	end
 
 end
@@ -1271,6 +1274,8 @@ function getBoundingBox2(partOrModel)
 		maxVec = -minVec
 	else
 		local part1 = partOrModel:GetChildren()[1]
+		if partOrModel:IsA(&quot;Tool&quot;) then part1 = partOrModel.Handle if not part1 then return end end
+		if part1:IsA(&quot;Flag&quot;) then part1 = partOrModel:FindFirstChild(&quot;Part&quot;) if not part1 then return end end
 		for i, object in pairs(partOrModel:GetChildren()) do
 			if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
 				boxMinInWorld = object.CFrame:pointToWorldSpace(-0.5 * object.Size)
@@ -1381,7 +1386,8 @@ end
 function getMouseTargetCFrame(targetPart)
 
 	if targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) ~= nil then
-		return targetPart.Parent:GetChildren()[1].CFrame
+		if targetPart.Parent:IsA(&quot;Tool&quot;) then return targetPart.Parent.Handle.CFrame
+		else return targetPart.Parent:GetChildren()[1].CFrame end
 	else
 		return targetPart.CFrame
 	end
@@ -1405,7 +1411,7 @@ function findConfigAtMouseTarget(partsTable)
 	local diagBB = maxBB - minBB
 
 	local insertCFrame
-	if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) then
+	if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then
 		i = 1
 		while (i &lt; (#Data.Stamp.CurrentParts[1]:GetChildren()) and not Data.Stamp.CurrentParts[1]:GetChildren()[i]:IsA(&quot;Part&quot;) and not Data.Stamp.CurrentParts[1]:GetChildren()[i]:IsA(&quot;TrussPart&quot;) and not Data.Stamp.CurrentParts[1]:GetChildren()[i]:IsA(&quot;WedgePart&quot;)) do
 			i = i + 1
@@ -1416,7 +1422,8 @@ function findConfigAtMouseTarget(partsTable)
 	end
 
 	if not isRestricted then
-		Mouse.TargetFilter = Data.Stamp.CurrentParts[1]
+		if Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then Mouse.TargetFilter = Data.Stamp.CurrentParts[1].Handle
+		else Mouse.TargetFilter = Data.Stamp.CurrentParts[1] end
 	end
 
 	local targetPart = Mouse.Target
@@ -1517,8 +1524,9 @@ function setupDraggableClone()
 	local clone = Data.Stamp.Model:Clone()
 	local scripts = {}
 	local parts = {}
-
-	collectParts(clone, parts, scripts)
+	local decals = {}
+	
+	collectParts(clone, parts, scripts, decals)
 
 	if #parts &gt; 0 then
 		Data.Stamp.DisabledScripts = {}
@@ -1526,6 +1534,7 @@ function setupDraggableClone()
 		Data.Stamp.MaterialTable = {}
 		Data.Stamp.CanCollideTable = {}
 		Data.Stamp.AnchoredTable = {}
+		Data.Stamp.DecalTransparencyTable = {}
 
 		for index,script in pairs(scripts) do
 			if not(script.Disabled) then
@@ -1535,7 +1544,7 @@ function setupDraggableClone()
 		end
 		for index, part in pairs(parts) do
 			Data.Stamp.TransparencyTable[part] = part.Transparency
-			part.Transparency = gStaticTrans
+			part.Transparency = gStaticTrans + (1-gStaticTrans)*part.Transparency
 			Data.Stamp.MaterialTable[part] = part.Material
 			part.Material = Enum.Material.Plastic
 			Data.Stamp.CanCollideTable[part] = part.CanCollide
@@ -1543,6 +1552,11 @@ function setupDraggableClone()
 			Data.Stamp.AnchoredTable[part] = part.Anchored
 			part.Anchored = true
 			part.archivable = false
+		end
+
+		for index, decal in pairs(decals) do
+			Data.Stamp.DecalTransparencyTable[decal] = decal.Transparency
+			decal.Transparency = gStaticTrans + (1-gStaticTrans)*decal.Transparency
 		end
 
 		game:GetService(&quot;InsertService&quot;):Insert(clone)
@@ -1569,8 +1583,9 @@ function setupDraggableClone()
 		-- pre-rotate if necessary
 		local ry = gInitial90DegreeRotations * math.pi/2
 		local rotCF = CFrame.fromEulerAnglesXYZ(0, ry, 0) 
-		if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) then
+		if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then
 			for i, object in pairs(Data.Stamp.CurrentParts[1]:GetChildren()) do
+				if object:IsA(&quot;Flag&quot;) then object = object.Handle end
 				if object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;Seat&quot;) or object:IsA(&quot;VehicleSeat&quot;) then object.CFrame = rotCF * object.CFrame end
 			end
 		else
@@ -1627,7 +1642,8 @@ end
 local debris = game:GetService(&quot;Debris&quot;)
 function flashRedBox()
 	errorBox.Parent = player.PlayerGui
-	errorBox.Adornee = Data.Stamp.CurrentParts[1]
+	if Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then errorBox.Adornee = Data.Stamp.CurrentParts[1].Handle
+	else errorBox.Adornee = Data.Stamp.CurrentParts[1] end
 
 	delay(0,function()
 		for i = 1, 3 do
@@ -1725,15 +1741,17 @@ function onInsertMouseButton1Up()
 			end
 
 			-- Post process: after positioning the part or model, restore transparency, material, anchored and collide states and create joints
-			if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) then
+			if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then
 				
-				-- Tyler&apos;s magical hack-code for allowing/preserving clones of both Surface and Manual Welds...  just don&apos;t ask X&lt;
-				manualWeldTable = {}
-				manualWeldParentTable = {}
-				saveTheWelds(Data.Stamp.CurrentParts[1])
-				Data.Stamp.CurrentParts[1]:BreakJoints()
-				Data.Stamp.CurrentParts[1]:MakeJoints()
-				restoreTheWelds()
+				if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) then
+					-- Tyler&apos;s magical hack-code for allowing/preserving clones of both Surface and Manual Welds...  just don&apos;t ask X&lt;
+					manualWeldTable = {}
+					manualWeldParentTable = {}
+					saveTheWelds(Data.Stamp.CurrentParts[1])
+					Data.Stamp.CurrentParts[1]:BreakJoints()
+					Data.Stamp.CurrentParts[1]:MakeJoints()
+					restoreTheWelds()
+				end
 				
 				-- if it&apos;s a model, we also want to fill in the playerID and playerName tags, if it has those (e.g. for the friend-only door)
 				playerIdTag = Data.Stamp.CurrentParts[1]:FindFirstChild(&quot;PlayerIdTag&quot;)
@@ -1782,6 +1800,9 @@ function onInsertMouseButton1Up()
 			end
 			for part, anchored in pairs(Data.Stamp.AnchoredTable) do
 				part.Anchored = anchored
+			end
+			for decal, transparency in pairs(Data.Stamp.DecalTransparencyTable) do
+				decal.Transparency = transparency
 			end
 
 			-- re-enable all seats
@@ -2011,8 +2032,9 @@ function onInsertKeyDown(key)
 			local ry = math.pi/2
 			local rotCF = CFrame.fromEulerAnglesXYZ(0, ry, 0)
 			gInitial90DegreeRotations = gInitial90DegreeRotations + 1 
-			if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) then
+			if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then
 				for i, object in pairs(Data.Stamp.CurrentParts[1]:GetChildren()) do
+					if object:IsA(&quot;Flag&quot;) then object = object.Handle end
 					if object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;Seat&quot;) or object:IsA(&quot;VehicleSeat&quot;) then
 						object.CFrame = rotCF * object.CFrame
 					end
@@ -4914,10 +4936,10 @@ function onEquippedLocal(mouse)
 			Tool.SavedState.Value = currStampGui
 		end
 
-		Mouse.KeyDown:connect(onInsertKeyDown)
-
 		Data.FullyLoaded = true
 	end
+
+	Mouse.KeyDown:connect(onInsertKeyDown)
 end
 
 
