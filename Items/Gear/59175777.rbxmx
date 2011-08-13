@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.030000329</X>
-					<Y>0.864999771</Y>
-					<Z>1.00499988</Z>
+					<X>-0.369999588</X>
+					<Y>1.69500017</Y>
+					<Z>0.5649997</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
-					<R11>0</R11>
-					<R12>1</R12>
+					<R11>1</R11>
+					<R12>0</R12>
 					<R20>0</R20>
-					<R21>-1</R21>
-					<R22>0</R22>
+					<R21>0</R21>
+					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -144,7 +144,7 @@ local activated = false
 
 function activateAbility(key)
 &#9;key = key:lower()
-&#9;if key == &quot;q&quot; or key == &quot;e&quot; or key == &quot;c&quot; or key == &quot;z&quot; and activated then&#9;
+&#9;if (key == &quot;q&quot; or key == &quot;e&quot; or key == &quot;c&quot; or key == &quot;z&quot;) and activated then&#9;
 &#9;&#9;spikeScript = vCharacter:FindFirstChild(&quot;SpikeScript&quot;)
 &#9;&#9;if spikeScript == nil then 
 &#9;&#9;&#9;spikeScript = Tool:FindFirstChild(&quot;SpikeScript&quot;):Clone()
@@ -161,7 +161,7 @@ function activateAbility(key)
 end
 
 function onActivated()
-&#9;if Tool.Enabled == false then 
+&#9;if (Tool.Enabled == false) or activated then 
 &#9;&#9;return
 &#9;end
 
@@ -227,13 +227,34 @@ Tool.Unequipped:connect(onUnequipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="NumberValue" referent="RBX4">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<string name="Name">SpikeyCooldown</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=56510834</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">DrinkAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX6">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SpikeScript</string>
-				<ProtectedString name="Source">local vCharacter = script.Parent
+				<ProtectedString name="Source">function waitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do
+&#9;&#9;parent.ChildAdded:wait()
+&#9;end
+&#9;return parent[childName]
+end
+
+local vCharacter = script.Parent
 local myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
 local myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
 local myHead = vCharacter:FindFirstChild(&quot;Head&quot;)
@@ -244,7 +265,7 @@ local myLeftLeg = vCharacter:FindFirstChild(&quot;Left Leg&quot;)
 
 local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
 
-local key = script:FindFirstChild(&quot;Key&quot;)
+local key = waitForChild(script, &quot;Key&quot;)
 
 local spikeDamage = 10
 
@@ -264,14 +285,10 @@ spikeMesh.Parent = spike
 
 local spikeClones = {}
 
-local lArmClone
-local rArmClone
-local lLegClone
-local rLegClone
-local torsoFrontClone
-local torsoFrontClone2
-local torsoBackClone
-local torsoBackClone2 
+local LeftSpike
+local RightSpike
+
+local removingSpikes = false
 
 function poke(hit)
 &#9;if hit and hit.Parent then 
@@ -293,141 +310,71 @@ function tagHumanoid(humanoid, player)
 &#9;end
 end
 
+function weldSpikes(WeldParts, C1s)
+&#9;local NewSpikes = {}
+&#9;local LeftWeld
+&#9;local RightWeld
+&#9;local Welds = {}
+
+&#9;for i = 1, 2 do
+&#9;&#9;if WeldParts[i] then
+&#9;&#9;&#9;NewSpikes[i] = spike:Clone()
+&#9;&#9;&#9;NewSpikes[i].Parent = vCharacter
+&#9;&#9;&#9;table.insert(spikeClones, NewSpikes[i])
+&#9;&#9;&#9;
+&#9;&#9;&#9;local NewWeld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;NewWeld.Part0 = WeldParts[i]
+&#9;&#9;&#9;NewWeld.Part1 = NewSpikes[i]
+&#9;&#9;&#9;NewWeld.C1 = C1s[i]
+&#9;&#9;&#9;NewWeld.Parent = WeldParts[i]
+&#9;&#9;&#9;Welds[i] = NewWeld
+
+&#9;&#9;&#9;NewSpikes[i].Touched:connect(poke)
+&#9;&#9;end
+&#9;end
+
+&#9;local LeftMesh
+&#9;local RightMesh
+&#9;local Meshes = {LeftMesh, RightMesh}
+&#9;
+&#9;for j = 1, 10 do
+&#9;&#9;for i = 1, 2 do
+&#9;&#9;&#9;if NewSpikes[i] then 
+&#9;&#9;&#9;&#9;Meshes[i] = NewSpikes[i]:FindFirstChild(&quot;Mesh&quot;)
+&#9;&#9;&#9;&#9;if Meshes[i] then Meshes[i].Scale = Vector3.new(1, 1 + (j * 0.5), 1) end
+&#9;&#9;&#9;&#9;if Welds[i] then Welds[i].C1 = Welds[i].C1 - Vector3.new(0, 0.3, 0) end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(0.15)
+&#9;end
+end
+&#9;
+
+&#9;
+
 function spikeyDestruction()
+&#9;if removingSpikes then return end
 &#9;if myHumanoid then
 &#9;&#9;if key then 
 &#9;&#9;&#9;if #spikeClones &gt;= 4 then 
-&#9;&#9;&#9;&#9;for i = 1, #spikeClones do&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;spikeClones[i]:Remove()
-&#9;&#9;&#9;&#9;&#9;spikeClones[i] = nil
+&#9;&#9;&#9;&#9;removingSpikes = true
+&#9;&#9;&#9;&#9;for i = 1, #spikeClones do
+&#9;&#9;&#9;&#9;&#9;if spikeClones[i] then
+&#9;&#9;&#9;&#9;&#9;&#9;spikeClones[i]:Remove()
+&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;wait(0.1)
 &#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;removingSpikes = false
+&#9;&#9;&#9;&#9;spikeClones = {}
 &#9;&#9;&#9;end&#9;&#9;&#9;
-&#9;&#9;&#9;if key.Value == &quot;q&quot; then&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;lArmClone = spike:Clone()&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;lArmClone.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, lArmClone)&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local leftWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;leftWeld.Part0 = myLeftArm
-&#9;&#9;&#9;&#9;leftWeld.Part1 = lArmClone
-&#9;&#9;&#9;&#9;leftWeld.C1 = (CFrame.new(Vector3.new(0, 0, 0))) * CFrame.Angles(0, 0, -math.pi/2)
-&#9;&#9;&#9;&#9;leftWeld.Parent = lArmClone
-
-&#9;&#9;&#9;&#9;rArmClone = spike:Clone()
-&#9;&#9;&#9;&#9;rArmClone.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, rArmClone)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local rightWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;rightWeld.Part0 = myRightArm
-&#9;&#9;&#9;&#9;rightWeld.Part1 = rArmClone
-&#9;&#9;&#9;&#9;rightWeld.C1 = (CFrame.new(Vector3.new(0, 0, 0))) * CFrame.Angles(0, 0, math.pi/2)
-&#9;&#9;&#9;&#9;rightWeld.Parent = rArmClone
-
-&#9;&#9;&#9;&#9;lArmClone.Touched:connect(poke)
-&#9;&#9;&#9;&#9;rArmClone.Touched:connect(poke)
-&#9;&#9;&#9;&#9;for j = 1, 10 do 
-&#9;&#9;&#9;&#9;&#9;lArmClone.Mesh.Scale = Vector3.new(1, 1+ (j * 0.5), 1)
-&#9;&#9;&#9;&#9;&#9;rArmClone.Mesh.Scale = Vector3.new(1, 1 +(j * 0.5), 1)
-
-&#9;&#9;&#9;&#9;&#9;lArmClone.Weld.C1 = lArmClone.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;rArmClone.Weld.C1 = rArmClone.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;elseif key.Value == &quot;e&quot; then 
-&#9;&#9;&#9;&#9;lLegClone = spike:Clone()&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;lLegClone.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, lLegClone)&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local leftWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;leftWeld.Part0 = myLeftLeg
-&#9;&#9;&#9;&#9;leftWeld.Part1 = lLegClone
-&#9;&#9;&#9;&#9;leftWeld.C1 = (CFrame.new(Vector3.new(0, 0, 0))) * CFrame.Angles(math.pi/2, -math.pi/6, 0)
-&#9;&#9;&#9;&#9;leftWeld.Parent = lLegClone
-
-&#9;&#9;&#9;&#9;rLegClone = spike:Clone()
-&#9;&#9;&#9;&#9;rLegClone.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, rLegClone)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local rightWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;rightWeld.Part0 = myRightLeg
-&#9;&#9;&#9;&#9;rightWeld.Part1 = rLegClone
-&#9;&#9;&#9;&#9;rightWeld.C1 = (CFrame.new(Vector3.new(0, 0, 0))) * CFrame.Angles(math.pi/2, math.pi/6, 0)
-&#9;&#9;&#9;&#9;rightWeld.Parent = rLegClone
-
-&#9;&#9;&#9;&#9;for j = 1, 10 do 
-&#9;&#9;&#9;&#9;&#9;lLegClone.Mesh.Scale = Vector3.new(1, 1+ (j * 0.5), 1)
-&#9;&#9;&#9;&#9;&#9;rLegClone.Mesh.Scale = Vector3.new(1, 1 +(j * 0.5), 1)
-
-&#9;&#9;&#9;&#9;&#9;lLegClone.Weld.C1 = lLegClone.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;rLegClone.Weld.C1 = rLegClone.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;end
-
-&#9;&#9;&#9;&#9;lLegClone.Touched:connect(poke)
-&#9;&#9;&#9;&#9;rLegClone.Touched:connect(poke)
+&#9;&#9;&#9;if key.Value == &quot;q&quot; then
+&#9;&#9;&#9;&#9;weldSpikes({myLeftArm, myRightArm}, {CFrame.Angles(0, 0, -math.pi/2), CFrame.Angles(0, 0, math.pi/2)})
+&#9;&#9;&#9;elseif key.Value == &quot;e&quot; then
+&#9;&#9;&#9;&#9;weldSpikes({myLeftLeg, myRightLeg}, {CFrame.Angles(math.pi/2, -math.pi/6, 0), CFrame.Angles(math.pi/2, math.pi/6, 0)})
 &#9;&#9;&#9;elseif key.Value == &quot;z&quot; then
-&#9;&#9;&#9;&#9;torsoFrontClone = spike:Clone()&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;torsoFrontClone.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, torsoFrontClone)&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local leftWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;leftWeld.Part0 = myTorso
-&#9;&#9;&#9;&#9;leftWeld.Part1 = torsoFrontClone
-&#9;&#9;&#9;&#9;leftWeld.C1 = (CFrame.new(Vector3.new(0.5, 0, 0.3))) * CFrame.Angles(math.pi/2, -math.pi/6, 0)
-&#9;&#9;&#9;&#9;leftWeld.Parent = torsoFrontClone
-
-&#9;&#9;&#9;&#9;torsoFrontClone2 = spike:Clone()
-&#9;&#9;&#9;&#9;torsoFrontClone2.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, torsoFrontClone2)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local rightWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;rightWeld.Part0 = myTorso
-&#9;&#9;&#9;&#9;rightWeld.Part1 = torsoFrontClone2
-&#9;&#9;&#9;&#9;rightWeld.C1 = (CFrame.new(Vector3.new(-0.5, 0, 0.3))) * CFrame.Angles(math.pi/2, math.pi/6, 0)
-&#9;&#9;&#9;&#9;rightWeld.Parent = torsoFrontClone2
-
-&#9;&#9;&#9;&#9;torsoFrontClone.Touched:connect(poke)
-&#9;&#9;&#9;&#9;torsoFrontClone2.Touched:connect(poke)
-&#9;&#9;&#9;&#9;for j = 1, 10 do 
-&#9;&#9;&#9;&#9;&#9;torsoFrontClone.Mesh.Scale = Vector3.new(1, 1 + (j * 0.5), 1)
-&#9;&#9;&#9;&#9;&#9;torsoFrontClone2.Mesh.Scale = Vector3.new(1, 1 + (j * 0.5), 1)
-
-&#9;&#9;&#9;&#9;&#9;torsoFrontClone.Weld.C1 = torsoFrontClone.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;torsoFrontClone2.Weld.C1 = torsoFrontClone2.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;weldSpikes({myTorso, myTorso}, {CFrame.new(0.5, 0, 0.3) * CFrame.Angles(math.pi/2, -math.pi/6, 0), CFrame.new(-0.5, 0, 0.3) * CFrame.Angles(math.pi/2, math.pi/6, 0)})
 &#9;&#9;&#9;elseif key.Value == &quot;c&quot; then
-&#9;&#9;&#9;&#9;torsoBackClone = spike:Clone()&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;torsoBackClone.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, torsoBackClone)&#9;&#9;&#9;&#9;
-
-&#9;&#9;&#9;&#9;local leftWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;leftWeld.Part0 = myTorso
-&#9;&#9;&#9;&#9;leftWeld.Part1 = torsoBackClone
-&#9;&#9;&#9;&#9;leftWeld.C1 = (CFrame.new(Vector3.new(0.5, 0, 0.3))) * CFrame.Angles(-math.pi/2, math.pi/6, 0)
-&#9;&#9;&#9;&#9;leftWeld.Parent = torsoBackClone
-
-&#9;&#9;&#9;&#9;torsoBackClone2 = spike:Clone()
-&#9;&#9;&#9;&#9;torsoBackClone2.Parent = vCharacter
-&#9;&#9;&#9;&#9;table.insert(spikeClones, torsoBackClone2)
-
-&#9;&#9;&#9;&#9;local rightWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;rightWeld.Part0 = myTorso
-&#9;&#9;&#9;&#9;rightWeld.Part1 = torsoBackClone2
-&#9;&#9;&#9;&#9;rightWeld.C1 = (CFrame.new(Vector3.new(-0.5, 0, 0.3))) * CFrame.Angles(-math.pi/2, -math.pi/6, 0)
-&#9;&#9;&#9;&#9;rightWeld.Parent = torsoBackClone2
-
-&#9;&#9;&#9;&#9;torsoBackClone.Touched:connect(poke)
-&#9;&#9;&#9;&#9;torsoBackClone2.Touched:connect(poke)
-&#9;&#9;&#9;&#9;for j = 1, 10 do 
-&#9;&#9;&#9;&#9;&#9;torsoBackClone.Mesh.Scale = Vector3.new(1, 1 + (j * 0.5), 1)
-&#9;&#9;&#9;&#9;&#9;torsoBackClone2.Mesh.Scale = Vector3.new(1, 1 + (j * 0.5), 1)
-
-&#9;&#9;&#9;&#9;&#9;torsoBackClone.Weld.C1 = torsoBackClone.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;torsoBackClone2.Weld.C1 = torsoBackClone2.Weld.C1 - Vector3.new(0, 0.3, 0)
-&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;weldSpikes({myTorso, myTorso}, {CFrame.new(0.5, 0, 0.3) * CFrame.Angles(-math.pi/2, math.pi/6, 0), CFrame.new(-0.5, 0, 0.3) * CFrame.Angles(-math.pi/2, -math.pi/6, 0)})
 &#9;&#9;&#9;else 
 &#9;&#9;&#9;&#9;-- do nothing 
 &#9;&#9;&#9;end&#9;&#9;
@@ -435,19 +382,21 @@ function spikeyDestruction()
 &#9;end
 end
 
+if key then local connection = key.Changed:connect(spikeyDestruction) end
+
 spikeyDestruction()
 
-local connection = key.Changed:connect(spikeyDestruction)
 
 wait(10.0)
 if connection then connection:disconnect() end
 for i = 1, #spikeClones do
-&#9;spikeClones[i]:Remove()
-&#9;spikeClones[i] = nil
+&#9;if spikeClones[i] then
+&#9;&#9;spikeClones[i]:Remove()
+&#9;end
 end
 script:Remove() </ProtectedString>
 			</Properties>
-			<Item class="StringValue" referent="RBX5">
+			<Item class="StringValue" referent="RBX7">
 				<Properties>
 					<bool name="Archivable">true</bool>
 					<string name="Name">Key</string>
@@ -455,43 +404,29 @@ script:Remove() </ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="NumberValue" referent="RBX6">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<string name="Name">SpikeyCooldown</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX7">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=56510834</url></Content>
-				<bool name="Archivable">true</bool>
-				<string name="Name">DrinkAnim</string>
-			</Properties>
-		</Item>
 		<Item class="Camera" referent="RBX8">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.191146269</X>
-					<Y>0.985907912</Y>
-					<Z>4.12524605</Z>
-					<R00>0.999780655</R00>
-					<R01>-0.00224907277</R01>
-					<R02>0.0208212584</R02>
-					<R10>2.32830644e-010</R10>
-					<R11>0.994216561</R11>
-					<R12>0.107393384</R12>
-					<R20>-0.0209423751</R20>
-					<R21>-0.107369825</R21>
-					<R22>0.993998528</R22>
+					<X>-0.979516864</X>
+					<Y>4.26360321</Y>
+					<Z>-0.270639658</Z>
+					<R00>-1</R00>
+					<R01>-5.64493303e-006</R01>
+					<R02>8.94069728e-007</R02>
+					<R10>5.68434189e-014</R10>
+					<R11>0.156434491</R11>
+					<R12>0.987688363</R12>
+					<R20>-5.7152979e-006</R20>
+					<R21>0.987688363</R21>
+					<R22>-0.156434491</R22>
 				</CoordinateFrame>
 				<CoordinateFrame name="Focus">
-					<X>-0.225278899</X>
-					<Y>-1.16195977</Y>
-					<Z>-15.7547245</Z>
+					<X>-0.979534745</X>
+					<Y>-15.4901619</Y>
+					<Z>2.85804987</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
