@@ -1,0 +1,729 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Archivable">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>-1.79999995</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>-0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">StoneStaff</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=59057848</url></Content>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent
+
+local stillEquipped = false
+
+function onEquippedLocal(mouse)
+&#9;stillEquipped = true
+&#9;if mouse == nil then 
+&#9;&#9;return
+&#9;end
+&#9;while stillEquipped do 
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;while Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;while not Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end&#9;
+&#9;end
+end
+
+
+function onUnequippedLocal()
+&#9;stillEquipped = false
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">StoneStaffMain</string>
+				<ProtectedString name="Source">math.randomseed(tick()); math.random()
+
+local Tool = script.Parent
+local Handle = Tool.Handle
+
+local myCharacter
+local myHumanoid
+local myPlayer
+
+local SlashSound = Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+SlashSound.Parent = Handle
+SlashSound.Volume = .7
+local RockfallSound
+
+local SwingAnim
+local ThudAnim
+
+local debris = game:GetService(&quot;Debris&quot;)
+
+function gripDown()
+&#9;Tool.GripUp = Vector3.new(0, 0, 1)
+&#9;Tool.GripForward = Vector3.new(0, 1, 0)
+&#9;Tool.GripRight = Vector3.new(1, 0, 0)
+&#9;Tool.GripPos = Vector3.new(0, 0, 1)
+end
+
+function gripUp()
+&#9;Tool.GripUp = Vector3.new(0, 0, 1)
+&#9;Tool.GripForward = Vector3.new(0, 1, 0)
+&#9;Tool.GripRight = Vector3.new(1, 0, 0)
+&#9;Tool.GripPos = Vector3.new(0, 0, -1.8)
+end
+
+function gripOut()
+&#9;Tool.GripUp = Vector3.new(0, -1, 0)
+&#9;Tool.GripForward = Vector3.new(0, 0, 1)
+&#9;Tool.GripRight = Vector3.new(1, 0, 0)
+&#9;Tool.GripPos = Vector3.new(0, 0, -1.8)
+end
+
+function stonesplosion(key)
+&#9;-- Check to make sure we should actually be causing this stonesplosion.
+&#9;if key:lower() ~= &quot;x&quot; or Tool:FindFirstChild(&quot;StonesplosionDisabled&quot;) then return end
+&#9;-- Then, play animation and spawn script!
+&#9;myCharacter = Tool.Parent
+&#9;myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;
+&#9;-- Disable this special move for the future.
+&#9;local StonesplosionDisabled = Instance.new(&quot;BoolValue&quot;)
+&#9;StonesplosionDisabled.Name = &quot;StonesplosionDisabled&quot;
+&#9;StonesplosionDisabled.Parent = Tool
+&#9;debris:AddItem(StonesplosionDisabled, 20)
+
+&#9;if myHumanoid then
+&#9;&#9;ThudAnim = Tool:FindFirstChild(&quot;StaffThud&quot;)
+&#9;&#9;if ThudAnim then
+&#9;&#9;&#9;ThudAnim = myHumanoid:LoadAnimation(ThudAnim)
+&#9;&#9;&#9;gripDown()
+&#9;&#9;&#9;ThudAnim:Play()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;wait(0.8)&#9;-- For animation to finish.
+&#9;local StonesplosionScript = Tool:FindFirstChild(&quot;StonesplosionScript&quot;)
+&#9;if StonesplosionScript then
+&#9;&#9;StonesplosionScript = StonesplosionScript:Clone()
+&#9;&#9;local Center = StonesplosionScript:FindFirstChild(&quot;Center&quot;)
+&#9;&#9;if Center then
+&#9;&#9;&#9;-- Script is parented to Workspace to ensure that it still runs even if our character
+&#9;&#9;&#9;--   dies or the tool is lost.
+&#9;&#9;&#9;StonesplosionScript.Parent = game.Workspace
+&#9;&#9;&#9;-- Center of the stonesplosion is roughly at the point where the bottom tip of the staff
+&#9;&#9;&#9;--   touches the ground.
+&#9;&#9;&#9;Center.Value = Handle.Position - Vector3.new(0, 2.75, 0)
+&#9;&#9;&#9;-- And play a corresponding sound.
+&#9;&#9;&#9;RockfallSound = Handle:FindFirstChild(&quot;RockfallSound&quot;)
+&#9;&#9;&#9;if RockfallSound then RockfallSound:Play() end
+&#9;&#9;&#9;StonesplosionScript.Disabled = false
+&#9;&#9;end
+&#9;end
+&#9;gripUp()
+end
+
+function tagAndUntagHumanoid(humanoid, player, waitTime)
+&#9;local CreatorTag = Instance.new(&quot;ObjectValue&quot;)
+&#9;CreatorTag.Name = &quot;creator&quot;
+&#9;CreatorTag.Value = player
+&#9;CreatorTag.Parent = humanoid
+&#9;debris:AddItem(CreatorTag, waitTime)
+end
+
+function damageAndPetrify(hit)
+&#9;-- Debounce!
+&#9;if hit:FindFirstChild(&quot;SwordStaffRecentlyHit&quot;) then return end
+&#9;local DebounceTag = Instance.new(&quot;BoolValue&quot;)
+&#9;DebounceTag.Name = &quot;SwordStaffRecentlyHit&quot;
+&#9;DebounceTag.Parent = hit
+&#9;debris:AddItem(DebounceTag, 0.2)
+
+&#9;myCharacter = Tool.Parent
+&#9;local hitThing = hit.Parent
+&#9;local hitHumanoid = hitThing:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if hitHumanoid ~= nil and hitThing ~= myCharacter then
+&#9;&#9;-- OK, so now we know we hit another character.
+&#9;&#9;-- Do damage, and, 1/4 of the time, petrify the character.
+&#9;&#9;myPlayer = game.Players:GetPlayerFromCharacter(myCharacter)
+&#9;&#9;if myPlayer then tagAndUntagHumanoid(hitHumanoid, myPlayer, 2) end
+&#9;&#9;hitHumanoid:TakeDamage(5)
+&#9;
+&#9;&#9;-- Note that petrifying is only possible if you&apos;re swinging the staff:
+&#9;&#9;if (math.random() &lt; 0.08) and Tool.Enabled == false then
+&#9;&#9;&#9;-- Petrify!
+&#9;&#9;&#9;local PetrifyScript = Tool:FindFirstChild(&quot;StoneStaffPersonPetrifyScript&quot;)
+&#9;&#9;&#9;-- Make sure to petrify only someone who is not already petrified, though.
+&#9;&#9;&#9;if PetrifyScript and not hitThing:FindFirstChild(&quot;StoneStaffPersonPetrifyScript&quot;) then
+&#9;&#9;&#9;&#9;PetrifyScript = PetrifyScript:Clone()
+&#9;&#9;&#9;&#9;PetrifyScript.Parent = hitThing
+
+&#9;&#9;&#9;&#9;if myPlayer then tagAndUntagHumanoid(hitHumanoid, myPlayer, 7) end
+&#9;&#9;&#9;&#9;PetrifyScript.Disabled = false
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function onActivated()
+&#9;if not Tool.Enabled then return end
+&#9;Tool.Enabled = false
+&#9;myCharacter = Tool.Parent
+&#9;if myCharacter then
+&#9;&#9;myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if myHumanoid then
+&#9;&#9;&#9;if SwingAnim then SwingAnim:Stop() end
+&#9;&#9;&#9;SwingAnim = Tool:FindFirstChild(&quot;StaffSwing&quot;)
+&#9;&#9;&#9;if SwingAnim then
+&#9;&#9;&#9;&#9;gripOut()
+&#9;&#9;&#9;&#9;SwingAnim = myHumanoid:LoadAnimation(SwingAnim)
+&#9;&#9;&#9;&#9;SwingAnim:Play()
+&#9;&#9;&#9;&#9;wait(0.2)
+&#9;&#9;&#9;&#9;SlashSound:Play()
+&#9;&#9;&#9;&#9;wait(0.8)
+&#9;&#9;&#9;&#9;gripUp()
+&#9;&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;Tool.Enabled = true
+end
+
+function onEquipped(mouse)
+&#9;gripUp()
+&#9;if mouse then mouse.KeyDown:connect(stonesplosion) end
+&#9;Handle.Touched:connect(damageAndPetrify)
+&#9;if not Tool.Enabled then 
+&#9;&#9;wait(1.5)
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function onUnequipped()
+&#9;if SwingAnim then SwingAnim:Stop() end
+&#9;if ThudAnim then ThudAnim:Stop() end
+end
+
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="Archivable">true</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>24.6244545</X>
+					<Y>5.77786446</Y>
+					<Z>6.7721715</Z>
+					<R00>-0.88955909</R00>
+					<R01>0.456816465</R01>
+					<R02>0.000363712636</R02>
+					<R10>-4.3562121e-008</R10>
+					<R11>-0.000796274457</R11>
+					<R12>0.999999642</R12>
+					<R20>0.456816554</R20>
+					<R21>0.889558911</R21>
+					<R22>0.000708353124</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">3</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.290000021</X>
+					<Y>0.260000646</Y>
+					<Z>3.56999469</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=59058008</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1.10000002</X>
+						<Y>1.10000002</Y>
+						<Z>1.10000002</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=59057946</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<bool name="Looped">false</bool>
+					<string name="Name">RockfallSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=59145877</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX6">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">StoneStaffPersonPetrifyScript</string>
+				<ProtectedString name="Source">-- Slate texture asset ID: 58972839 
+
+local myCharacter = script.Parent
+local myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;)
+local CharChildren = myCharacter:GetChildren()
+local myPlayer = game.Players:GetPlayerFromCharacter(myCharacter)
+local BackpackStuff = {}
+if myPlayer then BackpackStuff = myPlayer.Backpack:GetChildren() end
+local Clothes = {}
+local OriginalClothesParents = {}
+local ChangedFileMeshes = {}
+local OriginalMeshTextures = {}
+local ChangedOtherMeshes = {}
+local OriginalVertexColors = {}
+local Parts = {}
+local OriginalPartBrickColors = {}
+local OriginalPartMaterials = {}
+local CharacterMeshes = {}
+local OriginalBaseTextures = {}
+local OriginalOverlayTextures = {}
+&#9;&#9;
+-- First, root character in one spot: delete his/her Animate script, and set the humanoid&apos;s WalkSpeed to 0.
+local AnimateScript = myCharacter:FindFirstChild(&quot;Animate&quot;)
+-- (Note, though, that we store a reference to the script, so we can return it later)
+if AnimateScript then AnimateScript.Parent = nil end
+if myHumanoid then myHumanoid.WalkSpeed = 0 end
+
+-- Then, get rid of the character&apos;s weapons (Tools and HopperBins) by parenting them to Workspace and,
+--  if necessary, getting rid of their handles. But remember the position of the equipped handle (if there
+--  be one) so that we can fake it with stone :).
+-- Parenting them to Workspace ensures that their scripts will still run even though the character can&apos;t
+--   use them.
+local CharacterStuff = {}
+local CharacterHandles = {}
+local BackpackHandles = {}
+local CloneHandle
+local CloneHandleWeld
+local Torso
+
+for index, obj in pairs(CharChildren) do
+&#9;if obj:IsA(&quot;Tool&quot;) then
+&#9;&#9;local Handle = obj.Handle
+&#9;&#9;CloneHandle = Handle:Clone()
+&#9;&#9;CloneHandle.CFrame = Handle.CFrame
+&#9;&#9;Torso = myCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;if Torso then
+&#9;&#9;&#9;CloneHandleWeld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;CloneHandleWeld.Part0 = Torso
+&#9;&#9;&#9;CloneHandleWeld.Part1 = CloneHandle
+&#9;&#9;&#9;CloneHandleWeld.C1 = CloneHandle.CFrame:inverse() * Torso.CFrame
+&#9;&#9;&#9;CloneHandleWeld.Parent = CloneHandle
+&#9;&#9;&#9;CloneHandle.Parent = myCharacter
+&#9;&#9;end
+&#9;&#9;Handle.Parent = nil
+&#9;&#9;obj.Parent = game.Workspace
+&#9;&#9;table.insert(CharacterStuff, obj)
+&#9;&#9;table.insert(CharacterHandles, Handle)
+&#9;elseif obj:IsA(&quot;HopperBin&quot;) then
+&#9;&#9;obj.Parent = game.Workspace
+&#9;&#9;table.insert(CharacterStuff, obj)
+&#9;&#9;table.insert(CharacterHandle, nil)
+&#9;end
+end
+
+for index, obj in pairs(BackpackStuff) do
+&#9;if obj:IsA(&quot;Tool&quot;) then
+&#9;&#9;local Handle = obj.Handle
+&#9;&#9;Handle.Parent = nil
+&#9;&#9;-- Note that it&apos;s already in BackpackStuff automatically.
+&#9;&#9;table.insert(BackpackHandles, Handle)
+&#9;else&#9;-- obj is a HopperBin
+&#9;&#9;table.insert(BackpackHandles, nil)
+&#9;end
+&#9;-- Whether obj is a Tool or a HopperBin, we have to parent it to Workspace...
+&#9;obj.Parent = game.Workspace
+end
+&#9;
+-- Now, retexture all hats, parts, and package meshes, and delete
+--  shirts, pants and t-shirts.
+
+function Union(Table1, Table2)
+&#9;for index, obj in pairs(Table2) do
+&#9;&#9;table.insert(Table1, obj)
+&#9;end
+end
+
+function GetDescendants(instance)
+&#9;local Children = instance:GetChildren()
+&#9;local Descendants = {}
+&#9;for index, obj in pairs(Children) do
+&#9;&#9;table.insert(Descendants, obj)
+&#9;&#9;Union(Descendants, GetDescendants(obj))
+&#9;end
+&#9;return Descendants
+end
+
+
+for index, Descendant in pairs(GetDescendants(myCharacter)) do
+&#9;-- Note that GetDescendants includes the fake handle (and its mesh) :)
+
+&#9;-------- MESHES --------------------
+&#9;if Descendant:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;if Descendant:IsA(&quot;FileMesh&quot;) then
+&#9;&#9;&#9;if Descendant.TextureId ~= &quot;&quot; then&#9;-- Need this check for heads.
+&#9;&#9;&#9;&#9;table.insert(ChangedFileMeshes, Descendant)
+&#9;&#9;&#9;&#9;table.insert(OriginalMeshTextures, Descendant.TextureId)
+&#9;&#9;&#9;&#9;Descendant.TextureId = &quot;rbxasset://Textures/SlateTileMono.png&quot;
+&#9;&#9;&#9;end
+&#9;&#9;else&#9;-- it&apos;s a non-file mesh, so we can&apos;t actually make it slate :(
+&#9;&#9;&#9;-- We&apos;ll make it gray instead.
+&#9;&#9;&#9;table.insert(ChangedOtherMeshes, Descendant)
+&#9;&#9;&#9;table.insert(OriginalVertexColors, Descendant.VertexColor)
+&#9;&#9;&#9;Descendant.VertexColor = BrickColor.new(&quot;Medium stone grey&quot;).Color
+&#9;&#9;end
+
+
+&#9;-------- PARTS ---------------------
+&#9;elseif Descendant:IsA(&quot;BasePart&quot;) then
+&#9;&#9;table.insert(Parts, Descendant)
+&#9;&#9;table.insert(OriginalPartBrickColors, Descendant.BrickColor)
+&#9;&#9;table.insert(OriginalPartMaterials, Descendant.Material)
+&#9;&#9;Descendant.BrickColor = BrickColor.new(&quot;Medium stone grey&quot;)
+&#9;&#9;Descendant.Material = &quot;Slate&quot;
+
+&#9;------- CLOTHES --------------------
+&#9;elseif Descendant:IsA(&quot;Clothing&quot;) or Descendant.ClassName == &quot;ShirtGraphic&quot; then
+&#9;&#9;table.insert(Clothes, Descendant)
+&#9;&#9;table.insert(OriginalClothesParents, Descendant.Parent)
+&#9;&#9;Descendant.Parent = nil
+
+&#9;------- PACKAGE MESHES -------------
+&#9;elseif Descendant.ClassName == &quot;CharacterMesh&quot; then
+&#9;&#9;table.insert(CharacterMeshes, Descendant)
+&#9;&#9;table.insert(OriginalBaseTextures, Descendant.BaseTextureId)
+&#9;&#9;table.insert(OriginalOverlayTextures, Descendant.OverlayTextureId)
+&#9;&#9;Descendant.BaseTextureId = 58972839
+&#9;&#9;Descendant.OverlayTextureId = 58972839
+
+&#9;end
+end
+
+-- OK, we&apos;re stone now. Wait for a while, and do damage while waiting.
+for i = 1, 5 do
+&#9;if myHumanoid then myHumanoid:TakeDamage(6) end
+&#9;wait(1)
+end
+
+-- Then, fix all the stuff we just broke :P
+if CloneHandle then CloneHandle:Remove() end
+
+for i = 1, #BackpackStuff do
+&#9;if BackpackHandles[i] ~= nil then BackpackHandles[i].Parent = BackpackStuff[i] end
+&#9;if myPlayer then BackpackStuff[i].Parent = myPlayer.Backpack end
+end
+
+for i = 1, #CharacterStuff do
+&#9;if CharacterHandles[i] ~= nil then CharacterHandles[i].Parent = CharacterStuff[i] end
+&#9;if myCharacter then CharacterStuff[i].Parent = myCharacter end
+end
+
+if myHumanoid then myHumanoid.WalkSpeed = 16 end
+
+if AnimateScript then AnimateScript.Parent = myCharacter end
+
+for i = 1, #ChangedFileMeshes do
+&#9;if ChangedFileMeshes[i] then ChangedFileMeshes[i].TextureId = OriginalMeshTextures[i] end
+end
+
+for i = 1, #ChangedOtherMeshes do
+&#9;if ChangedOtherMeshes[i] then ChangedOtherMeshes[i].VertexColor = OriginalVertexColors[i] end
+end
+
+for i = 1, #Parts do
+&#9;if Parts[i] then
+&#9;&#9;Parts[i].BrickColor = OriginalPartBrickColors[i]
+&#9;&#9;Parts[i].Material = OriginalPartMaterials[i]
+&#9;end
+end
+
+for i = 1, #Clothes do
+&#9;Clothes[i].Parent = OriginalClothesParents[i]
+end
+
+for i = 1, #CharacterMeshes do
+&#9;if CharacterMeshes[i] then
+&#9;&#9;CharacterMeshes[i].BaseTextureId = OriginalBaseTextures[i]
+&#9;&#9;CharacterMeshes[i].OverlayTextureId = OriginalOverlayTextures[i]
+&#9;end
+end
+
+script:Remove()
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=59085834</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">StaffSwing</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=59088963</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">StaffThud</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX9">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">StonesplosionScript</string>
+				<ProtectedString name="Source">-- Naturally this borrows a lot of code from the PersonPetrifyScript.
+-- However, this time around, the sets of changed stuff store the changed objects as
+--  INDICES rather than as values, so that we don&apos;t re-add a zillion things to the sets
+--  every time we do a new Region 3 query.
+function waitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do
+&#9;&#9;parent.ChildAdded:wait()
+&#9;end
+&#9;return parent[childName]
+end
+
+local Center = waitForChild(script, &quot;Center&quot;).Value
+
+local FileMeshesAndTextures = {}
+local OtherMeshesAndColors = {}
+local PartsBrickColorsAndMaterials = {}
+
+local StonifyTag = Instance.new(&quot;BoolValue&quot;)
+StonifyTag.Name = &quot;StoneStaffStonified&quot;
+
+function stonify(Part)
+&#9;-- Ignore the part if it&apos;s owned by a character (PC or NPC.)
+&#9;-- Also, note that at many points we check to make sure the part is not already stonified.
+&#9;--   This should prevent accidentally setting something to stone permanently if two or more people are using
+&#9;--   the staff at the same time.
+&#9;if not Part.Parent then return end
+&#9;if Part.Parent:FindFirstChild(&quot;Humanoid&quot;) then return end
+&#9;if Part.Parent.ClassName == &quot;Hat&quot; and Part.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;) then return end
+&#9;-- Change all meshes to slate, or at least slate-colored.
+&#9;for index, Child in pairs(Part:GetChildren()) do
+&#9;&#9;if Child:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;if Child:IsA(&quot;FileMesh&quot;) then
+&#9;&#9;&#9;&#9;if Child.TextureId ~= &quot;&quot; and Child.TextureId ~= &quot;rbxasset://Textures/SlateTileMono.png&quot; then
+&#9;&#9;&#9;&#9;&#9;-- Following check is necessary in case some parts get hit multiple times...
+&#9;&#9;&#9;&#9;&#9;if not FileMeshesAndTextures[Child] then
+&#9;&#9;&#9;&#9;&#9;&#9;FileMeshesAndTextures[Child] = Child.TextureId
+&#9;&#9;&#9;&#9;&#9;&#9;Child.TextureId = &quot;rbxasset://Textures/SlateTileMono.png&quot;
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else&#9;-- it&apos;s a non-file mesh, so we can&apos;t actually make it slate :(
+&#9;&#9;&#9;&#9;-- We&apos;ll make it gray instead.
+&#9;&#9;&#9;&#9;if Child.VertexColor ~= BrickColor.new(&quot;Medium stone grey&quot;).Color then
+&#9;&#9;&#9;&#9;&#9;if not OtherMeshesAndColors[Child] then
+&#9;&#9;&#9;&#9;&#9;&#9;OtherMeshesAndColors[Child] = Child.VertexColor
+&#9;&#9;&#9;&#9;&#9;&#9;Child.VertexColor = BrickColor.new(&quot;Medium stone grey&quot;).Color
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;-- Then change Part&apos;s Material and BrickColor.
+&#9;if Part.BrickColor.Number ~= 194 or Part.Material ~= Enum.Material.Slate then
+&#9;&#9;if not PartsBrickColorsAndMaterials[Part] then
+&#9;&#9;&#9;PartsBrickColorsAndMaterials[Part] = {Part.BrickColor, Part.Material}
+&#9;&#9;&#9;Part.BrickColor = BrickColor.new(&quot;Medium stone grey&quot;)
+&#9;&#9;&#9;Part.Material = &quot;Slate&quot;
+&#9;&#9;end
+&#9;end
+end
+
+-- MAIN OPERATION: -----
+local TouchPart = Instance.new(&quot;Part&quot;)
+TouchPart.Name = &quot;StonesplosionTouchPart&quot;
+TouchPart.formFactor = Enum.FormFactor.Custom
+TouchPart.Shape = Enum.PartType.Ball
+TouchPart.CanCollide = false
+TouchPart.Locked = true
+TouchPart.CFrame = CFrame.new(Center)
+TouchPart.BrickColor = BrickColor.new(&quot;Medium stone grey&quot;)
+TouchPart.Transparency = 1
+TouchPart.TopSurface = &quot;Smooth&quot;
+TouchPart.BottomSurface = &quot;Smooth&quot;
+
+local AntiGrav = Instance.new(&quot;BodyForce&quot;)
+AntiGrav.Name = &quot;AntiGrav&quot;
+AntiGrav.force = Vector3.new(0, 196.2 * TouchPart:GetMass(), 0)
+AntiGrav.Parent = TouchPart
+
+TouchPart.Parent = game.Workspace
+
+TouchPart.Touched:connect(stonify)
+
+for i = 1, 400 do
+&#9;wait()
+&#9;TouchPart.Size = Vector3.new(i, i, i)
+&#9;TouchPart.CFrame = CFrame.new(Center)
+&#9;AntiGrav.force = Vector3.new(0, 196.2 * TouchPart:GetMass(), 0)
+&#9;TouchPart.Velocity = Vector3.new(math.random(), math.random(), math.random())
+end
+
+TouchPart:Remove()
+
+-- After it&apos;s over, set everything back to normal.
+for Mesh, Texture in pairs(FileMeshesAndTextures) do
+&#9;if Mesh then Mesh.TextureId = Texture end
+end
+
+for Mesh, Color in pairs(OtherMeshesAndColors) do
+&#9;if Mesh then Mesh.VertexColor = Color end
+end
+
+for Part, PropertyTable in pairs(PartsBrickColorsAndMaterials) do
+&#9;if Part then
+&#9;&#9;Part.BrickColor = PropertyTable[1]
+&#9;&#9;Part.Material = PropertyTable[2]
+&#9;end
+end
+
+script:Remove()
+
+</ProtectedString>
+			</Properties>
+			<Item class="Vector3Value" referent="RBX10">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<string name="Name">Center</string>
+					<Vector3 name="Value">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX11">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>24.5582066</X>
+					<Y>5.97092342</Y>
+					<Z>10.5558643</Z>
+					<R00>0.999610126</R00>
+					<R01>0.00270789745</R01>
+					<R02>-0.0277919695</R02>
+					<R10>2.32830671e-010</R10>
+					<R11>0.995286822</R11>
+					<R12>0.0969752967</R12>
+					<R20>0.0279235821</R20>
+					<R21>-0.096937485</R21>
+					<R22>0.994898677</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>25.1140461</X>
+					<Y>4.03141689</Y>
+					<Z>-9.3421154</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
