@@ -814,6 +814,10 @@ local selectionLasso
 local handles
 
 local previousDistance
+local needsCursor = true
+
+local currMouseTarget
+local connections = {}
 
 function onHandlesDown(normal)
 &#9;previousDistance = 0
@@ -832,25 +836,64 @@ function onHandlesDrag(normal, distance)
 end
 
 function onButton1Down(mouse)
-&#9;if mouse.Target == nil or mouse.Target.Locked then
-&#9;&#9;selectionBox.Adornee = nil
-&#9;&#9;selectionLasso.Part = nil
-&#9;&#9;handles.Adornee = nil
-&#9;else
-&#9;&#9;selectionBox.Adornee = mouse.Target
-&#9;&#9;selectionLasso.Part = mouse.Target
-&#9;&#9;handles.Adornee = mouse.Target
-&#9;&#9;handles.Faces = mouse.Target.ResizeableFaces
+&#9;local success = pcall(function() theMouse = mouse.Target end)
+
+&#9;if success then
+&#9;&#9;if canSelect(mouse.Target) then
+&#9;&#9;&#9;selectionBox.Adornee = mouse.Target
+&#9;&#9;&#9;selectionLasso.Part = mouse.Target
+&#9;&#9;&#9;handles.Adornee = mouse.Target
+&#9;&#9;&#9;handles.Faces = mouse.Target.ResizeableFaces
+&#9;&#9;else
+&#9;&#9;&#9;selectionBox.Adornee = nil
+&#9;&#9;&#9;selectionLasso.Part = nil
+&#9;&#9;&#9;handles.Adornee = nil
+&#9;&#9;end
 &#9;end
 end
 
+function mouseTargetChanged(mouse)
+
+&#9;if canSelect(mouse.Target) then
+&#9;&#9;if needsCursor then
+&#9;&#9;&#9;mouse.Icon =&quot;rbxasset://textures\\DragCursor.png&quot;
+&#9;&#9;&#9;needsCursor = false
+&#9;&#9;end
+&#9;else
+&#9;&#9;needsCursor = true
+&#9;&#9;mouse.Icon = &quot;&quot;
+&#9;end
+
+end
+
+local function isPartOfModel(object)
+&#9;if object and object ~= game.Workspace and object:IsA(&quot;Model&quot;) then
+&#9;&#9;return true
+&#9;elseif not object or object == game.Workspace then
+&#9;&#9;return false
+&#9;else
+&#9;&#9;return isPartOfModel(object.Parent)
+&#9;end
+end
+
+function canSelect(object)
+&#9;local isModel = isPartOfModel(object)
+&#9;return object and object:IsA(&quot;BasePart&quot;) and not object.Locked and not isPartOfModel(object)
+end
 
 
 function onEquippedLocal(mouse)
-&#9;Tool.TextureId = &quot;rbxasset://icons/resize_sel.png&quot;
 
-&#9;mouse.Icon =&quot;rbxasset://textures\\DragCursor.png&quot;
-&#9;mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+&#9;currMouseTarget = nil
+
+&#9;table.insert(connections,mouse.Button1Down:connect(function() onButton1Down(mouse) end) )
+&#9;table.insert(connections, mouse.Move:connect(function()
+&#9;&#9;&#9;if currMouseTarget ~= mouse.Target then
+&#9;&#9;&#9;&#9;mouseTargetChanged(mouse)
+&#9;&#9;&#9;&#9;currMouseTarget = mouse.Target
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;)
 
 &#9;local character = script.Parent.Parent
 &#9;local player = game.Players:GetPlayerFromCharacter(character)
@@ -882,6 +925,12 @@ function onUnequippedLocal()
 &#9;selectionBox:Remove()
 &#9;selectionLasso:Remove()
 &#9;handles:Remove()
+
+&#9;for i = 1, #connections do
+&#9;&#9;if connections[i] then connections[i]:disconnect() end
+&#9;end
+
+&#9;connections = {}
 end
 
 script.Active.Changed:connect(function(prop)
@@ -1253,8 +1302,6 @@ script.Active.Changed:connect(function(prop)
 &#9;&#9;onUnequippedLocal()
 &#9;end
 end)
---Tool.Equipped:connect(onEquippedLocal)
---Tool.Unequipped:connect(onUnequippedLocal)
 
 </ProtectedString>
 			</Properties>
