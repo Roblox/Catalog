@@ -767,6 +767,9 @@ local Mouse
 local mouseMoveCon
 local mouseButton1DownCon
 local mouseButton1UpCon
+local cameraChangeCon
+
+local walking = false
 
 local pressedEsc = false
 
@@ -2222,6 +2225,18 @@ function onEquippedLocal(mouse)
 
 &#9;if not playerModel then return end
 
+&#9;-- used to move object when walking
+&#9;cameraChangeCon = game.Players.LocalPlayer.Character.Humanoid.Running:connect(function(speed)
+&#9;&#9;if speed &gt; 0 then
+&#9;&#9;&#9;walking = true
+&#9;&#9;&#9;while walking do
+&#9;&#9;&#9;&#9;onInsertMouseMove()
+&#9;&#9;&#9;&#9;wait(1.0/30.0)
+&#9;&#9;&#9;end
+&#9;&#9;else
+&#9;&#9;&#9;walking = false
+&#9;&#9;end
+&#9;end)
 &#9;mouseMoveCon = mouse.Move:connect(onInsertMouseMove)
 &#9;mouseButton1DownCon = mouse.Button1Down:connect(onInsertMouseButton1Down)
 &#9;mouseButton1UpCon = mouse.Button1Up:connect(onInsertMouseButton1Up)
@@ -2265,6 +2280,7 @@ function onUnequipped()
 &#9;if mouseMoveCon then mouseMoveCon:disconnect() end
 &#9;if mouseButton1DownCon then mouseButton1DownCon:disconnect() end
 &#9;if mouseButton1UpCon then mouseButton1UpCon:disconnect() end
+&#9;if cameraChangeCon then cameraChangeCon:disconnect() end
 
 &#9;cancelAssetPlacement()
 
@@ -4334,16 +4350,14 @@ local isGametest = string.find(BaseUrl,&quot;gametest&quot;)
 local isRestricted = Instance.new(&quot;BoolValue&quot;)
 isRestricted.Name = &quot;IsRestricted&quot;
 isRestricted.Value = false
+
+waitForProperty(game,&quot;PlaceId&quot;)
 if game.PlaceId == 41324860 then
 &#9;isRestricted.Value = true
-&#9;print(&quot;at wtrb&quot;)
-else
-&#9;print(&quot;not at wtrb&quot;)
 end
 isRestricted.Parent = variables
 
 if isGametest then
-&#9;print(&quot;on gametest&quot;)
 &#9;giveNewUserId(28215009)
 &#9;giveNewUserId(28215010)
 &#9;if not isRestricted.Value then
@@ -4356,7 +4370,6 @@ if isGametest then
 &#9;&#9;giveNewUserId(28220614)
 &#9;end
 else -- we are on prod
-&#9;print(&quot;on prod&quot;)
 &#9;giveNewUserId(18881789)
 &#9;giveNewUserId(18881808)
 &#9;if not isRestricted.Value then
