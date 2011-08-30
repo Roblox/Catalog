@@ -20,90 +20,9 @@
 				<R22>0</R22>
 			</CoordinateFrame>
 			<string name="Name">ConfigTool</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=51744223</url></Content>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=59102714</url></Content>
 		</Properties>
-		<Item class="Script" referent="RBX1">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">-------- OMG HAX
-
-r = game:service(&quot;RunService&quot;)
-
-
-local damage = 0
-
-
-local slash_damage = 0
-
-
-sword = script.Parent.Handle
-Tool = script.Parent
-
-
-
-function attack()
-&#9;local anim = Instance.new(&quot;StringValue&quot;)
-&#9;anim.Name = &quot;toolanim&quot;
-&#9;anim.Value = &quot;Slash&quot;
-&#9;anim.Parent = Tool
-end
-
-
-function swordUp()
-&#9;Tool.GripForward = Vector3.new(-1,0,0)
-&#9;Tool.GripRight = Vector3.new(0,1,0)
-&#9;Tool.GripUp = Vector3.new(0,0,1)
-end
-
-function swordOut()
-&#9;Tool.GripForward = Vector3.new(0,0,1)
-&#9;Tool.GripRight = Vector3.new(0,-1,0)
-&#9;Tool.GripUp = Vector3.new(-1,0,0)
-end
-
-
-
-Tool.Enabled = true
-
-function onActivated()
-
-&#9;if not Tool.Enabled then
-&#9;&#9;return
-&#9;end
-
-&#9;Tool.Enabled = false
-
-&#9;local character = Tool.Parent;
-&#9;local humanoid = character.Humanoid
-&#9;if humanoid == nil then
-&#9;&#9;print(&quot;Humanoid not found&quot;)
-&#9;&#9;return 
-&#9;end
-
-&#9;
-
-&#9;attack()
-
-&#9;wait(1)
-
-&#9;Tool.Enabled = true
-end
-
-
-function onEquipped()
-end
-
-
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBX2">
+		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<bool name="Archivable">true</bool>
@@ -172,7 +91,7 @@ script.Parent.Equipped:connect(onEquipped)
 					<Z>2</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<bool name="Archivable">true</bool>
 					<token name="LODX">2</token>
@@ -199,7 +118,7 @@ script.Parent.Equipped:connect(onEquipped)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="LocalScript" referent="RBX3">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
@@ -229,8 +148,6 @@ local Tool = script.Parent
 enabled = true
 game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/configure_sel.png&quot;)
 
-local selectionLasso
-local selectionBox
 local guiMain
 local screen
 
@@ -253,6 +170,8 @@ local objectValueSelect = {}
 
 local colorPaletteSelectMode = false
 
+local needsIconReset = false
+
 local textSize = 5
 
 --Constants
@@ -261,6 +180,18 @@ local height = 20
 local transparency = 0.5
 local buttonColor = BrickColor.new(&quot;Mid gray&quot;)
 local frameColor = BrickColor.new(&quot;Pastel yellow&quot;)
+
+
+local function isInModel(part)
+&#9;if part == game.Workspace then
+&#9;&#9;return false, nil
+&#9;elseif part:IsA(&quot;Model&quot;) then
+&#9;&#9;return true, part
+&#9;else
+&#9;&#9;return isInModel(part.Parent)
+&#9;end
+end
+
 
 function constrained(valueObject)
 &#9;return (valueObject:IsA(&quot;IntConstrainedValue&quot;) or valueObject:IsA(&quot;DoubleConstrainedValue&quot;))
@@ -599,7 +530,6 @@ function onObjectValueMouseClick(guiFrame, value, objectButton)
 end
 
 function onObjectValueMouseEnter(value, objectButton)
-&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = value.Value
 &#9;objectValueSelect[&quot;HoverValue&quot;] = value
 &#9;if value.Value then
 &#9;&#9;objectButton.BackgroundColor = BrickColor.Blue()
@@ -610,7 +540,6 @@ end
 &#9;
 function onObjectValueMouseLeave(value, objectButton)
 &#9;if objectValueSelect[&quot;HoverValue&quot;] == value then
-&#9;&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = nil
 &#9;&#9;objectValueSelect[&quot;HoverValue&quot;] = nil
 &#9;end
 &#9;objectButton.BackgroundColor = buttonColor
@@ -620,7 +549,6 @@ function onObjectValueCancel()
 &#9;if objectValueSelect[&quot;Enabled&quot;] then
 &#9;&#9;objectValueSelect[&quot;Enabled&quot;] = false
 
-&#9;&#9;objectValueSelect[&quot;Box&quot;].Adornee = nil
 &#9;&#9;objectValueSelect[&quot;Frame&quot;].Visible = true
 &#9;&#9;objectValueSelect[&quot;Frame&quot;] = nil
 &#9;&#9;objectValueSelect[&quot;Value&quot;] = nil
@@ -634,7 +562,6 @@ function on3dObjectValueButton1Up(mouse, guiMain)
 
 &#9;&#9;objectValueSelect[&quot;Enabled&quot;] = false
 
-&#9;&#9;objectValueSelect[&quot;Box&quot;].Adornee = nil
 &#9;&#9;objectValueSelect[&quot;Frame&quot;].Visible = true
 
 &#9;&#9;objectValueSelect[&quot;Frame&quot;] = nil
@@ -643,10 +570,6 @@ function on3dObjectValueButton1Up(mouse, guiMain)
 end
 
 function on3dObjectValueMouseMove(mouse, guiMain)
-&#9;local part = mouse.Target
-&#9;if part and part ~= objectValueSelect[&quot;Box&quot;].Adornee then
-&#9;&#9;objectValueSelect[&quot;Box&quot;].Adornee = part
-&#9;end
 end
 
 function setObjectButtonText(guiFrame, objectButton, objectValue)
@@ -894,6 +817,41 @@ function processConfiguration(config, playerGui)
 end
 
 function on3dMouseMove(mouse, guiMain)
+&#9;if mouse.Target and canSelectObject(mouse.Target) then
+
+&#9;&#9;local part = mouse.Target
+&#9;&#9;if part:IsA(&quot;VehicleSeat&quot;) then
+&#9;&#9;&#9;foundPart = part
+&#9;&#9;else
+&#9;&#9;&#9;foundPart = findConfiguration(part)
+&#9;&#9;end
+
+&#9;&#9;if foundPart then
+&#9;&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\DragCursor.png&quot;
+&#9;&#9;&#9;if objectValueSelect[&quot;HoverBox&quot;] then 
+&#9;&#9;&#9;&#9;local isModel, model = isInModel(part)
+&#9;&#9;&#9;&#9;if isModel then
+&#9;&#9;&#9;&#9;&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = model
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = part
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;needsIconReset = true
+&#9;&#9;else
+&#9;&#9;&#9;if needsIconReset then
+&#9;&#9;&#9;&#9;mouse.Icon = &quot;&quot;
+&#9;&#9;&#9;&#9;if objectValueSelect[&quot;HoverBox&quot;] then objectValueSelect[&quot;HoverBox&quot;].Adornee = nil end
+&#9;&#9;&#9;&#9;needsIconReset = false
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;else
+&#9;&#9;if needsIconReset then
+&#9;&#9;&#9;mouse.Icon = &quot;&quot;
+&#9;&#9;&#9;if objectValueSelect[&quot;HoverBox&quot;] then objectValueSelect[&quot;HoverBox&quot;].Adornee = nil end
+&#9;&#9;&#9;needsIconReset = false
+&#9;&#9;end
+&#9;end
+
 &#9;if objectValueSelect[&quot;Enabled&quot;] then
 &#9;&#9;on3dObjectValueMouseMove(mouse, guiMain)
 &#9;end
@@ -910,11 +868,6 @@ function cancelSelectionGui()
 &#9;&#9;end
 &#9;&#9;valueConnections = {}
 &#9;end
-
-&#9;selectionBox.Adornee = nil
-&#9;selectionLasso.Part = nil
-&#9;objectValueSelect[&quot;Box&quot;].Adornee = nil
-&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = nil
 
 &#9;showConfigurationAnnotations()
 
@@ -949,9 +902,6 @@ function removeSelectionGui()
 &#9;&#9;valueConnections = {}
 &#9;end
 
-&#9;selectionBox.Adornee = nil
-&#9;selectionLasso.Part = nil
-&#9;if objectValueSelect[&quot;Box&quot;] then objectValueSelect[&quot;Box&quot;].Adornee = nil end
 &#9;if objectValueSelect[&quot;HoverBox&quot;] then objectValueSelect[&quot;HoverBox&quot;].Adornee = nil end
 
 &#9;showConfigurationAnnotations()
@@ -982,16 +932,6 @@ function canSelectObject(part)
 &#9;return part and not (part.Locked) and part:IsA(&quot;BasePart&quot;) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60
 end
 
-local function isInModel(part)
-&#9;if part == game.Workspace then
-&#9;&#9;return false, nil
-&#9;elseif part:IsA(&quot;Model&quot;) then
-&#9;&#9;return true, part
-&#9;else
-&#9;&#9;return isInModel(part.Parent)
-&#9;end
-end
-
 local function findConfigInModel(model)
 &#9;local children = model:GetChildren()
 &#9;for i = 1, #children do
@@ -1000,15 +940,22 @@ local function findConfigInModel(model)
 &#9;&#9;end
 &#9;end
 &#9;for i = 1, #children do
-&#9;&#9;return findConfigInModel(children[i])
+&#9;&#9;if #children[i]:GetChildren() &gt; 0 then
+&#9;&#9;&#9;local returnValue = findConfigInModel(children[i])
+&#9;&#9;&#9;if returnValue ~= nil then
+&#9;&#9;&#9;&#9;return returnValue
+&#9;&#9;&#9;end
+&#9;&#9;end
 &#9;end
+
 &#9;return nil
 end
 
 function findConfiguration(part)
 &#9;local partInModel, model = isInModel(part)
 &#9;if partInModel then
-&#9;&#9;return findConfigInModel(model)
+&#9;&#9;local isModelConfig = findConfigInModel(model)
+&#9;&#9;return isModelConfig
 &#9;else
 &#9;&#9;local children = part:GetChildren() &#9;&#9;
 &#9;&#9;if children then
@@ -1073,13 +1020,12 @@ function on3dButton1Up(mouse, guiMain, playerGui)
 &#9;&#9;&#9;openFrame(selectionGui, selectionGui.Size)
 
 &#9;&#9;&#9;local hasModel, model = isInModel(part)
-&#9;&#9;&#9;if not hasModel then
-&#9;&#9;&#9;&#9;selectionBox.Adornee = part
+&#9;&#9;&#9;if hasModel then
+&#9;&#9;&#9;&#9;screen.Adornee = model
 &#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;selectionBox.Adornee = model
+&#9;&#9;&#9;&#9;screen.Adornee = part
 &#9;&#9;&#9;end
 
-&#9;&#9;&#9;screen.Adornee = part
 &#9;&#9;&#9;return
 &#9;&#9;end
 &#9;else
@@ -1087,7 +1033,39 @@ function on3dButton1Up(mouse, guiMain, playerGui)
 &#9;end
 end
 
-function on3dButton1Down(mouse, guiMain, playerGui)
+function createBillboardGui(name, objectAdorning)
+&#9;local screen = Instance.new(&quot;BillboardGui&quot;)
+&#9;screen.Name = tostring(name)
+&#9;screen.Size = UDim2.new(1.5,0,1.5,0)
+&#9;screen.Enabled = true
+&#9;screen.Active = true
+&#9;screen.ExtentsOffset = Vector3.new(0,0,1)
+
+&#9;local isModel, model = isInModel(objectAdorning)
+&#9;if isModel then
+&#9;&#9;screen.Adornee = model
+&#9;else
+&#9;&#9;screen.Adornee = objectAdorning
+&#9;end
+
+&#9;local badgeFrame = Instance.new(&quot;Frame&quot;)
+&#9;badgeFrame.Name = &quot;BadgeFrame&quot;
+&#9;badgeFrame.Size = UDim2.new(2,0,1,0)
+&#9;badgeFrame.Position = UDim2.new(-0.5,0,0,0)
+&#9;badgeFrame.BackgroundTransparency = 1
+&#9;badgeFrame.Parent = screen
+
+&#9;return screen
+end
+
+function giveConfigBadge(parent)
+&#9;local configBadge = Instance.new(&quot;ImageLabel&quot;)
+&#9;configBadge.Name = &quot;ConfigBadge&quot;
+&#9;configBadge.BackgroundTransparency = 1
+&#9;configBadge.Image = &quot;http://www.roblox.com/asset/?id=59785529&quot;
+&#9;configBadge.Position = UDim2.new(0.25,0,0)
+&#9;configBadge.Size = UDim2.new(0.5,0,1,0)
+&#9;configBadge.Parent = parent
 end
 
 function onEquippedLocal(mouse)
@@ -1114,12 +1092,11 @@ function onEquippedLocal(mouse)
 &#9;if not screen then
 &#9;&#9;screen = Instance.new(&quot;BillboardGui&quot;)
 &#9;&#9;screen.Name = &quot;ConfigGui&quot;
-&#9;&#9;screen.Size = UDim2.new(16,0,8,0)
+&#9;&#9;screen.Size = UDim2.new(0,360,0,180)
 &#9;&#9;screen.Enabled = false
 &#9;&#9;screen.Active = true
-&#9;&#9;screen.ExtentsOffset = Vector3.new(0,0,2)
-&#9;&#9;screen.StudsOffset = Vector3.new(0,5,1)
 &#9;&#9;screen.Parent = player.PlayerGui
+&#9;&#9;screen.AlwaysOnTop = true
 
 &#9;&#9;guiMain = Instance.new(&quot;Frame&quot;)
 &#9;&#9;guiMain.BackgroundTransparency = 1
@@ -1129,55 +1106,36 @@ function onEquippedLocal(mouse)
 &#9;&#9;removeBillboards()
 &#9;&#9;lastPart = nil
 &#9;&#9;screen.Parent = player.PlayerGui
-&#9;&#9;--screen.Repositioner.Disabled = false
 &#9;end
 
 &#9;setUpConfigurationService(guiMain)
 &#9;showConfigurationAnnotations()
 
-&#9;mouse.Button1Down:connect(function() on3dButton1Down(mouse, guiMain, player.PlayerGui) end)
 &#9;mouse.Button1Up:connect(function() on3dButton1Up(mouse, guiMain, player.PlayerGui) end)
 &#9;mouse.Move:connect(function() on3dMouseMove(mouse, guiMain) end)
-&#9;
-&#9;selectionBox = Instance.new(&quot;SelectionBox&quot;)
-&#9;selectionBox.Name = &quot;MainSelectionBox&quot;
-&#9;selectionBox.Color = BrickColor.new(&quot;Bright bluish green&quot;)
-&#9;selectionBox.Adornee = nil
-&#9;selectionBox.Parent = player.PlayerGui;
-
-&#9;selectionLasso = Instance.new(&quot;SelectionPartLasso&quot;)
-&#9;selectionLasso.Name = &quot;Model Delete Lasso&quot;
-&#9;selectionLasso.Humanoid = character.Humanoid
-&#9;selectionLasso.Part = nil
-&#9;selectionLasso.Visible = true
-&#9;selectionLasso.archivable = false
-&#9;selectionLasso.Color = BrickColor.Red()
-&#9;selectionLasso.Parent = game.workspace
 
 &#9;objectValueSelect.HoverBox = Instance.new(&quot;SelectionBox&quot;)
 &#9;objectValueSelect.HoverBox.Name = &quot;HoverBox&quot;
-&#9;objectValueSelect.HoverBox.Color = BrickColor.Blue()
+&#9;objectValueSelect.HoverBox.Color = BrickColor.new(&quot;Really blue&quot;)
+&#9;objectValueSelect.HoverBox.Transparency = 0.5
 &#9;objectValueSelect.HoverBox.Adornee = nil
 &#9;objectValueSelect.HoverBox.Parent = player.PlayerGui;
-
-&#9;objectValueSelect.Box = Instance.new(&quot;SelectionBox&quot;)
-&#9;objectValueSelect.Box.Name = &quot;Box&quot;
-&#9;objectValueSelect.Box.Color = BrickColor.Blue()
-&#9;objectValueSelect.Box.Adornee = nil
-&#9;objectValueSelect.Box.Parent = player.PlayerGui;
 end
 
 function onUnequippedLocal()
 
+&#9;local guiChildren = game.Players.LocalPlayer.PlayerGui:GetChildren()
+&#9;for i = 1, #guiChildren do
+&#9;&#9;if guiChildren[i]:IsA(&quot;BillboardGui&quot;) then
+&#9;&#9;&#9;guiChildren[i].Parent = nil
+&#9;&#9;end
+&#9;end
+
 &#9;destroyConfigurationService()
 
-&#9;selectionBox:Remove()
-&#9;selectionLasso:Remove()
-&#9;objectValueSelect.Box:Remove()
 &#9;objectValueSelect.HoverBox:Remove()
 
 &#9;if screen then
-&#9;&#9;--screen.Repositioner.Disabled = true
 &#9;&#9;screen.Parent = nil
 &#9;end
 
@@ -1194,7 +1152,7 @@ local configTable = {}
 function createVisualAnnotation(config, guiMain)
 &#9;local selection = Instance.new(&quot;SelectionBox&quot;)
 &#9;selection.Name = &quot;Annotation&quot;
-&#9;selection.Color = BrickColor.new(&quot;Bright bluish green&quot;)
+&#9;selection.Color = BrickColor.new(&quot;Really blue&quot;)
 &#9;selection.Transparency = 0.5
 &#9;selection.Parent = guiMain.Parent
 &#9;return selection
@@ -1256,6 +1214,15 @@ function configurationAdded(config, guiMain)
 &#9;else
 &#9;&#9;configurationParentChanged(data, config)
 &#9;end
+
+&#9;local billboardName = tostring(config.Parent)
+
+&#9;local newBillboard = game.Players.LocalPlayer.PlayerGui:FindFirstChild(billboardName)
+&#9;if not newBillboard then
+&#9;&#9;newBillboard = createBillboardGui(billboardName,config.Parent)
+&#9;&#9;newBillboard.Parent = game.Players.LocalPlayer.PlayerGui
+&#9;end
+&#9;giveConfigBadge(newBillboard:FindFirstChild(&quot;BadgeFrame&quot;))
 
 &#9;configTable[config] = data
 end
@@ -1322,832 +1289,11 @@ Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX5">
+		<Item class="BoolValue" referent="RBX4">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<string name="Name">IsRestricted</string>
 				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX6">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">WiringScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local CONNECT_BILLBOARD_GUI = &quot;ConnectBillboardGui&quot;
-local WIRE_LASSO = &quot;WireLasso&quot;
-local WIRE_TEXTURE = &quot;http://www.roblox.com/asset?id=56954045&quot;
---local WIRE_TEXTURE = &quot;rbxasset://Textures/ui/playerlist_small_hide_dn.png&quot;
-local KILL_WIRE_TEXTURE = &quot;rbxasset://Textures/ui/CloseButton_dn.png&quot;
-local STATIC_PLAYER_GUI = nil
-local STATIC_BASE_PLATE = nil
-local SELECTED_SOURCE = nil
-local SELECTED_SINK = nil
-local WIRE_LASSO_MAP = {}
-local WIRING_PANEL_MAP = {}
-local LAST_HOVERED_PART = nil
-local SCREEN_MESSAGE = nil
-local ANNOTATIONS = {}
-local KNOWN_SOURCE_PARTS = {}
-local KNOWN_SINK_PARTS = {}
-local BASE_ANNOTATION_TRANSPARENCY = 0.5
-local BASE_WIRE_TRANSPARENCY = 0.5
-local BASE_WIRE_RADIUS = .06
-local ENHANCED_WIRE_RADIUS = .12
-local SOURCE_BUTTON_TEXT_COLOR = Color3.new(1, .5, 0)
-local SOURCE_BUTTON_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=55130296&quot;
-local SOURCE_BUTTON_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=56953981&quot;
-local SINK_BUTTON_TEXT_COLOR = Color3.new(0, 1, 0)
-local SINK_BUTTON_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=55130274&quot;
-local SINK_BUTTON_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=56953950&quot;
-local BUTTON_HOVER_TEXT_COLOR = Color3.new(1, 1, 1)
-local BUTTON_ICON_WIDTH = 50
-local DISCONNECT_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=55130256&quot;
-local DISCONNECT_SOURCE_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=55130237&quot;
-local DISCONNECT_SINK_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=55130219&quot;
-local TAIL_TEXTURE = &quot;http://www.roblox.com/asset?id=55134078&quot;
-local USE_BILLBOARD_GUI = true
-local LAST_CLICK_TIME = 0
-local CLICK_HELP_TIME_DELTA = .8
-
-local ALL_TEXTURES = { SOURCE_BUTTON_ICON_TEXTURE, SOURCE_BUTTON_ICON_HOVER_TEXTURE,
-&#9;&#9;SINK_BUTTON_ICON_TEXTURE, SINK_BUTTON_ICON_HOVER_TEXTURE,
-&#9;&#9;DISCONNECT_ICON_HOVER_TEXTURE, DISCONNECT_SOURCE_ICON_TEXTURE,
-&#9;&#9;DISCONNECT_SINK_ICON_TEXTURE, TAIL_TEXTURE, WIRE_TEXTURE }
-
-for idx, asset in ipairs(ALL_TEXTURES) do
-&#9;game:GetService(&quot;ContentProvider&quot;):Preload(asset)
-end
-
-function clearSelection()
-&#9;SELECTED_SOURCE = nil
-&#9;SELECTED_SINK = nil
-&#9;getLocalLasso().From = nil
-&#9;getLocalLasso().To = nil
-end
-
-function clearScreenMessage()
-&#9;if SCREEN_MESSAGE ~= nil then
-&#9;&#9;SCREEN_MESSAGE:Remove()
-&#9;&#9;SCREEN_MESSAGE = nil
-&#9;end
-end
-
-function clearHover()
-&#9;if LAST_HOVERED_PART ~= nil then
-&#9;&#9;ANNOTATIONS[LAST_HOVERED_PART].Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;ANNOTATIONS[LAST_HOVERED_PART].Color = BrickColor.new(&quot;Lime green&quot;)
-&#9;&#9;if WIRING_PANEL_MAP[LAST_HOVERED_PART] ~= nil then
-&#9;&#9;&#9;WIRING_PANEL_MAP[LAST_HOVERED_PART]:Remove()
-&#9;&#9;&#9;WIRING_PANEL_MAP[LAST_HOVERED_PART] = nil
-&#9;&#9;end
-&#9;&#9;setPartWireTransparency(LAST_HOVERED_PART, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
-&#9;end
-end
-
-function getPlayerGui()
-&#9;if STATIC_PLAYER_GUI == nil then
-&#9;&#9;STATIC_PLAYER_GUI = game.Players:GetPlayerFromCharacter(Tool.Parent).PlayerGui
-&#9;end
-&#9;return STATIC_PLAYER_GUI
-end
-
-function findMyBasePlate()
-&#9;if script.Parent.IsRestricted.Value then
-&#9;&#9;--if true then return game.Workspace.Base end -- for testing purposes
-&#9;&#9;if STATIC_BASE_PLATE == nil then
-&#9;&#9;&#9;local buildingAreas = game.Workspace.BuildingAreas:GetChildren()
-&#9;&#9;&#9;for i = 1, #buildingAreas do
-&#9;&#9;&#9;&#9;if buildingAreas[i].Player.Value == script.Parent.Parent.Name then
-&#9;&#9;&#9;&#9;&#9;STATIC_BASE_PLATE = buildingAreas[i].PlayerArea
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return STATIC_BASE_PLATE
-&#9;end
-
-&#9;return nil
-end
-
-function getLocalLasso()
-&#9;if not game.Players.LocalPlayer.PlayerGui:FindFirstChild(&quot;lasso&quot;) then
-&#9;&#9;local lasso = Instance.new(&quot;FloorWire&quot;)
-&#9;&#9;lasso.Name = &quot;lasso&quot;
-&#9;&#9;lasso.Parent = game.Players.LocalPlayer.PlayerGui
-&#9;end
-
-&#9;return game.Players.LocalPlayer.PlayerGui.lasso
-end
-
-function findModel(part)
-&#9;if script.Parent.IsRestricted.Value then
-&#9;&#9;local basePlate = findMyBasePlate()
-&#9;&#9;while part ~= nil do
-&#9;&#9;&#9;if part.className == &quot;Model&quot; and part.Name ~= basePlate.Name and part.Name ~= &quot;GarbageParts&quot; then
-&#9;&#9;&#9;&#9;return part
-&#9;&#9;&#9;elseif part.Name == basePlate.Name or part.Name == &quot;GarbageParts&quot; then
-&#9;&#9;&#9;&#9;return nil
-&#9;&#9;&#9;end
-&#9;&#9;&#9;part = part.Parent
-&#9;&#9;end
-&#9;else
-&#9;&#9;local origPart = part
-&#9;&#9;while part ~= nil do
-&#9;&#9;&#9;if part.className == &quot;Model&quot; then
-&#9;&#9;&#9;&#9;return part
-&#9;&#9;&#9;elseif part.Name == &quot;Workspace&quot; or part.Name == &quot;game&quot; then
-&#9;&#9;&#9;&#9;return origPart
-&#9;&#9;&#9;end
-&#9;&#9;&#9;part = part.Parent
-&#9;&#9;end
-&#9;end
-
-&#9;return nil
-end
-
-function createVisualAnnotation(part, guiMain)
-&#9;local selection = Instance.new(&quot;SelectionBox&quot;, guiMain)
-&#9;selection.Name = &quot;Annotation&quot;
-&#9;selection.Color = BrickColor.new(&quot;Lime green&quot;)
-&#9;selection.Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;selection.Adornee = part
-&#9;return selection
-end
-
-function isInteractivePart(obj)
-&#9;if obj == nil then return false end
-&#9;if obj:IsA(&quot;Part&quot;) then
-&#9;&#9;for idx, child in ipairs(obj:GetChildren()) do
-&#9;&#9;&#9;if child:IsA(&quot;CustomEvent&quot;) or child:IsA(&quot;CustomEventReceiver&quot;) then
-&#9;&#9;&#9;&#9;return true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return false
-end
-
-local function applyToInteractiveChildren(root_object, fn)
-&#9;for idx, child in ipairs(root_object:GetChildren()) do
-&#9;&#9;if isInteractivePart(child) then
-&#9;&#9;&#9;fn(child)
-&#9;&#9;elseif child:IsA(&quot;Model&quot;) then
-&#9;&#9;&#9;applyToInteractiveChildren(child, fn)
-&#9;&#9;end
-&#9;end
-end
-
-function applyToConnectorsWires(sourceOrSink, fn)
-&#9;if sourceOrSink:IsA(&quot;CustomEvent&quot;) then
-&#9;&#9;for idx, recv in ipairs(sourceOrSink:GetAttachedReceivers()) do
-&#9;&#9;&#9;fn(WIRE_LASSO_MAP[sourceOrSink][recv])
-&#9;&#9;end
-&#9;else
-&#9;&#9;for idx, source in ipairs(sourceOrSink:GetAttachedEvents()) do
-&#9;&#9;&#9;fn(WIRE_LASSO_MAP[source][sourceOrSink])
-&#9;&#9;end
-&#9;end
-end
-
-function warnNoWireableParts()
-&#9;local topHint = nil
-&#9;pcall(function() topHint = getPlayerGui().Gui.Hints.CenterHint end)
-&#9;
-&#9;if topHint then
-&#9;&#9;topHint.Add.Label.Value = &quot;No Wiring Parts!  Add Wiring Parts using the Stamper Tool.&quot;
-&#9;&#9;topHint.Add.Width.Value = 580
-&#9;&#9;topHint.Add.Time.Value = 10
-&#9;&#9;topHint.Add.Disabled = true  -- flip it off then on, in case it&apos;s currently running.
-&#9;&#9;topHint.Add.Disabled = false
-&#9;end
-end
-
-function warnNotClickingWireablePart()
-&#9;local topHint = getPlayerGui().Gui.Hints.CenterHint
-&#9;topHint.Add.Label.Value = &quot;This part isn&apos;t wireable :(&quot;
-&#9;topHint.Add.Width.Value = 580
-&#9;topHint.Add.Time.Value = 2
-&#9;topHint.Add.Disabled = true  -- flip it off then on, in case it&apos;s currently running.
-&#9;topHint.Add.Disabled = false
-end
-
---------------------------------------------------------------------------------
--- Screen messages (when source/sink is selected)
-
-function stylizeScreenMessageLabel(label, text)
-&#9;label.Text = text
-&#9;label.FontSize = Enum.FontSize.Size24
-&#9;label.Font = Enum.Font.ArialBold
-&#9;label.BackgroundTransparency = 1
-&#9;label.BorderSizePixel = 0
-&#9;label.Size = UDim2.new(0, label.TextBounds.x, 0, label.TextBounds.y)
-&#9;label.TextColor3 = Color3.new(1, 1, 1)
-end
-
-function createSourceIcon(parent, precedingText)
-&#9;local sourceIcon = Instance.new(&quot;ImageLabel&quot;, frame)
-&#9;sourceIcon.Archivable = false
-&#9;sourceIcon.Image = SOURCE_BUTTON_ICON_TEXTURE
-&#9;sourceIcon.Size = UDim2.new(0, 35, 0, 35)
-&#9;sourceIcon.BackgroundTransparency = 1
-&#9;sourceIcon.BorderSizePixel = 0
-&#9;sourceIcon.Position = UDim2.new(0,
-&#9;&#9;&#9;precedingText.Position.X.Offset + precedingText.TextBounds.x + 5,
-&#9;&#9;&#9;0, precedingText.Position.Y.Offset +
-&#9;&#9;&#9;&#9;((precedingText.Size.Y.Offset - sourceIcon.Size.Y.Offset) / 2))
-&#9;return sourceIcon
-end
-
-function createSinkIcon(parent, precedingText)
-&#9;local sinkIcon = Instance.new(&quot;ImageLabel&quot;, frame)
-&#9;sinkIcon.Archivable = false
-&#9;sinkIcon.Image = SINK_BUTTON_ICON_TEXTURE
-&#9;sinkIcon.Size = UDim2.new(0, 35, 0, 35)
-&#9;sinkIcon.BackgroundTransparency = 1
-&#9;sinkIcon.BorderSizePixel = 0
-&#9;sinkIcon.Position = UDim2.new(0,
-&#9;&#9;&#9;precedingText.Position.X.Offset + precedingText.TextBounds.x + 5,
-&#9;&#9;&#9;0, precedingText.Position.Y.Offset +
-&#9;&#9;&#9;&#9;((precedingText.Size.Y.Offset - sinkIcon.Size.Y.Offset) / 2))
-&#9;return sinkIcon
-end
-
-function addToAllXPositions(objs, offset)
-&#9;for idx, obj in ipairs(objs) do
-&#9;&#9;pos = obj.Position
-&#9;&#9;obj.Position = UDim2.new(0, pos.X.Offset + offset, 0, pos.Y.Offset)
-&#9;end
-end
-
-function showSourceScreenMessage(source)
-&#9;gui = Instance.new(&quot;ScreenGui&quot;, getPlayerGui())
-&#9;gui.Archivable = false
-&#9;frame = Instance.new(&quot;Frame&quot;, gui)
-&#9;frame.Archivable = false
-&#9;frame.Style = Enum.FrameStyle.RobloxRound
-
-&#9;local line1part1 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;line1part1.Archivable = false
-&#9;stylizeScreenMessageLabel(line1part1, &quot;Choose a&quot;)
-
-&#9;sinkIcon = createSinkIcon(frame, line1part1)
-&#9;
-&#9;line1part2 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;line1part2.Archivable = false
-&#9;stylizeScreenMessageLabel(line1part2, &quot;receiver to trigger when&quot;)
-&#9;line1part2.Position = UDim2.new(0,
-&#9;&#9;sinkIcon.Position.X.Offset + sinkIcon.Size.X.Offset + 5, 0, 0)
-
-&#9;line1height = math.max(sinkIcon.Size.Y.Offset, line1part1.Size.Y.Offset)
-
-&#9;line2part1 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;line2part1.Archivable = false
-&#9;stylizeScreenMessageLabel(line2part1, source.Parent.Name)
-&#9;line2part1.Position = UDim2.new(0, 0, 0, line1height)
-&#9;
-&#9;sourceIcon = createSourceIcon(frame, line2part1)
-
-&#9;line2part2 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;stylizeScreenMessageLabel(line2part2, &quot;signals &quot;)
-&#9;line2part2.Position = UDim2.new(0,
-&#9;&#9;sourceIcon.Position.X.Offset + sourceIcon.Size.X.Offset + 5,
-&#9;&#9;0, line2part1.Position.Y.Offset)
-
-&#9;line2part3 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;stylizeScreenMessageLabel(line2part3, source.Name)
-&#9;line2part3.TextColor3 = SOURCE_BUTTON_TEXT_COLOR
-&#9;line2part3.Position = UDim2.new(0,
-&#9;&#9;line2part2.Position.X.Offset + line2part2.Size.X.Offset,
-&#9;&#9;0, line2part1.Position.Y.Offset)
-
-&#9;-- re-center
-&#9;line1width = line1part2.Position.X.Offset + line1part2.Size.X.Offset
-&#9;line2width = line2part3.Position.X.Offset + line2part3.Size.X.Offset
-
-&#9;if line1width &gt; line2width then
-&#9;&#9;local halfDelta = (line1width - line2width) / 2
-&#9;&#9;addToAllXPositions({line2part1, sourceIcon, line2part2, line2part3}, halfDelta)
-&#9;else
-&#9;&#9;local halfDelta = (line2width - line1width) / 2
-&#9;&#9;addToAllXPositions({line1part1, sinkIcon, line1part2}, halfDelta)
-&#9;end
-
-&#9;frame.Size = UDim2.new(0, math.max(line1width, line2width) + 15,
-&#9;&#9;&#9;0, 2 * line1height + 5)
-&#9;frame.Position = UDim2.new(.5, -frame.Size.X.Offset/2, 0, 0)
-
-&#9;clearScreenMessage()
-&#9;SCREEN_MESSAGE = gui
-end
-
-function showSinkScreenMessage(sink)
-&#9;gui = Instance.new(&quot;ScreenGui&quot;, getPlayerGui())
-&#9;frame = Instance.new(&quot;Frame&quot;, gui)
-&#9;frame.Style = Enum.FrameStyle.RobloxRound
-
-&#9;local line1part1 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;stylizeScreenMessageLabel(line1part1, &quot;Choose which&quot;)
-
-&#9;local sourceIcon = createSourceIcon(frame, line1part1)
-&#9;
-&#9;line1part2 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;stylizeScreenMessageLabel(line1part2, &quot;signal will cause&quot;)
-&#9;line1part2.Position = UDim2.new(0,
-&#9;&#9;sourceIcon.Position.X.Offset + sourceIcon.Size.X.Offset + 5, 0, 0)
-
-&#9;local line1height = math.max(sourceIcon.Size.Y.Offset, line1part1.Size.Y.Offset)
-
-&#9;line2part1 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;stylizeScreenMessageLabel(line2part1, sink.Parent.Name .. &quot; to&quot;)
-&#9;line2part1.Position = UDim2.new(0, 0, 0, line1height)
-&#9;
-&#9;local sinkIcon = createSinkIcon(frame, line2part1)
-
-&#9;line2part2 = Instance.new(&quot;TextLabel&quot;, frame)
-&#9;stylizeScreenMessageLabel(line2part2, sink.Name)
-&#9;line2part2.TextColor3 = SINK_BUTTON_TEXT_COLOR
-&#9;line2part2.Position = UDim2.new(0,
-&#9;&#9;sinkIcon.Position.X.Offset + sinkIcon.Size.X.Offset,
-&#9;&#9;0, line2part1.Position.Y.Offset)
-
-&#9;-- re-center
-&#9;line1width = line1part2.Position.X.Offset + line1part2.Size.X.Offset
-&#9;line2width = line2part2.Position.X.Offset + line2part2.Size.X.Offset
-
-&#9;if line1width &gt; line2width then
-&#9;&#9;local halfDelta = (line1width - line2width) / 2
-&#9;&#9;addToAllXPositions({line2part1, sinkIcon, line2part2}, halfDelta)
-&#9;else
-&#9;&#9;local halfDelta = (line2width - line1width) / 2
-&#9;&#9;addToAllXPositions({line1part1, sourceIcon, line1part2}, halfDelta)
-&#9;end
-
-&#9;frame.Size = UDim2.new(0, math.max(line1width, line2width) + 15,
-&#9;&#9;&#9;0, 2 * line1height + 5)
-&#9;frame.Position = UDim2.new(.5, -frame.Size.X.Offset/2, 0, 0)
-
-&#9;clearScreenMessage()
-&#9;SCREEN_MESSAGE = gui
-end
-
---------------------------------------------------------------------------------
--- Hover
-
-function setPartWireTransparency(part, transparency, wireRadius, texture)
-&#9;for idx, child in ipairs(part:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;CustomEvent&quot;) then
-&#9;&#9;&#9;for idx2, recv in ipairs(child:GetAttachedReceivers()) do
-&#9;&#9;&#9;&#9;addWireUiIfNotAlreadyThere(child, recv)
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[child][recv].Transparency = transparency
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[child][recv].WireRadius = wireRadius
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[child][recv].Texture = texture
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[child][recv].Color = BrickColor.new(&quot;Really black&quot;)
-&#9;&#9;&#9;end
-&#9;&#9;elseif child:IsA(&quot;CustomEventReceiver&quot;) then
-&#9;&#9;&#9;for idx2, source in ipairs(child:GetAttachedEvents()) do
-&#9;&#9;&#9;&#9;addWireUiIfNotAlreadyThere(source, child)
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[source][child].Transparency = transparency
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[source][child].WireRadius = wireRadius
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[source][child].Texture = texture
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[source][child].Color = BrickColor.new(&quot;Really black&quot;)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function isConfigOpen()
-&#9;if game.Players.LocalPlayer.PlayerGui:FindFirstChild(&quot;ConfigGui&quot;) then
-&#9;&#9;return game.Players.LocalPlayer.PlayerGui.ConfigGui.Enabled
-&#9;end
-&#9;return false
-end
-
-function hoverListener(mouse)
-&#9;if isConfigOpen() then return end
-&#9;local part = mouse.Target
-&#9;if LAST_HOVERED_PART ~= part and
-&#9;&#9;&#9;findModel(LAST_HOVERED_PART) ~= findModel(part) then
-&#9;&#9;clearHover()
-&#9;&#9;if (KNOWN_SOURCE_PARTS[part] and SELECTED_SOURCE == nil) or
-&#9;&#9;&#9;(KNOWN_SINK_PARTS[part] and SELECTED_SINK == nil) then
-&#9;&#9;&#9;ANNOTATIONS[part].Transparency = 0
-&#9;&#9;&#9;ANNOTATIONS[part].Color = BrickColor.new(&quot;Lime green&quot;)
-&#9;&#9;&#9;LAST_HOVERED_PART = part
-&#9;&#9;&#9;buildScreenPanel(part, mouse.X, mouse.Y)
-&#9;&#9;&#9;setPartWireTransparency(part, 0, ENHANCED_WIRE_RADIUS, &quot;&quot;)
-&#9;&#9;else
-&#9;&#9;&#9;LAST_HOVERED_PART = nil
-&#9;&#9;end
-&#9;end
-end
-
---------------------------------------------------------------------------------
--- Connect / Disconnect dialog
-
-function addWireUiIfNotAlreadyThere(source, sink)
-&#9;if WIRE_LASSO_MAP[source] == nil then
-&#9;&#9;WIRE_LASSO_MAP[source] = {}
-&#9;end
-&#9;if WIRE_LASSO_MAP[source][sink] ~= nil then
-&#9;&#9;return
-&#9;end
-
-&#9;pairLasso = Instance.new(&quot;FloorWire&quot;, getPlayerGui())
-&#9;pairLasso.From = source.Parent
-&#9;pairLasso.To = sink.Parent
-&#9;pairLasso.Transparency = BASE_WIRE_TRANSPARENCY
-&#9;pairLasso.Texture = &quot;&quot;
-&#9;pairLasso.Name = WIRE_LASSO
-&#9;pairLasso.Color = BrickColor.new(&quot;Really black&quot;)
-&#9;WIRE_LASSO_MAP[source][sink] = pairLasso
-end
-
-function connectHelper(source, sink)
-&#9;-- clear wires coming to sink
-&#9;for idx, old_source in ipairs(sink:GetAttachedEvents()) do
-&#9;&#9;wire = WIRE_LASSO_MAP[old_source][sink]
-&#9;&#9;if wire ~= nil then
-&#9;&#9;&#9;wire:Remove()
-&#9;&#9;&#9;WIRE_LASSO_MAP[old_source][sink] = nil
-&#9;&#9;end
-&#9;&#9;old_source:Disconnect(sink)
-&#9;end
-
-&#9;source:Connect(sink)
-&#9;addWireUiIfNotAlreadyThere(source, sink)
-end
-
-function makeSourceConnectCallback(source)
-&#9;return function()
-&#9;&#9;clearHover()
-&#9;&#9;if SELECTED_SINK ~= nil then
-&#9;&#9;&#9;connectHelper(source, SELECTED_SINK)
-&#9;&#9;&#9;clearSelection()
-&#9;&#9;&#9;clearScreenMessage()
-&#9;&#9;&#9;for part, val in pairs(KNOWN_SINK_PARTS) do
-&#9;&#9;&#9;&#9;ANNOTATIONS[part].Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;&#9;end
-&#9;&#9;else
-&#9;&#9;&#9;SELECTED_SOURCE = source
-&#9;&#9;&#9;getLocalLasso().From = source.Parent
-&#9;&#9;&#9;getLocalLasso().To = game.Players.LocalPlayer.Character.Humanoid.Torso
-&#9;&#9;&#9;showSourceScreenMessage(SELECTED_SOURCE)
-&#9;&#9;&#9;for part, val in pairs(KNOWN_SOURCE_PARTS) do
-&#9;&#9;&#9;&#9;if not KNOWN_SINK_PARTS[part] then
-&#9;&#9;&#9;&#9;&#9;ANNOTATIONS[part].Transparency = 1
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function makeSinkConnectCallback(sink)
-&#9;return function()
-&#9;&#9;clearHover()
-&#9;&#9;if SELECTED_SOURCE ~= nil then
-&#9;&#9;&#9;connectHelper(SELECTED_SOURCE, sink)
-&#9;&#9;&#9;clearSelection()
-&#9;&#9;&#9;clearScreenMessage()
-&#9;&#9;&#9;for part, val in pairs(KNOWN_SOURCE_PARTS) do
-&#9;&#9;&#9;&#9;ANNOTATIONS[part].Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;&#9;end
-&#9;&#9;else
-&#9;&#9;&#9;SELECTED_SINK = sink
-&#9;&#9;&#9;getLocalLasso().From = game.Players.LocalPlayer.Character.Humanoid.Torso
-&#9;&#9;&#9;getLocalLasso().To = sink.Parent
-&#9;&#9;&#9;showSinkScreenMessage(SELECTED_SINK)
-&#9;&#9;&#9;for part, val in pairs(KNOWN_SINK_PARTS) do
-&#9;&#9;&#9;&#9;if not KNOWN_SOURCE_PARTS[part] then
-&#9;&#9;&#9;&#9;&#9;ANNOTATIONS[part].Transparency = 1
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function makeControlButton(y_position, frame, sourceOrSink, textColor, iconImage, iconHoverImage, callbackBuilder)
-&#9;local button = Instance.new(&quot;TextButton&quot;, frame)
-&#9;button.Position = UDim2.new(.025, 0, 0, y_position)
-&#9;button.Text = sourceOrSink.Name
-&#9;button.TextXAlignment = Enum.TextXAlignment.Left
-&#9;button.Style = Enum.ButtonStyle.Custom
-&#9;button.BorderSizePixel = 0
-&#9;button.BackgroundTransparency = 1
-&#9;button.BackgroundColor3 = Color3.new(0, 0 ,0)
-&#9;button.TextColor3 = textColor
-&#9;button.Font = Enum.Font.ArialBold
-&#9;button.FontSize = Enum.FontSize.Size18
-&#9;button.Size = UDim2.new(.95, 0, 0, button.TextBounds.y)
-&#9;
-&#9;local icon = Instance.new(&quot;ImageLabel&quot;, button)
-&#9;icon.Image = iconImage
-&#9;icon.Position = UDim2.new(0, button.TextBounds.x + 10, 0, -8)
-&#9;icon.Size = UDim2.new(0, 35, 0 , 35)
-&#9;icon.BackgroundTransparency = 1
-
-&#9;button.MouseEnter:connect(function()
-&#9;&#9;applyToConnectorsWires(sourceOrSink, function(wire)
-&#9;&#9;&#9;wire.Texture = WIRE_TEXTURE
-&#9;&#9;&#9;wire.Velocity = 2
-&#9;&#9;end)
-&#9;&#9;button.BackgroundTransparency = 0
-&#9;&#9;button.TextColor3 = BUTTON_HOVER_TEXT_COLOR
-&#9;&#9;icon.Image = iconHoverImage
-&#9;end)
-&#9;local leaveCallback = function()
-&#9;&#9;applyToConnectorsWires(sourceOrSink, function(wire)
-&#9;&#9;&#9;wire.Texture = &quot;&quot;
-&#9;&#9;end)
-&#9;&#9;button.BackgroundTransparency = 1
-&#9;&#9;button.TextColor3 = textColor
-&#9;&#9;icon.Image = iconImage
-&#9;end
-&#9;button.MouseLeave:connect(leaveCallback)
-&#9;button.MouseButton1Click:connect(function()
-&#9;&#9;callbackBuilder(sourceOrSink)()
-&#9;&#9;leaveCallback()
-&#9;end)
-&#9;return button
-end
-
-function makeDisconnectCallback(source, sink)
-&#9;return function()
-&#9;&#9;clearHover()
-&#9;&#9;source:Disconnect(sink)
-&#9;&#9;if WIRE_LASSO_MAP[source] ~= nil then
-&#9;&#9;&#9;lassoUi = WIRE_LASSO_MAP[source][sink]
-&#9;&#9;&#9;if lassoUi ~= nil then
-&#9;&#9;&#9;&#9;lassoUi:Remove()
-&#9;&#9;&#9;&#9;WIRE_LASSO_MAP[source][sink] = nil
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function makeDisconnectButton(y_position, frame, localConnector, foreignConnector, textColor, iconImage)
-&#9;local source = nil
-&#9;local sink = nil
-&#9;if localConnector:IsA(&quot;CustomEvent&quot;) then
-&#9;&#9;source = localConnector
-&#9;&#9;sink = foreignConnector
-&#9;else
-&#9;&#9;source = foreignConnector
-&#9;&#9;sink = localConnector
-&#9;end
-
-&#9;local button = Instance.new(&quot;TextButton&quot;, frame)
-&#9;button.Position = UDim2.new(0, 17, 0, y_position)
-&#9;button.Text = foreignConnector.Name .. &quot; (&quot; .. foreignConnector.Parent.Name .. &quot;)&quot; 
-&#9;button.TextXAlignment = Enum.TextXAlignment.Left
-&#9;button.Style = Enum.ButtonStyle.Custom
-&#9;button.BackgroundTransparency = 1
-&#9;button.BackgroundColor3 = Color3.new(0, 0 ,0)
-&#9;button.TextColor3 = textColor
-&#9;button.BorderSizePixel = 0
-&#9;button.Font = Enum.Font.Arial
-&#9;button.FontSize = Enum.FontSize.Size18
-&#9;button.Size = UDim2.new(.95, -10, 0, button.TextBounds.y + 2)
-&#9;
-&#9;local icon = Instance.new(&quot;ImageLabel&quot;, button)
-&#9;icon.Image = iconImage
-&#9;icon.Parent = button
-&#9;icon.Position = UDim2.new(0, button.TextBounds.x + 10, 0, 2)
-&#9;icon.Size = UDim2.new(0, 15, 0 , 15)
-&#9;icon.BackgroundTransparency = 1
-
-&#9;button.MouseButton1Click:connect(makeDisconnectCallback(source, sink))
-&#9;button.MouseEnter:connect(function()
-&#9;&#9;button.BackgroundTransparency = 0
-&#9;&#9;button.TextColor3 = BUTTON_HOVER_TEXT_COLOR
-&#9;&#9;icon.Image = DISCONNECT_ICON_HOVER_TEXTURE
-&#9;&#9;WIRE_LASSO_MAP[source][sink].Color = BrickColor.new(&quot;Really red&quot;)
-&#9;end)
-&#9;button.MouseLeave:connect(function()
-&#9;&#9;button.BackgroundTransparency = 1
-&#9;&#9;button.TextColor3 = textColor
-&#9;&#9;icon.Image = iconImage
-&#9;&#9;WIRE_LASSO_MAP[source][sink].Color = BrickColor.new(&quot;Really black&quot;)
-&#9;end)
-
-&#9;return button
-end
-
-function buildScreenPanel(part, x, y)
-&#9;sources = {}
-&#9;sinks = {}
-&#9;for idx, child in ipairs(part:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;CustomEvent&quot;) then
-&#9;&#9;&#9;table.insert(sources, child)
-&#9;&#9;elseif child:IsA(&quot;CustomEventReceiver&quot;) then
-&#9;&#9;&#9;table.insert(sinks, child)
-&#9;&#9;end
-&#9;end
-
-&#9;local gui = nil
-&#9;local mouseFrame = nil
-&#9;if USE_BILLBOARD_GUI then
-&#9;&#9;gui = Instance.new(&quot;BillboardGui&quot;, getPlayerGui())
-&#9;&#9;gui.Name = &quot;WiringGui&quot;
-&#9;&#9;gui.StudsOffset = Vector3.new(0, 1.5, 0)
-&#9;&#9;gui.ExtentsOffset = Vector3.new(0, 1, 0)
-&#9;&#9;gui.Adornee = part
-&#9;&#9;gui.Active = true
-&#9;else 
-&#9;&#9;gui = Instance.new(&quot;ScreenGui&quot;, getPlayerGui())
-&#9;end
-
-&#9;frame = Instance.new(&quot;Frame&quot;, gui)
-&#9;frame.Style = Enum.FrameStyle.RobloxRound
-&#9;frame.Active = true
-
-&#9;local maxWidth = 0
-&#9;local y_position = 5
-
-&#9;if SELECTED_SOURCE == nil then
-&#9;&#9;for idx, source in ipairs(sources) do
-&#9;&#9;&#9;button = makeControlButton(y_position, frame, source, SOURCE_BUTTON_TEXT_COLOR,
-&#9;&#9;&#9;&#9;&#9;SOURCE_BUTTON_ICON_TEXTURE, SOURCE_BUTTON_ICON_HOVER_TEXTURE,
-&#9;&#9;&#9;&#9;&#9;makeSourceConnectCallback)
-&#9;&#9;&#9;maxWidth = math.max(1.25 * (button.TextBounds.x + BUTTON_ICON_WIDTH), maxWidth)
-&#9;&#9;&#9;y_position = y_position + button.TextBounds.y
-
-&#9;&#9;&#9;receivers = source:GetAttachedReceivers()
-&#9;&#9;&#9;for sub_idx, receiver in ipairs(receivers) do
-&#9;&#9;&#9;&#9;y_position = y_position + 2
-&#9;&#9;&#9;&#9;addWireUiIfNotAlreadyThere(source, receiver)
-&#9;&#9;&#9;&#9;button = makeDisconnectButton(y_position, frame, source, receiver,
-&#9;&#9;&#9;&#9;&#9;SOURCE_BUTTON_TEXT_COLOR, DISCONNECT_SOURCE_ICON_TEXTURE)
-&#9;&#9;&#9;&#9;y_position = y_position + button.TextBounds.y
-&#9;&#9;&#9;&#9;maxWidth = math.max(1.15 * (button.TextBounds.x + 17 + 25), maxWidth)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;y_position = y_position + 5
-&#9;&#9;end
-&#9;end
-
-&#9;if SELECTED_SINK == nil then
-&#9;&#9;for idx, sink in ipairs(sinks) do
-&#9;&#9;&#9;button = makeControlButton(y_position, frame, sink, SINK_BUTTON_TEXT_COLOR,
-&#9;&#9;&#9;&#9;&#9;SINK_BUTTON_ICON_TEXTURE, SINK_BUTTON_ICON_HOVER_TEXTURE,
-&#9;&#9;&#9;&#9;&#9;makeSinkConnectCallback)
-&#9;&#9;&#9;maxWidth = math.max(1.25 * (button.TextBounds.x + BUTTON_ICON_WIDTH), maxWidth)
-&#9;&#9;&#9;y_position = y_position + button.TextBounds.y
-
-&#9;&#9;&#9;senders = sink:GetAttachedEvents()
-&#9;&#9;&#9;for sub_idx, sender in ipairs(senders) do
-&#9;&#9;&#9;&#9;y_position = y_position + 2
-&#9;&#9;&#9;&#9;-- addWire takes source first
-&#9;&#9;&#9;&#9;addWireUiIfNotAlreadyThere(sender, sink)
-&#9;&#9;&#9;&#9;button = makeDisconnectButton(y_position, frame, sink, sender,
-&#9;&#9;&#9;&#9;&#9;SINK_BUTTON_TEXT_COLOR, DISCONNECT_SINK_ICON_TEXTURE)
-&#9;&#9;&#9;&#9;y_position = y_position + button.TextBounds.y
-&#9;&#9;&#9;&#9;maxWidth = math.max(1.15 * (button.TextBounds.x + 17 + 25), maxWidth)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;y_position = y_position + 5
-&#9;&#9;end
-&#9;end
-
-&#9;-- set size and position
-&#9;if not getPlayerGui():FindFirstChild(&quot;ScreenGui&quot;) then
-&#9;&#9;local screenGui = Instance.new(&quot;ScreenGui&quot;)
-&#9;&#9;screenGui.Parent = getPlayerGui()
-&#9;end
-
-&#9;local screenSize = getPlayerGui().ScreenGui.AbsoluteSize
-&#9;local menuWidth = maxWidth
-&#9;local menuHeight = y_position + 17.5
-&#9;if USE_BILLBOARD_GUI then
-
-&#9;&#9;gui.Size = UDim2.new(0, menuWidth, 0, menuHeight + 150)
-&#9;&#9;gui.SizeOffset = Vector2.new(0, -50.0 / (menuHeight + 150));
-&#9;&#9;
-&#9;&#9;local tail = Instance.new(&quot;ImageLabel&quot;, frame)
-&#9;&#9;tail.Size = UDim2.new(0, 32, 0, 32)
-&#9;&#9;tail.Position = UDim2.new(.5, -16, 1, 8)
-&#9;&#9;tail.Image = TAIL_TEXTURE
-&#9;&#9;tail.BackgroundTransparency = 1
-&#9;&#9;tail.Visible = true
-
-&#9;&#9;f = Instance.new(&quot;Frame&quot;, gui)
-&#9;&#9;f.Size = UDim2.new(1, 0, 1, 0)
-&#9;&#9;f.BackgroundTransparency = 1
-&#9;&#9;f.ZIndex = -1
-&#9;&#9;f.Active = true
-&#9;else
-&#9;&#9;x = math.min(x - 9, screenSize.x - menuWidth) 
-&#9;&#9;y = math.min(y - 9, screenSize.y - menuHeight)
-&#9;&#9;frame.Position = UDim2.new(0, x, 0, y)
-&#9;end
-
-&#9;frame.Size = UDim2.new(0, menuWidth, 0, menuHeight)
-
-&#9;WIRING_PANEL_MAP[part] = gui
-end
-
---------------------------------------------------------------------------------
--- Tool.Equipped/Unequipped
-
-Tool.Equipped:connect(function(mouse)
-&#9;playerGui = getPlayerGui()
-&#9;local interactiveCount = 0
-&#9;
-&#9;local root
-&#9;if script.Parent.IsRestricted.Value then
-&#9;&#9;root = findMyBasePlate()
-&#9;else
-&#9;&#9;root = game.Workspace
-&#9;end
-
-&#9;applyToInteractiveChildren(root, function(part)
-&#9;&#9;ANNOTATIONS[part] = createVisualAnnotation(part, playerGui)
-&#9;&#9;interactiveCount = interactiveCount + 1
-&#9;&#9;for idx, child in ipairs(part:GetChildren()) do
-&#9;&#9;&#9;if child:IsA(&quot;CustomEvent&quot;) then
-&#9;&#9;&#9;&#9;KNOWN_SOURCE_PARTS[part] = true
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if child:IsA(&quot;CustomEventReceiver&quot;) then
-&#9;&#9;&#9;&#9;KNOWN_SINK_PARTS[part] = true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;setPartWireTransparency(part, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
-&#9;end)
-
-&#9;if interactiveCount == 0 then
-&#9;&#9;warnNoWireableParts()
-&#9;end
-
-&#9;getLocalLasso().Texture = WIRE_TEXTURE
-&#9;getLocalLasso().WireRadius = ENHANCED_WIRE_RADIUS
-&#9;clearSelection()
-
-&#9;if script.Parent.IsRestricted.Value then
-&#9;&#9;mouse.TargetFilter = game.Workspace.BaseplateBumpers
-&#9;end
-
-&#9;mouse.Move:connect(function() hoverListener(mouse) end)
-&#9;mouse.Button1Down:connect(function()
-&#9;&#9;if LAST_HOVERED_PART ~= nil then return end
-
-&#9;&#9;clearSelection()
-&#9;&#9;clearScreenMessage()
-&#9;&#9;clearHover()
-&#9;&#9;local annotationCount = 0
-&#9;&#9;for part, annotation in pairs(ANNOTATIONS) do
-&#9;&#9;&#9;annotation.Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;&#9;annotationCount = annotationCount + 1
-&#9;&#9;end
-&#9;&#9;if annotationCount == 0 then
-&#9;&#9;&#9;warnNoWireableParts()
-&#9;&#9;elseif time() - LAST_CLICK_TIME &lt; CLICK_HELP_TIME_DELTA then
-&#9;&#9;&#9;warnNotClickingWireablePart()
-&#9;&#9;end
-&#9;&#9;LAST_CLICK_TIME = time()
-&#9;end)
-&#9;-- TODO: onkeydown/onmouse2down, prevent hover from triggering
-&#9;-- until the up event comes
-&#9;LAST_HOVERED_PART = nil
-end)
-
-Tool.Unequipped:connect(function()
-&#9;playerGui = getPlayerGui()
-
-&#9;if playerGui:FindFirstChild(&quot;Gui&quot;) then
-&#9;&#9;local centerHint = getPlayerGui().Gui.Hints.CenterHint
-&#9;&#9;centerHint.Delete.Disabled = false
-&#9;end
-
-&#9;-- TODO: simplify these side effects
-&#9;-- call clearHover before removing annotations, because
-&#9;-- clear hover resets annotation boxes. Also before clearing
-&#9;-- lassos because this may create lassos
-&#9;clearHover()
-
-&#9;for part, gui in pairs(WIRING_PANEL_MAP) do
-&#9;&#9;if gui then gui:Remove() end
-&#9;end
-&#9;WIRING_PANEL_MAP = {}
-
-&#9;for source, submap in pairs(WIRE_LASSO_MAP) do
-&#9;&#9;for sink, wire in pairs(submap) do
-&#9;&#9;&#9;wire:Remove()
-&#9;&#9;end
-&#9;end
-&#9;WIRE_LASSO_MAP = {}
-
-&#9;for k,box in pairs(ANNOTATIONS) do
-&#9;&#9;box:Remove()
-&#9;end
-&#9;ANNOTATIONS = {}
-
-&#9;KNOWN_SOURCE_PARTS = {}
-&#9;KNOWN_SINK_PARTS = {}
-
-&#9;clearSelection()
-&#9;clearScreenMessage()
-&#9;LAST_HOVERED_PART = nil
-end)
-
-</ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
