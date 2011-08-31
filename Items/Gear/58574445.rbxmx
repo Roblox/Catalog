@@ -36,14 +36,14 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.03999996</X>
-					<Y>13.915</Y>
+					<X>-1.25999963</X>
+					<Y>14.1850004</Y>
 					<Z>0.874999762</Z>
-					<R00>-1</R00>
+					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
-					<R11>-1</R11>
+					<R11>1</R11>
 					<R12>0</R12>
 					<R20>0</R20>
 					<R21>0</R21>
@@ -179,7 +179,7 @@
 --- PRELOAD ASSETS OYUS -- 
 
 Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=58449099&quot;) -- Background
-Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=58344744&quot;)
+Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=58344744&quot;) -- ??
 Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=58461425&quot;) -- Character
 Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=58462272&quot;) -- Character inverse
 Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=58512337&quot;) -- Projectile
@@ -214,7 +214,7 @@ local myHumanoid
 
 -- Game Toggle
 local gameStillOn
-local gameDuration = 480 -- 6 minutes to finish the game
+local gameDuration = 480 -- 8 minutes to finish the game
 
 -- Coroutines
 local co
@@ -240,7 +240,7 @@ local cloudAssets = {58482096, 58482106, 58482119, 58482126}
 local projectileSound
 local bossSound
 local screamSound 
---
+
 -- Platforms
 local maxPlatforms = 7 -- lets cap it at 7, since that&apos;s my favorite number
 local minPlatforms = 3 -- 3 sounds fine to me
@@ -272,6 +272,7 @@ local backwards = false
 local falling = false
 local jumping = false
 local firing = false
+local forcefield  -- To stop spawnKill
 local stopFall
 
 -- Projectile
@@ -296,846 +297,845 @@ local enemies = {}
 --------------------------------------------------- OOP STUFF(NOT COMPLETE) ----------------------------------
 
 local World = {} -- Ideally, I want all of the code to be a part of the World class i.e. table
-function World:Update() -- Updating the world	
-	setCharacterVelocity()
-	--projectileCharMovement()
-	simulateCharacterPhysics()
-	-- Animation
-	-- AI	
-	moveCharacter()
+function World:Update() -- Updating the world&#9;
+&#9;setCharacterVelocity()
+&#9;--projectileCharMovement()
+&#9;simulateCharacterPhysics()
+&#9;-- Animation
+&#9;-- AI&#9;
+&#9;moveCharacter()
 end 
 --------------------------------------------------- PHYSICS ---------------------------------------------------
 
 -- Box Collision Detection
 -- Returns if collision can occur
-function checkForCollision(worldObject, currentObject, offset)	-- OMG -- 
-	local leftMostCurrentObjectX = currentObject.Position.X.Scale + offset.X
-	local rightMostCurrentObjectX = currentObject.Position.X.Scale + (5 * currentObject.Size.X.Scale/7) + offset.X
-	local topMostCurrentObjectY = currentObject.Position.Y.Scale --[[]] + (2 * currentObject.Size.Y.Scale/7)  + offset.Y
-	local bottomMostCurrentObjectY = currentObject.Position.Y.Scale + (5 * currentObject.Size.Y.Scale/7) + offset.Y
-	local leftMostWorldObjectX = worldObject.Position.X.Scale
-	local rightMostWorldObjectX = worldObject.Position.X.Scale + worldObject.Size.X.Scale
-	local topMostWorldObjectY = worldObject.Position.Y.Scale
-	local bottomMostWorldObjectY = worldObject.Position.Y.Scale + worldObject.Size.Y.Scale
+function checkForCollision(worldObject, currentObject, offset)&#9;-- OMG -- 
+&#9;local leftMostCurrentObjectX = currentObject.Position.X.Scale + offset.X
+&#9;local rightMostCurrentObjectX = currentObject.Position.X.Scale + (5 * currentObject.Size.X.Scale/7) + offset.X
+&#9;local topMostCurrentObjectY = currentObject.Position.Y.Scale --[[]] + (2 * currentObject.Size.Y.Scale/7)  + offset.Y
+&#9;local bottomMostCurrentObjectY = currentObject.Position.Y.Scale + (5 * currentObject.Size.Y.Scale/7) + offset.Y
+&#9;local leftMostWorldObjectX = worldObject.Position.X.Scale
+&#9;local rightMostWorldObjectX = worldObject.Position.X.Scale + worldObject.Size.X.Scale
+&#9;local topMostWorldObjectY = worldObject.Position.Y.Scale
+&#9;local bottomMostWorldObjectY = worldObject.Position.Y.Scale + worldObject.Size.Y.Scale
 
-	if (rightMostCurrentObjectX &gt; leftMostWorldObjectX) and (bottomMostCurrentObjectY &gt; topMostWorldObjectY) 
-		and (rightMostWorldObjectX &gt; leftMostCurrentObjectX) and (bottomMostWorldObjectY &gt; topMostCurrentObjectY) then		
-		return true
-	else 
-		return false
-	end	
+&#9;if (rightMostCurrentObjectX &gt; leftMostWorldObjectX) and (bottomMostCurrentObjectY &gt; topMostWorldObjectY) 
+&#9;&#9;and (rightMostWorldObjectX &gt; leftMostCurrentObjectX) and (bottomMostWorldObjectY &gt; topMostCurrentObjectY) then&#9;&#9;
+&#9;&#9;return true
+&#9;else 
+&#9;&#9;return false
+&#9;end&#9;
 end
 
 -- Steps through the array of physics objects, and computes necessary collision
 -- Very basic at the moment
 -- Add a space partition perhaps? buckets? 
-function simulateCharacterPhysics()	
-	stopFall = false
-	if #physicsObjects &gt; 0 then 
-		if #movableObjects &gt; 0 then 
-			for i = 1, #movableObjects do 
-				for j = 1, #physicsObjects do 
-					if physicsObjects[j] ~= movableObjects[i] then						
-						collidedX = checkForCollision(physicsObjects[j], movableObjects[i], Vector2.new(velocity.X, 0))						
-						collidedY = checkForCollision(physicsObjects[j], movableObjects[i], Vector2.new(0, velocity.Y))
-						if collidedX then velocity = Vector2.new(0, velocity.Y) end
-						if collidedY then 
-							if velocity.Y &lt; 0 then
-								velocity = Vector2.new(velocity.X, 0)
-							elseif velocity.Y &gt; 0 then
-								velocity = Vector2.new(velocity.X, 0)
-								stopFall = true
-								basePlatform = physicsObjects[j]
-								if basePlatform == endScreenPlatform then 									
-									if worldScrolling == false then
-										worldScrolling = true 
-										coroutine.resume(coroutine.create(scrollWorld))
-									end
-								end
-								falling = false
-							end
-						end
-					end					
-				end
-				if not stopFall then 
-					falling  = true 					
-				end				
-			end			
-		end
-	end
-	collided = false
+function simulateCharacterPhysics()&#9;
+&#9;stopFall = false
+&#9;if #physicsObjects &gt; 0 then 
+&#9;&#9;if #movableObjects &gt; 0 then 
+&#9;&#9;&#9;for i = 1, #movableObjects do 
+&#9;&#9;&#9;&#9;for j = 1, #physicsObjects do 
+&#9;&#9;&#9;&#9;&#9;if physicsObjects[j] ~= movableObjects[i] then&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;collidedX = checkForCollision(physicsObjects[j], movableObjects[i], Vector2.new(velocity.X, 0))&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;collidedY = checkForCollision(physicsObjects[j], movableObjects[i], Vector2.new(0, velocity.Y))
+&#9;&#9;&#9;&#9;&#9;&#9;if collidedX then velocity = Vector2.new(0, velocity.Y) end
+&#9;&#9;&#9;&#9;&#9;&#9;if collidedY then 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if velocity.Y &lt; 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;velocity = Vector2.new(velocity.X, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;elseif velocity.Y &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;velocity = Vector2.new(velocity.X, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;stopFall = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;basePlatform = physicsObjects[j]
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if basePlatform == endScreenPlatform then &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if worldScrolling == false then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;worldScrolling = true 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;coroutine.resume(coroutine.create(scrollWorld))
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;falling = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if not stopFall then 
+&#9;&#9;&#9;&#9;&#9;falling  = true &#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;end&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;end&#9;&#9;&#9;
+&#9;&#9;end
+&#9;end
+&#9;collided = false
 end  
 
-function fallAcceleration()	
-	while falling do
-		gravity = gravity + 2 * gravity * wait()		
-		wait()
-	end
-	gravity = 0.00576
-	accelerateBool = false
+function fallAcceleration()&#9;
+&#9;while falling do
+&#9;&#9;gravity = gravity + 2 * gravity * wait()&#9;&#9;
+&#9;&#9;wait()
+&#9;end
+&#9;gravity = 0.00384
+&#9;accelerateBool = false
 end  
 
 ------------------------------------------------------------------------------------------------------ 
 
 -- To reset the RPG back to its original state and to enable the tool
 function waitUntilDone()
-	while gameStillOn do
-		wait(1)
-	end
-	destroyGameInterface()
-	RPG.Transparency = 0.0
-	Tool.Enabled = true
+&#9;while gameStillOn do
+&#9;&#9;wait(1)
+&#9;end
+&#9;destroyGameInterface()
+&#9;RPG.Transparency = 0.0
+&#9;Tool.Enabled = true
 end
 
 ----------------------------------------------- ANIMATIONS --------------------------------------------
 
 function linearAnimate(layer, sign)
-	local defaultPos = layer.Position 
-	while layer do 		
-		layer.Position = UDim2.new(layer.Position.X.Scale + sign * 0.005, 0, layer.Position.Y.Scale, 0)
-		sign = sign * -1
-		wait()
-	end
+&#9;local defaultPos = layer.Position 
+&#9;while layer do &#9;&#9;
+&#9;&#9;layer.Position = UDim2.new(layer.Position.X.Scale + sign * 0.005, 0, layer.Position.Y.Scale, 0)
+&#9;&#9;sign = sign * -1
+&#9;&#9;wait()
+&#9;end
 end
 
-function animateClouds()	
-	while #cloudsLeft &gt; 0 and #cloudsRight &gt; 0 do 		
-		for i = 1, #cloudsLeft do 			
-			tick()
-			if cloudsLeft[i].Position.X.Scale &gt; 0.94 then				
-				cloudsLeft[i].Position = UDim2.new(0.04, 0, math.random(5, 15)/100, 0)
-			else
-				cloudsLeft[i].Position = cloudsLeft[i].Position + UDim2.new(math.random(3, 5)/1000, 0, 0, 0)
-			end
-		end
-		for i = 1, #cloudsRight do 			
-			tick()
-			if cloudsRight[i].Position.X.Scale &lt; 0.02 then				
-				cloudsRight[i].Position = UDim2.new(0.98, 0, math.random(5, 15)/100, 0)
-			else
-				cloudsRight[i].Position = cloudsRight[i].Position + UDim2.new(-math.random(4, 6)/1000, 0, 0, 0)
-			end
-		end
-		wait(0.25) 
-	end
+function animateClouds()&#9;
+&#9;while #cloudsLeft &gt; 0 and #cloudsRight &gt; 0 do &#9;&#9;
+&#9;&#9;for i = 1, #cloudsLeft do &#9;&#9;&#9;
+&#9;&#9;&#9;tick()
+&#9;&#9;&#9;if cloudsLeft[i].Position.X.Scale &gt; 0.94 then&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;cloudsLeft[i].Position = UDim2.new(0.04, 0, math.random(5, 15)/100, 0)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;cloudsLeft[i].Position = cloudsLeft[i].Position + UDim2.new(math.random(3, 5)/1000, 0, 0, 0)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for i = 1, #cloudsRight do &#9;&#9;&#9;
+&#9;&#9;&#9;tick()
+&#9;&#9;&#9;if cloudsRight[i].Position.X.Scale &lt; 0.02 then&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;cloudsRight[i].Position = UDim2.new(0.98, 0, math.random(5, 15)/100, 0)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;cloudsRight[i].Position = cloudsRight[i].Position + UDim2.new(-math.random(4, 6)/1000, 0, 0, 0)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(0.25) 
+&#9;end
 end
 
 function waveAnimate(waveLayer, waveLayer2)
-	local offset = 0.025 
-	local sign = 1 
-	while waveLayer and waveLayer2 do
-		waveLayer.Position = waveLayer.Position +UDim2.new(0, 0, offset * sign, 0)
-		--waveLayer2.Position = waveLayer2.Position + UDim2.new(0, 0, offset * - sign, 0)
-		sign = sign * - 1
-		wait(0.25)
-	end
+&#9;local offset = 0.025 
+&#9;local sign = 1 
+&#9;while waveLayer and waveLayer2 do
+&#9;&#9;waveLayer.Position = waveLayer.Position +UDim2.new(0, 0, offset * sign, 0)
+&#9;&#9;--waveLayer2.Position = waveLayer2.Position + UDim2.new(0, 0, offset * - sign, 0)
+&#9;&#9;sign = sign * - 1
+&#9;&#9;wait(0.25)
+&#9;end
 end
 
 --------------------------------------------------- SCROLL WORLD ---------------------------------------
-function scrollWorld()	
-	for i = 1, #enemies do enemies[i]:Remove() enemies[i] = nil end
-	enemies = {}
-	while endScreenPlatform.Position.X.Scale &gt; 0.07 do 		
-		for i = 1, #platforms do
-			if platforms[i] then
-				platforms[i].Position = platforms[i].Position - UDim2.new(0.01, 0, 0, 0)
-			end
-			if platforms[i] == endScreenPlatform then
-				gameChar.Position = gameChar.Position - UDim2.new(0.01, 0, 0, 0)
-			end
-			if platforms[i] and platforms[i] ~= endScreenPlatform and platforms[i].Position.X.Scale &lt;= 0 then 				
-				platforms[i]:Remove()				
-				table.remove(platforms, i)
-			end			
-		end	
-		wait(0.1)
-	end
-	if seaMonster then seaMonster:Remove() seaMonster = nil end
-	spawnPlatform = endScreenPlatform
-	spawnPlatform.Name = &quot;Spawn Platform&quot;
-	endScreenPlatform = nil 
-	worldScrolling = false			
-	createPlatforms()		
+function scrollWorld()&#9;
+&#9;for i = 1, #enemies do enemies[i]:Remove() enemies[i] = nil end
+&#9;enemies = {}
+&#9;while endScreenPlatform.Position.X.Scale &gt; 0.07 do &#9;&#9;
+&#9;&#9;for i = 1, #platforms do
+&#9;&#9;&#9;if platforms[i] then
+&#9;&#9;&#9;&#9;platforms[i].Position = platforms[i].Position - UDim2.new(0.01, 0, 0, 0)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if platforms[i] == endScreenPlatform then
+&#9;&#9;&#9;&#9;gameChar.Position = gameChar.Position - UDim2.new(0.01, 0, 0, 0)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if platforms[i] and platforms[i] ~= endScreenPlatform and platforms[i].Position.X.Scale &lt;= 0 then &#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;platforms[i]:Remove()&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;table.remove(platforms, i)
+&#9;&#9;&#9;end&#9;&#9;&#9;
+&#9;&#9;end&#9;
+&#9;&#9;wait(0.1)
+&#9;end
+&#9;if seaMonster then seaMonster:Remove() seaMonster = nil end
+&#9;spawnPlatform = endScreenPlatform
+&#9;spawnPlatform.Name = &quot;Spawn Platform&quot;
+&#9;endScreenPlatform = nil 
+&#9;worldScrolling = false&#9;&#9;&#9;
+&#9;createPlatforms()&#9;&#9;
 end
 
 ----------------------------------------------- AI(OYUS!) ----------------------------------------------
 
-function followChar(seaMonster)			
-	while seaMonster and gameChar do		
-		local direction = Vector2.new(gameChar.Position.X.Scale - seaMonster.Position.X.Scale + (gameChar.Size.X.Scale/2.0 - seaMonster.Size.X.Scale/2.0), 0).unit
-		seaMonster.Position = seaMonster.Position + UDim2.new(direction.X * 0.03, 0, 0, 0)
-		wait(0.25)
-	end
+function followChar(seaMonster)&#9;&#9;&#9;
+&#9;while seaMonster and gameChar do&#9;&#9;
+&#9;&#9;local direction = Vector2.new(gameChar.Position.X.Scale - seaMonster.Position.X.Scale + (gameChar.Size.X.Scale/2.0 - seaMonster.Size.X.Scale/2.0), 0).unit
+&#9;&#9;seaMonster.Position = seaMonster.Position + UDim2.new(direction.X * 0.03, 0, 0, 0)
+&#9;&#9;wait(0.25)
+&#9;end
 end
 
-function shoot(direction, ball)	
-	local collision
-	while ball do 			
-		ball.Position = ball.Position + UDim2.new((direction.X * 0.035) , 0, (direction.Y * 0.035) ,0) 		
-		if ball.Position.X.Scale &gt;= 1 or ball.Position.X.Scale &lt;= 0 or ball.Position.Y.Scale &gt;= 1 or ball.Position.Y.Scale &lt;= 0 then
-			ball:Remove() 
-			ball = nil
-		end
-		if ball then
-			for i = 1, #physicsObjects do 
-				if ball then
-					local collision = checkForCollision(physicsObjects[i], ball, Vector2.new(0, 0))
-					if collision then ball:Remove() ball = nil end 
-				end
-			end		
-			if ball and gameChar then collision = checkForCollision(gameChar, ball, Vector2.new(0, 0)) end
-			if collision and gameChar then 					
-				killCharacter = true
-				if ball then 
-					ball:Remove() 
-					ball = nil
-				end
-			end		
-		end
-		wait(0.125)		
-	end	
+function shoot(direction, ball)&#9;
+&#9;local collision
+&#9;while ball do &#9;&#9;&#9;
+&#9;&#9;ball.Position = ball.Position + UDim2.new((direction.X * 0.035) , 0, (direction.Y * 0.035) ,0) &#9;&#9;
+&#9;&#9;if ball.Position.X.Scale &gt;= 1 or ball.Position.X.Scale &lt;= 0 or ball.Position.Y.Scale &gt;= 1 or ball.Position.Y.Scale &lt;= 0 then
+&#9;&#9;&#9;ball:Remove() 
+&#9;&#9;&#9;ball = nil
+&#9;&#9;end
+&#9;&#9;if ball then
+&#9;&#9;&#9;for i = 1, #physicsObjects do 
+&#9;&#9;&#9;&#9;if ball then
+&#9;&#9;&#9;&#9;&#9;local collision = checkForCollision(physicsObjects[i], ball, Vector2.new(0, 0))
+&#9;&#9;&#9;&#9;&#9;if collision then ball:Remove() ball = nil end 
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end&#9;&#9;
+&#9;&#9;&#9;if ball and gameChar then collision = checkForCollision(gameChar, ball, Vector2.new(0, 0)) end
+&#9;&#9;&#9;if collision and gameChar and forcefield then &#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;killCharacter = true
+&#9;&#9;&#9;&#9;if ball then 
+&#9;&#9;&#9;&#9;&#9;ball:Remove() 
+&#9;&#9;&#9;&#9;&#9;ball = nil
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end&#9;&#9;
+&#9;&#9;end
+&#9;&#9;wait(0.125)&#9;&#9;
+&#9;end&#9;
 end
 
-function shootChar(i)		
-	while enemies[i] and enemies[i].Parent and gameChar do 			
-		local direction = Vector2.new(gameChar.Position.X.Scale - enemies[i].Position.X.Scale, gameChar.Position.Y.Scale - enemies[i].Position.Y.Scale).unit		
-		local ball = Instance.new(&quot;ImageLabel&quot;)
-		ball.Size = UDim2.new(0.03, 0, 0.03, 0)
-		ball.Image = &quot;http://www.roblox.com/asset/?id=58525251&quot;
-		ball.Parent = gameFrame
-		ball.Name = &quot;Ball&quot;
-		ball.Position = enemies[i].Position - UDim2.new(0.04, 0, 0, 0)
-		ball.BackgroundTransparency = 1.0		
-		table.insert(enemyProjectiles, ball)				
-		coroutine.resume(coroutine.create(function() shoot(direction, ball) end))
-		wait(3.0)				
-	end
+function shootChar(i)&#9;&#9;
+&#9;while enemies[i] and enemies[i].Parent and gameChar do &#9;&#9;&#9;
+&#9;&#9;local direction = Vector2.new(gameChar.Position.X.Scale - enemies[i].Position.X.Scale, gameChar.Position.Y.Scale - enemies[i].Position.Y.Scale).unit&#9;&#9;
+&#9;&#9;local ball = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;ball.Size = UDim2.new(0.03, 0, 0.03, 0)
+&#9;&#9;ball.Image = &quot;http://www.roblox.com/asset/?id=58525251&quot;
+&#9;&#9;ball.Parent = gameFrame
+&#9;&#9;ball.Name = &quot;Ball&quot;
+&#9;&#9;ball.Position = enemies[i].Position - UDim2.new(0.04, 0, 0, 0)
+&#9;&#9;ball.BackgroundTransparency = 1.0&#9;&#9;
+&#9;&#9;table.insert(enemyProjectiles, ball)&#9;&#9;&#9;&#9;
+&#9;&#9;coroutine.resume(coroutine.create(function() shoot(direction, ball) end))
+&#9;&#9;wait(3.0)&#9;&#9;&#9;&#9;
+&#9;end
 end
 
-function rainFire(fireball)	
-	local collision
-	while fireball and boss do		
-		fireball.Position = fireball.Position + UDim2.new(0, 0, 0.01, 0)
-		if gameChar then 
-			collision = checkForCollision(gameChar, fireball, Vector2.new(0, 0)) 
-		end
-		if collision and gameChar then			
-			killCharacter = true 
-			if fireball then 
-				fireball:Remove() 
-				fireball = nil 
-			end
-		end					
-		if fireball and fireball.Position.Y.Scale &gt; 1.0 then fireball:Remove() fireball = nil end
-		wait()		
-	end	
+function rainFire(fireball)&#9;
+&#9;local collision
+&#9;while fireball and boss do&#9;&#9;
+&#9;&#9;fireball.Position = fireball.Position + UDim2.new(0, 0, 0.01, 0)
+&#9;&#9;if gameChar then 
+&#9;&#9;&#9;collision = checkForCollision(gameChar, fireball, Vector2.new(0, 0)) 
+&#9;&#9;end
+&#9;&#9;if collision and gameChar and not forcefield then&#9;&#9;&#9;
+&#9;&#9;&#9;killCharacter = true 
+&#9;&#9;&#9;if fireball then 
+&#9;&#9;&#9;&#9;fireball:Remove() 
+&#9;&#9;&#9;&#9;fireball = nil 
+&#9;&#9;&#9;end
+&#9;&#9;end&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;if fireball and fireball.Position.Y.Scale &gt; 1.0 then fireball:Remove() fireball = nil end
+&#9;&#9;wait()&#9;&#9;
+&#9;end&#9;
 end
 
 function spawnFireball()
-	wait(3.0)
-	while gameChar and boss do
-		pos = gameChar.Position.X.Scale 
-		local fireball = Instance.new(&quot;ImageLabel&quot;)
-		fireball.Name = &quot;FireBall&quot;
-		fireball.Parent = gameFrame
-		fireball.Image = &quot;http://www.roblox.com/asset/?id=58546354&quot;
-		fireball.BackgroundTransparency = 1.0
-		fireball.Size = UDim2.new(0.05, 0, 0.1, 0)
-		fireball.Position = UDim2.new(pos, 0, 0, 0)
-		coroutine.resume(coroutine.create(function() rainFire(fireball) end))
-		wait(math.random(2, 3))
-	end
+&#9;wait(3.0)
+&#9;while gameChar and boss do
+&#9;&#9;pos = gameChar.Position.X.Scale 
+&#9;&#9;local fireball = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;fireball.Name = &quot;FireBall&quot;
+&#9;&#9;fireball.Parent = gameFrame
+&#9;&#9;fireball.Image = &quot;http://www.roblox.com/asset/?id=58546354&quot;
+&#9;&#9;fireball.BackgroundTransparency = 1.0
+&#9;&#9;fireball.Size = UDim2.new(0.05, 0, 0.1, 0)
+&#9;&#9;fireball.Position = UDim2.new(pos, 0, 0, 0)
+&#9;&#9;coroutine.resume(coroutine.create(function() rainFire(fireball) end))
+&#9;&#9;wait(math.random(2, 3))
+&#9;end
 end
 
-function laserify(laser, direction)	
-	print(&quot;Laserifying&quot;)
-	local collision
-	while laser and boss do		
-		laser.Position = laser.Position + UDim2.new(direction.X * 0.02, 0, direction.Y * 0.02, 0)
-		if gameChar then 
-			collision = checkForCollision(gameChar, laser, Vector2.new(0, 0)) 
-		end
-		if collision and gameChar then			
-			killCharacter = true 
-			if laser then 
-				laser:Remove() 
-				laser = nil 
-			end
-		end	
-		for i = 1, #physicsObjects do 
-			if laser then
-				local collision = checkForCollision(physicsObjects[i], laser, Vector2.new(0, 0))
-				if collision then 
-					laser:Remove() 
-					laser = nil 
-				end 
-			end
-		end		
-		if laser and laser.Position.X.Scale &lt; 0.0 then laser:Remove() laser = nil end
-		wait()		
-	end	
+function laserify(laser, direction)&#9;
+&#9;print(&quot;Laserifying&quot;)
+&#9;local collision
+&#9;while laser and boss do&#9;&#9;
+&#9;&#9;laser.Position = laser.Position + UDim2.new(direction.X * 0.02, 0, direction.Y * 0.02, 0)
+&#9;&#9;if gameChar then 
+&#9;&#9;&#9;collision = checkForCollision(gameChar, laser, Vector2.new(0, 0)) 
+&#9;&#9;end
+&#9;&#9;if collision and gameChar and not forcefield then&#9;&#9;&#9;
+&#9;&#9;&#9;killCharacter = true 
+&#9;&#9;&#9;if laser then 
+&#9;&#9;&#9;&#9;laser:Remove() 
+&#9;&#9;&#9;&#9;laser = nil 
+&#9;&#9;&#9;end
+&#9;&#9;end&#9;
+&#9;&#9;for i = 1, #physicsObjects do 
+&#9;&#9;&#9;if laser then
+&#9;&#9;&#9;&#9;local collision = checkForCollision(physicsObjects[i], laser, Vector2.new(0, 0))
+&#9;&#9;&#9;&#9;if collision then 
+&#9;&#9;&#9;&#9;&#9;laser:Remove() 
+&#9;&#9;&#9;&#9;&#9;laser = nil 
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;end
+&#9;&#9;end&#9;&#9;
+&#9;&#9;if laser and laser.Position.X.Scale &lt; 0.0 then laser:Remove() laser = nil end
+&#9;&#9;wait()&#9;&#9;
+&#9;end&#9;
 end
 
 function fireLaser()
-	print(&quot;Firing Laser&quot;)
-	wait(4.0)
-	while gameChar and boss do
-		direction = Vector2.new(gameChar.Position.X.Scale - boss.Position.X.Scale, gameChar.Position.Y.Scale - boss.Position.Y.Scale)
-		local laser = Instance.new(&quot;ImageLabel&quot;)
-		laser.Name = &quot;Laser&quot;
-		laser.Parent = gameFrame
-		laser.Image = &quot;http://www.roblox.com/asset/?id=58556170&quot;
-		laser.BackgroundTransparency = 1.0
-		laser.Size = UDim2.new(0.05, 0, 0.05, 0)
-		laser.Position = boss.Position + UDim2.new(-0.1, 0, 0, 0)
-		print(&quot;Starting laserify&quot;)
-		coroutine.resume(coroutine.create(function() laserify(laser, direction) end))
-		print(&quot;Coroutine spawned&quot;)
-		wait(math.random(2, 3))
-	end
+&#9;print(&quot;Firing Laser&quot;)
+&#9;wait(4.0)
+&#9;while gameChar and boss do
+&#9;&#9;direction = Vector2.new(gameChar.Position.X.Scale - boss.Position.X.Scale, gameChar.Position.Y.Scale - boss.Position.Y.Scale)
+&#9;&#9;local laser = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;laser.Name = &quot;Laser&quot;
+&#9;&#9;laser.Parent = gameFrame
+&#9;&#9;laser.Image = &quot;http://www.roblox.com/asset/?id=58556170&quot;
+&#9;&#9;laser.BackgroundTransparency = 1.0
+&#9;&#9;laser.Size = UDim2.new(0.05, 0, 0.05, 0)
+&#9;&#9;laser.Position = boss.Position + UDim2.new(-0.1, 0, 0, 0)
+&#9;&#9;print(&quot;Starting laserify&quot;)
+&#9;&#9;coroutine.resume(coroutine.create(function() laserify(laser, direction) end))
+&#9;&#9;print(&quot;Coroutine spawned&quot;)
+&#9;&#9;wait(math.random(2, 3))
+&#9;end
 end
 
 function bossBattle()
-	local perpY = 0.02 
-	if boss then
-		print(&quot;Found boss&quot;)
-		coroutine.resume(coroutine.create(spawnFireball))	
-		
-		while boss do 
-			if boss.Position.Y.Scale &gt; 0.50 then 
-				perpY = -0.02 
-			elseif boss.Position.Y.Scale &lt; 0.25 then 
-				perpY = 0.02 
-			end
-			boss.Position = boss.Position + UDim2.new(0, 0, perpY, 0)
-			wait(0.25)
-		end
-	end
+&#9;local perpY = 0.02 
+&#9;if boss then
+&#9;&#9;print(&quot;Found boss&quot;)
+&#9;&#9;coroutine.resume(coroutine.create(spawnFireball))&#9;&#9;&#9;
+&#9;&#9;while boss do 
+&#9;&#9;&#9;if boss.Position.Y.Scale &gt; 0.50 then 
+&#9;&#9;&#9;&#9;perpY = -0.02 
+&#9;&#9;&#9;elseif boss.Position.Y.Scale &lt; 0.25 then 
+&#9;&#9;&#9;&#9;perpY = 0.02 
+&#9;&#9;&#9;end
+&#9;&#9;&#9;boss.Position = boss.Position + UDim2.new(0, 0, perpY, 0)
+&#9;&#9;&#9;wait(0.25)
+&#9;&#9;end
+&#9;end
 end
 
 function updateBoss()
-	if boss then
-		health = boss:FindFirstChild(&quot;Health&quot;)
-		if health then
-			if health.Value &gt;= 300 and health.Value &lt; 400 then
-				boss.Image = &quot;http://www.roblox.com/asset/?id=58541632&quot;
-			elseif health.Value &gt; 200 and health.Value &lt; 300 then 
-				boss.Image = &quot;http://www.roblox.com/asset/?id=58541721&quot;
-			elseif health.Value &gt; 100 and health.Value &lt; 200 then
-				boss.Image = &quot;http://www.roblox.com/asset/?id=58541762&quot;
-			elseif health.Value &gt; 0 and health.Value &lt; 100 then
-				boss.Image = &quot;http://www.roblox.com/asset/?id=58541780&quot;
-			end
-			-- FIRING MAH LASER 
-			if health.Value &lt; 200 then 
-				coroutine.resume(coroutine.create(fireLaser))				
-			end
-		end
-	end
+&#9;if boss then
+&#9;&#9;health = boss:FindFirstChild(&quot;Health&quot;)
+&#9;&#9;if health then
+&#9;&#9;&#9;if health.Value &gt;= 300 and health.Value &lt; 400 then
+&#9;&#9;&#9;&#9;boss.Image = &quot;http://www.roblox.com/asset/?id=58541632&quot;
+&#9;&#9;&#9;elseif health.Value &gt; 200 and health.Value &lt; 300 then 
+&#9;&#9;&#9;&#9;boss.Image = &quot;http://www.roblox.com/asset/?id=58541721&quot;
+&#9;&#9;&#9;elseif health.Value &gt; 100 and health.Value &lt; 200 then
+&#9;&#9;&#9;&#9;boss.Image = &quot;http://www.roblox.com/asset/?id=58541762&quot;
+&#9;&#9;&#9;elseif health.Value &gt; 0 and health.Value &lt; 100 then
+&#9;&#9;&#9;&#9;boss.Image = &quot;http://www.roblox.com/asset/?id=58541780&quot;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;-- FIRING MAH LASER 
+&#9;&#9;&#9;if health.Value &lt; 200 then 
+&#9;&#9;&#9;&#9;coroutine.resume(coroutine.create(fireLaser))&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
 end
 
-function spawnAI()	
-	print(&quot;Spawning AI&quot;)
-	if screenCount == 7 then 
-		if endScreenPlatform then 
-			endScreenPlatform:Remove() 
-			endScreenPlatform = nil 
-		end
-		for i = 1, #platforms do
-			if platforms[i].Position.X.Scale &gt; 0.50 then 
-				for j = 1, #physicsObjects do 
-					if platforms[i] == physicsObjects[j] then 
-						table.remove(physicsObjects, j)
-					end
-				end
-				platforms[i]:Remove()				
-			end
-		end
-		if spawnPlatform then 
-			spawnPlatform.Position = spawnPlatform.Position + UDim2.new(0, 0, 0.25, 0)
-			if gameChar then 
-				gameChar.Position = gameChar.Position + UDim2.new(0, 0, 0.25, 0)
-			end
-		end
-		boss = Instance.new(&quot;ImageLabel&quot;)
-		boss.Name = &quot;Boss&quot;
-		boss.Image = &quot;http://www.roblox.com/asset/?id=58541175&quot;
-		boss.Size = UDim2.new(0.3, 0, 0.3, 0)
-		boss.Position = UDim2.new(0.70, 0, 0.35, 0)
-		boss.BackgroundTransparency = 1.0
-		boss.ZIndex = 2.0 
-		boss.Parent = gameFrame
+function spawnAI()&#9;
+&#9;print(&quot;Spawning AI&quot;)
+&#9;if screenCount == 7 then 
+&#9;&#9;if endScreenPlatform then 
+&#9;&#9;&#9;endScreenPlatform:Remove() 
+&#9;&#9;&#9;endScreenPlatform = nil 
+&#9;&#9;end
+&#9;&#9;for i = 1, #platforms do
+&#9;&#9;&#9;if platforms[i].Position.X.Scale &gt; 0.50 then 
+&#9;&#9;&#9;&#9;for j = 1, #physicsObjects do 
+&#9;&#9;&#9;&#9;&#9;if platforms[i] == physicsObjects[j] then 
+&#9;&#9;&#9;&#9;&#9;&#9;table.remove(physicsObjects, j)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;platforms[i]:Remove()&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if spawnPlatform then 
+&#9;&#9;&#9;spawnPlatform.Position = spawnPlatform.Position + UDim2.new(0, 0, 0.25, 0)
+&#9;&#9;&#9;if gameChar then 
+&#9;&#9;&#9;&#9;gameChar.Position = gameChar.Position + UDim2.new(0, 0, 0.25, 0)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;boss = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;boss.Name = &quot;Boss&quot;
+&#9;&#9;boss.Image = &quot;http://www.roblox.com/asset/?id=58541175&quot;
+&#9;&#9;boss.Size = UDim2.new(0.3, 0, 0.3, 0)
+&#9;&#9;boss.Position = UDim2.new(0.70, 0, 0.35, 0)
+&#9;&#9;boss.BackgroundTransparency = 1.0
+&#9;&#9;boss.ZIndex = 2.0 
+&#9;&#9;boss.Parent = gameFrame
 
-		health = Instance.new(&quot;NumberValue&quot;)
-		health.Name = &quot;Health&quot;
-		health.Parent = boss
-		health.Value = 500
-		health.Changed:connect(updateBoss)
+&#9;&#9;health = Instance.new(&quot;NumberValue&quot;)
+&#9;&#9;health.Name = &quot;Health&quot;
+&#9;&#9;health.Parent = boss
+&#9;&#9;health.Value = 500
+&#9;&#9;health.Changed:connect(updateBoss)
 
-		coroutine.resume(coroutine.create(function() bossBattle() end))
-	elseif screenCount &lt; 7 and screenCount &gt; 0 then 		
-		seaMonster = Instance.new(&quot;ImageLabel&quot;)
-		seaMonster.Name = &quot;Sea Monster&quot;
-		seaMonster.Image = &quot;http://www.roblox.com/asset/?id=58518986&quot;
-		seaMonster.Size = UDim2.new(0.2, 0, 0.2, 0)
-		seaMonster.Position = UDim2.new(math.random(25, 75)/100, 0, 0.79, 0)
-		seaMonster.Parent = gameFrame
-		seaMonster.BackgroundTransparency = 1.0
-		seaMonster.ZIndex = 4.0
-		table.insert(AIObjects , seaMonster)	
+&#9;&#9;coroutine.resume(coroutine.create(function() bossBattle() end))
+&#9;elseif screenCount &lt; 7 and screenCount &gt; 0 then &#9;&#9;
+&#9;&#9;seaMonster = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;seaMonster.Name = &quot;Sea Monster&quot;
+&#9;&#9;seaMonster.Image = &quot;http://www.roblox.com/asset/?id=58518986&quot;
+&#9;&#9;seaMonster.Size = UDim2.new(0.2, 0, 0.2, 0)
+&#9;&#9;seaMonster.Position = UDim2.new(math.random(25, 75)/100, 0, 0.79, 0)
+&#9;&#9;seaMonster.Parent = gameFrame
+&#9;&#9;seaMonster.BackgroundTransparency = 1.0
+&#9;&#9;seaMonster.ZIndex = 4.0
+&#9;&#9;table.insert(AIObjects , seaMonster)&#9;
 
-		coroutine.resume(coroutine.create(function() followChar(seaMonster) end))		
-		
-		tick()			 
-		for i = 1, 2 do 
-			enemies[i] = Instance.new(&quot;ImageLabel&quot;)
-			enemies[i].Name = &quot;Enemy&quot;
-			enemies[i].Image = &quot;http://www.roblox.com/asset/?id=58520924&quot;
-			enemies[i].Size = UDim2.new(0.1, 0, 0.1, 0)
-			enemies[i].Parent = gameFrame
-			enemies[i].BackgroundTransparency = 1.0
-			enemies[i].Position = platforms[(i+1) + (i-1) * math.random(1, 2)].Position + UDim2.new(0, 0, -0.075, 0)				
-			coroutine.resume(coroutine.create(function() wait(3.0) shootChar(i) end))
+&#9;&#9;coroutine.resume(coroutine.create(function() followChar(seaMonster) end))&#9;&#9;
+&#9;&#9;
+&#9;&#9;tick()&#9;&#9;&#9; 
+&#9;&#9;for i = 1, 2 do 
+&#9;&#9;&#9;enemies[i] = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;&#9;enemies[i].Name = &quot;Enemy&quot;
+&#9;&#9;&#9;enemies[i].Image = &quot;http://www.roblox.com/asset/?id=58520924&quot;
+&#9;&#9;&#9;enemies[i].Size = UDim2.new(0.1, 0, 0.1, 0)
+&#9;&#9;&#9;enemies[i].Parent = gameFrame
+&#9;&#9;&#9;enemies[i].BackgroundTransparency = 1.0
+&#9;&#9;&#9;enemies[i].Position = platforms[(i+1) + (i-1) * math.random(1, 2)].Position + UDim2.new(0, 0, -0.075, 0)&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;coroutine.resume(coroutine.create(function() wait(3.0) shootChar(i) end))
 
-			health = Instance.new(&quot;NumberValue&quot;)
-			health.Name = &quot;Health&quot;
-			health.Value = 35
-			health.Parent = enemies[i]
-		end		
-	else
-		-- do nothing
-	end
+&#9;&#9;&#9;health = Instance.new(&quot;NumberValue&quot;)
+&#9;&#9;&#9;health.Name = &quot;Health&quot;
+&#9;&#9;&#9;health.Value = 35
+&#9;&#9;&#9;health.Parent = enemies[i]
+&#9;&#9;end&#9;&#9;
+&#9;else
+&#9;&#9;-- do nothing
+&#9;end
 end
 
 ----------------------------------------------- GUI CODE -----------------------------------------------
 
 function createPlatforms()
-	tick()
-	local posX = {math.random(18, 20)/100, math.random(34, 40)/100, math.random(52, 60)/100, math.random(72, 76)/100}
-	local posY = {math.random(28, 40)/100, math.random(30, 46)/100, math.random(30, 32)/100, math.random(24, 28)/100}		
-	screenCount = screenCount + 1	
-	endScreenPlatform = Instance.new(&quot;ImageLabel&quot;)
-	endScreenPlatform.Name = &quot;EndScreenPlatform&quot;
-	endScreenPlatform.Image = &quot;http://www.roblox.com/asset/?id=58344744&quot;
-	endScreenPlatform.Size = UDim2.new(0.10, 0, 0.025, 0)	
-	endScreenPlatform.Position = UDim2.new(math.random(85, 92)/100,  0, math.random(15, 24)/100, 0)
-	endScreenPlatform.Parent = gameFrame
-	table.insert(platforms, endScreenPlatform)
-	table.insert(physicsObjects, endScreenPlatform)
-	
-	-- initialize the world with 5 platforms? maybe?
-	tick()
-	--numPlatforms = math.random(minPlatforms, maxPlatforms - 2)
-	numPlatforms = 4	
-	for i = 1, numPlatforms do
-		tick() -- seed that random!
-		-- The platforms can never be lower than 60, unless you want to get eaten by the shark
-		-- Or higher than 15 since we need to accomodate our character
-		--posX = math.random(20, 75) * 0.01
-		--posY = math.random(15, 60) * 0.01			
-		local pf = Instance.new(&quot;ImageLabel&quot;)
-		pf.Name = &quot;Platform&quot;
-		pf.Image = &quot;http://www.roblox.com/asset/?id=58344744&quot;
-		pf.Size = UDim2.new(0.1, 0, 0.025, 0)
-		-- Another criteria to consider, can the platforms never be right on top of each other? Maybe?
-		pf.Position = UDim2.new(posX[i],  0, posY[i], 0)
-		pf.Parent = gameFrame
-		table.insert(platforms, pf)
-		table.insert(physicsObjects, pf)				
-	end
-	-- Create Character to control
-	createLocalCharacter()
+&#9;tick()
+&#9;local posX = {math.random(18, 20)/100, math.random(34, 40)/100, math.random(52, 60)/100, math.random(72, 76)/100}
+&#9;local posY = {math.random(28, 40)/100, math.random(30, 46)/100, math.random(30, 32)/100, math.random(24, 28)/100}&#9;&#9;
+&#9;screenCount = screenCount + 1&#9;
+&#9;endScreenPlatform = Instance.new(&quot;ImageLabel&quot;)
+&#9;endScreenPlatform.Name = &quot;EndScreenPlatform&quot;
+&#9;endScreenPlatform.Image = &quot;http://www.roblox.com/asset/?id=58344744&quot;
+&#9;endScreenPlatform.Size = UDim2.new(0.10, 0, 0.025, 0)&#9;
+&#9;endScreenPlatform.Position = UDim2.new(math.random(85, 92)/100,  0, math.random(15, 24)/100, 0)
+&#9;endScreenPlatform.Parent = gameFrame
+&#9;table.insert(platforms, endScreenPlatform)
+&#9;table.insert(physicsObjects, endScreenPlatform)
+&#9;
+&#9;-- initialize the world with 5 platforms? maybe?
+&#9;tick()
+&#9;--numPlatforms = math.random(minPlatforms, maxPlatforms - 2)
+&#9;numPlatforms = 4&#9;
+&#9;for i = 1, numPlatforms do
+&#9;&#9;tick() -- seed that random!
+&#9;&#9;-- The platforms can never be lower than 60, unless you want to get eaten by the shark
+&#9;&#9;-- Or higher than 15 since we need to accomodate our character&#9;&#9;
+&#9;&#9;local pf = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;pf.Name = &quot;Platform&quot;
+&#9;&#9;pf.Image = &quot;http://www.roblox.com/asset/?id=58344744&quot;
+&#9;&#9;pf.Size = UDim2.new(0.1, 0, 0.025, 0)
+&#9;&#9;-- Another criteria to consider, can the platforms never be right on top of each other? Maybe?
+&#9;&#9;pf.Position = UDim2.new(posX[i],  0, posY[i], 0)
+&#9;&#9;pf.Parent = gameFrame
+&#9;&#9;table.insert(platforms, pf)
+&#9;&#9;table.insert(physicsObjects, pf)&#9;&#9;&#9;&#9;
+&#9;end
+&#9;-- Create Character to control
+&#9;createLocalCharacter()
 
-	-- Spawn a bunch of enemies
-	spawnAI()
+&#9;-- Spawn a bunch of enemies
+&#9;spawnAI()
 end
 
 function createGameInterface()
-	gameGui = Instance.new(&quot;ScreenGui&quot;)
-	gameGui.Parent = game.Players.LocalPlayer.PlayerGui
-	gameGui.Name = &quot;Game Gui&quot;
+&#9;gameGui = Instance.new(&quot;ScreenGui&quot;)
+&#9;gameGui.Parent = game.Players.LocalPlayer.PlayerGui
+&#9;gameGui.Name = &quot;Game Gui&quot;
 
-	gameFrame = Instance.new(&quot;Frame&quot;)
-	gameFrame.Parent = gameGui	
-	while gameGui.AbsoluteSize.X == 0 do wait() end -- WUT?
-	local screenMidPoint = Vector2.new(gameGui.AbsoluteSize.x/2.0, gameGui.AbsoluteSize.y/2.0)	
-	gameFrame.Position = UDim2.new(0, screenMidPoint.X - 320, 0, screenMidPoint.Y - 240)
-	gameFrame.Size = UDim2.new(0, 640, 0, 480)
-	gameFrame.BackgroundTransparency = 1.0
-	gameFrame.Name = &quot;Game Frame&quot;
+&#9;gameFrame = Instance.new(&quot;Frame&quot;)
+&#9;gameFrame.Parent = gameGui&#9;
+&#9;while gameGui.AbsoluteSize.X == 0 do wait() end -- WUT?
+&#9;local screenMidPoint = Vector2.new(gameGui.AbsoluteSize.x/2.0, gameGui.AbsoluteSize.y/2.0)&#9;
+&#9;gameFrame.Position = UDim2.new(0, screenMidPoint.X - 320, 0, screenMidPoint.Y - 240)
+&#9;gameFrame.Size = UDim2.new(0, 640, 0, 480)
+&#9;gameFrame.BackgroundTransparency = 1.0
+&#9;gameFrame.Name = &quot;Game Frame&quot;
 
-	local gameBackground = Instance.new(&quot;ImageLabel&quot;)
-	gameBackground.Image = &quot;http://www.roblox.com/asset/?id=58449099&quot;
-	gameBackground.Size = UDim2.new(1, 0, 1, 0)
-	gameBackground.Parent = gameFrame
-	gameBackground.BackgroundTransparency = 1.0
-	gameBackground.Name = &quot;Background&quot;
+&#9;local gameBackground = Instance.new(&quot;ImageLabel&quot;)
+&#9;gameBackground.Image = &quot;http://www.roblox.com/asset/?id=58449099&quot;
+&#9;gameBackground.Size = UDim2.new(1, 0, 1, 0)
+&#9;gameBackground.Parent = gameFrame
+&#9;gameBackground.BackgroundTransparency = 1.0
+&#9;gameBackground.Name = &quot;Background&quot;
 
-	RPGImage = Instance.new(&quot;ImageLabel&quot;)
-	RPGImage.Parent = gameFrame
-	RPGImage.Name = &quot;RPG Image&quot;
-	RPGImage.Image = &quot;http://www.roblox.com/asset/?id=58458224&quot;
-	RPGImage.Position = UDim2.new(-0.3378, 0, -0.2, 0)
-	RPGImage.Size = UDim2.new(1.669, 0, 1.38, 0)
-	RPGImage.BackgroundTransparency = 1.0
-	RPGImage.ZIndex = 10.0
+&#9;RPGImage = Instance.new(&quot;ImageLabel&quot;)
+&#9;RPGImage.Parent = gameFrame
+&#9;RPGImage.Name = &quot;RPG Image&quot;
+&#9;RPGImage.Image = &quot;http://www.roblox.com/asset/?id=58458224&quot;
+&#9;RPGImage.Position = UDim2.new(-0.3378, 0, -0.2, 0)
+&#9;RPGImage.Size = UDim2.new(1.669, 0, 1.38, 0)
+&#9;RPGImage.BackgroundTransparency = 1.0
+&#9;RPGImage.ZIndex = 10.0
 
-	local gameWater
+&#9;local gameWater
 
-	local gameWeed = Instance.new(&quot;ImageLabel&quot;)
-	gameWeed.Image = &quot;http://www.roblox.com/asset/?id=58449411&quot;
-	gameWeed.Name = &quot;SeaWeed&quot;
-	gameWeed.Size = UDim2.new(1, 0, 1, 0)
-	gameWeed.Parent = gameFrame
-	gameWeed.BackgroundTransparency = 1.0
-	gameWeed.Position = UDim2.new(0, 0, 0, 0)
+&#9;local gameWeed = Instance.new(&quot;ImageLabel&quot;)
+&#9;gameWeed.Image = &quot;http://www.roblox.com/asset/?id=58449411&quot;
+&#9;gameWeed.Name = &quot;SeaWeed&quot;
+&#9;gameWeed.Size = UDim2.new(1, 0, 1, 0)
+&#9;gameWeed.Parent = gameFrame
+&#9;gameWeed.BackgroundTransparency = 1.0
+&#9;gameWeed.Position = UDim2.new(0, 0, 0, 0)
 
-	local waterLayer = Instance.new(&quot;ImageLabel&quot;)
-	waterLayer.Image = &quot;http://www.roblox.com/asset/?id=58450141&quot;
-	waterLayer.Name = &quot;WaterLayer2&quot;
-	waterLayer.Size = UDim2.new(1, 0, 1, 0)
-	waterLayer.Parent = gameFrame
-	waterLayer.BackgroundTransparency = 1.0
-	waterLayer.Position = UDim2.new(0, 0, 0, 0)
+&#9;local waterLayer = Instance.new(&quot;ImageLabel&quot;)
+&#9;waterLayer.Image = &quot;http://www.roblox.com/asset/?id=58450141&quot;
+&#9;waterLayer.Name = &quot;WaterLayer2&quot;
+&#9;waterLayer.Size = UDim2.new(1, 0, 1, 0)
+&#9;waterLayer.Parent = gameFrame
+&#9;waterLayer.BackgroundTransparency = 1.0
+&#9;waterLayer.Position = UDim2.new(0, 0, 0, 0)
 
-	coroutine.resume(coroutine.create(function() linearAnimate(waterLayer, 1) end))
+&#9;coroutine.resume(coroutine.create(function() linearAnimate(waterLayer, 1) end))
 
-	local waterLayer2 = Instance.new(&quot;ImageLabel&quot;)
-	waterLayer2.Image = &quot;http://www.roblox.com/asset/?id=58450165&quot;
-	waterLayer2.Name = &quot;WaterLayer2&quot;
-	waterLayer2.Size = UDim2.new(1, 0, 1, 0)
-	waterLayer2.Parent = gameFrame
-	waterLayer2.BackgroundTransparency = 1.0
-	waterLayer2.Position = UDim2.new(0, 0, 0, 0)
-	coroutine.resume(coroutine.create(function() linearAnimate(waterLayer2, -1) end))
+&#9;local waterLayer2 = Instance.new(&quot;ImageLabel&quot;)
+&#9;waterLayer2.Image = &quot;http://www.roblox.com/asset/?id=58450165&quot;
+&#9;waterLayer2.Name = &quot;WaterLayer2&quot;
+&#9;waterLayer2.Size = UDim2.new(1, 0, 1, 0)
+&#9;waterLayer2.Parent = gameFrame
+&#9;waterLayer2.BackgroundTransparency = 1.0
+&#9;waterLayer2.Position = UDim2.new(0, 0, 0, 0)
+&#9;coroutine.resume(coroutine.create(function() linearAnimate(waterLayer2, -1) end))
 
-	local waveLayer = Instance.new(&quot;ImageLabel&quot;)
-	waveLayer.Name = &quot;Wave&quot;
-	waveLayer.Image = &quot;http://www.roblox.com/asset/?id=58484376&quot;
-	waveLayer.Size = UDim2.new(1, 0, 1, 0)
-	waveLayer.Parent = gameFrame
-	waveLayer.BackgroundTransparency = 1.0
-	waveLayer.Position = UDim2.new(0, 0, 0, 0) 	
-	
-	local waveLayer2 = Instance.new(&quot;ImageLabel&quot;)
-	waveLayer2.Name = &quot;Wave2&quot;
-	waveLayer2.Image = &quot;http://www.roblox.com/asset/?id=58484457&quot;
-	waveLayer2.Size = UDim2.new(1, 0, 1, 0)
-	waveLayer2.Parent = gameFrame
-	waveLayer2.BackgroundTransparency = 1.0
-	waveLayer2.Position = UDim2.new(0, 0, 0, 0) 
-	
-	coroutine.resume(coroutine.create(function() waveAnimate(waveLayer, waveLayer2) end))
+&#9;local waveLayer = Instance.new(&quot;ImageLabel&quot;)
+&#9;waveLayer.Name = &quot;Wave&quot;
+&#9;waveLayer.Image = &quot;http://www.roblox.com/asset/?id=58484376&quot;
+&#9;waveLayer.Size = UDim2.new(1, 0, 1, 0)
+&#9;waveLayer.Parent = gameFrame
+&#9;waveLayer.BackgroundTransparency = 1.0
+&#9;waveLayer.Position = UDim2.new(0, 0, 0, 0) &#9;
+&#9;
+&#9;local waveLayer2 = Instance.new(&quot;ImageLabel&quot;)
+&#9;waveLayer2.Name = &quot;Wave2&quot;
+&#9;waveLayer2.Image = &quot;http://www.roblox.com/asset/?id=58484457&quot;
+&#9;waveLayer2.Size = UDim2.new(1, 0, 1, 0)
+&#9;waveLayer2.Parent = gameFrame
+&#9;waveLayer2.BackgroundTransparency = 1.0
+&#9;waveLayer2.Position = UDim2.new(0, 0, 0, 0) 
+&#9;
+&#9;coroutine.resume(coroutine.create(function() waveAnimate(waveLayer, waveLayer2) end))
 
-	lifeLayer = Instance.new(&quot;ImageLabel&quot;)
-	lifeLayer.Image = &quot;http://www.roblox.com/asset/?id=58463565&quot;
-	lifeLayer.Name = &quot;Lives&quot;
-	lifeLayer.Size = UDim2.new(0.13, 0, 0.05, 0)
-	lifeLayer.Position = UDim2.new(0.03, 0, 0.01, 0)
-	lifeLayer.BackgroundTransparency = 1.0
-	lifeLayer.Parent = gameFrame
-	lifeLayer.ZIndex = 2.0	
+&#9;lifeLayer = Instance.new(&quot;ImageLabel&quot;)
+&#9;lifeLayer.Image = &quot;http://www.roblox.com/asset/?id=58463565&quot;
+&#9;lifeLayer.Name = &quot;Lives&quot;
+&#9;lifeLayer.Size = UDim2.new(0.13, 0, 0.05, 0)
+&#9;lifeLayer.Position = UDim2.new(0.03, 0, 0.01, 0)
+&#9;lifeLayer.BackgroundTransparency = 1.0
+&#9;lifeLayer.Parent = gameFrame
+&#9;lifeLayer.ZIndex = 2.0&#9;
 
-	gameTimeText = Instance.new(&quot;TextLabel&quot;)
-	gameTimeText.Text = tostring(gameDuration)
-	gameTimeText.Parent = gameFrame
-	gameTimeText.Position = UDim2.new(0.96, 0, 0.01, 0)
+&#9;gameTimeText = Instance.new(&quot;TextLabel&quot;)
+&#9;gameTimeText.Text = tostring(gameDuration)
+&#9;gameTimeText.Parent = gameFrame
+&#9;gameTimeText.Position = UDim2.new(0.96, 0, 0.01, 0)
 
-	-- Clouds, 7 of em
-	for i = 1, 7 do 
-		tick()
-		cloud = Instance.new(&quot;ImageLabel&quot;)
-		cloud.Name = &quot;Cloud&quot;
-		cloud.Image = &quot;http://www.roblox.com/asset/?id=&quot; .. cloudAssets[math.random(1, 4)]
-		cloud.ZIndex = 1.0
-		cloud.Parent = gameFrame 
-		cloud.Size = UDim2.new(0.1, 0, 0.04, 0)
-		cloud.BackgroundTransparency = 1.0
-		leftRight = math.random(1, 2)
-		if leftRight == 1 then 
-			table.insert(cloudsLeft, cloud)			
-		else
-			table.insert(cloudsRight, cloud)
-		end		
-		cloud.Position = UDim2.new(math.random(10, 90)/100, 0, math.random(5, 15)/100, 0)
-	end
+&#9;-- Clouds, 7 of em
+&#9;for i = 1, 7 do 
+&#9;&#9;tick()
+&#9;&#9;cloud = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;cloud.Name = &quot;Cloud&quot;
+&#9;&#9;cloud.Image = &quot;http://www.roblox.com/asset/?id=&quot; .. cloudAssets[math.random(1, 4)]
+&#9;&#9;cloud.ZIndex = 1.0
+&#9;&#9;cloud.Parent = gameFrame 
+&#9;&#9;cloud.Size = UDim2.new(0.1, 0, 0.04, 0)
+&#9;&#9;cloud.BackgroundTransparency = 1.0
+&#9;&#9;leftRight = math.random(1, 2)
+&#9;&#9;if leftRight == 1 then 
+&#9;&#9;&#9;table.insert(cloudsLeft, cloud)&#9;&#9;&#9;
+&#9;&#9;else
+&#9;&#9;&#9;table.insert(cloudsRight, cloud)
+&#9;&#9;end&#9;&#9;
+&#9;&#9;cloud.Position = UDim2.new(math.random(10, 90)/100, 0, math.random(5, 15)/100, 0)
+&#9;end
 
-	coroutine.resume(coroutine.create(animateClouds))
-	-- PLATFORMS -- 
-	-- Special Case, since when the world scrolls, the end platform becomes the spawning one
-	spawnPlatform = Instance.new(&quot;ImageLabel&quot;)
-	spawnPlatform.Name = &quot;SpawnPlatform&quot;
-	spawnPlatform.Image = &quot;http://www.roblox.com/asset/?id=58344744&quot;
-	spawnPlatform.Size = UDim2.new(0.1, 0, 0.025, 0)	
-	spawnPlatform.Position = UDim2.new(0.05,  0, 0.19, 0)
-	spawnPlatform.Parent = gameFrame
-	table.insert(platforms, spawnPlatform)
-	table.insert(physicsObjects, spawnPlatform)	
-	
-	print(&quot;Creating platforms&quot;)
-	----------------------
-	createPlatforms()
-	----------------------
+&#9;coroutine.resume(coroutine.create(animateClouds))
+&#9;-- PLATFORMS -- 
+&#9;-- Special case, since when the world scrolls, the end platform becomes the spawning one
+&#9;spawnPlatform = Instance.new(&quot;ImageLabel&quot;)
+&#9;spawnPlatform.Name = &quot;SpawnPlatform&quot;
+&#9;spawnPlatform.Image = &quot;http://www.roblox.com/asset/?id=58344744&quot;
+&#9;spawnPlatform.Size = UDim2.new(0.1, 0, 0.025, 0)&#9;
+&#9;spawnPlatform.Position = UDim2.new(0.05,  0, 0.19, 0)
+&#9;spawnPlatform.Parent = gameFrame
+&#9;table.insert(platforms, spawnPlatform)
+&#9;table.insert(physicsObjects, spawnPlatform)&#9;
+&#9;
+&#9;print(&quot;Creating platforms&quot;)
+&#9;----------------------
+&#9;createPlatforms()
+&#9;----------------------
 
-	-- Create the default projectile, can&apos;t think of a better place to put this
-	gameProjectile = Instance.new(&quot;ImageLabel&quot;)
-	gameProjectile.Image = &quot;http://www.roblox.com/asset/?id=58512337&quot;
-	gameProjectile.Size = UDim2.new(0.020, 0, 0.020, 0)
-	gameProjectile.BackgroundTransparency = 1.0
-	gameProjectile.Name = &quot;CharProjectile&quot;		
+&#9;-- Create the default projectile, can&apos;t think of a better place to put this
+&#9;gameProjectile = Instance.new(&quot;ImageLabel&quot;)
+&#9;gameProjectile.Image = &quot;http://www.roblox.com/asset/?id=58512337&quot;
+&#9;gameProjectile.Size = UDim2.new(0.020, 0, 0.020, 0)
+&#9;gameProjectile.BackgroundTransparency = 1.0
+&#9;gameProjectile.Name = &quot;CharProjectile&quot;&#9;&#9;
 end
 
 function createLocalCharacter()
-	if not gameChar then
-		gameChar = Instance.new(&quot;ImageLabel&quot;)
-		gameChar.BackgroundTransparency = 1.0
-		gameChar.Image = &quot;http://www.roblox.com/asset/?id=58461425&quot;
-		gameChar.Size = UDim2.new(0.03, 0, 0.1, 0) -- Wut? 
-		gameChar.Name = &quot;Hero&quot;
-		gameChar.ZIndex = 1.0
-		-- Need to spawn the character on one of the platforms always 
-		-- Ideally the leftmost platform in which case it&apos;s width value is the lowest
-		--table.insert(physicsObjects, gameChar)
-		movableObjects = {}
-		table.insert(movableObjects, gameChar)
-		if  #platforms &gt; 0 then 
-			gameChar.Position = spawnPlatform.Position - UDim2.new(0, 0, 0.075, 0)
-		end
-		if gameFrame then gameChar.Parent = gameFrame end	
-	end
+&#9;if not gameChar then
+&#9;&#9;forcefield = true
+&#9;&#9;gameChar = Instance.new(&quot;ImageLabel&quot;)
+&#9;&#9;gameChar.BackgroundTransparency = 1.0
+&#9;&#9;gameChar.Image = &quot;http://www.roblox.com/asset/?id=58461425&quot;
+&#9;&#9;gameChar.Size = UDim2.new(0.03, 0, 0.1, 0) -- Wut? 
+&#9;&#9;gameChar.Name = &quot;Hero&quot;
+&#9;&#9;gameChar.ZIndex = 1.0
+&#9;&#9;-- Need to spawn the character on one of the platforms always 
+&#9;&#9;-- Ideally the leftmost platform in which case it&apos;s width value is the lowest
+&#9;&#9;--table.insert(physicsObjects, gameChar)
+&#9;&#9;movableObjects = {}
+&#9;&#9;table.insert(movableObjects, gameChar)
+&#9;&#9;if  #platforms &gt; 0 then 
+&#9;&#9;&#9;gameChar.Position = spawnPlatform.Position - UDim2.new(0, 0, 0.075, 0)
+&#9;&#9;end
+&#9;&#9;if gameFrame then gameChar.Parent = gameFrame end&#9;
+&#9;&#9;coroutine.resume(coroutine.create(function() wait(1.5) forcefield = false end))
+&#9;end
 end
 
 ----------------------------------------------------------------------------------------------
 
 function destroyGameInterface()
-	if gameGui then gameGui:Remove() gameGui = nil end
-	movableObjects = {}
-	physicsObjects = {}
-	platforms = {}
-	if spawnPoint then spawnPoint = 1.0 end
+&#9;if gameGui then gameGui:Remove() gameGui = nil end
+&#9;movableObjects = {}
+&#9;physicsObjects = {}
+&#9;platforms = {}
+&#9;if spawnPoint then spawnPoint = 1.0 end
 end
 
 ----------------------------------------------- MOVEMENT --------------------------------------
-function moveCharacter()	
-	if not worldScrolling then		
-		pos = Vector2.new(gameChar.Position.X.Scale, gameChar.Position.Y.Scale)	
-		if velocity then		
-			if pos.Y + velocity.Y &lt; 0 then
-				gameChar.Position = gameChar.Position + UDim2.new(velocity.X, 0, 0, 0)		
-			else 		
-				gameChar.Position = gameChar.Position + UDim2.new(velocity.X, 0, velocity.Y, 0)
-			end
-		end
-	end
+function moveCharacter()&#9;
+&#9;if not worldScrolling then&#9;-- freeze character, if the world is scrolling 
+&#9;&#9;pos = Vector2.new(gameChar.Position.X.Scale, gameChar.Position.Y.Scale)&#9;
+&#9;&#9;if velocity then&#9;&#9;
+&#9;&#9;&#9;if pos.Y + velocity.Y &lt; 0 then
+&#9;&#9;&#9;&#9;gameChar.Position = gameChar.Position + UDim2.new(velocity.X, 0, 0, 0)&#9;&#9;
+&#9;&#9;&#9;else &#9;&#9;
+&#9;&#9;&#9;&#9;gameChar.Position = gameChar.Position + UDim2.new(velocity.X, 0, velocity.Y, 0)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
 end
 
-function setCharacterVelocity()	
-	if gameChar then		
-		velocity = Vector2.new(0, 0)
-		if forwards then 
-			gameChar.Image = &quot;http://www.roblox.com/asset/?id=58461425&quot;			
-			velocity = velocity + Vector2.new(0.005, 0)
-		elseif backwards then 
-			gameChar.Image = &quot;http://www.roblox.com/asset/?id=58462272&quot;				
-			velocity = velocity - Vector2.new(0.005, 0)
-		end
-		if falling then 
-			if accelerateBool == false then 
-				accelerateBool = true
-				accelerateCo = coroutine.create(fallAcceleration)
-				coroutine.resume(accelerateCo) 
-			end			
-			velocity = velocity + Vector2.new(0, gravity)
-		end
-		if jumping then 			
-			velocity = velocity - Vector2.new(0, 0.020)
-		end
-	end
+function setCharacterVelocity()&#9;
+&#9;if gameChar then&#9;&#9;
+&#9;&#9;velocity = Vector2.new(0, 0)
+&#9;&#9;if forwards then 
+&#9;&#9;&#9;gameChar.Image = &quot;http://www.roblox.com/asset/?id=58461425&quot;&#9;&#9;&#9;
+&#9;&#9;&#9;velocity = velocity + Vector2.new(0.005, 0)
+&#9;&#9;elseif backwards then 
+&#9;&#9;&#9;gameChar.Image = &quot;http://www.roblox.com/asset/?id=58462272&quot;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;velocity = velocity - Vector2.new(0.005, 0)
+&#9;&#9;end
+&#9;&#9;if falling then 
+&#9;&#9;&#9;if accelerateBool == false then 
+&#9;&#9;&#9;&#9;accelerateBool = true
+&#9;&#9;&#9;&#9;accelerateCo = coroutine.create(fallAcceleration)
+&#9;&#9;&#9;&#9;coroutine.resume(accelerateCo) 
+&#9;&#9;&#9;end&#9;&#9;&#9;
+&#9;&#9;&#9;velocity = velocity + Vector2.new(0, gravity)
+&#9;&#9;end
+&#9;&#9;if jumping then &#9;&#9;&#9;
+&#9;&#9;&#9;velocity = velocity - Vector2.new(0, 0.020)
+&#9;&#9;end
+&#9;end
 end
 
-function gameCharMovementStop(key)	
-	if gameChar then
-		key = key:lower()		
-		if key == &quot;w&quot; then
-			jumping = false
-		elseif key ==&quot;a&quot; then 
-			backwards = false
-		elseif key == &quot;d&quot; then
-			forwards = false		
-		end
-	end
+function gameCharMovementStop(key)&#9;
+&#9;if gameChar then
+&#9;&#9;key = key:lower()&#9;&#9;
+&#9;&#9;if key == &quot;w&quot; then
+&#9;&#9;&#9;jumping = false
+&#9;&#9;elseif key ==&quot;a&quot; then 
+&#9;&#9;&#9;backwards = false
+&#9;&#9;elseif key == &quot;d&quot; then
+&#9;&#9;&#9;forwards = false&#9;&#9;
+&#9;&#9;end
+&#9;end
 end
 
-function gameCharMovementStart(key)	
-	local timeNow
-	if gameChar then		
-		key = key:lower()			
-		if key == &quot;w&quot; then 
-			timeNow = tick()
-			if timeNow - jumpTimer &gt; 1.0 then					
-				jumpTimer = timeNow
-				jumping = true			
-			end					
-		elseif key == &quot;a&quot; then		
-			backwards = true		
-		elseif key == &quot;d&quot; then 		
-			forwards = true							
-		end
-	end
+function gameCharMovementStart(key)&#9;
+&#9;local timeNow
+&#9;if gameChar then&#9;&#9;
+&#9;&#9;key = key:lower()&#9;&#9;&#9;
+&#9;&#9;if key == &quot;w&quot; then 
+&#9;&#9;&#9;timeNow = tick()
+&#9;&#9;&#9;if timeNow - jumpTimer &gt; 1.0 then&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;jumpTimer = timeNow
+&#9;&#9;&#9;&#9;jumping = true&#9;&#9;&#9;
+&#9;&#9;&#9;end&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;elseif key == &quot;a&quot; then&#9;&#9;
+&#9;&#9;&#9;backwards = true&#9;&#9;
+&#9;&#9;elseif key == &quot;d&quot; then &#9;&#9;
+&#9;&#9;&#9;forwards = true&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;end
+&#9;end
 end
 
 ----------------------------------------------- CHARACTER FIRING -----------------------------------------------
 
 function transferToWorldCoordinates(mouse)
-	if gameFrame then 
-		local xPos = mouse.X - gameFrame.Position.X.Offset 
-		local yPos = mouse.Y - gameFrame.Position.Y.Offset
-		return Vector2.new(xPos, yPos)
-	end
+&#9;if gameFrame then 
+&#9;&#9;local xPos = mouse.X - gameFrame.Position.X.Offset 
+&#9;&#9;local yPos = mouse.Y - gameFrame.Position.Y.Offset
+&#9;&#9;return Vector2.new(xPos, yPos)
+&#9;end
 end
 
-function fire(projectileClone, direction)	
-	local collision
-	-- Lets set the velocity to be 2 units 
-	while projectileClone do 		
-		projectileClone.Position = projectileClone.Position + UDim2.new((direction.X * 0.02), 0, (direction.Y * 0.02), 0)		
-		if projectileClone.Position.X.Scale &gt;= 1 or projectileClone.Position.X.Scale &lt;= 0 or projectileClone.Position.Y.Scale &gt;= 1 or projectileClone.Position.Y.Scale &lt;= 0 then
-			projectileClone:Remove() 
-			projectileClone = nil
-		end
-		for i = 1, #physicsObjects do 
-			if projectileClone then collision = checkForCollision(physicsObjects[i], projectileClone, Vector2.new(0, 0)) end
-			if collision then if projectileClone then projectileClone:Remove() projectileClone = nil end end 
-		end
-		for i = 1, #enemies do 			
-			if projectileClone then collision = checkForCollision(enemies[i], projectileClone, Vector2.new(0, 0)) end
-			if collision and projectileClone then 
-				projectileClone:Remove()
-				projectileClone = nil
-				health = enemies[i]:FindFirstChild(&quot;Health&quot;)				
-				if health and health.Value &gt; 0 then 						
-					health.Value = health.Value - 17
-				else 
-					enemies[i]:Remove() 
-					--enemies[i] = nil
-				end				
-			end 
-		end
-		if projectileClone and boss then
-			collision = checkForCollision(boss, projectileClone, Vector2.new(0, 0))
-			if collision and projectileClone then 
-				projectileClone:Remove()
-				projectileClone = nil
-				health = boss:FindFirstChild(&quot;Health&quot;)
-				if health and health.Value &gt; 0 then 
-					health.Value = health.Value - 17
-				else 
-					boss:Remove()	
-					boss = nil
-					-- End the Game
-					worldScrolling = true 
-					win = Instance.new(&quot;TextLabel&quot;)
-					win.Parent = gameFrame
-					win.Text = &quot;YOU WON&quot;
-					win.TextColor3 = Color3.new(1.0, 0.0, 0.0)
-					win.Position = UDim2.new(0.5, 0, 0.5, 0)
-					win.ZIndex = 10.0
-					win.FontSize = Enum.FontSize.Size24
-				end
-			end
-		end
-		wait()		
-	end
+function fire(projectileClone, direction)&#9;
+&#9;local collision
+&#9;-- Lets set the velocity to be 2 units 
+&#9;while projectileClone do &#9;&#9;
+&#9;&#9;projectileClone.Position = projectileClone.Position + UDim2.new((direction.X * 0.02), 0, (direction.Y * 0.02), 0)&#9;&#9;
+&#9;&#9;if projectileClone.Position.X.Scale &gt;= 1 or projectileClone.Position.X.Scale &lt;= 0 or projectileClone.Position.Y.Scale &gt;= 1 or projectileClone.Position.Y.Scale &lt;= 0 then
+&#9;&#9;&#9;projectileClone:Remove() 
+&#9;&#9;&#9;projectileClone = nil
+&#9;&#9;end
+&#9;&#9;for i = 1, #physicsObjects do 
+&#9;&#9;&#9;if projectileClone then collision = checkForCollision(physicsObjects[i], projectileClone, Vector2.new(0, 0)) end
+&#9;&#9;&#9;if collision then if projectileClone then projectileClone:Remove() projectileClone = nil end end 
+&#9;&#9;end
+&#9;&#9;for i = 1, #enemies do &#9;&#9;&#9;
+&#9;&#9;&#9;if projectileClone then collision = checkForCollision(enemies[i], projectileClone, Vector2.new(0, 0)) end
+&#9;&#9;&#9;if collision and projectileClone then 
+&#9;&#9;&#9;&#9;projectileClone:Remove()
+&#9;&#9;&#9;&#9;projectileClone = nil
+&#9;&#9;&#9;&#9;health = enemies[i]:FindFirstChild(&quot;Health&quot;)&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if health and health.Value &gt; 0 then &#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;health.Value = health.Value - 17
+&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;enemies[i]:Remove() 
+&#9;&#9;&#9;&#9;&#9;--enemies[i] = nil
+&#9;&#9;&#9;&#9;end&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;end 
+&#9;&#9;end
+&#9;&#9;if projectileClone and boss then
+&#9;&#9;&#9;collision = checkForCollision(boss, projectileClone, Vector2.new(0, 0))
+&#9;&#9;&#9;if collision and projectileClone then 
+&#9;&#9;&#9;&#9;projectileClone:Remove()
+&#9;&#9;&#9;&#9;projectileClone = nil
+&#9;&#9;&#9;&#9;health = boss:FindFirstChild(&quot;Health&quot;)
+&#9;&#9;&#9;&#9;if health and health.Value &gt; 0 then 
+&#9;&#9;&#9;&#9;&#9;health.Value = health.Value - 17
+&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;boss:Remove()&#9;
+&#9;&#9;&#9;&#9;&#9;boss = nil
+&#9;&#9;&#9;&#9;&#9;-- End the Game
+&#9;&#9;&#9;&#9;&#9;worldScrolling = true 
+&#9;&#9;&#9;&#9;&#9;win = Instance.new(&quot;TextLabel&quot;)
+&#9;&#9;&#9;&#9;&#9;win.Parent = gameFrame
+&#9;&#9;&#9;&#9;&#9;win.Text = &quot;YOU WON&quot;
+&#9;&#9;&#9;&#9;&#9;win.TextColor3 = Color3.new(1.0, 0.0, 0.0)
+&#9;&#9;&#9;&#9;&#9;win.Position = UDim2.new(0.5, 0, 0.5, 0)
+&#9;&#9;&#9;&#9;&#9;win.ZIndex = 10.0
+&#9;&#9;&#9;&#9;&#9;win.FontSize = Enum.FontSize.Size24
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait()&#9;&#9;
+&#9;end
 end
 
 function gameCharFire(mouse)
-	if mouse and gameProjectile and firing == false and gameChar then 
-		firing = true
-		local projectileClone = gameProjectile:Clone()
-		local mouseInWorld = transferToWorldCoordinates(mouse)
-		local gameCharPos = transferToWorldCoordinates(gameChar.AbsolutePosition)
-		if mouseInWorld and mouseInWorld.X &gt; gameCharPos.X then
-			gameChar.Image = &quot;http://www.roblox.com/asset/?id=58461425&quot;
-			projectileClone.Position = gameChar.Position + UDim2.new(0.03, 0, 0.025, 0)
-		else 
-			gameChar.Image = &quot;http://www.roblox.com/asset/?id=58462272&quot;
-			projectileClone.Position = gameChar.Position + UDim2.new(-0.03, 0, 0.025, 0)
-		end
-		projectileClone.Parent = gameFrame
-		table.insert(gameProjectileClones, projectileClone)
-		-- GROSS
-		-- Need to plug stuff into a generic physics engine
-		-- Next on the plate, hopefully 
-		local direction = (mouseInWorld - gameCharPos).unit
-		if projectileSound then projectileSound:Play() end
-		coroutine.resume(coroutine.create(function() fire(projectileClone, direction) end))			
-		wait(0.75)
-		firing = false
-	end
+&#9;if mouse and gameProjectile and firing == false and gameChar then 
+&#9;&#9;firing = true
+&#9;&#9;local projectileClone = gameProjectile:Clone()
+&#9;&#9;local mouseInWorld = transferToWorldCoordinates(mouse)
+&#9;&#9;local gameCharPos = transferToWorldCoordinates(gameChar.AbsolutePosition)
+&#9;&#9;if mouseInWorld and mouseInWorld.X &gt; gameCharPos.X then
+&#9;&#9;&#9;gameChar.Image = &quot;http://www.roblox.com/asset/?id=58461425&quot;
+&#9;&#9;&#9;projectileClone.Position = gameChar.Position + UDim2.new(0.03, 0, 0.025, 0)
+&#9;&#9;else 
+&#9;&#9;&#9;gameChar.Image = &quot;http://www.roblox.com/asset/?id=58462272&quot;
+&#9;&#9;&#9;projectileClone.Position = gameChar.Position + UDim2.new(-0.03, 0, 0.025, 0)
+&#9;&#9;end
+&#9;&#9;projectileClone.Parent = gameFrame
+&#9;&#9;table.insert(gameProjectileClones, projectileClone)
+&#9;&#9;-- GROSS
+&#9;&#9;-- Need to plug stuff into a generic physics engine
+&#9;&#9;-- Next on the plate, hopefully 
+&#9;&#9;local direction = (mouseInWorld - gameCharPos).unit
+&#9;&#9;if projectileSound then projectileSound:Play() end
+&#9;&#9;coroutine.resume(coroutine.create(function() fire(projectileClone, direction) end))&#9;&#9;&#9;
+&#9;&#9;wait(0.75)
+&#9;&#9;firing = false
+&#9;end
 end
 
 ----------------------------------------------- TOOL EVENTS -----------------------------------------------
 
 function onActivated()
-	if Tool.Enabled == false then 
-		return
-	end
-	
-	Tool.Enabled = false 
-	
-	vCharacter = Tool.Parent
-	myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-	myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)	
-	if myTorso and myHumanoid then 
-		wait(0.2)
-		myTorso.Anchored = true
-		myHumanoid.WalkSpeed = 0.0
-	end
-	projectileSound = RPG:FindFirstChild(&quot;ProjectileSound&quot;)
-	bossSound = RPG:FindFirstChild(&quot;BossSound&quot;)
-	screamSound = RPG:FindFirstChild(&quot;ScreamSound&quot;)
-	gameSound = RPG:FindFirstChild(&quot;GameSound&quot;)
-	numberOfLives = 3
-	RPG.Transparency = 1.0
-	if gameSound then gameSound:Play() end	
-	gameStillOn = true	
-	createGameInterface()	
-	co = coroutine.create(waitUntilDone)
-	coroutine.resume(co)
-	gameUpdate()	
+&#9;if Tool.Enabled == false then 
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;Tool.Enabled = false 
+&#9;
+&#9;vCharacter = Tool.Parent
+&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)&#9;
+&#9;if myTorso and myHumanoid then 
+&#9;&#9;wait(0.2)
+&#9;&#9;myTorso.Anchored = true
+&#9;&#9;myHumanoid.WalkSpeed = 0.0
+&#9;end
+&#9;projectileSound = RPG:FindFirstChild(&quot;ProjectileSound&quot;)
+&#9;bossSound = RPG:FindFirstChild(&quot;BossSound&quot;)
+&#9;screamSound = RPG:FindFirstChild(&quot;ScreamSound&quot;)
+&#9;gameSound = RPG:FindFirstChild(&quot;GameSound&quot;)
+&#9;numberOfLives = 3
+&#9;RPG.Transparency = 1.0
+&#9;if gameSound then gameSound:Play() end&#9;
+&#9;gameStillOn = true&#9;
+&#9;createGameInterface()&#9;
+&#9;co = coroutine.create(waitUntilDone)
+&#9;coroutine.resume(co)
+&#9;gameUpdate()&#9;
 end
 
 function onEquipped(mouse)
-	if mouse then 		
-		mouse.KeyDown:connect(gameCharMovementStart)
-		mouse.KeyUp:connect(gameCharMovementStop)
-		mouse.Button1Down:connect(function () gameCharFire(mouse) end)
-	end
+&#9;if mouse then &#9;&#9;
+&#9;&#9;mouse.KeyDown:connect(gameCharMovementStart)
+&#9;&#9;mouse.KeyUp:connect(gameCharMovementStop)
+&#9;&#9;mouse.Button1Down:connect(function () gameCharFire(mouse) end)
+&#9;end
 end
 
 function onUnequipped()
-	gameStillOn = false 
-	if myTorso then myTorso.Anchored = false end	
-	if myHumanoid then myHumanoid.WalkSpeed = 16.0 end
-	RPG.Transparency = 0.0
-	forwards = false
-	backwards = false
-	falling = false
-	jumping = false
-	firing = false	
-	stopFall = false
-	killCharacter = false
-	worldScrolling = false
-	screenCount = 0
-	velocity = Vector2.new(0, 0)
-	gravity = 0.0384
-	gameDuration = 240
-	jumpTimer = 0.0
-	boss = nil
-	enemies = {}
-	destroyGameInterface() 
-	if bossSound then bossSound:Stop() end
-	if gameSound then gameSound:Stop() end
+&#9;gameStillOn = false 
+&#9;if myTorso then myTorso.Anchored = false end&#9;
+&#9;if myHumanoid then myHumanoid.WalkSpeed = 16.0 end
+&#9;RPG.Transparency = 0.0
+&#9;forwards = false
+&#9;backwards = false
+&#9;falling = false
+&#9;jumping = false
+&#9;firing = false&#9;
+&#9;stopFall = false
+&#9;killCharacter = false
+&#9;worldScrolling = false
+&#9;screenCount = 0
+&#9;velocity = Vector2.new(0, 0)
+&#9;gravity = 0.0384
+&#9;gameDuration = 240
+&#9;jumpTimer = 0.0
+&#9;boss = nil
+&#9;enemies = {}
+&#9;destroyGameInterface() 
+&#9;if bossSound then bossSound:Stop() end
+&#9;if gameSound then gameSound:Stop() end
 end 
 
 -- Event Listeners 
@@ -1145,66 +1145,66 @@ Tool.Activated:connect(onActivated)
 
 ----------------------------------------------- GAME UPDATE FUNCTION --------------------------------------------
 
-function gameUpdate()	
-	while gameStillOn and gameDuration &gt; 0 do
-		World:Update()		
-		gameDuration = gameDuration - wait()
-		gameTimeText.Text = tostring(math.floor(gameDuration))
-		if gameDuration &lt; 60 then 
-			gameTimeText.TextColor3 = Color3.new(255, 0, 0)
-		end
-		if gameChar.Position.Y.Scale &gt; 0.7 then
-			if screamSound then screamSound:Play() end
-		end
-		if gameChar.Position.Y.Scale &gt; 0.85 or killCharacter == true then 			
-			killCharacter = false			
-			gameChar.Image = &quot;http://www.roblox.com/asset/?id=58551023&quot;						
-			wait(1.0)
-			gameChar:Remove()
-			gameChar = nil
-			if numberOfLives &gt; 0 then 
-				numberOfLives = numberOfLives - 1 
-				if numberOfLives == 2 then 
-					lifeLayer.Image = &quot;http://www.roblox.com/asset/?id=58463962&quot;
-				elseif numberOfLives == 1 then 
-					lifeLayer.Image = &quot;http://www.roblox.com/asset/?id=58463982&quot;
-				else 
-					lifeLayer.Image = &quot;&quot; 
-				end
-				createLocalCharacter()	
-			else 
-				lose = Instance.new(&quot;TextLabel&quot;)
-				lose.Parent = gameFrame
-				lose.Text = &quot;YOU LOSE&quot;
-				lose.Position = UDim2.new(0.5, 0, 0.5, 0)
-				lose.TextColor3 = Color3.new(0, 0, 1.0)
-				lose.ZIndex = 10.0
-				lose.FontSize = Enum.FontSize.Size24
-				wait(3.0)
-				gameStillOn = false 
-			end						
-			falling = false
-			stopFall = true
-		end
-		wait() -- NO CRASH 
-	end
-	jumpTimer = 0.0
-	screenCount = 0
-	killCharacter = false
-	forwards = false
-	backwards = false
-	falling = false
-	jumping = false
-	firing = false
-	stopFall = false
-	worldScrolling = false
-	boss = nil
-	enemies = {}
-	gameDuration = 480
-	velocity = Vector2.new(0, 0)
-	gravity = 0.0384
-	if bossSound then bossSound:Stop() end
-	if gameSound then gameSound:Stop() end
+function gameUpdate()&#9;
+&#9;while gameStillOn and gameDuration &gt; 0 do
+&#9;&#9;World:Update()&#9;&#9;
+&#9;&#9;gameDuration = gameDuration - wait()
+&#9;&#9;gameTimeText.Text = tostring(math.floor(gameDuration))
+&#9;&#9;if gameDuration &lt; 60 then 
+&#9;&#9;&#9;gameTimeText.TextColor3 = Color3.new(255, 0, 0)
+&#9;&#9;end
+&#9;&#9;if gameChar.Position.Y.Scale &gt; 0.7 then
+&#9;&#9;&#9;if screamSound then screamSound:Play() end
+&#9;&#9;end
+&#9;&#9;if gameChar.Position.Y.Scale &gt; 0.85 or killCharacter == true then &#9;&#9;&#9;
+&#9;&#9;&#9;killCharacter = false&#9;&#9;&#9;
+&#9;&#9;&#9;gameChar.Image = &quot;http://www.roblox.com/asset/?id=58551023&quot;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;wait(1.0)
+&#9;&#9;&#9;gameChar:Remove()
+&#9;&#9;&#9;gameChar = nil
+&#9;&#9;&#9;if numberOfLives &gt; 0 then 
+&#9;&#9;&#9;&#9;numberOfLives = numberOfLives - 1 
+&#9;&#9;&#9;&#9;if numberOfLives == 2 then 
+&#9;&#9;&#9;&#9;&#9;lifeLayer.Image = &quot;http://www.roblox.com/asset/?id=58463962&quot;
+&#9;&#9;&#9;&#9;elseif numberOfLives == 1 then 
+&#9;&#9;&#9;&#9;&#9;lifeLayer.Image = &quot;http://www.roblox.com/asset/?id=58463982&quot;
+&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;lifeLayer.Image = &quot;&quot; 
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;createLocalCharacter()&#9;
+&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;lose = Instance.new(&quot;TextLabel&quot;)
+&#9;&#9;&#9;&#9;lose.Parent = gameFrame
+&#9;&#9;&#9;&#9;lose.Text = &quot;YOU LOSE&quot;
+&#9;&#9;&#9;&#9;lose.Position = UDim2.new(0.5, 0, 0.5, 0)
+&#9;&#9;&#9;&#9;lose.TextColor3 = Color3.new(0, 0, 1.0)
+&#9;&#9;&#9;&#9;lose.ZIndex = 10.0
+&#9;&#9;&#9;&#9;lose.FontSize = Enum.FontSize.Size24
+&#9;&#9;&#9;&#9;wait(3.0)
+&#9;&#9;&#9;&#9;gameStillOn = false 
+&#9;&#9;&#9;end&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;falling = false
+&#9;&#9;&#9;stopFall = true
+&#9;&#9;end
+&#9;&#9;wait() -- NO CRASH 
+&#9;end
+&#9;jumpTimer = 0.0
+&#9;screenCount = 0
+&#9;killCharacter = false
+&#9;forwards = false
+&#9;backwards = false
+&#9;falling = false
+&#9;jumping = false
+&#9;firing = false
+&#9;stopFall = false
+&#9;worldScrolling = false
+&#9;boss = nil
+&#9;enemies = {}
+&#9;gameDuration = 480
+&#9;velocity = Vector2.new(0, 0)
+&#9;gravity = 0.0384
+&#9;if bossSound then bossSound:Stop() end
+&#9;if gameSound then gameSound:Stop() end
 end
 
 ----------------------------------------------- THE END(PEACE!!) -----------------------------------------------
@@ -1217,23 +1217,23 @@ end
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.752447844</X>
-					<Y>13.3051968</Y>
-					<Z>3.74345493</Z>
-					<R00>0.999609709</R00>
-					<R01>0.00580755202</R01>
-					<R02>0.0273237247</R02>
+					<X>-1.52212059</X>
+					<Y>14.059988</Y>
+					<Z>4.23275852</Z>
+					<R00>0.998806179</R00>
+					<R01>0.00550008891</R01>
+					<R02>-0.0485379733</R02>
 					<R10>-0</R10>
-					<R11>0.978149652</R11>
-					<R12>-0.20790197</R12>
-					<R20>-0.0279340893</R20>
-					<R21>0.207820833</R21>
-					<R22>0.977768004</R22>
+					<R11>0.993641019</R11>
+					<R12>0.112594612</R12>
+					<R20>0.0488485992</R20>
+					<R21>-0.112460196</R21>
+					<R22>0.992454827</R22>
 				</CoordinateFrame>
 				<CoordinateFrame name="Focus">
-					<X>-1.29892206</X>
-					<Y>17.4632339</Y>
-					<Z>-15.8118944</Z>
+					<X>-0.551361203</X>
+					<Y>11.8080959</Y>
+					<Z>-15.6163359</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
