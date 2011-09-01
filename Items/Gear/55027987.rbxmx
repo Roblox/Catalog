@@ -143,6 +143,11 @@ else
 &#9;return
 end
 
+local isRestricted = false
+if game.PlaceId == &quot;41324860&quot; then
+&#9;isRestricted = true
+end
+
 local Tool = script.Parent
 
 enabled = true
@@ -637,7 +642,6 @@ function processValue(value, playerGui, guiFrame)
 end
 
 function killFrame(frame)
-&#9;toggleWiringGui(true)
 &#9;screen.Enabled = false
 &#9;frame:remove()
 end
@@ -872,7 +876,7 @@ function cancelSelectionGui()
 &#9;showConfigurationAnnotations()
 
 &#9;if lastConfig then
-&#9;&#9;local configValues = lastConfig:getChildren()
+&#9;&#9;local configValues = lastConfig:GetChildren()
 &#9;&#9;for i = 1, #configValues do
 &#9;&#9;&#9;if origValueMap[configValues[i].Name] ~= nil then
 &#9;&#9;&#9;&#9;if constrained(configValues[i]) then configValues[i].ConstrainedValue = origValueMap[configValues[i].Name]
@@ -907,7 +911,7 @@ function removeSelectionGui()
 &#9;showConfigurationAnnotations()
 
 &#9;if lastConfig then
-&#9;&#9;local configValues = lastConfig:getChildren()
+&#9;&#9;local configValues = lastConfig:GetChildren()
 &#9;&#9;for i = 1, #configValues do
 &#9;&#9;&#9;if origValueMap[configValues[i].Name] ~= nil then
 &#9;&#9;&#9;&#9;origValueMap[configValues[i].Name] = nil
@@ -920,9 +924,9 @@ end
 
 function canSelectObject(part)
 
-&#9;if Tool.IsRestricted.Value then
+&#9;if isRestricted then
 &#9;&#9;waitForChild(playerArea,&quot;PlayerArea&quot;)
-&#9;&#9;if Tool.IsRestricted.Value and playerArea:FindFirstChild(&quot;PlayerArea&quot;) and part:IsDescendantOf(playerArea.PlayerArea) then
+&#9;&#9;if isRestricted and playerArea:FindFirstChild(&quot;PlayerArea&quot;) and part:IsDescendantOf(playerArea.PlayerArea) then
 &#9;&#9;&#9;return part and not (part.Locked) and part:IsA(&quot;BasePart&quot;) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60
 &#9;&#9;else
 &#9;&#9;&#9;return false
@@ -969,15 +973,6 @@ function findConfiguration(part)
 &#9;return nil
 end
 
-function toggleWiringGui(enabled)
-&#9;local guiChildren = game.Players.LocalPlayer.PlayerGui:GetChildren()
-&#9;for i = 1, #guiChildren do
-&#9;&#9;if guiChildren[i].Name == &quot;WiringGui&quot; and guiChildren[i]:IsA(&quot;BillboardGui&quot;) then
-&#9;&#9;&#9;guiChildren[i].Enabled = enabled
-&#9;&#9;end
-&#9;end
-end
-
 function removeBillboards()
 &#9;local guis = guiMain:GetChildren()
 &#9;for i = 1, #guis do
@@ -1009,7 +1004,6 @@ function on3dButton1Up(mouse, guiMain, playerGui)
 
 &#9;&#9;&#9;removeBillboards()
 &#9;&#9;&#9;screen.Enabled = true
-&#9;&#9;&#9;toggleWiringGui(false)
 
 &#9;&#9;&#9;if foundPart:IsA(&quot;Configuration&quot;) then
 &#9;&#9;&#9;&#9;selectionGui = processConfiguration(foundPart, playerGui)
@@ -1039,7 +1033,7 @@ function createBillboardGui(name, objectAdorning)
 &#9;screen.Size = UDim2.new(1.5,0,1.5,0)
 &#9;screen.Enabled = true
 &#9;screen.Active = true
-&#9;screen.ExtentsOffset = Vector3.new(0,0,1)
+&#9;screen.AlwaysOnTop = true
 
 &#9;local isModel, model = isInModel(objectAdorning)
 &#9;if isModel then
@@ -1066,6 +1060,20 @@ function giveConfigBadge(parent)
 &#9;configBadge.Position = UDim2.new(0.25,0,0)
 &#9;configBadge.Size = UDim2.new(0.5,0,1,0)
 &#9;configBadge.Parent = parent
+
+&#9;local badgeCon = configBadge.Changed:connect(function(prop)
+&#9;&#9;if prop == &quot;AbsoluteSize&quot; then
+&#9;&#9;&#9;configBadge.Visible = (configBadge.AbsoluteSize.X &gt; 10)
+&#9;&#9;end
+&#9;end)
+
+&#9;local killCon = nil
+&#9;killCon = configBadge.AncestryChanged:connect(function(child,parent)
+&#9;&#9;if parent == nil then
+&#9;&#9;&#9;killCon:disconnect()
+&#9;&#9;&#9;badgeCon:disconnect()
+&#9;&#9;end
+&#9;end)
 end
 
 function onEquippedLocal(mouse)
@@ -1074,7 +1082,7 @@ function onEquippedLocal(mouse)
 
 &#9;if player == nil then return end
 
-&#9;if Tool.IsRestricted.Value then
+&#9;if isRestricted then
 &#9;&#9;waitForChild(game.Workspace,&quot;BuildingAreas&quot;)
 &#9;&#9;waitForChild(game.Workspace.BuildingAreas,&quot;Area1&quot;)
 &#9;&#9;waitForChild(game.Workspace.BuildingAreas.Area1,&quot;Player&quot;)
@@ -1086,8 +1094,6 @@ function onEquippedLocal(mouse)
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
-
-&#9;toggleWiringGui(true)
 
 &#9;if not screen then
 &#9;&#9;screen = Instance.new(&quot;BillboardGui&quot;)
@@ -1200,8 +1206,7 @@ function configurationAdded(config, guiMain)
 &#9;&#9;return
 &#9;end
 
-&#9;waitForChild(Tool,&quot;IsRestricted&quot;)
-&#9;if Tool.IsRestricted.Value and not isInMyArea(config) then
+&#9;if isRestricted and not isInMyArea(config) then
 &#9;&#9;return&#9;
 &#9;end
 &#9;
@@ -1209,7 +1214,11 @@ function configurationAdded(config, guiMain)
 &#9;data.Configuration = config
 &#9;data.VisualAnnotation = createVisualAnnotation(config, guiMain)
 &#9;if config:IsA(&quot;Configuration&quot;) then
-&#9;&#9;data.Connection = config.AncestryChanged:connect(function(child, newParent) if child == config then configurationParentChanged(data, newParent) end end)
+&#9;&#9;data.Connection = config.AncestryChanged:connect(function(child, newParent)
+&#9;&#9;&#9;if child == config then
+&#9;&#9;&#9;&#9;configurationParentChanged(data, newParent)
+&#9;&#9;&#9;end
+&#9;&#9;end)
 &#9;&#9;configurationParentChanged(data, config.Parent)
 &#9;else
 &#9;&#9;configurationParentChanged(data, config)
@@ -1217,11 +1226,8 @@ function configurationAdded(config, guiMain)
 
 &#9;local billboardName = tostring(config.Parent)
 
-&#9;local newBillboard = game.Players.LocalPlayer.PlayerGui:FindFirstChild(billboardName)
-&#9;if not newBillboard then
-&#9;&#9;newBillboard = createBillboardGui(billboardName,config.Parent)
-&#9;&#9;newBillboard.Parent = game.Players.LocalPlayer.PlayerGui
-&#9;end
+&#9;newBillboard = createBillboardGui(billboardName,config.Parent)
+&#9;newBillboard.Parent = game.Players.LocalPlayer.PlayerGui
 &#9;giveConfigBadge(newBillboard:FindFirstChild(&quot;BadgeFrame&quot;))
 
 &#9;configTable[config] = data
@@ -1287,13 +1293,6 @@ end
 
 Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX4">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<string name="Name">IsRestricted</string>
-				<bool name="Value">false</bool>
 			</Properties>
 		</Item>
 	</Item>
