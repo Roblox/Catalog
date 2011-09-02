@@ -792,6 +792,8 @@ local Data = {}
 Data.Stamp = {}
 Data.Loading = {}
 
+local guiScriptIsLoadingSomething = false
+
 local eyeDropperConnection, eyeDropperMoveConnection
 
 local playerModel
@@ -884,10 +886,10 @@ end
 function beginInsertAssetStamp(assetName, assetId, image, stampMode)
 &#9;-- trying to stop assets, gone back to Main Stamp Dialog
 &#9;if assetId == 0 then
+&#9;&#9;guiScriptIsLoadingSomething = true
 &#9;&#9;cancelAssetPlacement()
 &#9;&#9;return
 &#9;end
-
 &#9;-- This call will cause a &quot;wait&quot; until the data comes back
 &#9;-- below we wait a max of 8 seconds before deciding to bail out on loading
 &#9;local root
@@ -932,6 +934,11 @@ function beginInsertAssetStamp(assetName, assetId, image, stampMode)
 &#9;&#9;pcall(function() root:Remove() end)
 &#9;&#9;signalInsertComplete(&quot;Main&quot;)
 &#9;else
+&#9;&#9;if root == nil then
+&#9;&#9;&#9;signalInsertComplete(&quot;Main&quot;)
+&#9;&#9;&#9;return
+&#9;&#9;end
+
 &#9;&#9;local instances = root:GetChildren()
 &#9;&#9;if #instances == 0 then
 &#9;&#9;&#9;root:Remove()
@@ -989,6 +996,7 @@ function beginInsertAssetStamp(assetName, assetId, image, stampMode)
 &#9;&#9;cancelAssetPlacement()
 &#9;&#9;Data.Stamp.Model = root
 &#9;&#9;setupDraggableClone()
+&#9;&#9;guiScriptIsLoadingSomething = false
 &#9;end
 
 end
@@ -1028,6 +1036,8 @@ function signalInsertComplete(type)
 &#9;&#9;&#9;eyeDropperConnection = nil
 &#9;&#9;end
 &#9;&#9;if eyeDropperMoveConnection then eyeDropperMoveConnection:disconnect() end
+
+&#9;&#9;if Mouse and not mouseButton1UpCon then mouseButton1UpCon = Mouse.Button1Up:connect(onInsertMouseButton1Up) end
 &#9;end
 &#9;clearSelection()
 
@@ -1047,7 +1057,7 @@ function p(assetName, assetId, image, stampMode)
 &#9;local loader
 &#9;loading = true
 &#9;if useAssetVersionId then
-&#9;&#9;loader = coroutine.create(function()&#9;
+&#9;&#9;loader = coroutine.create(function()
 &#9;&#9;&#9;root = game:GetService(&quot;InsertService&quot;):LoadAssetVersion(assetId)
 &#9;&#9;&#9;loading = false
 &#9;&#9;end)
@@ -1619,6 +1629,7 @@ function checkPartLimit()
 end
 
 function setupDraggableClone()
+&#9;if eyeDropperConnection then eyeDropperConnection:disconnect() eyeDropperConnection = nil end
 
 &#9;--if not Mouse.Target then return end
 
@@ -1790,7 +1801,9 @@ end
 local insertBoundingBoxOverlapVector = Vector3.new(1, 1, 1) -- we can still stamp if our character extrudes into the target stamping space by 1 or fewer units
 
 function onInsertMouseButton1Up()
-&#9;if eyeDropperConnection ~= nil then 
+&#9;if guiScriptIsLoadingSomething then return end -- don&apos;t try to stamp while we&apos;re loading!
+
+&#9;if eyeDropperConnection then 
 &#9;&#9;eyeDropperConnection:disconnect()
 &#9;&#9;eyeDropperConnection = nil
 &#9;&#9;return
@@ -2050,11 +2063,13 @@ function onEyeDropperMouseButton1Down()
 &#9;&#9;if isRestricted then
 &#9;&#9;&#9;if checkPartLimit() then
 &#9;&#9;&#9;&#9;setupDraggableClone()
+&#9;&#9;&#9;&#9;if Mouse and not mouseButton1UpCon then mouseButton1UpCon = Mouse.Button1Up:connect(onInsertMouseButton1Up) end
 &#9;&#9;&#9;else
 &#9;&#9;&#9;&#9;variables.ShowMaxedOut.Value = true
 &#9;&#9;&#9;end
 &#9;&#9;else
 &#9;&#9;&#9;setupDraggableClone()
+&#9;&#9;&#9;if Mouse and not mouseButton1UpCon then mouseButton1UpCon = Mouse.Button1Up:connect(onInsertMouseButton1Up) end
 &#9;&#9;end
 
 &#9;&#9;variables.SwitchLoaderToDialog.AssetImage.Value = &quot;0&quot;
@@ -2089,6 +2104,9 @@ function startEyeDropperOperation()
 &#9;cancelAssetPlacement()
 &#9;pressedEsc = false
 &#9;signalInsertComplete(&quot;EyeDropper&quot;)
+
+&#9;if mouseButton1UpCon then mouseButton1UpCon:disconnect() mouseButton1UpCon = nil end
+
 &#9;if eyeDropperConnection then
 &#9;&#9;eyeDropperConnection:disconnect()
 &#9;&#9;eyeDropperConnection = nil
@@ -2191,6 +2209,9 @@ function onInsertKeyDown(key)
 &#9;&#9;&#9;eyeDropperConnection = nil
 &#9;&#9;end
 &#9;&#9;if eyeDropperMoveConnection then eyeDropperMoveConnection:disconnect() end
+
+&#9;&#9;if Mouse and not mouseButton1UpCon then mouseButton1UpCon = Mouse.Button1Up:connect(onInsertMouseButton1Up) end
+
 &#9;&#9;clearSelection()
 &#9;&#9;cancelAssetPlacement()
 &#9;&#9;Data.Loading.Cancelled = true
@@ -2327,6 +2348,8 @@ end)
 
 Tool.Unequipped:connect(function() onUnequipped() end)
 ----------------------------------------------------------------------------------------
+
+
 </ProtectedString>
 			</Properties>
 		</Item>
@@ -4329,6 +4352,8 @@ local startTime = 0
 
 local SetCache = {}
 
+local lastEnter = nil
+
 -- For Restricting Stamper Tool
 local buildingPlate
 local partModel
@@ -4520,7 +4545,6 @@ function closeClonePanel()
 end
 
 function cancelAssetPlacement()
-
 &#9;gInitial90DegreeRotations = 0
 &#9;Data.Stamp.Cancelled = true
 &#9;Data.Stamp.Dragger = nil
@@ -4949,7 +4973,12 @@ function buildInsertButton(buttonPosition)
 &#9;insertButton.Visible = true
 
 &#9;local mouseEnterCon = insertButton.MouseEnter:connect(function()
-&#9;&#9;showLargePreview(insertButton)
+&#9;&#9;lastEnter = insertButton
+&#9;&#9;delay(0.1,function()
+&#9;&#9;&#9;if lastEnter == insertButton then
+&#9;&#9;&#9;&#9;showLargePreview(insertButton)
+&#9;&#9;&#9;end
+&#9;&#9;end)
 &#9;end)
 &#9;return insertButton, mouseEnterCon
 end
@@ -5045,6 +5074,7 @@ end
 function beginInsertAssetGui(assetName, assetId, image, stampMode)
 &#9;Data.Stamp.StampMode = stampMode
 &#9;closeInsertPanel()
+&#9;signalStamperScript(&quot;&quot;,0,&quot;&quot;,&quot;&quot;,false)
 &#9;moveLoadingWindow()
 &#9;cancelAssetPlacement()
 &#9;signalStamperScript(assetName, assetId, image, stampMode)
@@ -5145,6 +5175,8 @@ function setUpRestrictions()
 end
 
 function onInsertKeyDown(key)
+&#9;if loading then return end -- don&apos;t try to switch while we&apos;re loading
+
 &#9;key = string.lower(key)
 
 &#9;-- go to mru buttons
