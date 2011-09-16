@@ -37,7 +37,7 @@
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
 					<X>0.0988349915</X>
-					<Y>8.97416878</Y>
+					<Y>8.97416687</Y>
 					<Z>-0.195800781</Z>
 					<R00>0.995120585</R00>
 					<R01>-7.11792454e-005</R01>
@@ -51,7 +51,7 @@
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">2</token>
+				<token name="FormFactor">1</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -306,8 +306,15 @@
 					<bool name="Value">false</bool>
 				</Properties>
 			</Item>
+			<Item class="BoolValue" referent="RBX26">
+				<Properties>
+					<bool name="Archivable">true</bool>
+					<string name="Name">MouseClick</string>
+					<bool name="Value">false</bool>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX26">
+		<Item class="LocalScript" referent="RBX27">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">true</bool>
@@ -558,12 +565,12 @@ goAway.Active = false
 arrowGui:remove()
 script:remove()</ProtectedString>
 			</Properties>
-			<Item class="ScreenGui" referent="RBX27">
+			<Item class="ScreenGui" referent="RBX28">
 				<Properties>
 					<bool name="Archivable">true</bool>
 					<string name="Name">GuideArrowGui</string>
 				</Properties>
-				<Item class="ImageLabel" referent="RBX28">
+				<Item class="ImageLabel" referent="RBX29">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -591,7 +598,7 @@ script:remove()</ProtectedString>
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
-				<Item class="ImageLabel" referent="RBX29">
+				<Item class="ImageLabel" referent="RBX30">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -619,7 +626,7 @@ script:remove()</ProtectedString>
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
-				<Item class="ImageLabel" referent="RBX30">
+				<Item class="ImageLabel" referent="RBX31">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -647,7 +654,7 @@ script:remove()</ProtectedString>
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
-				<Item class="ImageLabel" referent="RBX31">
+				<Item class="ImageLabel" referent="RBX32">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -675,7 +682,7 @@ script:remove()</ProtectedString>
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
-				<Item class="ImageLabel" referent="RBX32">
+				<Item class="ImageLabel" referent="RBX33">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -703,7 +710,7 @@ script:remove()</ProtectedString>
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
-				<Item class="TextButton" referent="RBX33">
+				<Item class="TextButton" referent="RBX34">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="Archivable">true</bool>
@@ -744,7 +751,7 @@ script:remove()</ProtectedString>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX34">
+		<Item class="LocalScript" referent="RBX35">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
@@ -774,7 +781,10 @@ local walking = false
 local pressedEsc = false
 
 local gInitial90DegreeRotations = 0
-local gStaticTrans = 0.7
+local gStaticTrans = 1
+local gDesiredTrans = 0.7
+local transFadeInTime = 0.5
+local fadeInDelayTime = 0.5
 local eyedropperOffGridTolerance = 0.01
 
 local useAssetVersionId = false
@@ -784,15 +794,19 @@ local variables = Tool.LuaGlobalVariables
 waitForChild(variables,&quot;ShowInvalidPlacement&quot;)
 waitForChild(variables, &quot;Stamped&quot;)
 waitForChild(Tool,&quot;ErrorBox&quot;)
+waitForChild(variables, &quot;ShowAdminCategories&quot;)
 local errorBox = Tool.ErrorBox
 
 waitForChild(variables, &quot;IsRestricted&quot;)
+waitForChild(variables, &quot;MouseClick&quot;)
+click = variables.MouseClick
 
 local Data = {}
 Data.Stamp = {}
 Data.Loading = {}
 
 local guiScriptIsLoadingSomething = false
+local unstampableSurface = false
 
 local eyeDropperConnection, eyeDropperMoveConnection
 
@@ -801,6 +815,7 @@ local player
 
 -- For Restricting Stamper Tool
 local isRestricted = variables.IsRestricted.Value
+local adminAccess = variables.ShowAdminCategories.Value
 
 -- For Delete highlighting
 local selectionBox
@@ -1266,6 +1281,72 @@ function canDeleteObject(part)
 &#9;return part and not (part.Locked) and part:IsA(&quot;BasePart&quot;) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60 and (isChildOfMyModel(part) or partInBounds(part))
 end]]
 
+-- below is a helper function to help get the model surface instead of the part surface [for allowing a side to elect out of making joints automatically]
+function calcRayHitTime(rayStart, raySlope, intersectionPlane)
+&#9;if math.abs(raySlope) &lt; .01 then return 0 end -- 0 slope --&gt;  we just say intersection time is 0, and sidestep this dimension
+&#9;-- rayStart + t*raySlope = intersectionPlane, so t = (intersectionPlane - rayStart) / raySlope
+&#9;return (intersectionPlane - rayStart) / raySlope
+end
+
+
+function modelTargetSurface(partOrModel, rayStart, rayEnd)
+&#9;if not partOrModel then
+&#9;&#9;return 0
+&#9;end
+
+&#9;local modelCFrame = nil
+&#9;local modelSize = nil
+&#9;if partOrModel:IsA(&quot;Model&quot;) then
+&#9;&#9;modelCFrame = partOrModel:GetModelCFrame()
+&#9;&#9;modelSize = partOrModel:GetModelSize()
+&#9;else
+&#9;&#9;modelCFrame = partOrModel.CFrame
+&#9;&#9;modelSize = partOrModel.Size
+&#9;end
+
+&#9;--local mouseRayStart = modelCFrame:pointToObjectSpace(game.Workspace.CurrentCamera.CoordinateFrame.p)
+&#9;--local mouseRayEnd = modelCFrame:pointToObjectSpace(Mouse.Hit.p)
+&#9;local mouseRayStart = modelCFrame:pointToObjectSpace(rayStart)
+&#9;local mouseRayEnd = modelCFrame:pointToObjectSpace(rayEnd)
+&#9;local mouseSlope = mouseRayEnd - mouseRayStart
+
+&#9;local xPositive = 1
+&#9;local yPositive = 1
+&#9;local zPositive = 1
+&#9;if mouseSlope.X &gt; 0 then xPositive = -1 end
+&#9;if mouseSlope.Y &gt; 0 then yPositive = -1 end
+&#9;if mouseSlope.Z &gt; 0 then zPositive = -1 end
+
+&#9;-- find which surface the transformed mouse ray hits (using modelSize):
+&#9;local xHitTime = calcRayHitTime(mouseRayStart.X, mouseSlope.X, modelSize.X/2 * xPositive)
+&#9;local yHitTime = calcRayHitTime(mouseRayStart.Y, mouseSlope.Y, modelSize.Y/2 * yPositive)
+&#9;local zHitTime = calcRayHitTime(mouseRayStart.Z, mouseSlope.Z, modelSize.Z/2 * zPositive)
+
+&#9;local hitFace = 0
+
+&#9;--if xHitTime &gt;= 0 and yHitTime &gt;= 0 and zHitTime &gt;= 0 then
+&#9;if xHitTime &gt; yHitTime then
+&#9;&#9;if xHitTime &gt; zHitTime then
+&#9;&#9;&#9;-- xFace is hit
+&#9;&#9;&#9;hitFace = 1*xPositive
+&#9;&#9;else
+&#9;&#9;&#9;-- zFace is hit
+&#9;&#9;&#9;hitFace = 3*zPositive
+&#9;&#9;end
+&#9;else
+&#9;&#9;if yHitTime &gt; zHitTime then
+&#9;&#9;&#9;-- yFace is hit
+&#9;&#9;&#9;hitFace = 2*yPositive
+&#9;&#9;else
+&#9;&#9;&#9;-- zFace is hit
+&#9;&#9;&#9;hitFace = 3*zPositive
+&#9;&#9;end
+&#9;end
+
+&#9;return hitFace
+end
+
+
 function onInsertMouseMove()
 
 &#9;if Data.Stamp.MovingLock then
@@ -1293,11 +1374,90 @@ function onInsertMouseMove()
 &#9;&#9;-- REM TL: Data.Stamp.Dragger:MouseMove(Mouse.UnitRay)
 &#9;&#9;-- don&apos;t move with dragger - will move in one step on mouse down
 &#9;&#9;-- draw ghost at acceptable positions
-&#9;&#9;configFound, targetCFrame = findConfigAtMouseTarget(Data.Stamp.TransparencyTable)
+&#9;&#9;configFound, targetCFrame, targetSurface = findConfigAtMouseTarget(Data.Stamp.TransparencyTable)
 &#9;&#9;if configFound then
+
+&#9;&#9;&#9;&#9;if autoAlignToFace() and targetSurface ~= 1 and targetSurface ~= 4 then
+&#9;&#9;&#9;&#9;-- pre-rotate the flag or portrait so it&apos;s aligned correctly
+&#9;&#9;&#9;&#9;--local currCFrame
+&#9;&#9;&#9;&#9;--if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then currCFrame = Data.Stamp.CurrentParts[1]:GetModelCFrame()
+&#9;&#9;&#9;&#9;--else currCFrame = Data.Stamp.CurrentParts[1].CFrame end
+
+&#9;&#9;&#9;&#9;local numRotations = 0 -- update this according to how many rotations you need to get it to target surface
+&#9;&#9;&#9;&#9;if targetSurface == 3 then numRotations = 0 - gInitial90DegreeRotations + autoAlignToFace()
+&#9;&#9;&#9;&#9;elseif targetSurface == 0 then numRotations = 2 - gInitial90DegreeRotations + autoAlignToFace()
+&#9;&#9;&#9;&#9;elseif targetSurface == 5 then numRotations = 3 - gInitial90DegreeRotations + autoAlignToFace()
+&#9;&#9;&#9;&#9;elseif targetSurface == 2 then numRotations = 1 - gInitial90DegreeRotations + autoAlignToFace() end
+&#9;&#9;&#9;&#9;
+
+&#9;&#9;&#9;&#9;local ry = math.pi/2
+&#9;&#9;&#9;&#9;local rotCF = CFrame.fromEulerAnglesXYZ(0, ry*numRotations, 0)
+&#9;&#9;&#9;&#9;gInitial90DegreeRotations = gInitial90DegreeRotations + numRotations
+&#9;&#9;&#9;&#9;if Data.Stamp.CurrentParts[1]:IsA(&quot;Model&quot;) or Data.Stamp.CurrentParts[1]:IsA(&quot;Tool&quot;) then
+&#9;&#9;&#9;&#9;&#9;for i, object in pairs(Data.Stamp.CurrentParts[1]:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;&#9;if object:IsA(&quot;Flag&quot;) then object = object.Handle end
+&#9;&#9;&#9;&#9;&#9;&#9;if object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;Seat&quot;) or object:IsA(&quot;VehicleSeat&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;object.CFrame = rotCF * object.CFrame
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;Data.Stamp.CurrentParts[1].CFrame = rotCF * Data.Stamp.CurrentParts[1].CFrame
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+
 &#9;&#9;&#9;positionPartsAtCFrame3(Data.Stamp.CurrentParts[1], targetCFrame)
+
+&#9;&#9;&#9;-- auto break joints code
+&#9;&#9;&#9;if Mouse.Target and Mouse.Target.Parent then
+&#9;&#9;&#9;&#9;local modelInfo = Mouse.Target:FindFirstChild(&quot;RobloxModel&quot;)
+&#9;&#9;&#9;&#9;if not modelInfo then modelInfo = Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) end
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local myModelInfo = Data.Stamp.CurrentParts[1]:FindFirstChild(&quot;UnstampableFaces&quot;)
+
+&#9;&#9;&#9;&#9;--if (modelInfo and modelInfo.Parent:FindFirstChild(&quot;UnstampableFaces&quot;)) or (modelInfo and myModelInfo) then  -- need better targetSurface calcs
+&#9;&#9;&#9;&#9;if (true) then
+&#9;&#9;&#9;&#9;&#9;local breakingFaces = &quot;&quot;
+&#9;&#9;&#9;&#9;&#9;local myBreakingFaces = &quot;&quot;
+&#9;&#9;&#9;&#9;&#9;if modelInfo and modelInfo.Parent:FindFirstChild(&quot;UnstampableFaces&quot;) then breakingFaces = modelInfo.Parent.UnstampableFaces.Value end
+&#9;&#9;&#9;&#9;&#9;if myModelInfo then myBreakingFaces = myModelInfo.Value end
+&#9;&#9;&#9;&#9;&#9;local hitFace = 0
+
+&#9;&#9;&#9;&#9;&#9;if modelInfo then hitFace = modelTargetSurface(modelInfo.Parent, game.Workspace.CurrentCamera.CoordinateFrame.p, Mouse.Hit.p) end
+
+&#9;&#9;&#9;&#9;&#9;-- are we stamping TO an unstampable surface?
+&#9;&#9;&#9;&#9;&#9;for bf in string.gmatch(breakingFaces, &quot;[^,]+&quot;) do
+&#9;&#9;&#9;&#9;&#9;&#9;if hitFace == tonumber(bf) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- return before we hit the JointsService code below!
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;unstampableSurface = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;game.JointsService:ClearJoinAfterMoveJoints() -- clear the JointsService cache
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Data.Stamp.MovingLock = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;&#9;-- now we have to cast the ray back in the other direction to find the surface we&apos;re stamping FROM
+&#9;&#9;&#9;&#9;&#9;hitFace = modelTargetSurface(Data.Stamp.CurrentParts[1], Mouse.Hit.p, game.Workspace.CurrentCamera.CoordinateFrame.p)
+
+&#9;&#9;&#9;&#9;&#9;-- are we stamping WITH an unstampable surface?
+&#9;&#9;&#9;&#9;&#9;for bf in string.gmatch(myBreakingFaces, &quot;[^,]+&quot;) do
+&#9;&#9;&#9;&#9;&#9;&#9;if hitFace == tonumber(bf) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;unstampableSurface = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;game.JointsService:ClearJoinAfterMoveJoints() -- clear the JointsService cache
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Data.Stamp.MovingLock = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;&#9;-- just need to match breakingFace against targetSurface using rotation supplied by modelCFrame
+&#9;&#9;&#9;&#9;&#9;-- targetSurface: 1 is top, 4 is bottom, 
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+
+
 &#9;&#9;end
+
 &#9;&#9;-- to show joints during the mouse move
+&#9;&#9;unstampableSurface = false
       game.JointsService:SetJoinAfterMoveInstance(Data.Stamp.CurrentParts[1])
       if Mouse.Target and Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) == nil then
 &#9;&#9;&#9;game.JointsService:SetJoinAfterMoveTarget(Mouse.Target)
@@ -1516,6 +1676,18 @@ function getMouseTargetCFrame(targetPart)
 end
 
 
+function surfaceToVector(surf)
+&#9;local vect = 1
+&#9;if surf &lt; 0 then
+&#9;&#9;surf = surf * -1
+&#9;&#9;vect = vect * -1
+&#9;end
+&#9;if surf == 1 then return vect*Vector3.new(1, 0, 0)
+&#9;elseif surf == 2 then return vect*Vector3.new(0, 1, 0)
+&#9;elseif surf == 3 then return vect*Vector3.new(0, 0, 1)
+&#9;else return Vector3.FromNormalId(Mouse.TargetSurface) end  -- if we somehow got a &quot;0&quot;, then we just revert to old behavior
+end
+
 function findConfigAtMouseTarget(partsTable)
 
 -- *Critical Assumption* :
@@ -1564,6 +1736,13 @@ function findConfigAtMouseTarget(partsTable)
 
 &#9;-- find which axis of the insertion objects should match with the target surface
 &#9;-- this should use targetPart CFrame, not the model CFrame
+
+&#9;--[[ attempt at fixing Mouse.TargetSurface below...
+&#9;local targetModel = targetPart
+&#9;if not targetPart:FindFirstChild(&quot;RobloxModel&quot;) and targetPart.Parent and targetPart.Parent:FindFirstChild(&quot;RobloxModel&quot;) then targetModel = targetPart.Parent end
+&#9;local correctedTargetSurfaceVector = surfaceToVector(modelTargetSurface(targetModel, game.Workspace.CurrentCamera.CoordinateFrame.p, mouseHitInWorld))
+&#9;local targetVectorInWorld = targetPart.CFrame:vectorToWorldSpace(correctedTargetSurfaceVector)
+&#9;--]]
 &#9;local targetVectorInWorld = targetPart.CFrame:vectorToWorldSpace(Vector3.FromNormalId(Mouse.TargetSurface))
 
 &#9;local targetRefPointInTarget
@@ -1615,7 +1794,7 @@ function findConfigAtMouseTarget(partsTable)
 &#9;targetConfig = CFrame.new(posInsertOriginInWorld.x, posInsertOriginInWorld.y, posInsertOriginInWorld.z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
 &#9;admissibleConfig = true
 
-&#9;return admissibleConfig, targetConfig
+&#9;return admissibleConfig, targetConfig, getClosestAlignedWorldDirection(targetVectorInWorld)
 
 end
 
@@ -1637,6 +1816,7 @@ function setupDraggableClone()
 &#9;if eyeDropperConnection then eyeDropperConnection:disconnect() eyeDropperConnection = nil end
 
 &#9;--if not Mouse.Target then return end
+&#9;click.Value = false
 
 &#9;if Data.Stamp.CurrentParts then
 &#9;&#9;for i = 1, #Data.Stamp.CurrentParts do
@@ -1679,6 +1859,32 @@ function setupDraggableClone()
 &#9;&#9;&#9;Data.Stamp.AnchoredTable[part] = part.Anchored
 &#9;&#9;&#9;part.Anchored = true
 &#9;&#9;&#9;part.archivable = false
+
+&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;local con = nil
+&#9;&#9;&#9;&#9;local exitLoop = false
+&#9;&#9;&#9;&#9;con = click.Changed:connect(function()
+&#9;&#9;&#9;&#9;&#9;if click.Value then
+&#9;&#9;&#9;&#9;&#9;&#9;con:disconnect()
+&#9;&#9;&#9;&#9;&#9;&#9;exitLoop = true
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;wait(fadeInDelayTime) -- give it some time to be completely transparent
+
+&#9;&#9;&#9;&#9;if exitLoop then return end -- if we already stamped, we don&apos;t need to do the rest of this
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local begTime = tick()
+&#9;&#9;&#9;&#9;local currTime = begTime
+&#9;&#9;&#9;&#9;while (currTime - begTime) &lt; transFadeInTime and part and part:IsA(&quot;BasePart&quot;) and part.Transparency &gt; gDesiredTrans and not exitLoop do
+&#9;&#9;&#9;&#9;&#9;part.Transparency = 1 - (((currTime - begTime)/transFadeInTime) * (gStaticTrans - gDesiredTrans))
+&#9;&#9;&#9;&#9;&#9;wait(0.03)
+&#9;&#9;&#9;&#9;&#9;currTime = tick()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if part and part:IsA(&quot;BasePart&quot;) and not exitLoop then
+&#9;&#9;&#9;&#9;&#9;part.Transparency = gDesiredTrans
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if con then con:disconnect() end
+&#9;&#9;&#9;end)
 &#9;&#9;end
 
 &#9;&#9;for index, decal in pairs(decals) do
@@ -1708,6 +1914,16 @@ function setupDraggableClone()
 
 &#9;&#9;Data.Stamp.CurrentParts = clone:GetChildren()
 
+&#9;&#9;-- if auto-alignable, we enforce a pre-rotation to the canonical &quot;0-frame&quot;
+&#9;&#9;if autoAlignToFace() then
+&#9;&#9;&#9;modelInverse = Data.Stamp.CurrentParts[1]:GetModelCFrame():inverse()
+&#9;&#9;&#9;for i, object in pairs(Data.Stamp.CurrentParts[1]:GetChildren()) do
+&#9;&#9;&#9;&#9;if object:IsA(&quot;Flag&quot;) then object = object.Handle end
+&#9;&#9;&#9;&#9;if object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;Seat&quot;) or object:IsA(&quot;VehicleSeat&quot;) then object.CFrame = modelInverse*object.CFrame end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;gInitial90DegreeRotations = autoAlignToFace()
+&#9;&#9;else
+
 &#9;&#9;-- pre-rotate if necessary
 &#9;&#9;local ry = gInitial90DegreeRotations * math.pi/2
 &#9;&#9;local rotCF = CFrame.fromEulerAnglesXYZ(0, ry, 0) 
@@ -1718,6 +1934,7 @@ function setupDraggableClone()
 &#9;&#9;&#9;end
 &#9;&#9;else
 &#9;&#9;&#9;Data.Stamp.CurrentParts[1].CFrame = rotCF * Data.Stamp.CurrentParts[1].CFrame
+&#9;&#9;end
 &#9;&#9;end
 
 &#9;&#9;-- After rotating, update the position
@@ -1834,6 +2051,13 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 
+&#9;&#9;&#9;-- if unstampable face, then don&apos;t let us stamp there!
+&#9;&#9;&#9;if unstampableSurface then
+&#9;&#9;&#9;&#9;Data.Stamp.MouseLock = false
+&#9;&#9;&#9;&#9;flashRedBox()
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+
 &#9;&#9;&#9;-- Prevent part from being stamped on top of a player
 
 &#9;&#9;&#9;local minBB, maxBB = getBoundingBox2(Data.Stamp.CurrentParts[1])
@@ -1927,6 +2151,7 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;-- make sure all the joints are activated before restoring anchor states
 &#9;&#9;&#9;if not createJoints then game.JointsService:CreateJoinAfterMoveJoints() end
 
+&#9;&#9;&#9;click.Value = true
 &#9;&#9;&#9;--Fix the transparency and material of all the parts
 &#9;&#9;&#9;for part, transparency in pairs(Data.Stamp.TransparencyTable) do
 &#9;&#9;&#9;&#9;part.Transparency = transparency
@@ -2178,12 +2403,94 @@ end
 
 ------------------------ End Selection Highlighting Code --------------------------
 
+function autoAlignToFace()
+&#9;local aatf = Data.Stamp.CurrentParts[1]:FindFirstChild(&quot;AutoAlignToFace&quot;)
+&#9;if aatf then return aatf.Value else return false end
+end
 
+
+function autoAlignHelper()
+&#9;local model = Data.Stamp.CurrentParts[1]
+&#9;local aatfTag = model:FindFirstChild(&quot;AutoAlignToFace&quot;)
+&#9;if not aatfTag then
+&#9;&#9;aatfTag = Instance.new(&quot;IntValue&quot;)
+&#9;&#9;aatfTag.Name = &quot;AutoAlignToFace&quot;
+&#9;&#9;aatfTag.Parent = Data.Stamp.CurrentParts[1]
+&#9;&#9;aatfTag.Value = 5
+&#9;end
+&#9;aatfTag.Value = aatfTag.Value + 1
+&#9;if aatfTag.Value &gt; 5 then aatfTag.Value = 0 end
+end
+
+function unstampableFaceHelper()
+&#9;if not Mouse.Target then return end
+&#9;local model = Mouse.Target
+&#9;if not model then return end
+&#9;if not model:FindFirstChild(&quot;RobloxModel&quot;) then model = model.Parent end
+&#9;if not model then return end
+&#9;if not model:FindFirstChild(&quot;RobloxModel&quot;) then return end
+
+&#9;local ufhTag = model:FindFirstChild(&quot;UnstampableFaces&quot;)
+&#9;if not ufhTag then
+&#9;&#9;ufhTag = Instance.new(&quot;StringValue&quot;)
+&#9;&#9;ufhTag.Name = &quot;UnstampableFaces&quot;
+&#9;&#9;ufhTag.Parent = model
+&#9;&#9;ufhTag.Value = &quot;&quot;
+&#9;end
+&#9;
+&#9;local hitFace = modelTargetSurface(model, game.Workspace.CurrentCamera.CoordinateFrame.p, Mouse.Hit.p)
+
+&#9;-- put string list into table form
+&#9;breakingFaceList = {}
+&#9;for bf = -3, 3 do
+&#9;&#9;breakingFaceList[bf] = false
+&#9;end
+&#9;for bf in string.gmatch(ufhTag.Value, &quot;[^,]+&quot;) do
+&#9;&#9;breakingFaceList[tonumber(bf)] = true
+&#9;end
+
+&#9;-- toggle value of hit face
+&#9;breakingFaceList[hitFace] = not breakingFaceList[hitFace]
+
+&#9;-- put table form back into string value
+&#9;ufhTag.Value = &quot;&quot;
+&#9;local seenAValueSoFar = false
+&#9;for bf = -3, 3 do
+&#9;&#9;if bf ~= 0 then -- ignore 0 face, since that doesn&apos;t exist
+&#9;&#9;&#9;if breakingFaceList[bf] then 
+&#9;&#9;&#9;&#9;if seenAValueSoFar then ufhTag.Value = ufhTag.Value .. &quot;,&quot; .. tostring(bf)
+&#9;&#9;&#9;&#9;else ufhTag.Value = tostring(bf) seenAValueSoFar = true end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function justificationHelper(whichAxis)
+&#9;local model = Data.Stamp.CurrentParts[1]
+&#9;local justTag = model:FindFirstChild(&quot;Justification&quot;)
+&#9;if not justTag then
+&#9;&#9;justTag = Instance.new(&quot;Vector3Value&quot;)
+&#9;&#9;justTag.Name = &quot;Justification&quot;
+&#9;&#9;justTag.Parent = Data.Stamp.CurrentParts[1]
+&#9;&#9;justTag.Value = Vector3.new(1, 1, 1)
+&#9;end
+&#9;local oldValue = justTag.Value
+&#9;if whichAxis == 1 then
+&#9;&#9;if oldValue.X == 2 then justTag.Value = Vector3.new(0, oldValue.Y, oldValue.Z)
+&#9;&#9;else justTag.Value = Vector3.new(oldValue.X+1, oldValue.Y, oldValue.Z) end
+&#9;elseif whichAxis == 2 then
+&#9;&#9;if oldValue.Y == 2 then justTag.Value = Vector3.new(oldValue.X, 0, oldValue.Z)
+&#9;&#9;else justTag.Value = Vector3.new(oldValue.X, oldValue.Y+1, oldValue.Z) end
+&#9;elseif whichAxis == 3 then
+&#9;&#9;if oldValue.Z == 2 then justTag.Value = Vector3.new(oldValue.X, oldValue.Y, 0)
+&#9;&#9;else justTag.Value = Vector3.new(oldValue.X, oldValue.Y, oldValue.Z+1) end
+&#9;end
+end
 
 function onInsertKeyDown(key)
 
 &#9;if Data.Stamp.Dragger then
-&#9;&#9;if key == &apos;R&apos; or key == &apos;r&apos;  then
+&#9;&#9;if key == &apos;R&apos; or key == &apos;r&apos; and not autoAlignToFace() then
 &#9;&#9;&#9;-- Rotate the parts or all the parts in the model
 &#9;&#9;&#9;local ry = math.pi/2
 &#9;&#9;&#9;local rotCF = CFrame.fromEulerAnglesXYZ(0, ry, 0)
@@ -2202,6 +2509,9 @@ function onInsertKeyDown(key)
 &#9;&#9;&#9;configFound, targetCFrame = findConfigAtMouseTarget(Data.Stamp.TransparencyTable)
 &#9;&#9;&#9;if configFound then
 &#9;&#9;&#9;&#9;positionPartsAtCFrame3(Data.Stamp.CurrentParts[1], targetCFrame)
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;-- update everything else in MouseMove
+&#9;&#9;&#9;&#9;onInsertMouseMove()
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
@@ -2222,7 +2532,26 @@ function onInsertKeyDown(key)
 &#9;&#9;Data.Loading.Cancelled = true
 &#9;&#9;signalInsertComplete(&quot;Main&quot;)
 &#9;end
-
+&#9;
+&#9;-- admin-only tools: helpful functions for construction purposes
+&#9;if adminAccess then
+&#9;&#9;if key == &apos;L&apos; or key == &apos;l&apos; then
+&#9;&#9;&#9;-- autoalign helper
+&#9;&#9;&#9;if Data.Stamp.Dragger then autoAlignHelper() onInsertMouseMove() end
+&#9;&#9;elseif key == &apos;U&apos; or key == &apos;u&apos; then
+&#9;&#9;&#9;-- unstampable face helper
+&#9;&#9;&#9;unstampableFaceHelper()
+&#9;&#9;--elseif key == &apos;C&apos; or key == &apos;c&apos; then
+--&#9;&#9;&#9;if Data.Stamp.Dragger then justificationHelper() end -- the &apos;c&apos; stands for &quot;Centering&quot; since &quot;j&quot; is already reserved by GuiScript
+&#9;&#9;--end
+&#9;&#9;elseif key == &apos;X&apos; or key == &apos;x&apos; then  -- change x justification
+&#9;&#9;&#9;if Data.Stamp.Dragger then justificationHelper(1) onInsertMouseMove() end
+&#9;&#9;elseif key == &apos;Y&apos; or key == &apos;y&apos; then  -- change y justification
+&#9;&#9;&#9;if Data.Stamp.Dragger then justificationHelper(2) onInsertMouseMove() end
+&#9;&#9;elseif key == &apos;Z&apos; or key == &apos;z&apos; then  -- change z justification
+&#9;&#9;&#9;if Data.Stamp.Dragger then justificationHelper(3) onInsertMouseMove() end
+&#9;&#9;end
+&#9;end
 end
 
 
@@ -2358,12 +2687,12 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="ScreenGui" referent="RBX35">
+		<Item class="ScreenGui" referent="RBX36">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<string name="Name">StampGUI</string>
 			</Properties>
-			<Item class="Frame" referent="RBX36">
+			<Item class="Frame" referent="RBX37">
 				<Properties>
 					<bool name="Active">true</bool>
 					<bool name="Archivable">true</bool>
@@ -2390,7 +2719,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 					<bool name="Visible">true</bool>
 					<int name="ZIndex">1</int>
 				</Properties>
-				<Item class="Frame" referent="RBX37">
+				<Item class="Frame" referent="RBX38">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -2417,7 +2746,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="Frame" referent="RBX38">
+					<Item class="Frame" referent="RBX39">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -2444,7 +2773,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">false</bool>
 							<int name="ZIndex">1</int>
 						</Properties>
-						<Item class="TextButton" referent="RBX39">
+						<Item class="TextButton" referent="RBX40">
 							<Properties>
 								<bool name="Active">true</bool>
 								<bool name="Archivable">true</bool>
@@ -2482,7 +2811,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<bool name="Visible">true</bool>
 								<int name="ZIndex">1</int>
 							</Properties>
-							<Item class="ImageLabel" referent="RBX40">
+							<Item class="ImageLabel" referent="RBX41">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -2511,21 +2840,21 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								</Properties>
 							</Item>
 						</Item>
-						<Item class="IntValue" referent="RBX41">
+						<Item class="IntValue" referent="RBX42">
 							<Properties>
 								<bool name="Archivable">true</bool>
 								<string name="Name">AssetId</string>
 								<int name="Value">209411115</int>
 							</Properties>
 						</Item>
-						<Item class="StringValue" referent="RBX42">
+						<Item class="StringValue" referent="RBX43">
 							<Properties>
 								<bool name="Archivable">true</bool>
 								<string name="Name">AssetName</string>
 								<string name="Value">Roof - Outer Corner</string>
 							</Properties>
 						</Item>
-						<Item class="ImageLabel" referent="RBX43">
+						<Item class="ImageLabel" referent="RBX44">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -2555,7 +2884,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						</Item>
 					</Item>
 				</Item>
-				<Item class="TextButton" referent="RBX44">
+				<Item class="TextButton" referent="RBX45">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="Archivable">true</bool>
@@ -2593,7 +2922,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="ImageLabel" referent="RBX45">
+					<Item class="ImageLabel" referent="RBX46">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -2622,7 +2951,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="TextButton" referent="RBX46">
+				<Item class="TextButton" referent="RBX47">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="Archivable">true</bool>
@@ -2661,7 +2990,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
-				<Item class="Frame" referent="RBX47">
+				<Item class="Frame" referent="RBX48">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -2688,7 +3017,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="TextButton" referent="RBX48">
+					<Item class="TextButton" referent="RBX49">
 						<Properties>
 							<bool name="Active">true</bool>
 							<bool name="Archivable">true</bool>
@@ -2726,7 +3055,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
 						</Properties>
-						<Item class="ImageLabel" referent="RBX49">
+						<Item class="ImageLabel" referent="RBX50">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -2755,7 +3084,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							</Properties>
 						</Item>
 					</Item>
-					<Item class="TextLabel" referent="RBX50">
+					<Item class="TextLabel" referent="RBX51">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -2790,7 +3119,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<int name="ZIndex">1</int>
 						</Properties>
 					</Item>
-					<Item class="TextButton" referent="RBX51">
+					<Item class="TextButton" referent="RBX52">
 						<Properties>
 							<bool name="Active">true</bool>
 							<bool name="Archivable">true</bool>
@@ -2828,7 +3157,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
 						</Properties>
-						<Item class="ImageLabel" referent="RBX52">
+						<Item class="ImageLabel" referent="RBX53">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -2858,7 +3187,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						</Item>
 					</Item>
 				</Item>
-				<Item class="Frame" referent="RBX53">
+				<Item class="Frame" referent="RBX54">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -2885,7 +3214,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="Frame" referent="RBX54">
+					<Item class="Frame" referent="RBX55">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -2913,7 +3242,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<int name="ZIndex">1</int>
 						</Properties>
 					</Item>
-					<Item class="TextLabel" referent="RBX55">
+					<Item class="TextLabel" referent="RBX56">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -2948,7 +3277,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<int name="ZIndex">1</int>
 						</Properties>
 					</Item>
-					<Item class="Frame" referent="RBX56">
+					<Item class="Frame" referent="RBX57">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -2975,7 +3304,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
 						</Properties>
-						<Item class="TextButton" referent="RBX57">
+						<Item class="TextButton" referent="RBX58">
 							<Properties>
 								<bool name="Active">true</bool>
 								<bool name="Archivable">true</bool>
@@ -3016,7 +3345,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						</Item>
 					</Item>
 				</Item>
-				<Item class="Frame" referent="RBX58">
+				<Item class="Frame" referent="RBX59">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -3043,7 +3372,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="ImageLabel" referent="RBX59">
+					<Item class="ImageLabel" referent="RBX60">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -3071,7 +3400,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<int name="ZIndex">3</int>
 						</Properties>
 					</Item>
-					<Item class="Frame" referent="RBX60">
+					<Item class="Frame" referent="RBX61">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -3098,7 +3427,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
 						</Properties>
-						<Item class="TextLabel" referent="RBX61">
+						<Item class="TextLabel" referent="RBX62">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -3133,7 +3462,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<int name="ZIndex">1</int>
 							</Properties>
 						</Item>
-						<Item class="Frame" referent="RBX62">
+						<Item class="Frame" referent="RBX63">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -3160,7 +3489,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<bool name="Visible">false</bool>
 								<int name="ZIndex">1</int>
 							</Properties>
-							<Item class="TextLabel" referent="RBX63">
+							<Item class="TextLabel" referent="RBX64">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3195,7 +3524,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">1</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX64">
+							<Item class="TextLabel" referent="RBX65">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3230,7 +3559,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">1</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX65">
+							<Item class="TextLabel" referent="RBX66">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3265,7 +3594,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">1</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX66">
+							<Item class="TextLabel" referent="RBX67">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3304,7 +3633,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 					</Item>
 				</Item>
 			</Item>
-			<Item class="Frame" referent="RBX67">
+			<Item class="Frame" referent="RBX68">
 				<Properties>
 					<bool name="Active">true</bool>
 					<bool name="Archivable">true</bool>
@@ -3331,7 +3660,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 					<bool name="Visible">true</bool>
 					<int name="ZIndex">2</int>
 				</Properties>
-				<Item class="TextButton" referent="RBX68">
+				<Item class="TextButton" referent="RBX69">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="Archivable">true</bool>
@@ -3369,7 +3698,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">3</int>
 					</Properties>
-					<Item class="ImageLabel" referent="RBX69">
+					<Item class="ImageLabel" referent="RBX70">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -3398,7 +3727,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Frame" referent="RBX70">
+				<Item class="Frame" referent="RBX71">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -3425,7 +3754,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="Frame" referent="RBX71">
+					<Item class="Frame" referent="RBX72">
 						<Properties>
 							<bool name="Active">true</bool>
 							<bool name="Archivable">true</bool>
@@ -3452,7 +3781,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">3</int>
 						</Properties>
-						<Item class="TextButton" referent="RBX72">
+						<Item class="TextButton" referent="RBX73">
 							<Properties>
 								<bool name="Active">true</bool>
 								<bool name="Archivable">true</bool>
@@ -3490,7 +3819,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<bool name="Visible">false</bool>
 								<int name="ZIndex">4</int>
 							</Properties>
-							<Item class="ImageLabel" referent="RBX73">
+							<Item class="ImageLabel" referent="RBX74">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3518,7 +3847,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">5</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX74">
+							<Item class="TextLabel" referent="RBX75">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3554,7 +3883,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								</Properties>
 							</Item>
 						</Item>
-						<Item class="TextButton" referent="RBX75">
+						<Item class="TextButton" referent="RBX76">
 							<Properties>
 								<bool name="Active">true</bool>
 								<bool name="Archivable">true</bool>
@@ -3592,7 +3921,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<bool name="Visible">false</bool>
 								<int name="ZIndex">4</int>
 							</Properties>
-							<Item class="ImageLabel" referent="RBX76">
+							<Item class="ImageLabel" referent="RBX77">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3620,7 +3949,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">5</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX77">
+							<Item class="TextLabel" referent="RBX78">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3656,7 +3985,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								</Properties>
 							</Item>
 						</Item>
-						<Item class="TextButton" referent="RBX78">
+						<Item class="TextButton" referent="RBX79">
 							<Properties>
 								<bool name="Active">true</bool>
 								<bool name="Archivable">true</bool>
@@ -3694,7 +4023,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<bool name="Visible">false</bool>
 								<int name="ZIndex">4</int>
 							</Properties>
-							<Item class="ImageLabel" referent="RBX79">
+							<Item class="ImageLabel" referent="RBX80">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3722,7 +4051,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">5</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX80">
+							<Item class="TextLabel" referent="RBX81">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3758,7 +4087,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								</Properties>
 							</Item>
 						</Item>
-						<Item class="TextButton" referent="RBX81">
+						<Item class="TextButton" referent="RBX82">
 							<Properties>
 								<bool name="Active">true</bool>
 								<bool name="Archivable">true</bool>
@@ -3796,7 +4125,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<bool name="Visible">false</bool>
 								<int name="ZIndex">4</int>
 							</Properties>
-							<Item class="ImageLabel" referent="RBX82">
+							<Item class="ImageLabel" referent="RBX83">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3824,7 +4153,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 									<int name="ZIndex">5</int>
 								</Properties>
 							</Item>
-							<Item class="TextLabel" referent="RBX83">
+							<Item class="TextLabel" referent="RBX84">
 								<Properties>
 									<bool name="Active">false</bool>
 									<bool name="Archivable">true</bool>
@@ -3861,7 +4190,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							</Item>
 						</Item>
 					</Item>
-					<Item class="TextButton" referent="RBX84">
+					<Item class="TextButton" referent="RBX85">
 						<Properties>
 							<bool name="Active">true</bool>
 							<bool name="Archivable">true</bool>
@@ -3899,7 +4228,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">3</int>
 						</Properties>
-						<Item class="ImageLabel" referent="RBX85">
+						<Item class="ImageLabel" referent="RBX86">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -3927,7 +4256,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<int name="ZIndex">4</int>
 							</Properties>
 						</Item>
-						<Item class="TextLabel" referent="RBX86">
+						<Item class="TextLabel" referent="RBX87">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -3963,7 +4292,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							</Properties>
 						</Item>
 					</Item>
-					<Item class="TextButton" referent="RBX87">
+					<Item class="TextButton" referent="RBX88">
 						<Properties>
 							<bool name="Active">true</bool>
 							<bool name="Archivable">true</bool>
@@ -4001,7 +4330,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">3</int>
 						</Properties>
-						<Item class="ImageLabel" referent="RBX88">
+						<Item class="ImageLabel" referent="RBX89">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -4029,7 +4358,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 								<int name="ZIndex">4</int>
 							</Properties>
 						</Item>
-						<Item class="TextLabel" referent="RBX89">
+						<Item class="TextLabel" referent="RBX90">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -4065,7 +4394,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							</Properties>
 						</Item>
 					</Item>
-					<Item class="Frame" referent="RBX90">
+					<Item class="Frame" referent="RBX91">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -4092,7 +4421,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 							<bool name="Visible">false</bool>
 							<int name="ZIndex">1</int>
 						</Properties>
-						<Item class="TextLabel" referent="RBX91">
+						<Item class="TextLabel" referent="RBX92">
 							<Properties>
 								<bool name="Active">false</bool>
 								<bool name="Archivable">true</bool>
@@ -4129,7 +4458,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						</Item>
 					</Item>
 				</Item>
-				<Item class="TextButton" referent="RBX92">
+				<Item class="TextButton" referent="RBX93">
 					<Properties>
 						<bool name="Active">true</bool>
 						<bool name="Archivable">true</bool>
@@ -4167,7 +4496,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">3</int>
 					</Properties>
-					<Item class="ImageLabel" referent="RBX93">
+					<Item class="ImageLabel" referent="RBX94">
 						<Properties>
 							<bool name="Active">false</bool>
 							<bool name="Archivable">true</bool>
@@ -4197,7 +4526,7 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 					</Item>
 				</Item>
 			</Item>
-			<Item class="LocalScript" referent="RBX94">
+			<Item class="LocalScript" referent="RBX95">
 				<Properties>
 					<bool name="Archivable">true</bool>
 					<bool name="Disabled">false</bool>
@@ -4226,7 +4555,7 @@ end)
 handleResize()</ProtectedString>
 				</Properties>
 			</Item>
-			<Item class="Frame" referent="RBX95">
+			<Item class="Frame" referent="RBX96">
 				<Properties>
 					<bool name="Active">false</bool>
 					<bool name="Archivable">true</bool>
@@ -4253,7 +4582,7 @@ handleResize()</ProtectedString>
 					<bool name="Visible">false</bool>
 					<int name="ZIndex">1</int>
 				</Properties>
-				<Item class="TextLabel" referent="RBX96">
+				<Item class="TextLabel" referent="RBX97">
 					<Properties>
 						<bool name="Active">false</bool>
 						<bool name="Archivable">true</bool>
@@ -4290,7 +4619,7 @@ handleResize()</ProtectedString>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="SelectionBox" referent="RBX97">
+		<Item class="SelectionBox" referent="RBX98">
 			<Properties>
 				<Ref name="Adornee">null</Ref>
 				<bool name="Archivable">true</bool>
@@ -4300,7 +4629,7 @@ handleResize()</ProtectedString>
 				<bool name="Visible">false</bool>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX98">
+		<Item class="LocalScript" referent="RBX99">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
@@ -4381,8 +4710,18 @@ local isRestricted = Instance.new(&quot;BoolValue&quot;)
 isRestricted.Name = &quot;IsRestricted&quot;
 isRestricted.Value = false
 
+function isLocalWTRB()
+&#9;waitForChild(game,&quot;StarterGui&quot;)
+&#9;if game.StarterGui:FindFirstChild(&quot;VersionGui&quot;) then
+&#9;&#9;if game.StarterGui.VersionGui:FindFirstChild(&quot;VersionText&quot;, true) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
 waitForProperty(game,&quot;PlaceId&quot;)
-if game.PlaceId == 41324860 then
+if game.PlaceId == 41324860 or isLocalWTRB() then
 &#9;isRestricted.Value = true
 end
 isRestricted.Parent = variables
@@ -4495,7 +4834,7 @@ function goToClone()
 &#9;cancelAssetPlacement()
 
 &#9;mode = 2
-&#9;signalStamperScript(&quot;&quot;,0,&quot;&quot;,&quot;&quot;,false)
+&#9;--signalStamperScript(&quot;&quot;,0,&quot;&quot;,&quot;&quot;,false)
 &#9;signalSwitchMode(&quot;Clone&quot;)
 
 &#9;currStampGui.StamperPanel.StamperButtons.ClonePanel.Visible = true
@@ -5423,7 +5762,7 @@ end)
 ----------------------------------------------------------------------------------------</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX99">
+		<Item class="LocalScript" referent="RBX100">
 			<Properties>
 				<bool name="Archivable">true</bool>
 				<bool name="Disabled">true</bool>
