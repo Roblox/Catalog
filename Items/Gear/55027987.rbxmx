@@ -151,7 +151,16 @@ end
 local Tool = script.Parent
 
 enabled = true
-game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/configure_sel.png&quot;)
+game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=59785529&quot;)
+game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=61423967&quot;)
+game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=61427382&quot;)
+
+local configIconImage = &quot;http://www.roblox.com/asset/?id=59785529&quot;
+local configIconOverImage = &quot;http://www.roblox.com/asset/?id=61423967&quot;
+local configIconHoverImage = &quot;http://www.roblox.com/asset/?id=61427382&quot;
+local highlightedImage
+
+local ServiceConnections
 
 local guiMain
 local screen
@@ -172,6 +181,8 @@ local origValueMap = {}
 local valueConnections = {}
 
 local objectValueSelect = {}
+
+local adornmentTable = {}
 
 local colorPaletteSelectMode = false
 
@@ -834,11 +845,16 @@ function on3dMouseMove(mouse, guiMain)
 &#9;&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\DragCursor.png&quot;
 &#9;&#9;&#9;if objectValueSelect[&quot;HoverBox&quot;] then 
 &#9;&#9;&#9;&#9;local isModel, model = isInModel(part)
+&#9;&#9;&#9;&#9;local adornee = part
 &#9;&#9;&#9;&#9;if isModel then
-&#9;&#9;&#9;&#9;&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = model
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = part
+&#9;&#9;&#9;&#9;&#9;adornee = model
 &#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;objectValueSelect[&quot;HoverBox&quot;].Adornee = adornee
+&#9;&#9;&#9;&#9;local billboard = getBillboard(adornee)
+&#9;&#9;&#9;&#9;local configBadge = billboard:FindFirstChild(&quot;ConfigBadge&quot;,true)
+&#9;&#9;&#9;&#9;configBadge.Image = configIconOverImage
+&#9;&#9;&#9;&#9;highlightedImage = configBadge
 &#9;&#9;&#9;end
 &#9;&#9;&#9;needsIconReset = true
 &#9;&#9;else
@@ -846,6 +862,10 @@ function on3dMouseMove(mouse, guiMain)
 &#9;&#9;&#9;&#9;mouse.Icon = &quot;&quot;
 &#9;&#9;&#9;&#9;if objectValueSelect[&quot;HoverBox&quot;] then objectValueSelect[&quot;HoverBox&quot;].Adornee = nil end
 &#9;&#9;&#9;&#9;needsIconReset = false
+
+&#9;&#9;&#9;&#9;if highlightedImage then 
+&#9;&#9;&#9;&#9;&#9;highlightedImage.Image = configIconImage
+&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;else
@@ -853,6 +873,10 @@ function on3dMouseMove(mouse, guiMain)
 &#9;&#9;&#9;mouse.Icon = &quot;&quot;
 &#9;&#9;&#9;if objectValueSelect[&quot;HoverBox&quot;] then objectValueSelect[&quot;HoverBox&quot;].Adornee = nil end
 &#9;&#9;&#9;needsIconReset = false
+
+&#9;&#9;&#9;if highlightedImage then 
+&#9;&#9;&#9;&#9;highlightedImage.Image = configIconImage
+&#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
 
@@ -920,10 +944,7 @@ function removeSelectionGui()
 &#9;end
 end
 
-
-
 function canSelectObject(part)
-
 &#9;if isRestricted then
 &#9;&#9;waitForChild(playerArea,&quot;PlayerArea&quot;)
 &#9;&#9;if isRestricted and playerArea:FindFirstChild(&quot;PlayerArea&quot;) and part:IsDescendantOf(playerArea.PlayerArea) then
@@ -1020,60 +1041,13 @@ function on3dButton1Up(mouse, guiMain, playerGui)
 &#9;&#9;&#9;&#9;screen.Adornee = part
 &#9;&#9;&#9;end
 
-&#9;&#9;&#9;return
+&#9;&#9;&#9;if highlightedImage then 
+&#9;&#9;&#9;&#9;highlightedImage.Image = configIconImage
+&#9;&#9;&#9;end
 &#9;&#9;end
 &#9;else
 &#9;&#9;cancelSelectionGui()
 &#9;end
-end
-
-function createBillboardGui(name, objectAdorning)
-&#9;local screen = Instance.new(&quot;BillboardGui&quot;)
-&#9;screen.Name = tostring(name)
-&#9;screen.Size = UDim2.new(1.5,0,1.5,0)
-&#9;screen.Enabled = true
-&#9;screen.Active = true
-&#9;screen.AlwaysOnTop = true
-
-&#9;local isModel, model = isInModel(objectAdorning)
-&#9;if isModel then
-&#9;&#9;screen.Adornee = model
-&#9;else
-&#9;&#9;screen.Adornee = objectAdorning
-&#9;end
-
-&#9;local badgeFrame = Instance.new(&quot;Frame&quot;)
-&#9;badgeFrame.Name = &quot;BadgeFrame&quot;
-&#9;badgeFrame.Size = UDim2.new(2,0,1,0)
-&#9;badgeFrame.Position = UDim2.new(-0.5,0,0,0)
-&#9;badgeFrame.BackgroundTransparency = 1
-&#9;badgeFrame.Parent = screen
-
-&#9;return screen
-end
-
-function giveConfigBadge(parent)
-&#9;local configBadge = Instance.new(&quot;ImageLabel&quot;)
-&#9;configBadge.Name = &quot;ConfigBadge&quot;
-&#9;configBadge.BackgroundTransparency = 1
-&#9;configBadge.Image = &quot;http://www.roblox.com/asset/?id=59785529&quot;
-&#9;configBadge.Position = UDim2.new(0.25,0,0)
-&#9;configBadge.Size = UDim2.new(0.5,0,1,0)
-&#9;configBadge.Parent = parent
-
-&#9;local badgeCon = configBadge.Changed:connect(function(prop)
-&#9;&#9;if prop == &quot;AbsoluteSize&quot; then
-&#9;&#9;&#9;configBadge.Visible = (configBadge.AbsoluteSize.X &gt; 10)
-&#9;&#9;end
-&#9;end)
-
-&#9;local killCon = nil
-&#9;killCon = configBadge.AncestryChanged:connect(function(child,parent)
-&#9;&#9;if parent == nil then
-&#9;&#9;&#9;killCon:disconnect()
-&#9;&#9;&#9;badgeCon:disconnect()
-&#9;&#9;end
-&#9;end)
 end
 
 function onEquippedLocal(mouse)
@@ -1201,6 +1175,91 @@ local function isInMyArea(part)
 &#9;end
 end
 
+function findBillboard(guiTable)
+&#9;if not guiTable then return end
+
+&#9;for i = 1, #guiTable do
+&#9;&#9;if guiTable[i] and guiTable[i]:IsA(&quot;BillboardGui&quot;) then
+&#9;&#9;&#9;return guiTable[i]
+&#9;&#9;end
+&#9;end
+end
+
+function getBillboard(adornee)
+&#9;local guiKey = adornee
+&#9;
+&#9;local billboard = findBillboard(adornmentTable[guiKey])
+&#9;if not billboard then
+&#9;&#9;local screen = Instance.new(&quot;BillboardGui&quot;)
+&#9;&#9;screen.Name = adornee.Name .. &quot;BadgeGUI&quot;
+&#9;&#9;screen.Size = UDim2.new(1.5,0,1.5,0)
+&#9;&#9;screen.Enabled = true
+&#9;&#9;screen.Active = true
+&#9;&#9;screen.AlwaysOnTop = true
+&#9;&#9;screen.ExtentsOffset = Vector3.new(0,0,0)
+&#9;&#9;screen.Adornee = adornee
+&#9;&#9;screen.Parent = game.Players.LocalPlayer.PlayerGui
+
+&#9;&#9;if not adornmentTable[guiKey] then 
+&#9;&#9;&#9;adornmentTable[guiKey] = {}
+&#9;&#9;end
+&#9;&#9;table.insert(adornmentTable[guiKey],screen)
+
+&#9;&#9;return screen
+&#9;end
+
+&#9;return billboard
+end
+
+function hasBadge(adornee)
+&#9;local screen = getBillboard(adornee)
+&#9;if not screen then return false end
+&#9;return screen:FindFirstChild(&quot;Badge&quot;,true)
+end
+
+function removeBadge(adornee)
+&#9;local screen = getBillboard(adornee)
+&#9;local badge = screen:FindFirstChild(&quot;ConfigBadge&quot;,true)
+&#9;if badge then badge:remove() end
+end
+
+function giveConfigBadge(adornee)
+&#9;local billboard = getBillboard(adornee)
+
+&#9;local configBadge = Instance.new(&quot;ImageLabel&quot;)
+&#9;configBadge.Name = &quot;ConfigBadge&quot;
+&#9;configBadge.BackgroundTransparency = 1
+&#9;configBadge.Image = configIconImage
+&#9;configBadge.Size = UDim2.new(1,0,1,0)
+&#9;configBadge.Parent = billboard
+
+&#9;billboard.Parent =  game.Players.LocalPlayer.PlayerGui
+
+&#9;local badgeCon = configBadge.Changed:connect(function(prop)
+&#9;&#9;if prop == &quot;AbsoluteSize&quot; then
+&#9;&#9;&#9;configBadge.Visible = (configBadge.AbsoluteSize.X &gt; 10)
+&#9;&#9;end
+&#9;end)
+
+&#9;local enterCon = configBadge.MouseEnter:connect(function()
+&#9;&#9;configBadge.Image = configIconHoverImage
+&#9;end)
+
+&#9;local leaveCon = configBadge.MouseLeave:connect(function()
+&#9;&#9;configBadge.Image = configIconImage
+&#9;end)
+
+&#9;local killCon = nil
+&#9;killCon = configBadge.AncestryChanged:connect(function(child,parent)
+&#9;&#9;if parent == nil then
+&#9;&#9;&#9;killCon:disconnect()
+&#9;&#9;&#9;badgeCon:disconnect()
+&#9;&#9;&#9;enterCon:disconnect()
+&#9;&#9;&#9;leaveCon:disconnect()
+&#9;&#9;end
+&#9;end)
+end
+
 function configurationAdded(config, guiMain)
 &#9;if configTable[config] then
 &#9;&#9;return
@@ -1224,11 +1283,16 @@ function configurationAdded(config, guiMain)
 &#9;&#9;configurationParentChanged(data, config)
 &#9;end
 
-&#9;local billboardName = tostring(config.Parent)
-
-&#9;newBillboard = createBillboardGui(billboardName,config.Parent)
-&#9;newBillboard.Parent = game.Players.LocalPlayer.PlayerGui
-&#9;giveConfigBadge(newBillboard:FindFirstChild(&quot;BadgeFrame&quot;))
+&#9;local partInModel, model = isInModel(config.Parent)
+&#9;if partInModel then
+&#9;&#9;if not hasBadge(model) then
+&#9;&#9;&#9;giveConfigBadge(model)
+&#9;&#9;end
+&#9;else
+&#9;&#9;if not hasBadge(config.Parent) then
+&#9;&#9;&#9;giveConfigBadge(config.Parent)
+&#9;&#9;end
+&#9;end
 
 &#9;configTable[config] = data
 end
@@ -1245,11 +1309,10 @@ function configurationRemoved(config)
 &#9;end
 
 &#9;data.VisualAnnotation:Remove()
+&#9;removeBadge(config.Parent)
 &#9;
 &#9;configTable[config] = nil
 end
-
-local ServiceConnections
 
 function findVehicleSeats(object, guiMain)
 &#9;if object:IsA(&quot;VehicleSeat&quot;) then
