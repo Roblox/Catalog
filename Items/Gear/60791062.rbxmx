@@ -132,6 +132,9 @@ local receiverTable = {}
 local ServiceConnections = {}
 local adornmentTable = {}
 
+local eventBadgeCount = {}
+local receiverBadgeCount = {}
+
 local isRestricted = false
 if game.PlaceId == &quot;41324860&quot; then
 &#9;isRestricted = true
@@ -158,11 +161,11 @@ local BASE_WIRE_TRANSPARENCY = 0.5
 local BASE_WIRE_RADIUS = .06
 local ENHANCED_WIRE_RADIUS = .12
 local SOURCE_BUTTON_TEXT_COLOR = Color3.new(1, .5, 0)
-local SOURCE_BUTTON_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=55130296&quot;
-local SOURCE_BUTTON_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=56953981&quot;
+local SOURCE_BUTTON_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=61334830&quot;
+local SOURCE_BUTTON_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=61335012&quot;
 local SINK_BUTTON_TEXT_COLOR = Color3.new(0, 1, 0)
-local SINK_BUTTON_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=55130274&quot;
-local SINK_BUTTON_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=56953950&quot;
+local SINK_BUTTON_ICON_TEXTURE = &quot;http://www.roblox.com/asset?id=60730993&quot;
+local SINK_BUTTON_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=61335025&quot;
 local BUTTON_HOVER_TEXT_COLOR = Color3.new(1, 1, 1)
 local BUTTON_ICON_WIDTH = 50
 local DISCONNECT_ICON_HOVER_TEXTURE = &quot;http://www.roblox.com/asset?id=55130256&quot;
@@ -173,7 +176,7 @@ local USE_BILLBOARD_GUI = true
 local LAST_CLICK_TIME = 0
 local CLICK_HELP_TIME_DELTA = .8
 local SOURCE_BADGE_TEXTURE = &quot;http://www.roblox.com/asset?id=60730993&quot;
-local SINK_BADGE_TEXTURE = &quot;http://www.roblox.com/asset?id=60730993&quot;
+local SINK_BADGE_TEXTURE = &quot;http://www.roblox.com/asset?id=61334830&quot;
 
 local ALL_TEXTURES = { SOURCE_BUTTON_ICON_TEXTURE, SOURCE_BUTTON_ICON_HOVER_TEXTURE,
 &#9;&#9;SINK_BUTTON_ICON_TEXTURE, SINK_BUTTON_ICON_HOVER_TEXTURE,
@@ -223,7 +226,6 @@ end
 
 function findMyBasePlate()
 &#9;if isRestricted then
-&#9;&#9;--if true then return game.Workspace.Base end -- for testing purposes
 &#9;&#9;if STATIC_BASE_PLATE == nil then
 &#9;&#9;&#9;local buildingAreas = game.Workspace.BuildingAreas:GetChildren()
 &#9;&#9;&#9;for i = 1, #buildingAreas do
@@ -350,7 +352,7 @@ function createSourceIcon(parent, precedingText)
 &#9;local sourceIcon = Instance.new(&quot;ImageLabel&quot;, frame)
 &#9;sourceIcon.Archivable = false
 &#9;sourceIcon.Image = SOURCE_BUTTON_ICON_TEXTURE
-&#9;sourceIcon.Size = UDim2.new(0, 35, 0, 35)
+&#9;sourceIcon.Size = UDim2.new(0, 30, 0, 30)
 &#9;sourceIcon.BackgroundTransparency = 1
 &#9;sourceIcon.BorderSizePixel = 0
 &#9;sourceIcon.Position = UDim2.new(0,
@@ -364,7 +366,7 @@ function createSinkIcon(parent, precedingText)
 &#9;local sinkIcon = Instance.new(&quot;ImageLabel&quot;, frame)
 &#9;sinkIcon.Archivable = false
 &#9;sinkIcon.Image = SINK_BUTTON_ICON_TEXTURE
-&#9;sinkIcon.Size = UDim2.new(0, 35, 0, 35)
+&#9;sinkIcon.Size = UDim2.new(0, 30, 0, 30)
 &#9;sinkIcon.BackgroundTransparency = 1
 &#9;sinkIcon.BorderSizePixel = 0
 &#9;sinkIcon.Position = UDim2.new(0,
@@ -607,7 +609,6 @@ function makeSourceConnectCallback(source)
 &#9;&#9;&#9;for part, val in pairs(KNOWN_SINK_PARTS) do
 &#9;&#9;&#9;&#9;local model = findModel(part)
 &#9;&#9;&#9;&#9;ANNOTATIONS[model].Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;&#9;&#9;findBillboard(adornmentTable[model]).Enabled = true
 &#9;&#9;&#9;end
 &#9;&#9;else
 &#9;&#9;&#9;SELECTED_SOURCE = source
@@ -618,7 +619,6 @@ function makeSourceConnectCallback(source)
 &#9;&#9;&#9;&#9;if not KNOWN_SINK_PARTS[part] then
 &#9;&#9;&#9;&#9;&#9;local model = findModel(part)
 &#9;&#9;&#9;&#9;&#9;ANNOTATIONS[model].Transparency = 1
-&#9;&#9;&#9;&#9;&#9;findBillboard(adornmentTable[model]).Enabled = false
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 &#9;&#9;end
@@ -635,7 +635,6 @@ function makeSinkConnectCallback(sink)
 &#9;&#9;&#9;for part, val in pairs(KNOWN_SOURCE_PARTS) do
 &#9;&#9;&#9;&#9;local model = findModel(part)
 &#9;&#9;&#9;&#9;ANNOTATIONS[model].Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;&#9;&#9;findBillboard(adornmentTable[model]).Enabled = true
 &#9;&#9;&#9;end
 &#9;&#9;else
 &#9;&#9;&#9;SELECTED_SINK = sink
@@ -646,7 +645,6 @@ function makeSinkConnectCallback(sink)
 &#9;&#9;&#9;&#9;if not KNOWN_SOURCE_PARTS[part] then
 &#9;&#9;&#9;&#9;&#9;local model = findModel(part)
 &#9;&#9;&#9;&#9;&#9;ANNOTATIONS[model].Transparency = 1
-&#9;&#9;&#9;&#9;&#9;findBillboard(adornmentTable[model]).Enabled = false
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 &#9;&#9;end
@@ -672,7 +670,7 @@ function makeControlButton(y_position, frame, sourceOrSink, textColor, iconImage
 &#9;icon.Image = iconImage
 &#9;icon.ZIndex = 2
 &#9;icon.Position = UDim2.new(0, button.TextBounds.x + 10, 0, -8)
-&#9;icon.Size = UDim2.new(0, 35, 0 , 35)
+&#9;icon.Size = UDim2.new(0, 30, 0 , 30)
 &#9;icon.BackgroundTransparency = 1
 
 &#9;button.MouseEnter:connect(function()
@@ -836,7 +834,7 @@ function buildScreenPanel(part, x, y)
 &#9;&#9;gui = Instance.new(&quot;BillboardGui&quot;, getPlayerGui())
 &#9;&#9;gui.Name = &quot;WiringGui&quot;
 &#9;&#9;gui.StudsOffset = Vector3.new(0, 1.5, 0)
-&#9;&#9;gui.ExtentsOffset = Vector3.new(0, 1, 0)
+&#9;&#9;gui.ExtentsOffset = Vector3.new(0,0, 0)
 &#9;&#9;gui.Adornee = part
 &#9;&#9;gui.Active = true
 &#9;&#9;gui.AlwaysOnTop = true
@@ -906,7 +904,20 @@ function buildScreenPanel(part, x, y)
 &#9;local menuHeight = y_position + 17.5
 &#9;if USE_BILLBOARD_GUI then
 
-&#9;&#9;gui.Size = UDim2.new(0, menuWidth, 0, menuHeight + 150)
+&#9;&#9;
+&#9;&#9;local size = Vector3.new(0,0,0)
+&#9;&#9;if gui.Adornee:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;size = gui.Adornee.Size
+&#9;&#9;elseif gui.Adornee:IsA(&quot;Model&quot;) then
+&#9;&#9;&#9;size = gui.Adornee:GetModelSize()
+&#9;&#9;end
+
+&#9;&#9;local xSize= size.X
+&#9;&#9;if size.Y &gt; xSize then
+&#9;&#9;&#9;xSize = size.Y
+&#9;&#9;end
+
+&#9;&#9;gui.Size = UDim2.new(0, menuWidth,0,menuHeight + 150)
 &#9;&#9;gui.SizeOffset = Vector2.new(0, -50.0 / (menuHeight + 150));
 &#9;&#9;
 &#9;&#9;local tail = Instance.new(&quot;ImageLabel&quot;, frame)
@@ -917,7 +928,7 @@ function buildScreenPanel(part, x, y)
 &#9;&#9;tail.Visible = true
 
 &#9;&#9;f = Instance.new(&quot;Frame&quot;, gui)
-&#9;&#9;f.Size = UDim2.new(1.4, 0, 4, 0)
+&#9;&#9;f.Size = UDim2.new(1, 0, 1, 0)
 &#9;&#9;f.BackgroundTransparency = 1
 &#9;&#9;f.ZIndex = 1
 &#9;&#9;f.Active = true
@@ -928,6 +939,7 @@ function buildScreenPanel(part, x, y)
 &#9;&#9;b.BorderSizePixel = 0
 &#9;&#9;b.Size = UDim2.new(1, 0, 1, 0)
 &#9;&#9;b.MouseButton1Click:connect(function ()
+&#9;&#9;&#9;print(&quot;Clicker&quot;)
 &#9;&#9;&#9;local foundConnector = findFirstConnector(findModel(LAST_HOVERED_PART))
 &#9;&#9;&#9;if foundConnector ~= nil and foundConnector:IsA(&quot;CustomEvent&quot;) then
 &#9;&#9;&#9;&#9;makeSourceConnectCallback(foundConnector)()
@@ -942,7 +954,7 @@ function buildScreenPanel(part, x, y)
 &#9;end
 
 &#9;frame.Size = UDim2.new(0, menuWidth, 0, menuHeight)
-
+&#9;frame.Position = UDim2.new(0.5,-menuWidth/2,0.05,0)
 &#9;WIRING_PANEL_MAP[part] = gui
 end
 
@@ -951,7 +963,6 @@ end
 
 Tool.Equipped:connect(function(mouse)
 &#9;playerGui = getPlayerGui()
-&#9;local interactiveCount = 0
 &#9;LAST_HOVERED_PART = nil
 
 &#9;local root
@@ -961,9 +972,9 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;root = game.Workspace
 &#9;end
 
-&#9;setUpConfigurationService(interactiveCount)
+&#9;local interactiveCount = setUpConfigurationService()
 
-&#9;if interactiveCount == 0 then
+&#9;if not interactiveCount or interactiveCount == 0 then
 &#9;&#9;warnNoWireableParts()
 &#9;end
 
@@ -1046,7 +1057,7 @@ function findBillboard(guiTable)
 &#9;if not guiTable then return end
 
 &#9;for i = 1, #guiTable do
-&#9;&#9;if guiTable[i]:IsA(&quot;BillboardGui&quot;) then
+&#9;&#9;if guiTable[i] and guiTable[i]:IsA(&quot;BillboardGui&quot;) then
 &#9;&#9;&#9;return guiTable[i]
 &#9;&#9;end
 &#9;end
@@ -1067,6 +1078,8 @@ function getBillboard(adornee)
 &#9;&#9;screen.ExtentsOffset = Vector3.new(0,0,0)
 &#9;&#9;screen.Adornee = adornee
 &#9;&#9;screen.Parent = game.Players.LocalPlayer.PlayerGui
+
+&#9;&#9;if not adornmentTable[guiKey] then return end
 &#9;&#9;table.insert(adornmentTable[guiKey],screen)
 
 &#9;&#9;local badgeFrame = Instance.new(&quot;Frame&quot;)
@@ -1090,6 +1103,17 @@ function repositionBadges(badgeFrame)
 &#9;&#9;badges[1].Position = UDim2.new(0,0,0,0)
 &#9;&#9;badges[2].Position = UDim2.new(0.5,0,0)
 &#9;end
+end
+
+function hasBadge(adornee, type)
+&#9;local screen = getBillboard(adornee)
+&#9;return screen:FindFirstChild(type .. &quot;Badge&quot;,true)
+end
+
+function removeBadge(adornee, type)
+&#9;local screen = getBillboard(adornee)
+&#9;local badge = screen:FindFirstChild(type .. &quot;Badge&quot;,true)
+&#9;if badge then badge:remove() end
 end
 
 function createBadge(adornee,type)
@@ -1120,50 +1144,123 @@ function createBadge(adornee,type)
 &#9;repositionBadges(screen.BadgeFrame)
 end
 
-function createAdornment(adornee,adornColor,type)
-&#9;local box = Instance.new(&quot;SelectionBox&quot;)
-&#9;box.Color = adornColor
-&#9;box.Name = adornee.Name .. &quot;Selection&quot; .. tostring(type)
-&#9;box.Adornee = adornee
-&#9;box.Transparency = 0.5
-&#9;box.Parent = game.Players.LocalPlayer.PlayerGui
-&#9;if not adornmentTable[adornee] then
-&#9;&#9;adornmentTable[adornee] = {}
+function upAdorneeCount(adornee,type)
+&#9;local typeLower = string.lower(type)
+&#9;if typeLower == &quot;receiver&quot; then
+&#9;&#9;if not receiverBadgeCount[adornee] then
+&#9;&#9;&#9;receiverBadgeCount[adornee] = 1
+&#9;&#9;else
+&#9;&#9;&#9;receiverBadgeCount[adornee] = receiverBadgeCount[adornee] + 1
+&#9;&#9;end
+&#9;elseif typeLower == &quot;event&quot; then
+&#9;&#9;if not eventBadgeCount[adornee] then
+&#9;&#9;&#9;eventBadgeCount[adornee] = 1
+&#9;&#9;else
+&#9;&#9;&#9;eventBadgeCount[adornee] = eventBadgeCount[adornee] + 1
+&#9;&#9;end
 &#9;end
-
-&#9;ANNOTATIONS[adornee] = box
-
-&#9;table.insert(adornmentTable[adornee],box)
-&#9;createBadge(adornee,type)
 end
 
-function removeAdornment(adornee, type)
+function downAdorneeCount(adornee,type)
+&#9;local typeLower = string.lower(type)
+&#9;if typeLower == &quot;receiver&quot; then
+&#9;&#9;if receiverBadgeCount[adornee] then
+&#9;&#9;&#9;receiverBadgeCount[adornee] = receiverBadgeCount[adornee] - 1
+&#9;&#9;&#9;if receiverBadgeCount[adornee] &lt; 1 then
+&#9;&#9;&#9;&#9;receiverBadgeCount[adornee] = nil
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;elseif typeLower == &quot;event&quot; then
+&#9;&#9;if eventBadgeCount[adornee] then
+&#9;&#9;&#9;eventBadgeCount[adornee] = eventBadgeCount[adornee] - 1
+&#9;&#9;&#9;if eventBadgeCount[adornee] &lt; 1 then
+&#9;&#9;&#9;&#9;eventBadgeCount[adornee] = nil
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function createAdornment(adornee,adornColor,type)
+&#9;upAdorneeCount(adornee,type)
+
+&#9;if receiverBadgeCount[adornee] == 1 or eventBadgeCount[adornee] == 1 then
+&#9;&#9;local box = Instance.new(&quot;SelectionBox&quot;)
+&#9;&#9;box.Color = adornColor
+&#9;&#9;box.Name = adornee.Name .. &quot;Selection&quot; .. tostring(type)
+&#9;&#9;box.Adornee = adornee
+&#9;&#9;box.Transparency = 0.5
+&#9;&#9;box.Parent = game.Players.LocalPlayer.PlayerGui
+&#9;&#9;if not adornmentTable[adornee] then
+&#9;&#9;&#9;adornmentTable[adornee] = {}
+&#9;&#9;end
+
+&#9;&#9;ANNOTATIONS[adornee] = box
+&#9;&#9;table.insert(adornmentTable[adornee],box)
+
+&#9;&#9;if not hasBadge(adornee,type) then
+&#9;&#9;&#9;createBadge(adornee,type)
+&#9;&#9;end
+&#9;end
+end
+
+function doRemoveAdornment(adornee, type)
 &#9;local key = adornee
 &#9;if not adornmentTable[key] then return end
 &#9;for i = 1, #adornmentTable[key] do
-&#9;&#9;adornmentTable[key][i]:remove()
+&#9;&#9;if adornmentTable[key] and adornmentTable[key][i] then
+&#9;&#9;&#9;if string.find(adornmentTable[key][i].Name,type) then
+&#9;&#9;&#9;&#9;adornmentTable[key][i]:remove()
+&#9;&#9;&#9;&#9;adornmentTable[key][i] = nil
+&#9;&#9;&#9;end
+&#9;&#9;end
 &#9;end
-&#9;adornmentTable[key] = nil
 end
 
-function eventReceiverAdded(receiver,interactiveCount)
+function removeAdornment(adornee, type)
+&#9;downAdorneeCount(adornee,type)
+
+&#9;if type == &quot;Receiver&quot; then
+&#9;&#9;if not receiverBadgeCount[adornee]then
+&#9;&#9;&#9;removeBadge(adornee, type)
+&#9;&#9;&#9;doRemoveAdornment(adornee, type)
+&#9;&#9;end
+&#9;elseif type == &quot;Event&quot; then
+&#9;&#9;if not eventBadgeCount[adornee] then
+&#9;&#9;&#9;removeBadge(adornee, type)
+&#9;&#9;&#9;doRemoveAdornment(adornee, type)
+&#9;&#9;end
+&#9;end
+end
+
+function eventReceiverAdded(receiver,wirePartCount)
 &#9;receiverTable[receiver] = findModel(receiver.Parent)
-&#9;interactiveCount = interactiveCount + 1
 &#9;createAdornment(receiverTable[receiver], BrickColor.new(&quot;Lime green&quot;), &quot;Receiver&quot;)
 &#9;setPartWireTransparency(receiver.Parent, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
 
 &#9;KNOWN_SINK_PARTS[receiver.Parent] = true
 &#9;KNOWN_SINK_PARTS[receiverTable[receiver]]= true
+
+&#9;if wirePartCount then
+&#9;&#9;return wirePartCount + 1
+&#9;else
+&#9;&#9;return 0
+&#9;end
+
 end
 
-function eventAdded(event,interactiveCount)
+function eventAdded(event,wirePartCount)
 &#9;eventTable[event] = findModel(event.Parent)
-&#9;interactiveCount = interactiveCount + 1
 &#9;createAdornment(eventTable[event], BrickColor.new(&quot;Bright orange&quot;), &quot;Event&quot;)
 &#9;setPartWireTransparency(event.Parent, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
 
 &#9;KNOWN_SOURCE_PARTS[event.Parent] = true
 &#9;KNOWN_SOURCE_PARTS[eventTable[event]]= true
+
+&#9;if wirePartCount then
+&#9;&#9;return wirePartCount + 1
+&#9;else
+&#9;&#9;return 0
+&#9;end
 end
 
 function eventReceiverRemoved(receiver)
@@ -1172,7 +1269,7 @@ function eventReceiverRemoved(receiver)
 &#9;KNOWN_SINK_PARTS[receiver.Parent] = false
 &#9;KNOWN_SINK_PARTS[receiverTable[receiver]]= false
 
-&#9;removeAdornment(receiverTable[receiver], BrickColor.new(&quot;Bright orange&quot;))
+&#9;removeAdornment(receiverTable[receiver],&quot;Receiver&quot;)
 &#9;receiverTable[receiver] = nil
 end
 
@@ -1182,11 +1279,12 @@ function eventRemoved(event)
 &#9;KNOWN_SOURCE_PARTS[event.Parent] = false
 &#9;KNOWN_SOURCE_PARTS[eventTable[event]]= false
 
-&#9;removeAdornment(eventTable[event], BrickColor.new(&quot;Lime green&quot;))
+&#9;removeAdornment(eventTable[event], &quot;Event&quot;)
 &#9;eventTable[event] = nil
 end
 
-function setUpConfigurationService(interactiveCount)
+function setUpConfigurationService()
+&#9;local wirePartCount = 0
 &#9;ServiceConnections = {}
 &#9;local collectionService = game:GetService(&quot;CollectionService&quot;)
 
@@ -1194,23 +1292,23 @@ function setUpConfigurationService(interactiveCount)
 &#9;local receivers = collectionService:GetCollection(&quot;CustomEventReceiver&quot;)
 &#9;if receivers then
 &#9;&#9;for pos, receiver in pairs(receivers) do
-&#9;&#9;&#9;eventReceiverAdded(receiver, interactiveCount)
+&#9;&#9;&#9;wirePartCount = eventReceiverAdded(receiver, wirePartCount)
 &#9;&#9;end
 &#9;end
 
 &#9;local events = collectionService:GetCollection(&quot;CustomEvent&quot;)
 &#9;if events then
 &#9;&#9;for pos, event in pairs(events) do
-&#9;&#9;&#9;eventAdded(event, interactiveCount)
+&#9;&#9;&#9;wirePartCount = eventAdded(event, wirePartCount)
 &#9;&#9;end
 &#9;end
 
 &#9;-- Now lets listen for any future additions/removals
 &#9;ServiceConnections[#ServiceConnections+1] = collectionService.ItemAdded:connect(function(instance)
 &#9;&#9;if instance:IsA(&quot;CustomEventReceiver&quot;) then
-&#9;&#9;&#9;eventReceiverAdded(instance, interactiveCount)
+&#9;&#9;&#9;eventReceiverAdded(instance)
 &#9;&#9;elseif instance:IsA(&quot;CustomEvent&quot;) then
-&#9;&#9;&#9;eventAdded(instance, interactiveCount)
+&#9;&#9;&#9;eventAdded(instance)
 &#9;&#9;end 
 &#9;end)
 &#9;ServiceConnections[#ServiceConnections+1] = collectionService.ItemRemoved:connect(function(instance)
@@ -1220,6 +1318,8 @@ function setUpConfigurationService(interactiveCount)
 &#9;&#9;&#9;eventRemoved(instance)
 &#9;&#9;end
 &#9;end)
+
+&#9;return wirePartCount
 end
 
 function destroyConfigurationService()
