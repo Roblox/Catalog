@@ -7,17 +7,17 @@
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>0</Y>
-				<Z>-0.5</Z>
+				<Y>-0.5</Y>
+				<Z>0</Z>
 				<R00>1</R00>
 				<R01>0</R01>
-				<R02>-0</R02>
+				<R02>0</R02>
 				<R10>0</R10>
-				<R11>0</R11>
-				<R12>-1</R12>
+				<R11>1</R11>
+				<R12>0</R12>
 				<R20>0</R20>
-				<R21>1</R21>
-				<R22>-0</R22>
+				<R21>0</R21>
+				<R22>1</R22>
 			</CoordinateFrame>
 			<string name="Name">ChameleonPotion</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=61902296 </url></Content>
@@ -182,6 +182,8 @@ local maxRange = 200
 local childScript
 local changeTo
 
+local drinkAnim
+
 function onActivated()
 &#9;if Tool.Enabled == false then 
 &#9;&#9;return 
@@ -200,13 +202,16 @@ function onActivated()
 &#9;local target = myHumanoid.TargetPoint 
 &#9;local direction = (target - Potion.Position).unit
 
-&#9;Potion.Transparency = 1.0
-
 &#9;local hit = game.Workspace:FindPartOnRay(Ray.new(Potion.Position + direction * minRange, direction * maxRange), vCharacter)
-&#9;
+
+&#9;drinkAnim = myHumanoid:LoadAnimation(Tool.DrinkAnim)
+&#9;if drinkAnim then drinkAnim:Play() end 
+&#9;Tool.GripPos = Vector3.new(0, 0, 0)
+&#9;wait(1.5)
+&#9;Tool.GripPos = Vector3.new(0, -0.5, 0)
+&#9;Potion.Transparency = 1.0&#9;
 &#9;if hit then 
-&#9;&#9;if mouse then 
-&#9;&#9;&#9;print(mouse.TargetSurface, 1)
+&#9;&#9;if mouse then &#9;&#9;&#9;
 &#9;&#9;&#9;local surface = mouse.TargetSurface&#9;&#9;&#9;   
 &#9;&#9;end
 &#9;&#9;childScript = vCharacter:FindFirstChild(&quot;ChangeFormScript&quot;)
@@ -235,6 +240,8 @@ end
 
 function onUnequipped()&#9;
 &#9;Potion.Transparency = 0.0
+&#9;if drinkAnim then drinkAnim:Stop() end
+&#9;Tool.GripPos = Vector3.new(0, -0.5, 0)
 end
 
 Tool.Activated:connect(onActivated)
@@ -440,7 +447,10 @@ function applyTexture(texture, part)
 &#9;&#9;&#9;characterMeshCount = characterMeshCount + 1
 &#9;&#9;&#9;children[i].OverlayTextureId = texture
 &#9;&#9;end
-&#9;&#9;if children[i].className == &quot;Shirt&quot; or children[i].className == &quot;Pants&quot; or children[i].className == &quot;Hat&quot; then
+&#9;&#9;if children[i].className == &quot;Hat&quot; and children[i]:FindFirstChild(&quot;Handle&quot;) and children[i].Handle:FindFirstChild(&quot;Mesh&quot;) then
+&#9;&#9;&#9;children[i].Handle.Mesh.TextureId = &quot;http://www.roblox.com/asset/?id=&quot; .. texture
+&#9;&#9;end
+&#9;&#9;if children[i].className == &quot;Shirt&quot; or children[i].className == &quot;Pants&quot; then
 &#9;&#9;&#9;children[i]:Remove()
 &#9;&#9;end
 &#9;&#9;if children[i].Name == &quot;Head&quot; then 
@@ -468,8 +478,8 @@ function applyTexture(texture, part)
 &#9;&#9;&#9;&#9;&#9;fakeNeck.Parent = torso
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end&#9;
-&#9;&#9;&#9;if fakeHead:FindFirstChild(&quot;Mesh&quot;) then 
-&#9;&#9;&#9;&#9;print(fakeHead.Mesh)
+&#9;&#9;&#9;if fakeHead:FindFirstChild(&quot;Mesh&quot;) then &#9;&#9;
+&#9;&#9;&#9;&#9;print(1.1)
 &#9;&#9;&#9;&#9;fakeHead.Mesh.TextureId = &quot;http://www.roblox.com/asset/?id=&quot; .. texture
 &#9;&#9;&#9;&#9;fakeHead.Transparency = 0.0
 &#9;&#9;&#9;end
@@ -493,14 +503,13 @@ function reform()
 &#9;part = changeTo.Value&#9;
 
 &#9;local humanoid = part.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;print(humanoid)
+&#9;
 &#9;if part.Parent.className == &quot;Hat&quot; or part.Parent.className == &quot;Tool&quot; then
 &#9;&#9;humanoid = part.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
 &#9;end
-&#9;print(humanoid)
+&#9;
 &#9;if humanoid  then &#9;&#9;
-&#9;&#9;copyCharacter(humanoid.Parent)
-&#9;&#9;print(humanoid.Parent)
+&#9;&#9;copyCharacter(humanoid.Parent)&#9;&#9;
 &#9;&#9;if restoreCo == nil or coroutine.status(restoreCo) == &quot;dead&quot; then
 &#9;&#9;&#9;restoreCo = coroutine.create(restoreCharacter)
 &#9;&#9;&#9;coroutine.resume(restoreCo)
@@ -510,7 +519,7 @@ function reform()
 &#9;&#9;return
 &#9;end
 
-&#9;if part:FindFirstChild(&quot;Mesh&quot;) and part.Mesh.TextureId then 
+&#9;if part:FindFirstChild(&quot;Mesh&quot;) then &#9;
 &#9;&#9;print(1)
 &#9;&#9;local pos = string.find(part.Mesh.TextureId, &quot;=&quot;)
 &#9;&#9;if pos &gt; 0 then 
@@ -528,10 +537,15 @@ function reform()
 &#9;end
 
 &#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if myHumanoid then
-&#9;&#9;print(2)
+&#9;if myHumanoid then&#9;&#9;
 &#9;&#9;local ch = vCharacter:GetChildren()
 &#9;&#9;for i  = 1, #ch do
+&#9;&#9;&#9;if ch[i].className == &quot;CharacterMesh&quot; then
+&#9;&#9;&#9;&#9;ch[i]:Remove()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if ch[i].className == &quot;Hat&quot; then
+&#9;&#9;&#9;&#9;ch[i]:Remove()
+&#9;&#9;&#9;end
 &#9;&#9;&#9;if ch[i].className == &quot;Part&quot; then 
 &#9;&#9;&#9;&#9;ch[i].BrickColor = part.BrickColor
 &#9;&#9;&#9;end
@@ -601,6 +615,49 @@ script:Remove()
 					</Properties>
 				</Item>
 			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=61914540</url></Content>
+				<bool name="Archivable">true</bool>
+				<string name="Name">DrinkAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX9">
+			<Properties>
+				<bool name="Archivable">true</bool>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-2.36700439</X>
+					<Y>18.6919537</Y>
+					<Z>-28.4836044</Z>
+					<R00>0.0349197909</R00>
+					<R01>0.0313815251</R01>
+					<R02>-0.998897314</R02>
+					<R10>1.16415308e-010</R10>
+					<R11>0.999506831</R11>
+					<R12>0.0314006768</R12>
+					<R20>0.999390066</R20>
+					<R21>-0.00109650521</R21>
+					<R22>0.0349025689</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>17.6109428</X>
+					<Y>18.06394</Y>
+					<Z>-29.1816559</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
 		</Item>
 	</Item>
 </roblox>
