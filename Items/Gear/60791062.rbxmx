@@ -3,7 +3,6 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="Archivable">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -25,7 +24,6 @@
 		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
-				<bool name="Archivable">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
 				<token name="BackSurface">0</token>
@@ -51,7 +49,6 @@
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">2</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -84,6 +81,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
+				<token name="formFactorRaw">2</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1</X>
@@ -93,7 +91,6 @@
 			</Properties>
 			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
-					<bool name="Archivable">true</bool>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
 					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=16884681</url></Content>
@@ -120,11 +117,16 @@
 		</Item>
 		<Item class="LocalScript" referent="RBX3">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">WiringScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
+				<ProtectedString name="Source">function waitForChild(parent, child)
+&#9;while not parent:FindFirstChild(child) do
+&#9;&#9;parent.ChildAdded:wait()
+&#9;end
+end
+
+local Tool = script.Parent
 local mouseMoveCon, mouseButtonDownCon = nil
 
 local eventTable = {}
@@ -135,8 +137,10 @@ local adornmentTable = {}
 local eventBadgeCount = {}
 local receiverBadgeCount = {}
 
+local root = nil
+
 local isRestricted = false
-if game.PlaceId == &quot;41324860&quot; then
+if tostring(game.PlaceId) == &quot;41324860&quot; then
 &#9;isRestricted = true
 end
 
@@ -230,6 +234,7 @@ function findMyBasePlate()
 &#9;&#9;&#9;local buildingAreas = game.Workspace.BuildingAreas:GetChildren()
 &#9;&#9;&#9;for i = 1, #buildingAreas do
 &#9;&#9;&#9;&#9;if buildingAreas[i].Player.Value == script.Parent.Parent.Name then
+&#9;&#9;&#9;&#9;&#9;waitForChild(buildingAreas[i],&quot;PlayerArea&quot;)
 &#9;&#9;&#9;&#9;&#9;STATIC_BASE_PLATE = buildingAreas[i].PlayerArea
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
@@ -958,6 +963,24 @@ function buildScreenPanel(part, x, y)
 &#9;WIRING_PANEL_MAP[part] = gui
 end
 
+function inBaseplate(instance)
+&#9;if instance == STATIC_BASE_PLATE then return true end
+
+&#9;local instanceCopy = instance
+&#9;print(&quot;instanceCopy init =&quot;,instanceCopy)
+
+&#9;while instanceCopy and (instanceCopy.Parent ~= nil or instanceCopy.Parent ~= game.Workspace) do
+&#9;&#9;if instanceCopy.Parent == STATIC_BASE_PLATE then
+&#9;&#9;&#9;print(&quot;in baseplate&quot;)
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;&#9;print(&quot;instanceCopy =&quot;,instanceCopy)
+&#9;&#9;instanceCopy = instanceCopy.Parent
+&#9;end
+
+&#9;return false
+end
+
 --------------------------------------------------------------------------------
 -- Tool.Equipped/Unequipped
 
@@ -965,7 +988,6 @@ Tool.Equipped:connect(function(mouse)
 &#9;playerGui = getPlayerGui()
 &#9;LAST_HOVERED_PART = nil
 
-&#9;local root
 &#9;if isRestricted then
 &#9;&#9;root = findMyBasePlate()
 &#9;else
@@ -1233,6 +1255,9 @@ function removeAdornment(adornee, type)
 end
 
 function eventReceiverAdded(receiver,wirePartCount)
+&#9;if isRestricted then
+&#9;&#9;if not inBaseplate(receiver) then return wirePartCount end
+&#9;end
 &#9;receiverTable[receiver] = findModel(receiver.Parent)
 &#9;createAdornment(receiverTable[receiver], BrickColor.new(&quot;Lime green&quot;), &quot;Receiver&quot;)
 &#9;setPartWireTransparency(receiver.Parent, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
@@ -1249,6 +1274,9 @@ function eventReceiverAdded(receiver,wirePartCount)
 end
 
 function eventAdded(event,wirePartCount)
+&#9;if isRestricted then
+&#9;&#9;if not inBaseplate(event) then return wirePartCount end
+&#9;end
 &#9;eventTable[event] = findModel(event.Parent)
 &#9;createAdornment(eventTable[event], BrickColor.new(&quot;Bright orange&quot;), &quot;Event&quot;)
 &#9;setPartWireTransparency(event.Parent, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
