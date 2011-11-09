@@ -1,0 +1,340 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.349999994</Y>
+				<Z>-0.649999976</Z>
+				<R00>1</R00>
+				<R01>-0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">OwnerCameraTool</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=13506760</url></Content>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">CameraToolScript</string>
+				<ProtectedString name="Source">local function waitForChild(parent, childName)
+&#9;local child = parent:findFirstChild(childName)
+&#9;if child then return child end
+&#9;while true do
+&#9;&#9;child = parent.ChildAdded:wait()
+&#9;&#9;if child.Name==childName then return child end
+&#9;end
+end
+
+local Tool = script.Parent
+waitForChild(Tool,&quot;ScreenshotGui&quot;)
+waitForChild(Tool.ScreenshotGui,&quot;FlashFrame&quot;)
+waitForChild(Tool.ScreenshotGui,&quot;ScreenshotFrame&quot;)
+waitForChild(Tool.ScreenshotGui.ScreenshotFrame, &quot;ScreenshotText&quot;)
+local gui = Tool.ScreenshotGui
+local flashStep = 0.05
+
+local active = false
+Tool.Activated:connect(function()
+&#9;if active then return end
+&#9;active = true
+
+&#9;local camera = game.Workspace.CurrentCamera
+&#9;local cframe = game.Workspace.CurrentCamera.CoordinateFrame
+&#9;local player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+
+&#9;local cameraShot = game.Workspace:FindFirstChild(&quot;OwnerCameraShotRef&quot;)
+&#9;if not cameraShot then
+&#9;&#9;local newCameraShot = Instance.new(&quot;Model&quot;)
+&#9;&#9;newCameraShot.Name = &quot;OwnerCameraShotRef&quot;
+&#9;&#9;local cameraPos = Instance.new(&quot;Vector3Value&quot;)
+&#9;&#9;cameraPos.Name = &quot;CameraPos&quot;
+&#9;&#9;cameraPos.Value = Vector3.new(cframe.p.x,cframe.p.y,cframe.p.z)
+
+&#9;&#9;local cameraFocus = Instance.new(&quot;Vector3Value&quot;)
+&#9;&#9;cameraFocus.Name = &quot;CameraFocus&quot;
+&#9;&#9;cameraFocus.Value = game.Workspace.CurrentCamera.Focus.p
+&#9;&#9;
+&#9;&#9;cameraPos.Parent = newCameraShot
+&#9;&#9;cameraFocus.Parent = newCameraShot
+
+&#9;&#9;newCameraShot.Parent = game.Workspace
+
+&#9;&#9;local serverScript = Tool.UpdateServerCamera:clone()
+&#9;&#9;serverScript.Parent = newCameraShot
+&#9;&#9;serverScript.Disabled = false
+&#9;else
+&#9;&#9;if cameraShot:FindFirstChild(&quot;CameraPos&quot;) then
+&#9;&#9;&#9;cameraShot.CameraPos.Value = Vector3.new(game.Workspace.CurrentCamera.CoordinateFrame.p.x,game.Workspace.CurrentCamera.CoordinateFrame.p.y,game.Workspace.CurrentCamera.CoordinateFrame.p.z)
+&#9;&#9;end
+&#9;&#9;if cameraShot:FindFirstChild(&quot;CameraFocus&quot;) then
+&#9;&#9;&#9;cameraShot.CameraFocus.Value = game.Workspace.CurrentCamera.Focus.p
+&#9;&#9;end
+&#9;end
+
+&#9;gui.FlashFrame.BackgroundTransparency = 0
+&#9;while gui.FlashFrame.BackgroundTransparency &lt; 1 do
+&#9;&#9;gui.FlashFrame.BackgroundTransparency = gui.FlashFrame.BackgroundTransparency + flashStep
+&#9;&#9;wait(0.03)
+&#9;end
+
+&#9;active = false
+end)
+
+function setupGui()
+&#9;local player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;if gui and player and player:FindFirstChild(&quot;PlayerGui&quot;) then
+&#9;&#9;gui.Parent = player.PlayerGui
+&#9;&#9;gui.FlashFrame.Visible = true
+&#9;&#9;gui.ScreenshotFrame.Visible = true
+&#9;end
+end
+
+function destroyGui()
+&#9;gui.FlashFrame.Visible = false
+&#9;gui.ScreenshotFrame.Visible = false
+end
+
+Tool.Equipped:connect(function(mouse)
+&#9;setupGui()
+end)
+
+Tool.Unequipped:connect(function()
+&#9;destroyGui()
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX2">
+			<Properties>
+				<string name="Name">ScreenshotGui</string>
+			</Properties>
+			<Item class="Frame" referent="RBX3">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="Draggable">false</bool>
+					<string name="Name">ScreenshotFrame</string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>-200</XO>
+						<YS>0</YS>
+						<YO>0</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>400</XO>
+						<YS>0</YS>
+						<YO>40</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">3</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+				<Item class="TextLabel" referent="RBX4">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="Draggable">false</bool>
+						<token name="Font">2</token>
+						<token name="FontSize">7</token>
+						<string name="Name">ScreenshotText</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>1</XS>
+							<XO>0</XO>
+							<YS>1</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<string name="Text">Click to Create Thumbnail</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrap">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Frame" referent="RBX5">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4294967295</Color3>
+					<float name="BackgroundTransparency">1</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="Draggable">false</bool>
+					<string name="Name">FlashFrame</string>
+					<UDim2 name="Position">
+						<XS>0</XS>
+						<XO>0</XO>
+						<YS>0</YS>
+						<YO>0</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>1</XS>
+						<XO>0</XO>
+						<YS>1</YS>
+						<YO>0</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">0</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX6">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>0.600000024</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1.20000005</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX7">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=13506753</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2</X>
+						<Y>2</Y>
+						<Z>1.79999995</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=13506786</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX8">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">UpdateServerCamera</string>
+				<ProtectedString name="Source">local function waitForChild(parent, childName)
+&#9;local child = parent:findFirstChild(childName)
+&#9;if child then return child end
+&#9;while true do
+&#9;&#9;child = parent.ChildAdded:wait()
+&#9;&#9;if child.Name == childName then return child end
+&#9;end
+end
+
+local camRef = script.Parent
+
+waitForChild(camRef,&quot;CameraPos&quot;)
+waitForChild(camRef,&quot;CameraFocus&quot;)
+local camPos = camRef.CameraPos
+local camFocus = camRef.CameraFocus
+
+local debounce = false
+function updateServerCamera()
+&#9;if debounce then return end
+&#9;debounce = true
+&#9;&#9;game.Workspace.CurrentCamera.CameraType = Enum.CameraType.Fixed
+&#9;&#9;game.Workspace.CurrentCamera.CoordinateFrame = CFrame.new(camPos.Value,camFocus.Value)
+&#9;&#9;game.Workspace.CurrentCamera.Focus = CFrame.new(camFocus.Value)
+&#9;debounce = false
+end
+
+updateServerCamera()
+camFocus.Changed:connect(updateServerCamera)
+</ProtectedString>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
