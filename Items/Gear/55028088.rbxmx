@@ -3789,6 +3789,29 @@ local insertBoundingBoxOverlapVector = Vector3.new(1, 1, 1) -- we can still stam
 
 local useAssetVersionId = false
 
+
+-- for high-scalability display
+local adornPart = Instance.new(&quot;Part&quot;)
+adornPart.Parent = nil
+adornPart.formFactor = &quot;Custom&quot;
+adornPart.Size = Vector3.new(4, 4, 4)
+adornPart.CFrame = CFrame.new()
+
+local adorn = Instance.new(&quot;SelectionBox&quot;)
+adorn.Color = BrickColor.new(&quot;Toothpaste&quot;)
+adorn.Adornee = adornPart
+adorn.Visible = true
+adorn.Transparency = 0
+adorn.Name = &quot;HighScalabilityStamperLine&quot;
+adorn.Parent = nil
+
+local HighScalabilityLine = {}
+HighScalabilityLine.Start = nil
+HighScalabilityLine.End = nil
+HighScalabilityLine.Adorn = adorn
+HighScalabilityLine.AdornPart = adornPart
+HighScalabilityLine.InternalLine = nil
+
 waitForChild(Tool,&quot;LuaGlobalVariables&quot;)
 local variables = Tool.LuaGlobalVariables
 waitForChild(variables,&quot;ShowInvalidPlacement&quot;)
@@ -3906,6 +3929,17 @@ end
 function beginInsertAssetStamp(assetName, assetId, image, stampMode)
 &#9;-- trying to stop assets, gone back to Main Stamp Dialog
 &#9;if assetId == 0 then
+&#9;&#9;-- malformed signal, indicating that we stamped something, but never inserted from our GuiScript (so probably eyedroppered something first)
+&#9;&#9;if assetName == &quot;&quot; and image == &quot;&quot; and stampMode then
+&#9;&#9;&#9;guiScriptIsLoadingSomething = true
+&#9;&#9;&#9;cancelAssetPlacement()
+&#9;&#9;&#9;setupDraggableClone()
+&#9;&#9;&#9;wait() -- need this so onInsertMouseMove() can sync up with setupDraggableClone()
+&#9;&#9;&#9;onInsertMouseMove()
+&#9;&#9;&#9;guiScriptIsLoadingSomething = false
+&#9;&#9;&#9;return
+&#9;&#9;end
+
 &#9;&#9;guiScriptIsLoadingSomething = true
 &#9;&#9;cancelAssetPlacement()
 &#9;&#9;return
@@ -4490,6 +4524,27 @@ function MakeWedge(x, y, z, defaultmaterial)
 end
 
 
+-- helper function for truncating to 45-degree angles on a 2D plane
+function truncateToCircleEighth(bigValue, littleValue)
+&#9;local big = math.abs(bigValue)
+&#9;local little = math.abs(littleValue)
+&#9;local hypotenuse = math.sqrt(big*big + little*little)
+&#9;local frac = little / hypotenuse
+
+&#9;local bigSign = 1
+&#9;local littleSign = 1
+&#9;if bigValue &lt; 0 then bigSign = -1 end
+&#9;if littleValue &lt; 0 then littleSign = -1 end
+
+&#9;if frac &gt; .382683432 then
+&#9;&#9;-- between 22.5 and 45 degrees, so truncate to 45-degree tilt
+&#9;&#9;return .707106781 * hypotenuse * bigSign, .707106781 * hypotenuse * littleSign
+&#9;else 
+&#9;&#9;-- between 0 and 22.5 degrees, so truncate to 0-degree tilt
+&#9;&#9;return hypotenuse * bigSign, 0
+&#9;end
+end
+
 function onInsertMouseMove()
 
 &#9;if Data.Stamp.MovingLock then
@@ -4641,6 +4696,57 @@ function onInsertMouseMove()
 &#9;&#9;&#9;game.JointsService:SetJoinAfterMoveTarget(nil)
       end
       game.JointsService:ShowPermissibleJoints()
+
+&#9;&#9;-- here we allow for a line of high-scalability parts
+&#9;&#9;if (Data.Stamp.CurrentParts[1] and Data.Stamp.CurrentParts[1].Name == &quot;MegaClusterCube&quot;) and HighScalabilityLine.Start then
+&#9;&#9;&#9;HighScalabilityLine.End = Data.Stamp.CurrentParts[1].CFrame.p
+
+&#9;&#9;&#9;-- extract the line from these positions and limit to a 2D plane made from 2 of the world axes
+&#9;&#9;&#9;--   then use dominating axis to limit line to be at 45-degree intervals
+&#9;&#9;&#9;--   will use this internal representation of the line for the actual stamping
+&#9;&#9;&#9;local line = (HighScalabilityLine.End - HighScalabilityLine.Start)
+&#9;&#9;&#9;if math.abs(line.X) &lt; math.abs(line.Y) then
+&#9;&#9;&#9;&#9;if math.abs(line.X) &lt; math.abs(line.Z) then
+&#9;&#9;&#9;&#9;&#9;-- limit to Y/Z plane, domination unknown
+&#9;&#9;&#9;&#9;&#9;local newY, newZ
+&#9;&#9;&#9;&#9;&#9;if (math.abs(line.Y) &gt; math.abs(line.Z)) then 
+&#9;&#9;&#9;&#9;&#9;&#9;newY, newZ = truncateToCircleEighth(line.Y, line.Z)
+&#9;&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;&#9;newZ, newY = truncateToCircleEighth(line.Z, line.Y)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;line = Vector3.new(0, newY, newZ)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;-- limit to X/Y plane, with Y dominating
+&#9;&#9;&#9;&#9;&#9;local newY, newX = truncateToCircleEighth(line.Y, line.X)
+&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, newY, 0)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;if math.abs(line.Y) &lt; math.abs(line.Z) then
+&#9;&#9;&#9;&#9;&#9;-- limit to X/Z plane, domination unknown
+&#9;&#9;&#9;&#9;&#9;local newX, newZ
+&#9;&#9;&#9;&#9;&#9;if math.abs(line.X) &gt; math.abs(line.Z) then
+&#9;&#9;&#9;&#9;&#9;&#9;newX, newZ = truncateToCircleEighth(line.X, line.Z)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;newZ, newX = truncateToCircleEighth(line.Z, line.X)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, 0, newZ)
+&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;-- limit to X/Y plane, with X dominating
+&#9;&#9;&#9;&#9;&#9;local newX, newY = truncateToCircleEighth(line.X, line.Y)
+&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, newY, 0)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;-- resize the &quot;line&quot; graphic to be the correct size and orientation
+&#9;&#9;&#9;--HighScalabilityLine.AdornPart.Size = Vector3.new(4, 4, (HighScalabilityLine.End - HighScalabilityLine.Start).magnitude + 4)
+&#9;&#9;&#9;--local tempCFrame = CFrame.new(HighScalabilityLine.Start, HighScalabilityLine.End)
+&#9;&#9;&#9;HighScalabilityLine.AdornPart.Size = Vector3.new(4, 4, line.magnitude + 4)
+&#9;&#9;&#9;local tempCFrame = CFrame.new(HighScalabilityLine.Start, HighScalabilityLine.Start + line)
+&#9;&#9;&#9;HighScalabilityLine.AdornPart.CFrame = tempCFrame + tempCFrame:vectorToWorldSpace(Vector3.new(2, 2, 2) - HighScalabilityLine.AdornPart.Size/2)
+&#9;&#9;
+&#9;&#9;&#9;-- make player able to see this ish
+&#9;&#9;&#9;if player then HighScalabilityLine.Adorn.Parent = player.PlayerGui HighScalabilityLine.InternalLine = line end
+&#9;&#9;end
 &#9;end
 
 &#9;Data.Stamp.MovingLock = false
@@ -4654,10 +4760,18 @@ function onInsertMouseButton1Down()
 &#9;&#9;Data.Stamp.MouseDown = true
 &#9;end
 
+&#9;if (Data.Stamp.CurrentParts and Data.Stamp.CurrentParts[1] and Data.Stamp.CurrentParts[1].Name == &quot;MegaClusterCube&quot;) then
+&#9;&#9;&#9;-- only let them drag if they start dragging on the cluster!
+&#9;&#9;&#9;if Mouse.Target and Mouse.Target:IsA(&quot;Terrain&quot;) then
+&#9;&#9;&#9;&#9;HighScalabilityLine.Start = Data.Stamp.CurrentParts[1].CFrame.p
+&#9;&#9;&#9;end
+&#9;end
 end
 
 
 function cancelAssetPlacement()
+&#9;HighScalabilityLine.Start = nil
+&#9;HighScalabilityLine.Adorn.Parent = nil
 
 &#9;gInitial90DegreeRotations = 0
 &#9;Data.Stamp.Cancelled = true
@@ -5321,8 +5435,20 @@ function spaceAboveCharacter(charTorso, newTorsoY)
 end
 
 
+-- returns whether or not we want to cancel the stamp because we&apos;re blocked by this part
+function isBlocker(part)
+&#9;if not part then return false end
+&#9;if not part.Parent then return false end
+&#9;if part:FindFirstChild(&quot;Humanoid&quot;) then return false end
+&#9;if part:FindFirstChild(&quot;RobloxStamper&quot;) or part:FindFirstChild(&quot;RobloxModel&quot;) then return true end
+&#9;if part:IsA(&quot;Part&quot;) and not part.CanCollide then return false end
+&#9;if part == game.Workspace then return true end
+&#9;if part == game.Lighting then return false end
+&#9;return isBlocker(part.Parent)
+end
+
 function onInsertMouseButton1Up()
-&#9;if guiScriptIsLoadingSomething then return end -- don&apos;t try to stamp while we&apos;re loading!
+&#9;if guiScriptIsLoadingSomething or variables.InsertAsset.Updated.Value then return end -- don&apos;t try to stamp while we&apos;re loading!
 
 &#9;if eyeDropperConnection then 
 &#9;&#9;eyeDropperConnection:disconnect()
@@ -5346,6 +5472,8 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;if not inBounds(Data.Stamp.TransparencyTable) then
 &#9;&#9;&#9;&#9;&#9;variables.ShowInvalidPlacement.Value = true
 &#9;&#9;&#9;&#9;&#9;Data.Stamp.MouseLock = false
+&#9;&#9;&#9;&#9;&#9;HighScalabilityLine.Start = nil
+&#9;&#9;&#9;&#9;&#9;HighScalabilityLine.Adorn.Parent = nil
 &#9;&#9;&#9;&#9;&#9;return
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
@@ -5353,6 +5481,8 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;-- if unstampable face, then don&apos;t let us stamp there!
 &#9;&#9;&#9;if unstampableSurface then
 &#9;&#9;&#9;&#9;Data.Stamp.MouseLock = false
+&#9;&#9;&#9;&#9;HighScalabilityLine.Start = nil
+&#9;&#9;&#9;&#9;HighScalabilityLine.Adorn.Parent = nil
 &#9;&#9;&#9;&#9;flashRedBox()
 &#9;&#9;&#9;&#9;return
 &#9;&#9;&#9;end
@@ -5362,7 +5492,7 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;local minBB, maxBB = getBoundingBoxInWorldCoordinates(Data.Stamp.CurrentParts[1])
 &#9;&#9;&#9;local configFound, targetCFrame = findConfigAtMouseTarget(Data.Stamp.TransparencyTable)
 
-&#9;&#9;&#9;if configFound then
+&#9;&#9;&#9;if configFound and not HighScalabilityLine.Adorn.Parent then
 &#9;&#9;&#9;&#9;if clusterPartsInRegion(minBB+insertBoundingBoxOverlapVector, maxBB-insertBoundingBoxOverlapVector) then Data.Stamp.MouseLock = false flashRedBox() return end
 
 &#9;&#9;&#9;&#9;local blockingParts = game.Workspace:FindPartsInRegion3(Region3.new(minBB+insertBoundingBoxOverlapVector, maxBB-insertBoundingBoxOverlapVector), Data.Stamp.CurrentParts[1], 100)
@@ -5374,7 +5504,7 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;&#9;--&#9;&#9;  should work as soon as Region3 queries are fixed
 &#9;&#9;&#9;&#9;&#9;--      NOTE TO SELF:  See if partModel applies when isRestricted is false
 &#9;&#9;&#9;&#9;&#9;--if blockingParts[b]:IsDescendantOf(partModel) or blockingParts[b].Parent == script.Parent.Parent then Data.Stamp.MouseLock = false flashRedBox() break end --return end
-&#9;&#9;&#9;&#9;&#9;if blockingParts[b]:IsDescendantOf(partModel) then Data.Stamp.MouseLock = false flashRedBox() end-- still error if overlapping another model [should return here too!]
+&#9;&#9;&#9;&#9;&#9;if isBlocker(blockingParts[b]) then Data.Stamp.MouseLock = false flashRedBox() return end-- still error if overlapping another model [should return here too!]
 &#9;&#9;&#9;&#9;end
 
 &#9;&#9;&#9;&#9;local alreadyPushedUp = {}
@@ -5403,23 +5533,117 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;&#9;&#9;--break
 &#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else Data.Stamp.MouseLock = false return end -- if no config then don&apos;t stamp!
+&#9;&#9;&#9;elseif (not configFound) then
+&#9;&#9;&#9;&#9;HighScalabilityLine.Start = nil
+&#9;&#9;&#9;&#9;HighScalabilityLine.Adorn.Parent = nil
+&#9;&#9;&#9;&#9;Data.Stamp.MouseLock = false 
+&#9;&#9;&#9;&#9;return 
+&#9;&#9;&#9;end -- if no config then don&apos;t stamp!
+
+&#9;&#9;&#9;-- something will be stamped!  so set the &quot;StampedSomething&quot; toggle to true
+&#9;&#9;&#9;local localChar = game.Players.LocalPlayer.Character
+&#9;&#9;&#9;if localChar then
+&#9;&#9;&#9;&#9;local stampTracker = localChar:FindFirstChild(&quot;StampTracker&quot;)
+&#9;&#9;&#9;&#9;if stampTracker and not stampTracker.Value then stampTracker.Value = true end
+&#9;&#9;&#9;end
 
 &#9;&#9;&#9;if Data.Stamp.Model and Data.Stamp.Model:GetChildren()[1] and Data.Stamp.Model:GetChildren()[1].Name == &quot;MegaClusterCube&quot; then
-&#9;&#9;&#9;&#9;-- if target point is in cluster, just use cluster:SetCell
-&#9;&#9;&#9;&#9;print(&quot;is cluster cube&quot;)
-&#9;&#9;&#9;&#9;print(&quot;cluster is&quot;,cluster)
-&#9;&#9;&#9;&#9;if cluster then
-&#9;&#9;&#9;&#9;&#9;print(&quot;should cluster&quot;)
-&#9;&#9;&#9;&#9;&#9;-- if targetCFrame is inside cluster, just set that cell to 1 and return
-&#9;&#9;&#9;&#9;&#9;local cellPos = cluster:WorldToCell(targetCFrame.p)
-&#9;&#9;&#9;&#9;&#9;local cMax = cluster.MaxExtents.Max
-&#9;&#9;&#9;&#9;&#9;local cMin = cluster.MaxExtents.Min
+&#9;&#9;&#9;&#9;&#9;local line = HighScalabilityLine.InternalLine
+&#9;&#9;&#9;&#9;&#9;local cMax = game.Workspace.Terrain.MaxExtents.Max
+&#9;&#9;&#9;&#9;&#9;local cMin = game.Workspace.Terrain.MaxExtents.Min
 
 &#9;&#9;&#9;&#9;&#9;local clusterMaterial = 1 -- default is grass
 &#9;&#9;&#9;&#9;&#9;if Data.Stamp.Model:GetChildren()[1]:FindFirstChild(&quot;ClusterMaterial&quot;) then
 &#9;&#9;&#9;&#9;&#9;&#9;clusterMaterial = Data.Stamp.Model:GetChildren()[1].ClusterMaterial.Value
 &#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;&#9;if HighScalabilityLine.Adorn.Parent and HighScalabilityLine.Start and line and line.magnitude &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;local startCell = game.Workspace.Terrain:WorldToCell(HighScalabilityLine.Start)
+&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;local xInc = 0
+&#9;&#9;&#9;&#9;&#9;&#9;local yInc = 0
+&#9;&#9;&#9;&#9;&#9;&#9;local zInc = 0
+&#9;&#9;&#9;&#9;&#9;&#9;if line.X &gt; 0 then xInc = 1 elseif line.X &lt; 0 then xInc = -1 end
+&#9;&#9;&#9;&#9;&#9;&#9;if line.Y &gt; 0 then yInc = 1 elseif line.Y &lt; 0 then yInc = -1 end
+&#9;&#9;&#9;&#9;&#9;&#9;if line.Z &gt; 0 then zInc = 1 elseif line.Z &lt; 0 then zInc = -1 end
+
+&#9;&#9;&#9;&#9;&#9;&#9;local incrementVect = Vector3.new(xInc, yInc, zInc)
+&#9;&#9;&#9;&#9;&#9;&#9;local stepVect = Vector3.new(0, 0, 0)
+
+&#9;&#9;&#9;&#9;&#9;&#9;print(line)
+&#9;&#9;&#9;&#9;&#9;&#9;print(incrementVect)
+
+&#9;&#9;&#9;&#9;&#9;&#9;while (stepVect.magnitude*4 &lt;= line.magnitude) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellPos = Vector3int16.new(startCell.X + stepVect.X, startCell.Y + stepVect.Y, startCell.Z + stepVect.Z)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if cellPos.X &gt;= cMin.X and cellPos.Y &gt;= cMin.Y and cellPos.Z &gt;= cMin.Z and cellPos.X &lt; cMax.X and cellPos.Y &lt; cMax.Y and cellPos.Z &lt; cMax.Z then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- check if overlaps player or part:
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellCenter = game.Workspace.Terrain:cellCenterToWorld(cellPos.X, cellPos.Y, cellPos.Z)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellBlockingParts = game.Workspace:FindPartsInRegion3(Region3.new(cellCenter - Vector3.new(2, 2, 2) + insertBoundingBoxOverlapVector, cellCenter + Vector3.new(2, 2, 2) - insertBoundingBoxOverlapVector), Data.Stamp.CurrentParts[1], 100)
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local skipThisCell = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for b = 1, #cellBlockingParts do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if isBlocker(cellBlockingParts[b]) then skipThisCell = true break end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if not skipThisCell then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- pop players up above any set cells
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local alreadyPushedUp = {}
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- if no blocking model below, then see if stamping on top of a character
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for b = 1, #cellBlockingParts do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if cellBlockingParts[b].Parent and not alreadyPushedUp[cellBlockingParts[b].Parent] and cellBlockingParts[b].Parent:FindFirstChild(&quot;Humanoid&quot;) and cellBlockingParts[b].Parent:FindFirstChild(&quot;Humanoid&quot;):IsA(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local blockingPersonTorso = cellBlockingParts[b].Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;alreadyPushedUp[cellBlockingParts[b].Parent] = true
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if blockingPersonTorso then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- if so, let&apos;s push the person upwards so they pop on top of the stamped model/part (but only if there&apos;s space above them)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local newY = cellCenter.Y + 5
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if spaceAboveCharacter(blockingPersonTorso, newY) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;blockingPersonTorso.CFrame = blockingPersonTorso.CFrame + Vector3.new(0, newY - blockingPersonTorso.CFrame.p.Y, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- if no space, we just skip this one
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;skipThisCell = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if not skipThisCell then  -- if we STILL aren&apos;t skipping...  then we&apos;re good to go!
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- set it
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;cluster:SetCell(cellPos.X, cellPos.Y, cellPos.Z, clusterMaterial, 0, 1)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- auto-wedge it?
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if (autoWedgeClusterParts) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i = cellPos.x - 1, cellPos.x + 1 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for j = cellPos.y - 1, cellPos.y + 1 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for k = cellPos.z - 1, cellPos.z + 1 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;MakeWedge(i, j, k)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect = stepVect + incrementVect
+&#9;&#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;&#9;&#9;-- and also get rid of any HighScalabilityLine stuff if it&apos;s there
+&#9;&#9;&#9;&#9;&#9;&#9;HighScalabilityLine.Start = nil
+&#9;&#9;&#9;&#9;&#9;&#9;HighScalabilityLine.Adorn.Parent = nil
+&#9;&#9;&#9;&#9;&#9;&#9;Data.Stamp.MouseLock = false
+&#9;&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;-- not High-Scalability-Line-Based, so behave normally [and get rid of any HSL stuff]
+&#9;&#9;&#9;&#9;HighScalabilityLine.Start = nil
+&#9;&#9;&#9;&#9;HighScalabilityLine.Adorn.Parent = nil
+
+&#9;&#9;&#9;&#9;-- if target point is in cluster, just use cluster:SetCell
+&#9;&#9;&#9;&#9;if cluster then
+&#9;&#9;&#9;&#9;&#9;-- if targetCFrame is inside cluster, just set that cell to 1 and return
+&#9;&#9;&#9;&#9;&#9;local cellPos = cluster:WorldToCell(targetCFrame.p)
 
 &#9;&#9;&#9;&#9;&#9;if cellPos.X &gt;= cMin.X and cellPos.Y &gt;= cMin.Y and cellPos.Z &gt;= cMin.Z and cellPos.X &lt; cMax.X and cellPos.Y &lt; cMax.Y and cellPos.Z &lt; cMax.Z then
 &#9;&#9;&#9;&#9;&#9;&#9;cluster:SetCell(cellPos.X, cellPos.Y, cellPos.Z, clusterMaterial, 0, 1)
