@@ -18,7 +18,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">BanHammer V1.1</string>
+			<string name="Name">BanHammer</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=10684453</url></Content>
 		</Properties>
 		<Item class="Part" referent="RBX1">
@@ -34,9 +34,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.259159088</X>
-					<Y>6.43653345</Y>
-					<Z>0.389559746</Z>
+					<X>-0.259155273</X>
+					<Y>3.43653774</Y>
+					<Z>0.389560699</Z>
 					<R00>-0.309529573</R00>
 					<R01>-0.260076046</R01>
 					<R02>0.914632022</R02>
@@ -217,6 +217,8 @@ end)</ProtectedString>
 player = nil
 --selected
 selected = false
+homerunning = false 
+whacking = false 
 --save shoulders
 RSH, LSH = nil, nil
 anim = &quot;none&quot;
@@ -224,10 +226,8 @@ anim = &quot;none&quot;
 --welds
 --what anim
 local TwoHandAnim
-local HomeRuner
+local HomeRunner
 local Whacker
-hr = false 
-wh = false 
 --create the dustcloud object
 local prt = Instance.new(&quot;Part&quot;)
 prt.Size = Vector3.new(7.5,7.5,7.5)
@@ -286,10 +286,10 @@ end
 
 --onselected, save shoulders and get player
 script.Parent.Equipped:connect(function()
-&#9;wait()
 &#9;TwoHandAnim = script.Parent.Parent:findFirstChild(&quot;Humanoid&quot;):LoadAnimation(script.Parent.TwoHandAnim)
-&#9;HomeRuner = script.Parent.Parent:findFirstChild(&quot;Humanoid&quot;):LoadAnimation(script.Parent.HomeRun)
+&#9;HomeRunner = script.Parent.Parent:findFirstChild(&quot;Humanoid&quot;):LoadAnimation(script.Parent.HomeRun)
 &#9;Whacker = script.Parent.Parent:findFirstChild(&quot;Humanoid&quot;):LoadAnimation(script.Parent.Whack)
+&#9;repeat wait() until TwoHandAnim ~= nil and HomeRunner ~= nil and Whacker ~= nil 
 &#9;if selected then return end
 &#9;selected = true
 &#9;TwoHandAnim:Play()
@@ -302,8 +302,8 @@ script.Parent.Unequipped:connect(function()
 &#9;if TwoHandAnim ~= nil then 
 &#9;&#9;TwoHandAnim:Stop()
 &#9;end 
-&#9;if HomeRuner ~= nil then 
-&#9;&#9;HomeRuner:Stop()
+&#9;if HomeRunner ~= nil then 
+&#9;&#9;HomeRunner:Stop()
 &#9;end 
 &#9;if Whacker ~= nil then 
 &#9;&#9;Whacker:Stop()
@@ -329,33 +329,31 @@ function HomeRunHit(part)
 end
 
 function HomeRun()
-&#9;if hr == false then 
-&#9;&#9;hr = true 
+&#9;if homerunning == false then 
+&#9;&#9;homerunning = true 
 &#9;&#9;anim = &quot;homerun&quot;
 &#9;&#9;TwoHandAnim:Stop()
-&#9;&#9;HomeRuner:Play()
+&#9;&#9;HomeRunner:Play()
 &#9;&#9;--start HomeRunhit connection--
 &#9;&#9;local con = hammer.Touched:connect(HomeRunHit)
 &#9;&#9;----------------------------------------
 &#9;&#9;wait(.6)
-&#9;&#9;HomeRuner:Stop()
+&#9;&#9;HomeRunner:Stop()
 &#9;&#9;if selected == true then 
 &#9;&#9;&#9;TwoHandAnim:Play()
 &#9;&#9;end 
-&#9;&#9;hr = false 
 &#9;&#9;----end HomeRun connection---
 &#9;&#9;con:disconnect()
+&#9;--&#9;wait(0.15)
+&#9;&#9;homerunning = false 
 &#9;end
 end 
 function Whack()
-&#9;if hr == false then 
+&#9;if homerunning == false then 
 &#9;anim = &quot;norm&quot;
 &#9;TwoHandAnim:Stop()
 &#9;Whacker:Play()
 --&#9;hammer.Whack:Play()
-&#9;w = Instance.new(&quot;StringValue&quot;)
-&#9;w.Name = &quot;WhackSound&quot;
-&#9;w.Parent = hammer
 &#9;&#9;--insert camshake and hit nearby people
 &#9;&#9;for _, p in pairs(game.Players:GetChildren()) do
 &#9;&#9;&#9;if p.Character == script.Parent.Parent == false then 
@@ -377,6 +375,7 @@ function Whack()
 &#9;&#9;delay(0.25, function()
 &#9;&#9;&#9;if anim == &quot;norm&quot; then 
 &#9;&#9;&#9;&#9;if selected == true then 
+&#9;&#9;&#9;&#9;&#9;whacking = true 
 &#9;&#9;&#9;&#9;&#9;p=Instance.new(&quot;Part&quot;)
 &#9;&#9;&#9;&#9;&#9;p.CanCollide = false 
 &#9;&#9;&#9;&#9;&#9;p.Transparency = 1
@@ -389,11 +388,18 @@ function Whack()
 &#9;&#9;&#9;&#9;&#9;p.CFrame = p.CFrame * CFrame.fromEulerAnglesXYZ(-math.pi/2, 0,  -math.pi/2)
 &#9;&#9;&#9;&#9;&#9;Hit, Pos = Raycast(p.Position, p.CFrame.lookVector, 4, script.Parent.Parent)
 &#9;&#9;&#9;&#9;&#9;if Hit ~= nil then 
-&#9;&#9;&#9;&#9;&#9;&#9;local pt = prt:clone()
-&#9;&#9;&#9;&#9;&#9;&#9;pt.Parent = script.Parent.Parent
-&#9;&#9;&#9;&#9;&#9;&#9;pt.CFrame = CFrame.new(hammer.CFrame.x, Pos.y + 0.75, hammer.CFrame.z) + script.Parent.Parent:findFirstChild(&quot;Torso&quot;).CFrame.lookVector * 1.75
-&#9;&#9;&#9;&#9;&#9;&#9;GetFigures(pt.Parent.Parent, pt)
-&#9;&#9;&#9;&#9;&#9;&#9;game.Debris:addItem(pt, 1.3)
+&#9;&#9;&#9;&#9;&#9;&#9;if homerunning == false then 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;delay(0.35, function()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;w = Instance.new(&quot;StringValue&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;w.Name = &quot;WhackSound&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;w.Parent = hammer
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local pt = prt:clone()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;pt.Parent = script.Parent.Parent
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;pt.CFrame = CFrame.new(hammer.CFrame.x, Pos.y + 0.75, hammer.CFrame.z) + script.Parent.Parent:findFirstChild(&quot;Torso&quot;).CFrame.lookVector * 1.75
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;GetFigures(pt.Parent.Parent, pt)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;game.Debris:addItem(pt, 1.3)
+&#9;&#9;&#9;&#9;&#9;&#9;end 
 &#9;&#9;&#9;&#9;&#9;end 
 &#9;&#9;&#9;&#9;&#9;p:Remove()
 &#9;&#9;&#9;&#9;end 
@@ -401,6 +407,7 @@ function Whack()
 &#9;&#9;end)
 &#9;&#9;wait(0.75)
 &#9;&#9;Whacker:Stop()
+&#9;&#9;whacking = false 
 &#9;&#9;------
 &#9;&#9;if selected == true then 
 &#9;&#9;&#9;TwoHandAnim:Play()
@@ -412,15 +419,17 @@ local co = nil
 --OMGHAX mouseclick
 local last_click = 0
 script.Parent.MouseClick.Changed:connect(function()
-&#9;if time() - last_click &lt; 0.3 then
-&#9;&#9;anim = &quot;homerun&quot;
-&#9;&#9;last_click = time()
-&#9;&#9;HomeRun()
-&#9;else
-&#9;&#9;anim = &quot;norm&quot;
-&#9;&#9;last_click = time()
-&#9;&#9;Whack()
-&#9;end
+&#9;if homerunning == false and whacking == false then 
+&#9;&#9;if time() - last_click &lt; 0.3 then
+&#9;&#9;&#9;anim = &quot;homerun&quot;
+&#9;&#9;&#9;last_click = time()
+&#9;&#9;&#9;HomeRun()
+&#9;&#9;else
+&#9;&#9;&#9;anim = &quot;norm&quot;
+&#9;&#9;&#9;last_click = time()
+&#9;&#9;&#9;Whack() 
+&#9;&#9;end 
+&#9;end 
 end)</ProtectedString>
 			</Properties>
 		</Item>
