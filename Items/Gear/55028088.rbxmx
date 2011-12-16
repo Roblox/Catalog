@@ -2793,7 +2793,6 @@ function giveNewUserId(id)
 end
 
 BaseUrl = BaseUrl:lower()
-local isGametest = string.find(BaseUrl,&quot;gametest&quot;)
 
 local isRestricted = Instance.new(&quot;BoolValue&quot;)
 isRestricted.Name = &quot;IsRestricted&quot;
@@ -2815,30 +2814,16 @@ if game.PlaceId == 41324860 or isLocalWTRB() then
 end
 isRestricted.Parent = variables
 
-if isGametest then
-&#9;giveNewUserId(28215009)
-&#9;giveNewUserId(28215010)
-&#9;if not isRestricted.Value then
-&#9;&#9;giveNewUserId(28215011)
-&#9;&#9;giveNewUserId(28215012)
-&#9;&#9;giveNewUserId(28215013)
-&#9;else
-&#9;&#9;giveNewUserId(2409156)
-&#9;&#9;giveNewUserId(28220612)
-&#9;&#9;giveNewUserId(28220614)
-&#9;end
-else -- we are on prod
-&#9;giveNewUserId(18881789)
-&#9;giveNewUserId(18881808)
-&#9;if not isRestricted.Value then
-&#9;&#9;giveNewUserId(18881829)
-&#9;&#9;giveNewUserId(18881853)
-&#9;&#9;giveNewUserId(18881866)
-&#9;else
-&#9;&#9;giveNewUserId(2409156)
-&#9;&#9;giveNewUserId(19238067)
-&#9;&#9;giveNewUserId(19238114)
-&#9;end
+giveNewUserId(18881789)
+giveNewUserId(18881808)
+if not isRestricted.Value then
+&#9;giveNewUserId(18881829)
+&#9;giveNewUserId(18881853)
+&#9;giveNewUserId(18881866)
+else
+&#9;giveNewUserId(2409156)
+&#9;giveNewUserId(19238067)
+&#9;giveNewUserId(19238114)
 end
 
 while #userIdsForStamperParts:GetChildren() &lt; userIdsForStamperParts.Value do userIdsForStamperParts.ChildAdded:wait() end
@@ -3456,7 +3441,11 @@ function setUpStamperGui()
 &#9;&#9;if newUserData and #newUserData &gt; 2 then
 &#9;&#9;&#9;-- start at #3 to skip over My Decals and My Models for each account
 &#9;&#9;&#9;for category = 3, #newUserData do
-&#9;&#9;&#9;&#9;table.insert(userData, newUserData[category])
+&#9;&#9;&#9;&#9;if newUserData[category].Name == &quot;High Scalability&quot; then
+&#9;&#9;&#9;&#9;&#9;table.insert(userData,1,newUserData[category])
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;table.insert(userData, newUserData[category])
+&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
@@ -3867,13 +3856,7 @@ end)
 ]] </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX100">
-			<Properties>
-				<string name="Name">AutoWedgeClusterParts</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX101">
+		<Item class="LocalScript" referent="RBX100">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -3944,6 +3927,12 @@ HighScalabilityLine.End = nil
 HighScalabilityLine.Adorn = adorn
 HighScalabilityLine.AdornPart = adornPart
 HighScalabilityLine.InternalLine = nil
+HighScalabilityLine.NewHint = true
+
+-- for higher dimensional megacluster part stamping
+HighScalabilityLine.MorePoints = {nil, nil}
+HighScalabilityLine.MoreLines = {nil, nil}
+HighScalabilityLine.Dimensions = 1
 
 waitForChild(Tool,&quot;LuaGlobalVariables&quot;)
 local variables = Tool.LuaGlobalVariables
@@ -3952,9 +3941,6 @@ waitForChild(variables, &quot;Stamped&quot;)
 waitForChild(Tool,&quot;ErrorBox&quot;)
 waitForChild(variables, &quot;ShowAdminCategories&quot;)
 local errorBox = Tool.ErrorBox
-
-waitForChild(Tool, &quot;AutoWedgeClusterParts&quot;)
-local autoWedgeClusterParts = Tool.AutoWedgeClusterParts.Value
 
 waitForChild(variables, &quot;IsRestricted&quot;)
 waitForChild(variables, &quot;MouseClick&quot;)
@@ -3987,8 +3973,21 @@ local currentSelectionColors = {}
 if isRestricted then waitForChild(game.Workspace, &quot;BaseplateBumpers&quot;) end
 ----------------------------------------------------------------------------------------
 
-
 -- Functions
+function hint(label)
+&#9;-- Pass in a string, it shows a top hint.  (Replaces previous hint, if exists)
+&#9;_player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;if(_player.PlayerGui:FindFirstChild(&quot;topHint&quot;)~=nil) then
+&#9;&#9;local topHint = _player.PlayerGui.topHint
+&#9;&#9;topHint.Add.Label.Value = label
+&#9;&#9;topHint.Add.Width.Value = 3 -- widest width
+&#9;&#9;topHint.Add.Time.Value = 5
+&#9;&#9;topHint.Add.Disabled = true
+&#9;&#9;topHint.Add.Disabled = false
+&#9;end
+end
+
+
 function getClosestColorToTerrainMaterial(terrainValue)
 &#9;if terrainValue == 1 then
 &#9;&#9;return BrickColor.new(&quot;Bright green&quot;)
@@ -4583,6 +4582,9 @@ function onInsertMouseMove()
 &#9;&#9;return
 &#9;end
 
+&#9;-- check to see if mouse is still active, and return otherwise!
+&#9;if not pcall(function () if Mouse and Mouse.Target and Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) == nil then return true else return false end end) then print(&quot;ERRORED OUT&quot;) game.JointsService:SetJoinAfterMoveTarget(nil) Mouse = nil return end
+
 &#9;if isRestricted and Mouse then
 &#9;&#9;Mouse.TargetFilter = game.Workspace.BaseplateBumpers
 &#9;end
@@ -4722,12 +4724,15 @@ function onInsertMouseMove()
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 
-
 &#9;&#9;end
 
 &#9;&#9;-- to show joints during the mouse move
 &#9;&#9;unstampableSurface = false
       game.JointsService:SetJoinAfterMoveInstance(Data.Stamp.CurrentParts[1])
+
+&#9;&#9;-- most common mouse inactive error occurs here, so check mouse active one more time in a pcall
+&#9;&#9;if not pcall(function () if Mouse and Mouse.Target and Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) == nil then return true else return false end end) then print(&quot;ERRORED OUT&quot;) game.JointsService:ClearJoinAfterMoveJoints() Mouse = nil Data.Stamp.MovingLock = false return end
+
       if Mouse and Mouse.Target and Mouse.Target.Parent:FindFirstChild(&quot;RobloxModel&quot;) == nil then
 &#9;&#9;&#9;game.JointsService:SetJoinAfterMoveTarget(Mouse.Target)
       else
@@ -4739,51 +4744,103 @@ function onInsertMouseMove()
 &#9;&#9;if (Data.Stamp.CurrentParts[1] and Data.Stamp.CurrentParts[1].Name == &quot;MegaClusterCube&quot;) and HighScalabilityLine.Start then
 &#9;&#9;&#9;HighScalabilityLine.End = Data.Stamp.CurrentParts[1].CFrame.p
 
-&#9;&#9;&#9;-- extract the line from these positions and limit to a 2D plane made from 2 of the world axes
-&#9;&#9;&#9;--   then use dominating axis to limit line to be at 45-degree intervals
-&#9;&#9;&#9;--   will use this internal representation of the line for the actual stamping
-&#9;&#9;&#9;local line = (HighScalabilityLine.End - HighScalabilityLine.Start)
-&#9;&#9;&#9;if math.abs(line.X) &lt; math.abs(line.Y) then
-&#9;&#9;&#9;&#9;if math.abs(line.X) &lt; math.abs(line.Z) then
-&#9;&#9;&#9;&#9;&#9;-- limit to Y/Z plane, domination unknown
-&#9;&#9;&#9;&#9;&#9;local newY, newZ
-&#9;&#9;&#9;&#9;&#9;if (math.abs(line.Y) &gt; math.abs(line.Z)) then 
-&#9;&#9;&#9;&#9;&#9;&#9;newY, newZ = truncateToCircleEighth(line.Y, line.Z)
-&#9;&#9;&#9;&#9;&#9;else 
-&#9;&#9;&#9;&#9;&#9;&#9;newZ, newY = truncateToCircleEighth(line.Z, line.Y)
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;line = Vector3.new(0, newY, newZ)
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;-- limit to X/Y plane, with Y dominating
-&#9;&#9;&#9;&#9;&#9;local newY, newX = truncateToCircleEighth(line.Y, line.X)
-&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, newY, 0)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;if math.abs(line.Y) &lt; math.abs(line.Z) then
-&#9;&#9;&#9;&#9;&#9;-- limit to X/Z plane, domination unknown
-&#9;&#9;&#9;&#9;&#9;local newX, newZ
-&#9;&#9;&#9;&#9;&#9;if math.abs(line.X) &gt; math.abs(line.Z) then
-&#9;&#9;&#9;&#9;&#9;&#9;newX, newZ = truncateToCircleEighth(line.X, line.Z)
+&#9;&#9;&#9;local line
+&#9;&#9;&#9;local line2 = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;local line3 = Vector3.new(0, 0, 0)
+
+&#9;&#9;&#9;if HighScalabilityLine.Dimensions == 1 then
+&#9;&#9;&#9;&#9;-- extract the line from these positions and limit to a 2D plane made from 2 of the world axes
+&#9;&#9;&#9;&#9;--   then use dominating axis to limit line to be at 45-degree intervals
+&#9;&#9;&#9;&#9;--   will use this internal representation of the line for the actual stamping
+&#9;&#9;&#9;&#9;line = (HighScalabilityLine.End - HighScalabilityLine.Start)
+
+&#9;&#9;&#9;&#9;if math.abs(line.X) &lt; math.abs(line.Y) then
+&#9;&#9;&#9;&#9;&#9;if math.abs(line.X) &lt; math.abs(line.Z) then
+&#9;&#9;&#9;&#9;&#9;&#9;-- limit to Y/Z plane, domination unknown
+&#9;&#9;&#9;&#9;&#9;&#9;local newY, newZ
+&#9;&#9;&#9;&#9;&#9;&#9;if (math.abs(line.Y) &gt; math.abs(line.Z)) then 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;newY, newZ = truncateToCircleEighth(line.Y, line.Z)
+&#9;&#9;&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;newZ, newY = truncateToCircleEighth(line.Z, line.Y)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;line = Vector3.new(0, newY, newZ)
 &#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;newZ, newX = truncateToCircleEighth(line.Z, line.X)
+&#9;&#9;&#9;&#9;&#9;&#9;-- limit to X/Y plane, with Y dominating
+&#9;&#9;&#9;&#9;&#9;&#9;local newY, newX = truncateToCircleEighth(line.Y, line.X)
+&#9;&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, newY, 0)
 &#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, 0, newZ)
-&#9;&#9;&#9;&#9;else 
-&#9;&#9;&#9;&#9;&#9;-- limit to X/Y plane, with X dominating
-&#9;&#9;&#9;&#9;&#9;local newX, newY = truncateToCircleEighth(line.X, line.Y)
-&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, newY, 0)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;if math.abs(line.Y) &lt; math.abs(line.Z) then
+&#9;&#9;&#9;&#9;&#9;&#9;-- limit to X/Z plane, domination unknown
+&#9;&#9;&#9;&#9;&#9;&#9;local newX, newZ
+&#9;&#9;&#9;&#9;&#9;&#9;if math.abs(line.X) &gt; math.abs(line.Z) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;newX, newZ = truncateToCircleEighth(line.X, line.Z)
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;newZ, newX = truncateToCircleEighth(line.Z, line.X)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, 0, newZ)
+&#9;&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;&#9;-- limit to X/Y plane, with X dominating
+&#9;&#9;&#9;&#9;&#9;&#9;local newX, newY = truncateToCircleEighth(line.X, line.Y)
+&#9;&#9;&#9;&#9;&#9;&#9;line = Vector3.new(newX, newY, 0)
+&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;HighScalabilityLine.InternalLine = line
+
+&#9;&#9;&#9;elseif HighScalabilityLine.Dimensions == 2 then
+&#9;&#9;&#9;&#9;line = HighScalabilityLine.MoreLines[1]
+&#9;&#9;&#9;&#9;line2 = HighScalabilityLine.End - HighScalabilityLine.MorePoints[1]
+&#9;&#9;
+&#9;&#9;&#9;&#9;-- take out any component of line2 along line1, so you get perpendicular to line1 component
+&#9;&#9;&#9;&#9;line2 = line2 - line.unit*line.unit:Dot(line2)
+
+&#9;&#9;&#9;&#9;tempCFrame = CFrame.new(HighScalabilityLine.Start, HighScalabilityLine.Start + line)
+
+&#9;&#9;&#9;&#9;-- then zero out whichever is the smaller component
+&#9;&#9;&#9;&#9;local yAxis = tempCFrame:vectorToWorldSpace(Vector3.new(0, 1, 0))
+&#9;&#9;&#9;&#9;local xAxis = tempCFrame:vectorToWorldSpace(Vector3.new(1, 0, 0))
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local xComp = xAxis:Dot(line2)
+&#9;&#9;&#9;&#9;local yComp = yAxis:Dot(line2)
+
+&#9;&#9;&#9;&#9;if math.abs(yComp) &gt; math.abs(xComp) then
+&#9;&#9;&#9;&#9;&#9;line2 = line2 - xAxis*xComp
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;line2 = line2 - yAxis*yComp
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;HighScalabilityLine.InternalLine = line2
+&#9;&#9;&#9;elseif HighScalabilityLine.Dimensions == 3 then
+&#9;&#9;&#9;&#9;line = HighScalabilityLine.MoreLines[1]
+&#9;&#9;&#9;&#9;line2 = HighScalabilityLine.MoreLines[2]
+&#9;&#9;&#9;&#9;line3 = HighScalabilityLine.End - HighScalabilityLine.MorePoints[2]
+
+&#9;&#9;&#9;&#9;-- zero out all components of previous lines
+&#9;&#9;&#9;&#9;line3 = line3 - line.unit*line.unit:Dot(line3)
+&#9;&#9;&#9;&#9;line3 = line3 - line2.unit*line2.unit:Dot(line3)
+
+&#9;&#9;&#9;&#9;HighScalabilityLine.InternalLine = line3
 &#9;&#9;&#9;end
 
 &#9;&#9;&#9;-- resize the &quot;line&quot; graphic to be the correct size and orientation
-&#9;&#9;&#9;--HighScalabilityLine.AdornPart.Size = Vector3.new(4, 4, (HighScalabilityLine.End - HighScalabilityLine.Start).magnitude + 4)
-&#9;&#9;&#9;--local tempCFrame = CFrame.new(HighScalabilityLine.Start, HighScalabilityLine.End)
-&#9;&#9;&#9;HighScalabilityLine.AdornPart.Size = Vector3.new(4, 4, line.magnitude + 4)
-&#9;&#9;&#9;local tempCFrame = CFrame.new(HighScalabilityLine.Start, HighScalabilityLine.Start + line)
-&#9;&#9;&#9;HighScalabilityLine.AdornPart.CFrame = tempCFrame + tempCFrame:vectorToWorldSpace(Vector3.new(2, 2, 2) - HighScalabilityLine.AdornPart.Size/2)
-&#9;&#9;
+&#9;&#9;&#9;tempCFrame = CFrame.new(HighScalabilityLine.Start, HighScalabilityLine.Start + line)
+&#9;&#9;&#9;
+&#9;&#9;&#9;if HighScalabilityLine.Dimensions == 1 then  -- faster calculation for line
+&#9;&#9;&#9;&#9;HighScalabilityLine.AdornPart.Size = Vector3.new(4, 4, line.magnitude + 4)
+&#9;&#9;&#9;&#9;HighScalabilityLine.AdornPart.CFrame = tempCFrame + tempCFrame:vectorToWorldSpace(Vector3.new(2, 2, 2) - HighScalabilityLine.AdornPart.Size/2)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;local boxSize = tempCFrame:vectorToObjectSpace(line + line2 + line3)
+&#9;&#9;&#9;&#9;HighScalabilityLine.AdornPart.Size = Vector3.new(4, 4, 4) + Vector3.new(math.abs(boxSize.X), math.abs(boxSize.Y), math.abs(boxSize.Z))
+&#9;&#9;&#9;&#9;HighScalabilityLine.AdornPart.CFrame = tempCFrame + tempCFrame:vectorToWorldSpace(boxSize/2)
+&#9;&#9;&#9;end
+
 &#9;&#9;&#9;-- make player able to see this ish
-&#9;&#9;&#9;if player then HighScalabilityLine.Adorn.Parent = player.PlayerGui HighScalabilityLine.InternalLine = line end
+&#9;&#9;&#9;if player then HighScalabilityLine.Adorn.Parent = player.PlayerGui end
+&#9;&#9;&#9;if HighScalabilityLine.NewHint then 
+&#9;&#9;&#9;&#9;if HighScalabilityLine.Dimensions == 1 and line and (line.magnitude &gt; 4) then hint(&quot;Press C to stamp in 2D&quot;) HighScalabilityLine.NewHint = false  
+&#9;&#9;&#9;&#9;elseif HighScalabilityLine.Dimensions == 2 and line2 and (line2.magnitude &gt; 4) then hint(&quot;Press C again to stamp in 3D&quot;) HighScalabilityLine.NewHint = false 
+&#9;&#9;&#9;&#9;elseif HighScalabilityLine.Dimensions == 3 then HighScalabilityLine.NewHint = false end  -- if we do cyclic, then let them know they&apos;re going back to line stamping
+&#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
 
@@ -4801,6 +4858,7 @@ function onInsertMouseButton1Down()
 &#9;if (Data.Stamp.CurrentParts and Data.Stamp.CurrentParts[1] and Data.Stamp.CurrentParts[1].Name == &quot;MegaClusterCube&quot;) and not eyeDropperConnection then
 &#9;&#9;&#9;-- only let them drag if they start dragging on the cluster!
 &#9;&#9;&#9;if Mouse and Mouse.Target and Mouse.Target:IsA(&quot;Terrain&quot;) then
+&#9;&#9;&#9;&#9;HighScalabilityLine.Dimensions = 1
 &#9;&#9;&#9;&#9;HighScalabilityLine.Start = Data.Stamp.CurrentParts[1].CFrame.p
 &#9;&#9;&#9;end
 &#9;end
@@ -4836,7 +4894,7 @@ function cancelAssetPlacement()
 &#9;end
 
 &#9;if Mouse then
-&#9;&#9;Mouse.Icon =&quot;rbxasset://textures\\ArrowCursor.png&quot;
+&#9;&#9;Mouse.Icon = &quot;http://www.roblox.com/asset?id=66887745&quot;
 &#9;end
 &#9;game.JointsService:ClearJoinAfterMoveJoints()
 
@@ -5395,6 +5453,8 @@ function setupDraggableClone()
 &#9;&#9;&#9;end
 &#9;&#9;end
 
+&#9;&#9;HighScalabilityLine.NewHint = true -- show hint if they start dragging a high-scalability part
+
 &#9;&#9;Data.Stamp.Dragger = Instance.new(&quot;Dragger&quot;)
 &#9;&#9;--Begin a movement by faking a MouseDown signal
 &#9;&#9;Data.Stamp.Dragger:MouseDown(parts[1], Vector3.new(0,0,0), parts)
@@ -5603,6 +5663,9 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;if stampTracker and not stampTracker.Value then stampTracker.Value = true end
 &#9;&#9;&#9;end
 
+&#9;&#9;&#9;-- also, show hints again if high scalability part
+&#9;&#9;&#9;HighScalabilityLine.NewHint = true
+
 &#9;&#9;&#9;if Data.Stamp.Model and Data.Stamp.Model:GetChildren()[1] and Data.Stamp.Model:GetChildren()[1].Name == &quot;MegaClusterCube&quot; then
 &#9;&#9;&#9;&#9;&#9;local line = HighScalabilityLine.InternalLine
 &#9;&#9;&#9;&#9;&#9;local cMax = game.Workspace.Terrain.MaxExtents.Max
@@ -5611,6 +5674,9 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;&#9;local clusterMaterial = 1 -- default is grass
 &#9;&#9;&#9;&#9;&#9;local clusterType = 0 -- default is brick
 &#9;&#9;&#9;&#9;&#9;local clusterOrientation = 0 -- default is 0 rotation
+
+&#9;&#9;&#9;&#9;&#9;local autoWedgeClusterParts = false
+&#9;&#9;&#9;&#9;&#9;if Data.Stamp.CurrentParts[1]:FindFirstChild(&quot;AutoWedge&quot;) then autoWedgeClusterParts = true end
 
 &#9;&#9;&#9;&#9;&#9;if Data.Stamp.CurrentParts[1]:FindFirstChild(&quot;ClusterMaterial&quot;) then
 &#9;&#9;&#9;&#9;&#9;&#9;clusterMaterial = Data.Stamp.CurrentParts[1].ClusterMaterial
@@ -5623,28 +5689,53 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;clusterMaterial = clusterMaterial.Value
 &#9;&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;end
-
-&#9;&#9;&#9;&#9;&#9;if HighScalabilityLine.Adorn.Parent and HighScalabilityLine.Start and line and line.magnitude &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;local startCell = game.Workspace.Terrain:WorldToCell(HighScalabilityLine.Start)
 &#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;local xInc = 0
-&#9;&#9;&#9;&#9;&#9;&#9;local yInc = 0
-&#9;&#9;&#9;&#9;&#9;&#9;local zInc = 0
-&#9;&#9;&#9;&#9;&#9;&#9;if line.X &gt; 0 then xInc = 1 elseif line.X &lt; 0 then xInc = -1 end
-&#9;&#9;&#9;&#9;&#9;&#9;if line.Y &gt; 0 then yInc = 1 elseif line.Y &lt; 0 then yInc = -1 end
-&#9;&#9;&#9;&#9;&#9;&#9;if line.Z &gt; 0 then zInc = 1 elseif line.Z &lt; 0 then zInc = -1 end
+&#9;&#9;&#9;&#9;&#9;if HighScalabilityLine.Adorn.Parent and HighScalabilityLine.Start and ((HighScalabilityLine.Dimensions &gt; 1) or (line and line.magnitude &gt; 0)) then
+&#9;&#9;&#9;&#9;&#9;&#9;local startCell = game.Workspace.Terrain:WorldToCell(HighScalabilityLine.Start)
 
-&#9;&#9;&#9;&#9;&#9;&#9;local incrementVect = Vector3.new(xInc, yInc, zInc)
-&#9;&#9;&#9;&#9;&#9;&#9;local stepVect = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;local xInc = {0,0,0}
+&#9;&#9;&#9;&#9;&#9;&#9;local yInc = {0,0,0}
+&#9;&#9;&#9;&#9;&#9;&#9;local zInc = {0,0,0}
+&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;local incrementVect = {nil, nil, nil}
+&#9;&#9;&#9;&#9;&#9;&#9;local stepVect = {Vector3.new(0, 0, 0), Vector3.new(0, 0, 0), Vector3.new(0, 0, 0)}
 
-&#9;&#9;&#9;&#9;&#9;&#9;print(line)
-&#9;&#9;&#9;&#9;&#9;&#9;print(incrementVect)
+&#9;&#9;&#9;&#9;&#9;&#9;local worldAxes = {Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1)}
 
-&#9;&#9;&#9;&#9;&#9;&#9;while (stepVect.magnitude*4 &lt;= line.magnitude) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellPos = Vector3int16.new(startCell.X + stepVect.X, startCell.Y + stepVect.Y, startCell.Z + stepVect.Z)
+&#9;&#9;&#9;&#9;&#9;&#9;local lines = {}
+&#9;&#9;&#9;&#9;&#9;&#9;if HighScalabilityLine.Dimensions &gt; 1 then table.insert(lines, HighScalabilityLine.MoreLines[1]) end
+&#9;&#9;&#9;&#9;&#9;&#9;if line and line.magnitude &gt; 0 then table.insert(lines, line) end
+&#9;&#9;&#9;&#9;&#9;&#9;if HighScalabilityLine.Dimensions &gt; 2 then table.insert(lines, HighScalabilityLine.MoreLines[2]) end
+
+&#9;&#9;&#9;&#9;&#9;&#9;for i = 1, #lines do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;lines[i] = Vector3.new(math.floor(lines[i].X+.5), math.floor(lines[i].Y+.5), math.floor(lines[i].Z+.5)) -- round to integers
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if lines[i].X &gt; 0 then xInc[i] = 1 elseif lines[i].X &lt; 0 then xInc[i] = -1 end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if lines[i].Y &gt; 0 then yInc[i] = 1 elseif lines[i].Y &lt; 0 then yInc[i] = -1 end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if lines[i].Z &gt; 0 then zInc[i] = 1 elseif lines[i].Z &lt; 0 then zInc[i] = -1 end
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;incrementVect[i] = Vector3.new(xInc[i], yInc[i], zInc[i])
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if incrementVect[i].magnitude &lt; .9 then incrementVect[i] = nil end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+
+
+&#9;&#9;&#9;&#9;&#9;&#9;if not lines[2] then lines[2] = Vector3.new(0, 0, 0) end
+&#9;&#9;&#9;&#9;&#9;&#9;if not lines[3] then lines[3] = Vector3.new(0, 0, 0) end
+
+&#9;&#9;&#9;&#9;&#9;&#9;while (stepVect[3].magnitude*4 &lt;= lines[3].magnitude) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local outerStepVectIndex = 1
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;while outerStepVectIndex &lt; 4 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect[2] = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;while (stepVect[2].magnitude*4 &lt;= lines[2].magnitude) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local innerStepVectIndex = 1
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;while innerStepVectIndex &lt; 4 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect[1] = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;while (stepVect[1].magnitude*4 &lt;= lines[1].magnitude) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local stepVectSum = stepVect[1] + stepVect[2] + stepVect[3]
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellPos = Vector3int16.new(startCell.X + stepVectSum.X, startCell.Y + stepVectSum.Y, startCell.Z + stepVectSum.Z)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;if cellPos.X &gt;= cMin.X and cellPos.Y &gt;= cMin.Y and cellPos.Z &gt;= cMin.Z and cellPos.X &lt; cMax.X and cellPos.Y &lt; cMax.Y and cellPos.Z &lt; cMax.Z then
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- check if overlaps player or part:
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellCenter = game.Workspace.Terrain:cellCenterToWorld(cellPos.X, cellPos.Y, cellPos.Z)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellCenter = game.Workspace.Terrain:CellCenterToWorld(cellPos.X, cellPos.Y, cellPos.Z)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local cellBlockingParts = game.Workspace:FindPartsInRegion3(Region3.new(cellCenter - Vector3.new(2, 2, 2) + insertBoundingBoxOverlapVector, cellCenter + Vector3.new(2, 2, 2) - insertBoundingBoxOverlapVector), Data.Stamp.CurrentParts[1], 100)
 
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local skipThisCell = false
@@ -5687,7 +5778,28 @@ function onInsertMouseButton1Up()
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;end
 
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect = stepVect + incrementVect
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect[1] = stepVect[1] + incrementVect[1]
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if incrementVect[2] then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;while innerStepVectIndex &lt; 4 and worldAxes[innerStepVectIndex]:Dot(incrementVect[2]) == 0 do innerStepVectIndex = innerStepVectIndex + 1 end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if innerStepVectIndex &lt; 4 then 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect[2] = stepVect[2] + worldAxes[innerStepVectIndex]*worldAxes[innerStepVectIndex]:Dot(incrementVect[2])
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;innerStepVectIndex = innerStepVectIndex + 1
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;else stepVect[2] = Vector3.new(1, 0, 0) innerStepVectIndex = 4 end -- skip all remaining loops
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if (stepVect[2].magnitude*4 &gt; lines[2].magnitude) then innerStepVectIndex = 4 end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if incrementVect[3] then 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;while outerStepVectIndex &lt; 4 and worldAxes[outerStepVectIndex]:Dot(incrementVect[3]) == 0 do outerStepVectIndex = outerStepVectIndex + 1 end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if outerStepVectIndex &lt; 4 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;stepVect[3] = stepVect[3] + worldAxes[outerStepVectIndex]*worldAxes[outerStepVectIndex]:Dot(incrementVect[3]) 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;outerStepVectIndex = outerStepVectIndex + 1
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;else stepVect[3] = Vector3.new(1, 0, 0) outerStepVectIndex = 4 end -- skip all remaining loops
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if (stepVect[3].magnitude*4 &gt; lines[3].magnitude) then outerStepVectIndex = 4 end
+&#9;&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;&#9;end
 
 &#9;&#9;&#9;&#9;&#9;&#9;-- and also get rid of any HighScalabilityLine stuff if it&apos;s there
@@ -5851,7 +5963,7 @@ function onEyeDropperMouseButton1Down()
 &#9;end
 &#9;clearSelection()
 &#9;if Mouse then
-&#9;&#9;Mouse.Icon = &quot;rbxasset://textures//ArrowCursor.png&quot;
+&#9;&#9;Mouse.Icon = &quot;http://www.roblox.com/asset?id=66887745&quot;
 &#9;end
 
 &#9;-- deny any attempt to clone something that wasn&apos;t stamped using the Stamper tool
@@ -6000,7 +6112,8 @@ function startEyeDropperOperation()
 &#9;end
 &#9;if eyeDropperMoveConnection then eyeDropperMoveConnection:disconnect() end
 &#9;if Mouse then
-&#9;&#9;Mouse.Icon =&quot;rbxasset://textures//DropperCursor.png&quot;
+&#9;&#9;--Mouse.Icon =&quot;rbxasset://textures//DropperCursor.png&quot;
+&#9;&#9;Mouse.Icon = &quot;http://www.roblox.com/asset?id=67163166&quot;
 &#9;&#9;eyeDropperConnection = Mouse.Button1Up:connect(onEyeDropperMouseButton1Down)
 &#9;&#9;eyeDropperMoveConnection = Mouse.Move:connect(onEyeDropperMouseMove)
 &#9;end
@@ -6083,10 +6196,10 @@ function autoAlignHelper()
 &#9;&#9;aatfTag = Instance.new(&quot;IntValue&quot;)
 &#9;&#9;aatfTag.Name = &quot;AutoAlignToFace&quot;
 &#9;&#9;aatfTag.Parent = Data.Stamp.CurrentParts[1]
-&#9;&#9;aatfTag.Value = 5
+&#9;&#9;aatfTag.Value = 3
 &#9;end
 &#9;aatfTag.Value = aatfTag.Value + 1
-&#9;if aatfTag.Value &gt; 5 then aatfTag.Value = 0 end
+&#9;if aatfTag.Value &gt; 3 then aatfTag.Value = 0 end
 end
 
 function unstampableFaceHelper()
@@ -6157,6 +6270,13 @@ end
 function onInsertKeyDown(key)
 &#9;key = string.lower(key)
 &#9;if Data.Stamp.Dragger then
+&#9;&#9;if key == &apos;c&apos; and Data.Stamp.CurrentParts[1].Name == &quot;MegaClusterCube&quot; and HighScalabilityLine.InternalLine and HighScalabilityLine.InternalLine.magnitude &gt; 0 and HighScalabilityLine.Dimensions &lt; 3 then
+&#9;&#9;&#9;HighScalabilityLine.MorePoints[HighScalabilityLine.Dimensions] = HighScalabilityLine.End
+&#9;&#9;&#9;HighScalabilityLine.MoreLines[HighScalabilityLine.Dimensions] = HighScalabilityLine.InternalLine
+&#9;&#9;&#9;HighScalabilityLine.Dimensions = HighScalabilityLine.Dimensions + 1
+&#9;&#9;&#9;HighScalabilityLine.NewHint = true
+&#9;&#9;end
+
 &#9;&#9;if key == &apos;r&apos; and not autoAlignToFace() then
 &#9;&#9;&#9;-- Update orientation value if this is a fake terrain part
 &#9;&#9;&#9;if Data.Stamp.CurrentParts[1].Name == &quot;MegaClusterCube&quot; then
@@ -6238,9 +6358,9 @@ function onEquippedLocal(newMouse)
 &#9;-- if equip goes through while in backpack (so getPlayer() returns nil), we don&apos;t want to process anything else
 &#9;if not player then return end
 
-&#9;if game:FindFirstChild(&quot;NetworkClient&quot;) and game.CoreGui.Version &gt;= 7 then -- only show billboards in online mode
+&#9;--[[if game:FindFirstChild(&quot;NetworkClient&quot;) and game.CoreGui.Version &gt;= 7 then  only show billboards in online mode
 &#9;&#9;if not billBoardOwnerGui then billBoardOwnerGui = generateOwnerGui(player.Name) end
-&#9;end
+&#9;end]]
 
 &#9;if isRestricted then
 &#9;&#9;if game.Workspace:FindFirstChild(&quot;BuildingAreas&quot;) then
@@ -6254,6 +6374,14 @@ function onEquippedLocal(newMouse)
 &#9;&#9;end
 &#9;else
 &#9;&#9;playerModel = game.Workspace
+
+&#9;&#9;-- give them a topHint gui too, if they don&apos;t have it since the place won&apos;t already have it&#9;
+&#9;&#9;if not player.PlayerGui:FindFirstChild(&quot;topHint&quot;) then
+&#9;&#9;&#9;local topHintGui = script.Parent:FindFirstChild(&quot;topHint&quot;)
+&#9;&#9;&#9;if topHintGui then
+&#9;&#9;&#9;&#9;topHintGui:Clone().Parent = player.PlayerGui
+&#9;&#9;&#9;end
+&#9;&#9;end
 &#9;end
 
 &#9;if not playerModel then return end
@@ -6312,6 +6440,7 @@ end
 
 
 function onUnequipped()
+&#9;Mouse = nil
 &#9;if mouseMoveCon then mouseMoveCon:disconnect() end
 &#9;if mouseButton1DownCon then mouseButton1DownCon:disconnect() end
 &#9;if mouseButton1UpCon then mouseButton1UpCon:disconnect() end
@@ -6367,6 +6496,397 @@ Tool.Unequipped:connect(function() onUnequipped() end)
 
 </ProtectedString>
 			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX101">
+			<Properties>
+				<string name="Name">topHint</string>
+			</Properties>
+			<Item class="ImageLabel" referent="RBX102">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">1</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<Content name="Image"><null></null></Content>
+					<string name="Name">_preview</string>
+					<UDim2 name="Position">
+						<XS>0</XS>
+						<XO>0</XO>
+						<YS>0</YS>
+						<YO>0</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>1</XS>
+						<XO>0</XO>
+						<YS>1</YS>
+						<YO>0</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<bool name="Visible">false</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+				<Item class="Frame" referent="RBX103">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Bkg</string>
+						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>-250</XO>
+							<YS>0</YS>
+							<YO>10</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>400</XO>
+							<YS>0</YS>
+							<YO>40</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">3</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+				<Item class="TextButton" referent="RBX104">
+					<Properties>
+						<bool name="Active">true</bool>
+						<bool name="AutoButtonColor">true</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">0</token>
+						<token name="FontSize">5</token>
+						<bool name="Modal">false</bool>
+						<string name="Name">Label</string>
+						<UDim2 name="Position">
+							<XS>0.25</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>10</YO>
+						</UDim2>
+						<bool name="Selected">false</bool>
+						<UDim2 name="Size">
+							<XS>0.5</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>40</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<string name="Text">Saved changes</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrap">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="LocalScript" referent="RBX105">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Add</string>
+					<ProtectedString name="Source">-- This script&apos;s job is to destroy previous topHint instance (if exists) and clone and run a new _topHint script (naming it &quot;topHint&quot;)
+-- When this script is finished, it disables and resets itself.
+
+function waitForChild(instance, name)
+&#9;while not instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+function waitForNoChild(instance, name)
+&#9;while instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildRemoved:wait()
+&#9;end
+end
+
+function waitForAnyChild(instance)
+&#9;while not instance:GetChildren()[1] do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+waitForChild(script, &quot;Label&quot;)
+waitForChild(script, &quot;Time&quot;)
+waitForChild(script, &quot;Width&quot;)
+waitForChild(script.Parent, &quot;_topHint&quot;)
+waitForChild(script.Parent._topHint, &quot;Label&quot;)
+waitForChild(script.Parent._topHint, &quot;HideTime&quot;)
+waitForChild(script.Parent._topHint, &quot;Width&quot;)
+
+local width = 0.55--script.Width.Value
+--width = math.min(0.55,width/script.Parent.AbsoluteSize.X)
+
+local quickReplace = true
+
+-- If there&apos;s already an instance, do you quickly replace the text and width (true), or animate out then in? (false)
+
+if (script.Parent:FindFirstChild(&quot;topHint&quot;)~=nil) then
+&#9;-- If there&apos;s already an instance...
+&#9;if(quickReplace) then
+&#9;&#9;-- If quickReplace is true...
+&#9;&#9;local bkg = script.Parent.Bkg
+&#9;&#9;local label = script.Parent.Label
+&#9;&#9;local ys = bkg.Position.Y.Scale
+&#9;&#9;local yo = bkg.Position.Y.Offset
+&#9;&#9;bkg.Position = UDim2.new((1 - width)/2,0, ys, yo)
+&#9;&#9;bkg.Size = UDim2.new(width,0, 0, 40)
+&#9;&#9;label.Text = script.Label.Value
+&#9;&#9;script.Parent.topHint.HideTime.Value = time() + script.Time.Value
+&#9;else
+&#9;&#9;-- If quickReplace is false...
+&#9;&#9;script.Parent.Delete.Disabled = false
+&#9;&#9;-- Wait for instance to be removed
+&#9;&#9;waitForNoChild(script.Parent, &quot;topHint&quot;)
+&#9;&#9;waitForNoChild(script.Parent, &quot;Bkg&quot;)
+&#9;&#9;waitForNoChild(script.Parent, &quot;Label&quot;)
+&#9;end
+else
+&#9;-- There&apos;s no previous instance.
+&#9;-- Clone and enable a new instance
+&#9;local topHint = script.Parent._topHint:Clone()
+&#9;topHint.Parent = script.Parent
+&#9;topHint.Name = &quot;topHint&quot;
+&#9;topHint.Label.Value = script.Label.Value
+&#9;topHint.HideTime.Value = time() + script.Time.Value
+&#9;topHint.Width.Value = width
+&#9;topHint.Disabled = false
+end
+
+script.Disabled = true
+</ProtectedString>
+				</Properties>
+				<Item class="NumberValue" referent="RBX106">
+					<Properties>
+						<string name="Name">Width</string>
+						<double name="Value">0</double>
+					</Properties>
+				</Item>
+				<Item class="StringValue" referent="RBX107">
+					<Properties>
+						<string name="Name">Label</string>
+						<string name="Value"></string>
+					</Properties>
+				</Item>
+				<Item class="NumberValue" referent="RBX108">
+					<Properties>
+						<string name="Name">Time</string>
+						<double name="Value">0</double>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="LocalScript" referent="RBX109">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">_topHint</string>
+					<ProtectedString name="Source">function waitForChild(instance, name)
+&#9;while not instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+function waitForNoChild(instance, name)
+&#9;while instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildRemoved:wait()
+&#9;end
+end
+
+function waitForAnyChild(instance)
+&#9;while not instance:GetChildren()[1] do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+-- This script creates the graphics for the new topHint, and animates it.
+-- Before calling this script, we&apos;ve already made sure: there&apos;s no other &quot;topHint&quot;, &quot;Bkg&quot;, and &quot;Label&quot;
+-- Then, if time~=0, it waits &quot;time&quot; and then calls &quot;Remove&quot; script
+
+waitForChild(script, &quot;Label&quot;)
+waitForChild(script, &quot;HideTime&quot;)
+waitForChild(script, &quot;Width&quot;)
+
+local container = script.Parent
+local labelText = script.Label.Value
+local hideTime = script.HideTime.Value
+local width = script.Width.Value
+
+-- SETTINGS
+local tweenTime = 0.3 -- animation time (seconds)
+local topY = -50
+local bottomY = 10
+local easing = &quot;Sine.easeInOut&quot;
+--
+
+local bkg = Instance.new(&quot;Frame&quot;)
+bkg.Parent = container
+bkg.Name = &quot;Bkg&quot;
+bkg.Position = UDim2.new((1 - width)/2,0, ys, yo)
+bkg.Size = UDim2.new(width,0, 0, 40)
+bkg.Style = &quot;RobloxRound&quot;
+
+function destroy()
+&#9;script.Parent.Delete.Disabled = false
+end
+
+local label = Instance.new(&quot;TextButton&quot;)
+label.Parent = container
+label.Name = &quot;Label&quot;
+label.BackgroundTransparency = 1
+label.FontSize = &quot;Size14&quot;
+label.Position = UDim2.new((1 - width)/2,0, 0, topY)
+label.Size = UDim2.new(width,0, 0, 40)
+label.Text = labelText
+label.TextColor3 = Color3.new(1, 1, 1)
+label.MouseButton1Click:connect(destroy)
+
+bkg:TweenPosition(UDim2.new(bkg.Position.X.Scale,bkg.Position.X.Offset,bkg.Position.Y.Scale,bottomY),
+&#9;&#9;Enum.EasingDirection.InOut,Enum.EasingStyle.Sine,tweenTime,true)
+
+label:TweenPosition(UDim2.new(label.Position.X.Scale,label.Position.X.Offset,label.Position.Y.Scale,bottomY),
+&#9;&#9;Enum.EasingDirection.InOut,Enum.EasingStyle.Sine,tweenTime,true)
+
+if(hideTime~=0) then
+&#9;while(time() &lt; hideTime) do wait(0.1) end
+&#9;destroy()
+end</ProtectedString>
+				</Properties>
+				<Item class="NumberValue" referent="RBX110">
+					<Properties>
+						<string name="Name">Width</string>
+						<double name="Value">0</double>
+					</Properties>
+				</Item>
+				<Item class="StringValue" referent="RBX111">
+					<Properties>
+						<string name="Name">Label</string>
+						<string name="Value"></string>
+					</Properties>
+				</Item>
+				<Item class="NumberValue" referent="RBX112">
+					<Properties>
+						<string name="Name">HideTime</string>
+						<double name="Value">0</double>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="LocalScript" referent="RBX113">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Delete</string>
+					<ProtectedString name="Source">function waitForChild(instance, name)
+&#9;while not instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+function waitForNoChild(instance, name)
+&#9;while instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildRemoved:wait()
+&#9;end
+end
+
+function waitForAnyChild(instance)
+&#9;while not instance:GetChildren()[1] do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+local topHint = script.Parent:FindFirstChild(&quot;topHint&quot;)
+local bkg = script.Parent:FindFirstChild(&quot;Bkg&quot;)
+local label = script.Parent:FindFirstChild(&quot;Label&quot;)
+
+-- SETTINGS
+local tweenTime = 0.3 -- animation time (seconds)
+local topY = -50 -- top position (Y Offset)
+local easing = &quot;Back.easeInOut&quot;
+--
+
+if(topHint~=nil) then
+&#9;topHint:Remove()
+end
+
+if(bkg~=nil) then
+&#9;bkg:TweenPosition(UDim2.new(bkg.Position.X.Scale,bkg.Position.X.Offset,bkg.Position.Y.Scale,topY),
+&#9;&#9;Enum.EasingDirection.InOut,Enum.EasingStyle.Quad,tweenTime,true)
+end
+
+if(label~=nil) then
+&#9;label:TweenPosition(UDim2.new(label.Position.X.Scale,label.Position.X.Offset,label.Position.Y.Scale,topY),
+&#9;&#9;Enum.EasingDirection.InOut,Enum.EasingStyle.Quad,tweenTime,true)
+end
+
+wait(tweenTime)
+if(bkg~=nil) then bkg:Remove() end
+if(label~=nil) then label:Remove() end
+
+script.Disabled = true
+</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="LocalScript" referent="RBX114">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">_readme</string>
+					<ProtectedString name="Source">--
+-- Top Hint
+--
+--  * This is a string of text that&apos;s top-centered in the window. (White text on black background)
+--  * It should be used for messages from the client, and never from the place creator. 
+--
+-- FEATURES:
+--  * Auto-hides previous messages before showing yours.
+--  * Always centered, regardless of length.
+--  * Clicking the message hides it.
+-- 
+-- USE IT FOR:
+--  * Quick task-related (non-essential) hints
+--  * Showing the current modal state
+--  * Tool hints (for the currently equipped tool)
+--  * Keyboard shortcuts
+--
+-- NEVER USE IT FOR:
+--  * Essential information (Use a popup instead)
+--  * Messages from users or place creators.  This is for client messages only.
+--
+-- ARGUMENTS:
+--  Label:  The message
+--  Width:  Text and background width (pixels) -- This should be removed when textWidth is added to Lua
+--  Time:   Seconds before hiding itself (If 0, it never hides)
+--
+-- USAGE:
+local topHint = script.Parent.topHint  -- path to topHint ScreenGui
+topHint.Add.Label.Value = &quot;Press D to return to main menu.&quot;
+topHint.Add.Width.Value = 290
+topHint.Add.Time.Value = 7
+topHint.Add.Disabled = true  -- flip it off then on, in case it&apos;s currently running.
+topHint.Add.Disabled = false
+--
+-- TO HIDE MANUALLY:
+topHint.Delete.Disabled = false
+-- Clicking the message also hides it.</ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
 	</Item>
 </roblox>
