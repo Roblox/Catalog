@@ -1,0 +1,1497 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Camera" referent="RBX0">
+		<Properties>
+			<Ref name="CameraSubject">null</Ref>
+			<token name="CameraType">0</token>
+			<CoordinateFrame name="CoordinateFrame">
+				<X>2.12940407</X>
+				<Y>58.0444565</Y>
+				<Z>-2.1260519</Z>
+				<R00>-0.493938953</R00>
+				<R01>-0.180762559</R01>
+				<R02>0.850499392</R02>
+				<R10>-0</R10>
+				<R11>0.978151441</R11>
+				<R12>0.207893372</R12>
+				<R20>-0.869496524</R20>
+				<R21>0.102686636</R21>
+				<R22>-0.483147144</R22>
+			</CoordinateFrame>
+			<CoordinateFrame name="Focus">
+				<X>-4.13194752</X>
+				<Y>56.5139503</Y>
+				<Z>1.4308635</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">ThumbnailCamera</string>
+		</Properties>
+	</Item>
+	<Item class="Tool" referent="RBX1">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-1.39999998</Y>
+				<Z>-0.5</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>-0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>-0</R22>
+			</CoordinateFrame>
+			<string name="Name">SnowmanCannon</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=66703802</url></Content>
+		</Properties>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SnowmanCannon_MainScript</string>
+				<ProtectedString name="Source">--local mDebugId = game.Workspace.DebugId.Value
+--game.Workspace.DebugId.Value = game.Workspace.DebugId.Value+1
+--print(&quot;Running swordscript &lt;&quot;..mDebugId..&quot;&gt;&quot;)
+
+-------------------------------------
+-- Makes an RBX::Lua Instance using
+-- a table of key-value pairs to
+-- initialize it. Values with numeric 
+-- keys will be parented to the object
+-- and other values will be set
+-- as members of the object.
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+---------------------------------------
+-- Same as Make, but modifies an existing
+-- object rather than creating ones.
+function Modify(obj, data)
+&#9;for k, v in pairs(data) do
+&#9;&#9;if type(data) == &apos;number&apos; then
+&#9;&#9;&#9;data.Parent = obj
+&#9;&#9;else
+&#9;&#9;&#9;data[k] = v
+&#9;&#9;end
+&#9;end
+&#9;return obj
+end
+
+-----------------------------------------
+-- Creates a class which can be instantiated
+-- using `CreateCLASSNAME( ... )`.
+---usage:
+--class&apos;MyClass&apos;(function(this, arg1)
+--&#9;this.ClassMember = value
+--&#9;function this.ClassMethod(...) ... end
+--end, function(def)
+--&#9;def.StaticMember = value
+--&#9; function def.StaticMethod(...) ... end
+--end)
+--local obj = CreateMyClass(arg1)
+------------------------------------------
+local function class(name)
+&#9;local def = {}
+&#9;getfenv(0)[name] = def
+&#9;return function(ctor, static)
+&#9;&#9;local nctor = function(...)
+&#9;&#9;&#9;local this = {}
+&#9;&#9;&#9;if ctor then
+&#9;&#9;&#9;&#9;ctor(this, ...)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;return this
+&#9;&#9;end
+&#9;&#9;getfenv(0)[&apos;Create&apos;..name] = nctor
+&#9;&#9;if static then static(def) end
+&#9;end
+end
+
+
+---------------------------------------------
+-- Signal class for custom-made events
+--API:
+-- Signal:connect(callback)
+-- Signal:fire(...)
+-- Signal:wait()
+---------------------------------------------
+class&apos;Signal&apos;(function(this)
+&#9;local mListeners = {}
+&#9;local mWaitObject = Create&apos;BoolValue&apos;{}
+
+&#9;function this:connect(func)
+&#9;&#9;local connection = {}
+&#9;&#9;function connection:disconnect()
+&#9;&#9;&#9;mListeners[func] = nil
+&#9;&#9;end
+&#9;&#9;mListeners[func] = connection
+&#9;&#9;return connection
+&#9;end
+
+&#9;function this:fire(...)
+&#9;&#9;--print(&quot;Fire evt&lt;&quot;..tostring(this)..&quot;&gt; from script&lt;&quot;..mDebugId..&quot;&gt;&quot;)
+&#9;&#9;for func, conn in pairs(mListeners) do
+&#9;&#9;&#9;--print(&quot;-&gt; &quot;..tostring(func)..&quot;( ... )&quot;)
+&#9;&#9;&#9;func(...)
+&#9;&#9;end
+&#9;&#9;mWaitObject.Value = not mWaitObject.Value
+&#9;end
+
+&#9;function this:wait()
+&#9;&#9;mWaitObject.Changed:wait()
+&#9;end
+end)
+
+
+--------------------------------------------------
+-- Bin class for cleaning up assets
+--API: 
+-- Bin:add(func: Function, ident: String)
+-- Bin:clean(ident: String)
+-- Bin:cleanAll()
+--------------------------------------------------
+class&apos;Bin&apos;(function(this)
+&#9;local mGarbage = {}
+
+&#9;function this:add(func, ident)
+&#9;&#9;ident = ident or &apos;__unnamed&apos;
+&#9;&#9;if not mGarbage[ident] then
+&#9;&#9;&#9;mGarbage[ident] = {}
+&#9;&#9;end
+&#9;&#9;mGarbage[ident][#mGarbage[ident]+1] = func
+&#9;end
+
+&#9;function this:clean(ident)
+&#9;&#9;local listToCall = mGarbage[ident]
+&#9;&#9;if listToCall then
+&#9;&#9;&#9;for _, func in pairs(listToCall) do
+&#9;&#9;&#9;&#9;func()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;mGarbage[ident] = nil
+&#9;&#9;end
+&#9;end
+
+&#9;function this:cleanAll()
+&#9;&#9;for ident, list in pairs(mGarbage) do
+&#9;&#9;&#9;for _, func in pairs(list) do
+&#9;&#9;&#9;&#9;func()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;mGarbage[ident] = nil
+&#9;&#9;end
+&#9;end
+end)
+
+
+-----------------------------------------------------
+-- AnimationProvider class for easy loading of
+-- animation assets into animationtracks once 
+-- a humanoid is available.
+--API:
+-- AnimationProvider:registerAnimation(ident, assetid)
+-- AnimationProvider:setHumanoid(humanoid)
+-- AnimationProvider:setTool(tool)
+-- AnimationProvider:getAnimation(ident)
+-----------------------------------------------------
+class&apos;AnimationProvider&apos;(function(this)
+&#9;local mAnimations = {--[[ident =&gt; {AnimationId, CurrentTrack, CurrentAnim} ]]}
+&#9;local mCurrentHumanoid = nil
+
+&#9;function this:registerAnimation(ident, assetid)
+&#9;&#9;--check for an existing copy of the anim
+&#9;&#9;local existingAnim = Tool.Tool:FindFirstChild(&apos;ANIM_&apos;..ident)
+&#9;&#9;&#9;
+&#9;&#9;--make the data for this anim
+&#9;&#9;local animdat = {
+&#9;&#9;&#9;AnimationId = assetid, 
+&#9;&#9;&#9;CurrentAnim = existingAnim or Create&apos;Animation&apos;{
+&#9;&#9;&#9;&#9;Name = &quot;ANIM_&quot;..ident,
+&#9;&#9;&#9;&#9;AnimationId = assetid,&#9;
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;&#9;mAnimations[ident] = animdat
+
+&#9;&#9;--if there&apos;s a current tool, put it in there
+&#9;&#9;if Tool.Tool then
+&#9;&#9;&#9;Tool.HUGE_EQUIP_HACK = true
+&#9;&#9;&#9;animdat.CurrentAnim.Parent = Tool.Tool
+&#9;&#9;&#9;Tool.HUGE_EQUIP_HACK = false
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;--if there&apos;s a humanoid load the animation track
+&#9;&#9;if mCurrentHumanoid then
+&#9;&#9;&#9;animdat.CurrentTrack = mCurrentHumanoid:LoadAnimation(animdat.CurrentAnim)
+&#9;&#9;end
+&#9;end
+
+&#9;function this:setHumanoid(humanoid)
+&#9;&#9;mCurrentHumanoid = humanoid
+&#9;&#9;for _, anim in pairs(mAnimations) do
+&#9;&#9;&#9;anim.CurrentTrack = humanoid:LoadAnimation(anim.CurrentAnim)
+&#9;&#9;end
+&#9;end
+
+&#9;function this:getAnimation(ident)
+&#9;&#9;local dat = mAnimations[ident]
+&#9;&#9;if not dat then error(&quot;Gear Fatal Error: Animation `&quot;..ident..&quot;` not found&quot;) end
+&#9;&#9;if not dat.CurrentTrack then 
+&#9;&#9;&#9;error(&quot;Gear Fatal Error: No Humanoid for animation `&quot;..ident..&quot;` to run in&quot;) 
+&#9;&#9;end
+&#9;&#9;return dat.CurrentTrack
+&#9;end
+end)
+
+
+----------------------------------------------
+-- SoundProvider class
+-- functions similarily to the animationprovider
+----------------------------------------------
+class&apos;SoundProvider&apos;(function(this)
+&#9;local mSounds = {}
+
+&#9;function this:registerSound(ident, assetid, inpart)
+&#9;&#9;inpart = inpart or Tool.Tool:FindFirstChild(&apos;Handle&apos;)
+&#9;&#9;if not inpart then
+&#9;&#9;&#9;repeat
+&#9;&#9;&#9;&#9;inpart = Tool.Tool.ChildAdded:wait()
+&#9;&#9;&#9;until inpart.Name == &apos;Handle&apos;
+&#9;&#9;end
+&#9;&#9;local existingSound = inpart:FindFirstChild(&apos;SOUND_&apos;..ident)
+&#9;&#9;local sounddat = {
+&#9;&#9;&#9;SoundId = assetid,
+&#9;&#9;&#9;CurrentSound = existingSound or Create&apos;Sound&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;SOUND_&apos;..ident,
+&#9;&#9;&#9;&#9;SoundId = assetid,
+&#9;&#9;&#9;&#9;Parent = inpart,
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;&#9;mSounds[ident] = sounddat
+&#9;end
+
+&#9;function this:getSound(ident)
+&#9;&#9;local dat = mSounds[ident]
+&#9;&#9;if dat then
+&#9;&#9;&#9;return dat.CurrentSound
+&#9;&#9;end
+&#9;end
+end)
+
+
+----------------------------------------------
+-- DebounceProvider class -- Prevent events
+-- from happening in too rapid succession
+----------------------------------------------
+class&apos;DebounceProvider&apos;(function(this)
+&#9;local mFlagNameToLastTime = {}
+
+&#9;function this:test(ident, delta)
+&#9;&#9;local t = tick()
+&#9;&#9;local lastTime = mFlagNameToLastTime[ident] or 0
+&#9;&#9;if delta then
+&#9;&#9;&#9;return (t-lastTime) &gt; delta
+&#9;&#9;else
+&#9;&#9;&#9;return mFlagNameToLastTime[ident]
+&#9;&#9;end
+&#9;end
+&#9;function this:set(ident, state)
+&#9;&#9;if state then
+&#9;&#9;&#9;mFlagNameToLastTime[ident] = state
+&#9;&#9;elseif state == false then
+&#9;&#9;&#9;mFlagNameToLastTime[ident] = false
+&#9;&#9;else
+&#9;&#9;&#9;mFlagNameToLastTime[ident] = tick()
+&#9;&#9;end
+&#9;end
+end)
+
+
+function TagHumanoid(humanoid)
+&#9;if Tool.Player then
+&#9;&#9;local tag = Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;Name = &quot;creator&quot;, 
+&#9;&#9;&#9;Value = Tool.Player,
+&#9;&#9;&#9;Parent = humanoid,
+&#9;&#9;}
+&#9;&#9;Tool.Bin:add(function()
+&#9;&#9;&#9;tag:Remove()
+&#9;&#9;end, &apos;HumanoidTag&apos;)
+&#9;end
+end
+function UntagHumanoid()
+&#9;Tool.Bin:clean(&apos;HumanoidTag&apos;)
+end
+
+
+------- wait for any event in a set of events  to fire ------
+function WaitForAny(tb)
+&#9;local evt = tb
+&#9;local conn = {}
+&#9;local eventargs = nil
+&#9;local waitProxy = Create&apos;BoolValue&apos;{}
+&#9;for _, e in pairs(evt) do
+&#9;&#9;local c = e:connect(function(...)
+&#9;&#9;&#9;for _, c in pairs(conn) do
+&#9;&#9;&#9;&#9;c:disconnect()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;eventargs = {...}
+&#9;&#9;&#9;waitProxy.Value = not waitProxy.Value
+&#9;&#9;end)
+&#9;&#9;conn[#conn+1] = c
+&#9;end
+&#9;--
+&#9;waitProxy.Changed:wait()
+&#9;--
+&#9;return unpack(eventargs)
+end
+
+
+----------------------------------------------
+-- Tool singleton class
+--API:
+-- ...
+class&apos;Tool&apos;(nil, function(this)
+&#9;--need this here for the animationprovider to use
+&#9;this.HUGE_EQUIP_HACK = false
+
+&#9;this.Bin = CreateBin()
+&#9;this.AnimationProvider = CreateAnimationProvider()
+&#9;this.DebounceProvider = CreateDebounceProvider()
+&#9;this.SoundProvider = CreateSoundProvider()
+
+&#9;--general values
+&#9;this.Tool = script.Parent
+&#9;this.Player = nil
+&#9;this.Humanoid = nil
+&#9;this.Character = nil
+
+&#9;--============ several flags for the gear
+&#9;--nothing
+
+&#9;--some events
+&#9;this.Equipped = CreateSignal()
+&#9;this.Unequipped = CreateSignal()
+&#9;this.OwnerChange = CreateSignal()
+
+&#9;--mouse utility events
+&#9;this.MouseClick = CreateSignal()
+&#9;this.MouseDoubleClick = CreateSignal()
+&#9;this.DoubleClickThreshold = 0.2
+&#9;this.MouseDown = false
+&#9;this.KeyDown = CreateSignal()
+
+&#9;local mLastClickTime = 0
+
+&#9;script.Parent.Equipped:connect(function(mouse)
+&#9;&#9;--print(&quot;Internal Equipped: Time b: &quot;..time())
+&#9;&#9;--set up general values in the tool
+&#9;&#9;this.Mouse = mouse
+&#9;&#9;local curOwner = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
+&#9;&#9;if curOwner ~= this.Player then
+&#9;&#9;&#9;this.Player = curOwner
+&#9;&#9;&#9;this.OwnerChange:fire(this.Player)
+&#9;&#9;end
+&#9;&#9;this.Character = this.Player.Character
+&#9;&#9;this.Humanoid = this.Character.Humanoid
+&#9;&#9;this.AnimationProvider:setHumanoid(this.Humanoid)
+
+&#9;&#9;--set up the mouse events
+&#9;&#9;mouse.Button1Down:connect(function()
+&#9;&#9;&#9;this.MouseDown = true
+&#9;&#9;&#9;local t = tick()
+&#9;&#9;&#9;if (t-mLastClickTime) &lt; this.DoubleClickThreshold then
+&#9;&#9;&#9;&#9;--prvent multiple double-clicks in a row
+&#9;&#9;&#9;&#9;mLastClickTime = 0
+&#9;&#9;&#9;&#9;this.MouseDoubleClick:fire(mouse)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;mLastClickTime = t
+&#9;&#9;&#9;&#9;this.MouseClick:fire(mouse)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;mouse.Button1Up:connect(function()
+&#9;&#9;&#9;this.MouseDown = false
+&#9;&#9;end)
+&#9;&#9;mouse.KeyDown:connect(function(key)
+&#9;&#9;&#9;this.KeyDown:fire(key)
+&#9;&#9;end)
+
+&#9;&#9;--done setup, call the equipped function
+&#9;&#9;if this.HUGE_EQUIP_HACK then
+&#9;&#9;&#9;--the HUGE_EQUIP_HACK flags tells the tool that the equip is a synchronous
+&#9;&#9;&#9;--call as a result of parenting an animation to the character, which happens 
+&#9;&#9;&#9;--when the tool is picked up from the workspace, but not during normal equips 
+&#9;&#9;&#9;--(Why does this happen???), if this is the case, the call should be rederrred 
+&#9;&#9;&#9;--one tick to ensure that all of the gear&apos;s loading can complete before it&apos;s 
+&#9;&#9;&#9;--equipped event is called.
+&#9;&#9;&#9;--TODO: Blame John for this.
+&#9;&#9;&#9;Delay(0, function()
+&#9;&#9;&#9;&#9;this.Equipped:fire(mouse)
+&#9;&#9;&#9;end)
+&#9;&#9;else
+&#9;&#9;&#9;--otherwise, proceed as normal
+&#9;&#9;&#9;this.Equipped:fire(mouse)
+&#9;&#9;end
+&#9;end)
+
+&#9;script.Parent.Unequipped:connect(function()
+&#9;&#9;--before my teardown, fire the event
+&#9;&#9;this.Unequipped:fire()
+
+&#9;&#9;--delete all my garbage
+&#9;&#9;this.Bin:cleanAll()
+&#9;end)
+end)
+
+
+local CurrentToolMode = nil
+
+local function SetToolMode(mode)
+&#9;if CurrentToolMode then
+&#9;&#9;CurrentToolMode.onDeselect()
+&#9;end
+&#9;CurrentToolMode = mode
+&#9;if mode then
+&#9;&#9;mode.onSelect()
+&#9;end
+end
+local CreateMode = nil
+local TargetMode = nil
+
+-------------------------------------------
+---------- interface in player ------------
+local TargetValue = nil
+local SnowmanListModel = nil
+local function SetTarget(humanoid)
+&#9;TargetValue.Value = humanoid
+end
+
+
+-------------------------------------------
+---------------- settings -----------------
+class&apos;ToolSettings&apos;(nil, function(def)
+&#9;def.MaxSnowmanCount = 3
+&#9;def.CreationTime = 1 --1 second
+&#9;def.MaxRange = 30
+end)
+
+
+-------------------------------------------
+-- isolated &quot;flash lasso effect&quot; class which
+-- can be reused in other gear in the future
+-- API:
+-- FlashLasso(from, to, brickcolor):
+--  Creates a new flashlasso between a |from|
+--  and a |to| position with a given |brickcolor|
+--
+-- setTransparency(factor):
+--  Sets the transparency of the effect. Usefull
+--  for fading the effect in-out if desired.
+--
+-- destroy():
+--  Cleans up any resources the FlashLasso may
+--  have put into the workspace or other 
+--  locations.
+-------------------------------------------
+class&apos;FlashLasso&apos;(function(this, from, to, color)
+&#9;local mRunFlag = true
+&#9;local mTransparency = 0
+
+&#9;--
+&#9;local K = (2*math.pi)/5
+&#9;local Omega = (2*math.pi)*6
+&#9;local function GetMainBeamDisp(x, t)
+&#9;&#9;return (math.cos(K*x - Omega*t)+math.cos(K*x - (0.2*Omega)*t))*0.2, 
+&#9;&#9;       (math.sin(K*x - Omega*t)+math.cos(K*x - (0.2*Omega)*t))*0.2
+&#9;end
+
+&#9;--
+&#9;local mBeamDir = CFrame.new(from, to)
+&#9;local mBeamLength = (to-from).magnitude
+&#9;--
+&#9;local mMainBeamSegCount = math.ceil(mBeamLength/FlashLasso.DesiredSegSize)
+&#9;local mMainBeamSegLen = mBeamLength/mMainBeamSegCount
+&#9;local mMainBeamSegs = {}
+&#9;for i = 1, mMainBeamSegCount do
+&#9;&#9;mMainBeamSegs[i] = Create&apos;Part&apos;{
+&#9;&#9;&#9;Name = &apos;BeamSeg&apos;,
+&#9;&#9;&#9;Parent = game.Workspace,
+&#9;&#9;&#9;Anchored = true,
+&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;Archivable = false,
+&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;Transparency = FlashLasso.BeamTransparency,
+&#9;&#9;&#9;BrickColor = color,
+&#9;&#9;&#9;BottomSurface = &apos;Smooth&apos;,
+&#9;&#9;&#9;TopSurface = &apos;Smooth&apos;,
+&#9;&#9;}
+&#9;end
+
+&#9;local function SetMainBeamState(t)
+&#9;&#9;local xysize = FlashLasso.BeamRadius*2
+&#9;&#9;for i = 1, mMainBeamSegCount do
+&#9;&#9;&#9;local seg = mMainBeamSegs[i]
+&#9;&#9;&#9;local z1 = (i-1)*mMainBeamSegLen
+&#9;&#9;&#9;local x1, y1 = GetMainBeamDisp(z1, t)
+&#9;&#9;&#9;local z2 = (i)*mMainBeamSegLen
+&#9;&#9;&#9;local x2, y2 = GetMainBeamDisp(z2, t)
+&#9;&#9;&#9;--
+&#9;&#9;&#9;local p1 = (mBeamDir*CFrame.new(x1, y1, -z1)).p
+&#9;&#9;&#9;local p2 = (mBeamDir*CFrame.new(x2, y2, -z2)).p
+&#9;&#9;&#9;--
+&#9;&#9;&#9;seg.Size = Vector3.new(xysize, xysize, (p1-p2).magnitude)
+&#9;&#9;&#9;seg.CFrame = CFrame.new(0.5*(p1+p2), p2)
+&#9;&#9;end
+&#9;end
+&#9;SetMainBeamState(tick())
+
+&#9;local mSparkSegs = {}
+&#9;local function MoveSparkSegs()
+&#9;&#9;local xysize = FlashLasso.BeamRadius*1.5
+&#9;&#9;for seg, _ in pairs(mSparkSegs) do
+&#9;&#9;&#9;if math.random(1, 20) == 20 or seg.Z &gt; mBeamLength then
+&#9;&#9;&#9;&#9;mSparkSegs[seg] = nil
+&#9;&#9;&#9;&#9;seg.Part.Parent = nil
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;local nz = seg.Z+seg.Length
+&#9;&#9;&#9;&#9;local nx = (math.random(-5,5)/10)
+&#9;&#9;&#9;&#9;local ny = (math.random(-5,5)/10)
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;local po = (mBeamDir*CFrame.new(seg.LastX, seg.LastY, -seg.Z)).p
+&#9;&#9;&#9;&#9;local pn = (mBeamDir*CFrame.new(nx, ny, -nz)).p
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;seg.Z = nz
+&#9;&#9;&#9;&#9;seg.LastX = nx
+&#9;&#9;&#9;&#9;seg.LastY = ny
+&#9;&#9;&#9;&#9;seg.Part.Size = Vector3.new(xysize, xysize, (po-pn).magnitude)
+&#9;&#9;&#9;&#9;seg.Part.CFrame = CFrame.new(0.5*(po+pn), pn)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;Spawn(function()
+&#9;&#9;while mRunFlag do
+&#9;&#9;&#9;SetMainBeamState(tick())
+
+&#9;&#9;&#9;--make a spark
+&#9;&#9;&#9;local spark = {}
+&#9;&#9;&#9;spark.Z = 0
+&#9;&#9;&#9;spark.LastX = 0
+&#9;&#9;&#9;spark.LastY = 0
+&#9;&#9;&#9;spark.Length = math.random(2, 4)
+&#9;&#9;&#9;spark.Part = Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;BeamSeg&apos;,
+&#9;&#9;&#9;&#9;Parent = game.Workspace,
+&#9;&#9;&#9;&#9;Anchored = true,
+&#9;&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;&#9;Archivable = false,
+&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;Transparency = (1-((1-FlashLasso.SparkTransparency)*(1-mTransparency))),
+&#9;&#9;&#9;&#9;BrickColor = color,
+&#9;&#9;&#9;&#9;BottomSurface = &apos;Smooth&apos;,
+&#9;&#9;&#9;&#9;TopSurface = &apos;Smooth&apos;,&#9;
+&#9;&#9;&#9;&#9;Size = Vector3.new(FlashLasso.BeamRadius*2, 
+&#9;&#9;&#9;&#9;                   FlashLasso.BeamRadius*2, 
+&#9;&#9;&#9;&#9;                   spark.Length),&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;}
+&#9;&#9;&#9;mSparkSegs[spark] = true
+&#9;&#9;&#9;
+&#9;&#9;&#9;MoveSparkSegs()
+
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;end)
+
+&#9;function this:destroy()
+&#9;&#9;mRunFlag = false
+&#9;&#9;for _, p in pairs(mMainBeamSegs) do
+&#9;&#9;&#9;p.Parent = nil
+&#9;&#9;end
+&#9;&#9;for seg, _ in pairs(mSparkSegs) do
+&#9;&#9;&#9;seg.Part.Parent = nil
+&#9;&#9;end
+&#9;end
+
+&#9;function this:setTransparency(f)
+&#9;&#9;local mainTrans = 1-((1-FlashLasso.BeamTransparency)*(1-f))
+&#9;&#9;for _, seg in pairs(mMainBeamSegs) do
+&#9;&#9;&#9;seg.Transparency = mainTrans
+&#9;&#9;end
+&#9;&#9;local sparkTrans = 1-((1-FlashLasso.SparkTransparency)*(1-f))
+&#9;&#9;for seg, _ in pairs(mSparkSegs) do
+&#9;&#9;&#9;seg.Part.Transparency = sparkTrans
+&#9;&#9;end
+&#9;&#9;mTransparency = f
+&#9;end
+
+end, function(def)
+&#9;def.DesiredSegSize = 2
+&#9;def.BeamTransparency = 0.5
+&#9;def.SparkTransparency = 0
+&#9;def.BeamRadius = 0.2
+end)
+
+
+-------------------------------------------
+---------- listen for events --------------
+Tool.Equipped:connect(function(mouse)
+&#9;--set up interface
+&#9;if not Tool.Player:FindFirstChild(&apos;SnowmanGun_Target&apos;) then
+&#9;&#9;Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;Parent = Tool.Player,
+&#9;&#9;&#9;Name = &apos;SnowmanGun_Target&apos;,
+&#9;&#9;}
+&#9;end
+&#9;TargetValue = Tool.Player:FindFirstChild(&apos;SnowmanGun_Target&apos;)
+
+&#9;if not Tool.Player:FindFirstChild(&apos;SnowmanGun_SnowmanList&apos;) then
+&#9;&#9;Create&apos;Model&apos;{
+&#9;&#9;&#9;Parent = Tool.Player,
+&#9;&#9;&#9;Name = &apos;SnowmanGun_SnowmanList&apos;,
+&#9;&#9;}
+&#9;end
+&#9;SnowmanListModel = Tool.Player:FindFirstChild(&apos;SnowmanGun_SnowmanList&apos;)
+
+&#9;--
+&#9;SetToolMode(CreateMode)
+end)
+Tool.Unequipped:connect(function()
+&#9;SetToolMode(nil)
+end)
+Tool.MouseClick:connect(function(mouse)
+&#9;CurrentToolMode.onPress(mouse)
+end)
+Tool.KeyDown:connect(function(key)
+&#9;if key:lower() == &apos;e&apos; then
+&#9;&#9;SetToolMode(CreateMode)
+&#9;elseif key:lower() == &apos;q&apos; then
+&#9;&#9;SetToolMode(TargetMode)
+&#9;end
+end)
+
+
+-------------------------------------------
+--------- shared gui between modes --------
+local Gui = Create&apos;ScreenGui&apos;{
+&#9;Name = &apos;SnowmanGunGui&apos;,
+}
+local ModeGui = Create&apos;Frame&apos;{
+&#9;Parent = Gui,
+&#9;--
+&#9;Name = &apos;ModeSelect&apos;,
+&#9;Style = &apos;RobloxRound&apos;,
+&#9;Size = UDim2.new(0, 128, 0, 256),
+&#9;Position = UDim2.new(0, 16, 0.5, -128),
+&#9;Create&apos;TextButton&apos;{
+&#9;&#9;Name = &apos;SetMode_Create&apos;,
+&#9;&#9;Style = &apos;RobloxButton&apos;,
+&#9;&#9;Size = UDim2.new(1, 0, 0.5, 0),
+&#9;&#9;Position = UDim2.new(),
+&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;TextColor3 = Color3.new(1,1,1),
+&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;Text = &quot;Create\nMode\n(`E` Key)&quot;,
+&#9;&#9;TextWrap = true,
+&#9;},
+&#9;Create&apos;TextButton&apos;{
+&#9;&#9;Name = &apos;SetMode_Target&apos;,
+&#9;&#9;Style = &apos;RobloxButton&apos;,
+&#9;&#9;Size = UDim2.new(1, 0, 0.5, 0),
+&#9;&#9;Position = UDim2.new(0, 0, 0.5, 0),
+&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;TextColor3 = Color3.new(1,1,1),
+&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;Text = &quot;Target\nMode\n(`Q` Key)&quot;,
+&#9;&#9;TextWrap = true,
+&#9;},
+}
+ModeGui.SetMode_Create.MouseButton1Down:connect(function()
+&#9;SetToolMode(CreateMode)
+end)
+ModeGui.SetMode_Target.MouseButton1Down:connect(function()
+&#9;SetToolMode(TargetMode)
+end)
+
+local CreationProgressGui = Create&apos;Frame&apos;{
+&#9;Parent = Gui,
+&#9;Visible = false,
+&#9;--
+&#9;Name = &apos;CreationProgress&apos;,
+&#9;Style = &apos;RobloxRound&apos;,
+&#9;Size = UDim2.new(0, 256, 0, 64),
+&#9;Position = UDim2.new(0.5, -128, 0, 16),
+&#9;--
+&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;Name = &apos;ProgressLabel&apos;,
+&#9;&#9;Text = &quot;&quot;,
+&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;TextColor3 = Color3.new(1, 1, 1),
+&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;FontSize = &apos;Size14&apos;,
+&#9;},
+}
+
+local TargetGui = Create&apos;BillboardGui&apos;{
+&#9;Name = &apos;SnowmanGun_Targeter&apos;,
+&#9;--
+&#9;Create&apos;ImageLabel&apos;{
+&#9;&#9;Visible = false,
+&#9;&#9;Name = &apos;TrackerImage&apos;,
+&#9;&#9;Image = &apos;http://www.roblox.com/asset/?id=66740738&apos;,
+&#9;&#9;Size = UDim2.new(9, 0, 9, 0),
+&#9;&#9;Position = UDim2.new(-4, 0, -4, 0),
+&#9;&#9;BackgroundTransparency = 1,
+&#9;},
+&#9;--
+&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;AlwaysOnTop = true,
+}
+
+local LabelMessageUid = 0
+local function UnsetCreationProgressLabel()
+&#9;CreationProgressGui.ProgressLabel.Text = &quot;Click and hold to create snowman turrets!&quot;
+end
+local function SetCreationProgressLabel(frac)
+&#9;LabelMessageUid = LabelMessageUid + 1
+&#9;local muid = LabelMessageUid
+&#9;--
+&#9;if type(frac) == &apos;number&apos; then
+&#9;&#9;local perc = tostring(frac*100):sub(1,3)..&quot;%&quot;
+&#9;&#9;CreationProgressGui.ProgressLabel.Text = &quot;Creating... &quot;..perc
+&#9;elseif type(frac) == &apos;string&apos; then
+&#9;&#9;CreationProgressGui.ProgressLabel.Text = frac
+&#9;end
+&#9;--
+&#9;return function()
+&#9;&#9;if LabelMessageUid == muid then
+&#9;&#9;&#9;UnsetCreationProgressLabel()
+&#9;&#9;end
+&#9;end
+end
+
+
+-------------------------------------------
+----------- utility functions -------------
+local function GetFireFrom() --get the position of the tip of the weapon
+&#9;return (Tool.Tool.Handle.CFrame * CFrame.new(-0.2, 1.8, 0.05)).p
+end
+
+local function ClassifySurface(part, point)
+&#9;local psize = part.Size
+&#9;local reldif = part.CFrame:toObjectSpace(CFrame.new(point)).p - psize/2
+&#9;local xdif = math.min(math.abs(reldif.x - psize.x), math.abs(reldif.x))
+&#9;local ydif = math.min(math.abs(reldif.y - psize.y), math.abs(reldif.y))
+&#9;local zdif = math.min(math.abs(reldif.z - psize.z), math.abs(reldif.z))
+&#9;if xdif &lt; math.min(ydif, zdif) then
+&#9;&#9;if math.abs(reldif.x - psize.x) &lt; reldif.x then
+&#9;&#9;&#9;return Enum.NormalId.Left
+&#9;&#9;else
+&#9;&#9;&#9;return Enum.NormalId.Right
+&#9;&#9;end
+&#9;elseif ydif &lt; math.min(xdif, zdif) then
+&#9;&#9;if math.abs(reldif.y - psize.y) &lt; reldif.y then
+&#9;&#9;&#9;return Enum.NormalId.Bottom
+&#9;&#9;else
+&#9;&#9;&#9;return Enum.NormalId.Top
+&#9;&#9;end
+&#9;elseif zdif &lt; math.min(xdif, ydif) then
+&#9;&#9;if math.abs(reldif.z - psize.z) &lt; psize.z then
+&#9;&#9;&#9;return Enum.NormalId.Front
+&#9;&#9;else
+&#9;&#9;&#9;return Enum.NormalId.Back
+&#9;&#9;end
+&#9;end
+end
+
+local function IsAbove(part, point)
+&#9;local normal = ClassifySurface(part, point)
+&#9;return ((part.CFrame-part.CFrame.p)*Vector3.FromNormalId(normal)).y &gt; 0
+end
+
+local function GetSnowmanList()
+&#9;local snowmen = {}
+&#9;for _, sn in pairs(SnowmanListModel:GetChildren()) do
+&#9;&#9;snowmen[#snowmen+1] = sn.Value
+&#9;end
+&#9;return snowmen
+end
+
+
+-------------------------------------------
+----------- create snowmen mode -----------
+CreateMode = {}
+function CreateMode.onPress(mouse)
+&#9;--do a raycast to find the true hit position of the shot
+&#9;local dirray = Ray.new(GetFireFrom(), (mouse.Hit.p-GetFireFrom()).unit*10000)
+&#9;local obj, pos = game.Workspace:FindPartOnRay(dirray, Tool.Character)
+
+&#9;--no hit object? Just bail out
+&#9;if not obj then return end
+
+&#9;--if the hit isn&apos;t close enough then bail out
+&#9;if (pos-GetFireFrom()).magnitude &gt; ToolSettings.MaxRange then
+&#9;&#9;--show a failed message
+&#9;&#9;local unsetLabel = SetCreationProgressLabel(&quot;Target not in range!&quot;)
+&#9;&#9;Delay(1, unsetLabel)
+
+&#9;&#9;--show a failed shot thing to show the range
+&#9;&#9;local failedFlash = CreateFlashLasso(GetFireFrom(), 
+&#9;&#9;                                     GetFireFrom()+(pos-GetFireFrom()).unit*ToolSettings.MaxRange, 
+&#9;&#9;                                     BrickColor.new(23))
+&#9;&#9;--add it to the bin to make sure it gets removed
+&#9;&#9;Tool.Bin:add(function()
+&#9;&#9;&#9;failedFlash:destroy()
+&#9;&#9;end, &apos;kill_failed_shot_effect&apos;)
+
+&#9;&#9;--now, fade it out
+&#9;&#9;for i = 0, 1, 0.1 do
+&#9;&#9;&#9;failedFlash:setTransparency(i)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+
+&#9;&#9;--and clean up
+&#9;&#9;Tool.Bin:clean(&apos;kill_failed_shot_effect&apos;)
+&#9;&#9;return
+&#9;end
+
+&#9;--I hit something
+&#9;if obj.Parent and obj.Parent:FindFirstChild(&apos;SnowmanOwner&apos;) then
+&#9;&#9;--fired at a snowman
+&#9;&#9;if obj.Parent.SnowmanOwner.Value == Tool.Player then
+&#9;&#9;&#9;local snowman_hum = obj.Parent.Humanoid
+&#9;&#9;&#9;--fired at one of my own snowmen, delete it
+&#9;&#9;&#9;SetCreationProgressLabel(&quot;Deleting...&quot;)
+
+&#9;&#9;&#9;--effect for a glow where the snowman is being created
+&#9;&#9;&#9;local deletionGlow = Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;Parent = game.Workspace,
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Name = &apos;DeleteSnowmanGlow&apos;,
+&#9;&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;&#9;Anchored = true,
+&#9;&#9;&#9;&#9;Archivable = false,
+&#9;&#9;&#9;&#9;CFrame = CFrame.new(pos),
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Create&apos;Fire&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;GlowEffect&apos;,
+&#9;&#9;&#9;&#9;&#9;Color = Color3.new(1, 0.2, 0.2),
+&#9;&#9;&#9;&#9;&#9;Size = 3,&#9;
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;}
+&#9;&#9;&#9;local deletionFlash = CreateFlashLasso(GetFireFrom(), pos, BrickColor.new(21))
+
+&#9;&#9;&#9;--slow down the character
+&#9;&#9;&#9;Tool.Humanoid.WalkSpeed = 0
+
+&#9;&#9;&#9;--set up clean-up
+&#9;&#9;&#9;Tool.Bin:add(function()
+&#9;&#9;&#9;&#9;deletionFlash:destroy()
+&#9;&#9;&#9;&#9;deletionGlow.Parent = nil
+&#9;&#9;&#9;&#9;UnsetCreationProgressLabel()
+&#9;&#9;&#9;&#9;Tool.Humanoid.WalkSpeed = 16
+&#9;&#9;&#9;end, &apos;destroy_deletion_effects&apos;)
+
+&#9;&#9;&#9;--kill
+&#9;&#9;&#9;while Tool.MouseDown and snowman_hum.Health &gt; 0 do
+&#9;&#9;&#9;&#9;snowman_hum:TakeDamage(2)
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;UnsetCreationProgressLabel()
+
+&#9;&#9;&#9;--done, fade out effects
+&#9;&#9;&#9;deletionGlow.Parent = nil
+&#9;&#9;&#9;for i = 0, 1, 0.1 do
+&#9;&#9;&#9;&#9;deletionFlash:setTransparency(i)
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;--clean up
+&#9;&#9;&#9;Tool.Bin:clean(&apos;destroy_deletion_effects&apos;)
+&#9;&#9;end
+&#9;else
+&#9;&#9;--check that there aren&apos;t too many snowmen
+&#9;&#9;if #GetSnowmanList() &gt;= ToolSettings.MaxSnowmanCount then
+&#9;&#9;&#9;local unsetLabel = SetCreationProgressLabel(&quot;You have too many snowmen currently created!&quot;)
+&#9;&#9;&#9;Delay(1, unsetLabel)
+&#9;&#9;&#9;return
+&#9;&#9;end
+
+&#9;&#9;--fired somewhere else, see if I hit a relatively horizontal surface
+&#9;&#9;--that a snowman can be placed on. Surface could also be a terrain, and
+&#9;&#9;--unfortunately there&apos;s no sane way to check if that&apos;s a relatively
+&#9;&#9;--horisontal surface, so don&apos;t.
+&#9;&#9;if obj:IsA(&apos;Terrain&apos;) or IsAbove(obj, pos) then
+&#9;&#9;&#9;--all good, go to create a snowman.
+
+&#9;&#9;&#9;--effect for a glow where the snowman is being created
+&#9;&#9;&#9;local creationGlow = Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;Parent = game.Workspace,
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Name = &apos;CreateSnowmanGlow&apos;,
+&#9;&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;&#9;Anchored = true,
+&#9;&#9;&#9;&#9;Archivable = false,
+&#9;&#9;&#9;&#9;CFrame = CFrame.new(pos),
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Create&apos;Fire&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;GlowEffect&apos;,
+&#9;&#9;&#9;&#9;&#9;Color = Color3.new(0.2, 0.2, 1),
+&#9;&#9;&#9;&#9;&#9;Size = 3,&#9;
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;}
+
+&#9;&#9;&#9;--effect for a line going from the gun to the snowman
+&#9;&#9;&#9;local creationLasso = CreateFlashLasso(GetFireFrom(), pos, BrickColor.new(23))
+
+&#9;&#9;&#9;--slow down the character
+&#9;&#9;&#9;Tool.Humanoid.WalkSpeed = 0
+
+&#9;&#9;&#9;--clean them up if all else fails
+&#9;&#9;&#9;Tool.Bin:add(function()
+&#9;&#9;&#9;&#9;creationGlow.Parent = nil
+&#9;&#9;&#9;&#9;creationLasso:destroy()
+&#9;&#9;&#9;&#9;UnsetCreationProgressLabel()
+&#9;&#9;&#9;&#9;Tool.Humanoid.WalkSpeed = 16
+&#9;&#9;&#9;end, &apos;destroy_creation_effects&apos;)
+
+&#9;&#9;&#9;SetCreationProgressLabel(0)
+&#9;&#9;&#9;for t = 0, ToolSettings.CreationTime, 0.1 do
+&#9;&#9;&#9;&#9;wait(0.1)
+&#9;&#9;&#9;&#9;if Tool.MouseDown then
+&#9;&#9;&#9;&#9;&#9;SetCreationProgressLabel(t/ToolSettings.CreationTime)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;--if they released the mouse then bail out
+&#9;&#9;&#9;&#9;&#9;UnsetCreationProgressLabel()
+&#9;&#9;&#9;&#9;&#9;Tool.Bin:clean(&apos;destroy_creation_effects&apos;)
+&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;--finished the wait, do the creation
+&#9;&#9;&#9;local snowMan = Create&apos;Model&apos;{
+&#9;&#9;&#9;&#9;Name = Tool.Player.Name..&apos;\&apos;s Snowman&apos;,
+&#9;&#9;&#9;&#9;Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;Head&apos;,
+&#9;&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;&#9;Size = Vector3.new(1.2, 1.1, 1.2),
+&#9;&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(1002), --`Mid gray`
+&#9;&#9;&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{}, --The headmesh, defaults are correct
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;Mid&apos;,
+&#9;&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;&#9;Size = Vector3.new(1.4, 1.2, 1.4),
+&#9;&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(1002),
+&#9;&#9;&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{},
+&#9;&#9;&#9;&#9;&#9;Create&apos;Motor6D&apos;{Name=&apos;RightGun&apos;},
+&#9;&#9;&#9;&#9;&#9;Create&apos;Motor6D&apos;{Name=&apos;LeftGun&apos;},
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;Torso&apos;,
+&#9;&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;&#9;Size = Vector3.new(1.6, 1.3, 1.6),
+&#9;&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(1002),
+&#9;&#9;&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{},
+&#9;&#9;&#9;&#9;&#9;Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;Neck&apos;,
+&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;&#9;Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;Hip&apos;,
+&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;FireSnowball&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;SoundId = &apos;rbxasset://sounds//paintball.wav&apos;,
+&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;RightGun&apos;,
+&#9;&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;&#9;Size = Vector3.new(0.4, 0.6, 1.5),
+&#9;&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(1003), --`Really black`
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;LeftGun&apos;,
+&#9;&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;&#9;Size = Vector3.new(0.4, 0.6, 1.5),
+&#9;&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(1003), --`Really black`
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;SnowmanOwner&apos;,
+&#9;&#9;&#9;&#9;&#9;Value = Tool.Player,
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;}
+&#9;&#9;&#9;snowMan.Torso.Neck.Part0 = snowMan.Torso
+&#9;&#9;&#9;snowMan.Torso.Neck.Part1 = snowMan.Head
+&#9;&#9;&#9;snowMan.Torso.Neck.C0 = CFrame.new(0, 2.2, 0)
+&#9;&#9;&#9;snowMan.Torso.Hip.Part0 = snowMan.Torso
+&#9;&#9;&#9;snowMan.Torso.Hip.Part1 = snowMan.Mid
+&#9;&#9;&#9;snowMan.Torso.Hip.C0 = CFrame.new(0, 1.2, 0)
+&#9;&#9;&#9;--
+&#9;&#9;&#9;snowMan.Mid.RightGun.Part0 = snowMan.Mid
+&#9;&#9;&#9;snowMan.Mid.RightGun.Part1 = snowMan.RightGun
+&#9;&#9;&#9;snowMan.Mid.RightGun.C0 = CFrame.new(0.8, 0, 0)
+&#9;&#9;&#9;snowMan.Mid.LeftGun.Part0 = snowMan.Mid
+&#9;&#9;&#9;snowMan.Mid.LeftGun.Part1 = snowMan.LeftGun
+&#9;&#9;&#9;snowMan.Mid.LeftGun.C0 = CFrame.new(-0.8, 0, 0)
+&#9;&#9;
+&#9;&#9;&#9;--now that the thing is aset up for a humanoid, make it
+&#9;&#9;&#9;Create&apos;Humanoid&apos;{Parent = snowMan,}
+
+&#9;&#9;&#9;--put it where it need to be and register to to the player
+&#9;&#9;&#9;snowMan.Parent = game.Workspace
+&#9;&#9;&#9;snowMan.Torso.Anchored = true
+&#9;&#9;&#9;snowMan.Torso.CFrame = CFrame.new(pos + Vector3.new(0, 0.7, 0))
+&#9;&#9;&#9;Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;&#9;Parent = SnowmanListModel,
+&#9;&#9;&#9;&#9;Value = snowMan,
+&#9;&#9;&#9;}
+
+&#9;&#9;&#9;--finally, activate the snowman with a script, also put a copy of the
+&#9;&#9;&#9;--bulletdamage script into it that it can use to put into bullets
+&#9;&#9;&#9;local sc = Tool.Tool.SnowmanScript:Clone()
+&#9;&#9;&#9;sc.Parent = snowMan
+&#9;&#9;&#9;sc.Disabled = false
+&#9;&#9;&#9;local dmg = Tool.Tool.BulletDamage:Clone()
+&#9;&#9;&#9;dmg.Parent = snowMan
+
+&#9;&#9;&#9;--fade out the effect
+&#9;&#9;&#9;creationGlow.Parent = nil
+&#9;&#9;&#9;for i = 0, 1, 0.1 do
+&#9;&#9;&#9;&#9;creationLasso:setTransparency(i)
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;--clean up
+&#9;&#9;&#9;Tool.Bin:clean(&apos;destroy_creation_effects&apos;)
+&#9;&#9;end
+&#9;end
+end
+function CreateMode.onSelect()
+&#9;Gui.Parent = Tool.Player.PlayerGui
+&#9;CreationProgressGui.Visible = true
+&#9;UnsetCreationProgressLabel()
+end
+function CreateMode.onDeselect()
+&#9;CreationProgressGui.Visible = false
+&#9;Gui.Parent = nil
+end
+
+
+-------------------------------------------
+-----------  set target mode    -----------
+TargetMode = {}
+local ToolSelected = false
+function TargetMode.onPress()
+&#9;local t = Tool.Mouse.Target
+&#9;local hum = (t.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;if hum then
+&#9;&#9;--clicked a humanoid, target it and show the target gui
+&#9;&#9;TargetValue.Value = hum
+
+&#9;&#9;--find a part in the humanoid to attach the gui to
+&#9;&#9;local partToAttachTo = (hum.Parent or game):FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;if not partToAttachTo and hum.Parent then
+&#9;&#9;&#9;local largestPart = nil
+&#9;&#9;&#9;for _, p in pairs(hum.Parent:GetChildren()) do
+&#9;&#9;&#9;&#9;if p:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;&#9;&#9;if not largestPart or p.Size.magnitude &gt; largestPart.Size.magnitude then
+&#9;&#9;&#9;&#9;&#9;&#9;largestPart = p
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;partToAttachTo = largestPart
+&#9;&#9;end
+&#9;&#9;if partToAttachTo then
+&#9;&#9;&#9;TargetGui.TrackerImage.Visible = true
+&#9;&#9;&#9;TargetGui.Adornee = partToAttachTo
+&#9;&#9;else
+&#9;&#9;&#9;TargetGui.TrackerImage.Visible = false
+&#9;&#9;end
+&#9;end
+end
+function TargetMode.onSelect()
+&#9;ToolSelected = true
+&#9;Gui.Parent = Tool.Player.PlayerGui
+&#9;--
+&#9;TargetGui.TrackerImage.Visible = true
+&#9;TargetGui.Parent = Tool.Player.PlayerGui
+&#9;--
+&#9;while ToolSelected do
+&#9;&#9;local t = Tool.Mouse.Target
+&#9;&#9;if t then
+&#9;&#9;&#9;local hum = (t.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;hum = hum or ((t.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;if hum then
+&#9;&#9;&#9;&#9;Tool.Mouse.Icon = &apos;http://www.roblox.com/asset/?id=66740738&apos;
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;Tool.Mouse.Icon = &apos;http://www.roblox.com/asset/?id=66740715&apos;
+&#9;&#9;&#9;end
+&#9;&#9;else
+&#9;&#9;&#9;Tool.Mouse.Icon = &apos;http://www.roblox.com/asset/?id=66740715&apos;
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+end
+function TargetMode.onDeselect()
+&#9;TargetGui.TrackerImage.Visible = false
+&#9;TargetGui.Parent = nil
+&#9;--
+&#9;ToolSelected = false
+&#9;Tool.Mouse.Icon = &apos;&apos;
+&#9;Gui.Parent = nil
+end
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX3">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SnowmanScript</string>
+				<ProtectedString name="Source">-------------------------------------
+-- Makes an RBX::Lua Instance using
+-- a table of key-value pairs to
+-- initialize it. Values with numeric 
+-- keys will be parented to the object
+-- and other values will be set
+-- as members of the object.
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+--                                                                       --
+--                        main code starts here                          --
+--                                                                       --
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+local Snowman = script.Parent
+local Humanoid = Snowman.Humanoid
+local Owner = Snowman.SnowmanOwner.Value
+local Target = Owner:FindFirstChild(&apos;SnowmanGun_Target&apos;) or 
+               Instance.new(&apos;ObjectValue&apos;) --just in case the map I&apos;m in is doing something terrible,
+                                           --I want to maintain function and not leave these as garbage
+                                           --in the workspace.
+
+local Mid = Snowman.Mid
+local Torso = Snowman.Torso
+local Hip = Snowman.Torso.Hip
+local RightGun = Snowman.Mid.RightGun
+local LeftGun = Snowman.Mid.LeftGun
+
+game.Players.ChildRemoved:connect(function(p)
+&#9;if p == Owner then
+&#9;&#9;Humanoid.Health = 0
+&#9;end
+end)
+
+Humanoid.Died:connect(function()
+&#9;--on died, unregister self from owners list of things
+&#9;if Owner:FindFirstChild(&apos;SnowmanGun_SnowmanList&apos;) then
+&#9;&#9;for _, ch in pairs(Owner.SnowmanGun_SnowmanList:GetChildren()) do
+&#9;&#9;&#9;if ch.Value == Snowman then
+&#9;&#9;&#9;&#9;ch.Parent = nil
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;--fade my parts to transprent
+&#9;for i = 0, 1, 0.1 do
+&#9;&#9;for _, obj in pairs(Snowman:GetChildren()) do
+&#9;&#9;&#9;if obj:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;&#9;obj.Transparency = i
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(0.1)
+&#9;end
+&#9;--and finally remove self
+&#9;Snowman:Remove()
+end)
+
+function BumpModel()
+&#9;Torso.CFrame = Torso.CFrame * CFrame.new(0, 1, 0)
+&#9;Torso.CFrame = Torso.CFrame * CFrame.new(0, -1, 0)
+end
+
+local LastShotTime = 0
+local ReloadTime = 2
+local MaxRange = 100
+
+while true do
+&#9;wait()
+&#9;local t = Target.Value
+&#9;if t and t:IsA(&apos;Humanoid&apos;) and t ~= Humanoid then
+&#9;&#9;local torso = (t.Parent or game):FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;if torso and t.Health &gt; 0 then
+&#9;&#9;&#9;--aim and fire!
+&#9;&#9;&#9;local aimPos = torso.Position
+&#9;&#9;&#9;local desiredCFrame = CFrame.new(Mid.Position, Vector3.new(aimPos.x, Mid.Position.y, aimPos.z))
+&#9;&#9;&#9;Hip.C1 = desiredCFrame:inverse()*Torso.CFrame*Hip.C0
+
+&#9;&#9;&#9;--todo: aim the guns as well
+&#9;&#9;&#9;BumpModel() --show the changes
+
+&#9;&#9;&#9;--find distance. Note: this code is here as the turret should still aim even if
+&#9;&#9;&#9;--it is not going to fire!
+&#9;&#9;&#9;local distToTarget = (Mid.Position-aimPos).magnitude
+
+&#9;&#9;&#9;if (tick()-LastShotTime) &gt; ReloadTime and distToTarget &lt; MaxRange then
+&#9;&#9;&#9;&#9;--fire a shot
+&#9;&#9;&#9;&#9;local Shot = Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;SnowmanBullet&apos;,
+&#9;&#9;&#9;&#9;&#9;Shape = &apos;Ball&apos;,
+&#9;&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;&#9;Size = Vector3.new(0.8, 0.8, 0.8),
+&#9;&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(1002),
+&#9;&#9;&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;&#9;&#9;CFrame = Mid.CFrame,
+&#9;&#9;&#9;&#9;&#9;Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;CreatorSnowman&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;Value = Snowman,
+&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;Mesh&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=66733658&apos;,&#9;
+&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;&#9;Create&apos;BodyVelocity&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;Propell&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;velocity = CFrame.new(Mid.Position, aimPos).lookVector*60,
+&#9;&#9;&#9;&#9;&#9;&#9;maxForce = Vector3.new(10000, 10000, 10000),
+&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;}
+
+&#9;&#9;&#9;&#9;--put a damage script in it
+&#9;&#9;&#9;&#9;local dmg = Snowman.BulletDamage:Clone()
+&#9;&#9;&#9;&#9;dmg.Parent = Shot
+&#9;&#9;&#9;&#9;dmg.Disabled = false
+
+&#9;&#9;&#9;&#9;--throw it into the workspace
+&#9;&#9;&#9;&#9;Shot.Parent = game.Workspace
+
+&#9;&#9;&#9;&#9;--play the fire sound
+&#9;&#9;&#9;&#9;Torso.FireSnowball:Play()
+
+&#9;&#9;&#9;&#9;--set the reload
+&#9;&#9;&#9;&#9;LastShotTime = tick()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX4">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">BulletDamage</string>
+				<ProtectedString name="Source">local CreatorSnowman = script.Parent.CreatorSnowman.Value
+local CreatorPlayer = CreatorSnowman.SnowmanOwner.Value
+
+function TagHumanoid(humanoid)
+&#9;local tag = Instance.new(&apos;ObjectValue&apos;)
+&#9;tag.Name = &quot;creator&quot; 
+&#9;tag.Value = CreatorPlayer
+&#9;tag.Parent = humanoid
+end
+function UntagHumanoid(humanoid)
+&#9;if humanoid:FindFirstChild(&quot;creator&quot;) then
+&#9;&#9;humanoid.creator.Parent = nil
+&#9;end
+end
+
+local DamageToDo = 20
+
+script.Parent.Touched:connect(function(part)
+&#9;--ignore touching the creator itself
+&#9;if not part:IsDescendantOf(CreatorSnowman) then
+&#9;&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;--catch hats and handles too
+&#9;&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+
+&#9;&#9;if hum then
+&#9;&#9;&#9;--inflict damage
+&#9;&#9;&#9;TagHumanoid(hum)
+&#9;&#9;&#9;hum:TakeDamage(DamageToDo)
+&#9;&#9;&#9;Delay(0.1, function()
+&#9;&#9;&#9;&#9;UntagHumanoid(hum)
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;script.Parent.Parent = nil
+&#9;end
+end)
+
+local FlightTime = 2
+for t = 0, FlightTime, 0.1 do
+&#9;wait(0.1)
+&#9;local fracLeft = (1-t/FlightTime)
+&#9;script.Parent.Size = Vector3.new(0.8, 0.8, 0.8)*fracLeft
+&#9;script.Parent.Mesh.Scale = Vector3.new(fracLeft, fracLeft, fracLeft)
+&#9;DamageToDo = 20*fracLeft
+end
+
+script.Parent.Parent = nil</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX5">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">1002</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>57.4000015</Y>
+					<Z>0</Z>
+					<R00>0.961553633</R00>
+					<R01>-0.274494171</R01>
+					<R02>0.00826891419</R02>
+					<R10>-0.00516340323</R10>
+					<R11>0.0120347124</R11>
+					<R12>0.999914169</R12>
+					<R20>-0.274570346</R20>
+					<R21>-0.96151334</R21>
+					<R22>0.0101543553</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>3</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX6">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=66733632</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=66733800</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX0">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>2.12940407</X>
+					<Y>58.0444565</Y>
+					<Z>-2.1260519</Z>
+					<R00>-0.493938953</R00>
+					<R01>-0.180762559</R01>
+					<R02>0.850499392</R02>
+					<R10>-0</R10>
+					<R11>0.978151441</R11>
+					<R12>0.207893372</R12>
+					<R20>-0.869496524</R20>
+					<R21>0.102686636</R21>
+					<R22>-0.483147144</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>-4.13194752</X>
+					<Y>56.5139503</Y>
+					<Z>1.4308635</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
