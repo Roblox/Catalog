@@ -448,7 +448,10 @@ end)
 
 
 local BeamColor = BrickColor.new(Color3.new(0, 255, 255))
-local PartModel = game.Workspace
+local PartModel = Create&apos;Model&apos;{
+&#9;Name = &apos;SpotWeld_Parts&apos;,
+}
+local Failsafe = nil
 
 Tool.AnimationProvider:registerAnimation(&apos;equip&apos;, &apos;http://www.roblox.com/asset/?id=69427262&apos;)
 Tool.AnimationProvider:registerAnimation(&apos;fire&apos;, &apos;http://www.roblox.com/asset/?id=69427271&apos;)
@@ -867,6 +870,7 @@ end
 
 
 local mClickNum = 0
+local mSelected = false
 Tool.MouseClick:connect(function()
 &#9;mClickNum = mClickNum+1
 &#9;local thisClick = mClickNum
@@ -891,7 +895,8 @@ Tool.MouseClick:connect(function()
 &#9;local isDamageTick = false
 &#9;local timeOfLastScorch = tick()
 &#9;local partsToIgnore = RaycastIgnore:genIgnoreList()
-&#9;while Tool.MouseDown and mClickNum == thisClick and Tool.Character:FindFirstChild(&quot;Head&quot;) do
+&#9;local headPart = Tool.Character:FindFirstChild(&quot;Head&quot;)
+&#9;while mSelected and Tool.MouseDown and mClickNum == thisClick and headPart do
 &#9;&#9;--first, find the true mouse hit, ignoring my ray parts
 &#9;&#9;local mouseRay = Tool.Mouse.UnitRay
 &#9;&#9;local newRay = Ray.new(mouseRay.Origin, mouseRay.Direction.unit*999.9)
@@ -924,7 +929,7 @@ Tool.MouseClick:connect(function()
 &#9;&#9;&#9;&#9;if hum then
 &#9;&#9;&#9;&#9;&#9;--found a humanoid, do damage
 &#9;&#9;&#9;&#9;&#9;TagHumanoid(hum)
-&#9;&#9;&#9;&#9;&#9;hum:TakeDamage(3)
+&#9;&#9;&#9;&#9;&#9;hum:TakeDamage(4)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 
@@ -946,9 +951,16 @@ Tool.MouseClick:connect(function()
 &#9;end
 end)
 
-
 local mHatPart = nil
 Tool.Equipped:connect(function()
+&#9;mSelected = true
+&#9;PartModel.Parent = game.Workspace
+&#9;Failsafe = Tool.Tool.Failsafe:Clone()
+&#9;Failsafe.Disabled = false
+&#9;Failsafe.Model.Value = PartModel
+&#9;Failsafe.Humanoid.Value = Tool.Humanoid
+&#9;Failsafe.Parent = PartModel
+&#9;--
 &#9;Tool.AnimationProvider:getAnimation(&apos;equip&apos;):Play(0.1, 1, 4)
 &#9;Tool.Tool.Grip = CFrame.new()
 &#9;Tool.Tool.Handle.Transparency = 1
@@ -970,7 +982,11 @@ Tool.Equipped:connect(function()
 end)
 
 Tool.Unequipped:connect(function()
-&#9;print(&quot;Unequipped&quot;)
+&#9;mSelected = false
+&#9;PartModel.Parent = nil
+&#9;Failsafe:Destroy()
+&#9;Failsafe = nil
+&#9;--
 &#9;Tool.AnimationProvider:getAnimation(&apos;equip&apos;):Stop()
 &#9;Tool.AnimationProvider:getAnimation(&apos;fire&apos;):Stop()
 &#9;Tool.AnimationProvider:getAnimation(&apos;hold&apos;):Stop()
@@ -985,7 +1001,8 @@ Tool.Unequipped:connect(function()
 &#9;&#9;mHatPart:Destroy()
 &#9;&#9;mHatPart = nil
 &#9;end
-end)</ProtectedString>
+end)
+</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Part" referent="RBX2">
@@ -1001,17 +1018,17 @@ end)</ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-24</X>
-					<Y>1.70000005</Y>
-					<Z>-11.0000038</Z>
-					<R00>-1</R00>
+					<X>-21</X>
+					<Y>44.5</Y>
+					<Z>-11</Z>
+					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
 					<R11>0</R11>
 					<R12>1</R12>
 					<R20>0</R20>
-					<R21>1</R21>
+					<R21>-1</R21>
 					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
@@ -1069,9 +1086,9 @@ end)</ProtectedString>
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1.04999995</X>
-						<Y>1.04999995</Y>
-						<Z>1.04999995</Z>
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
 					</Vector3>
 					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=69433631</url></Content>
 					<Vector3 name="VertexColor">
@@ -1082,28 +1099,53 @@ end)</ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX4">
+		<Item class="Script" referent="RBX4">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Failsafe</string>
+				<ProtectedString name="Source">while not script:FindFirstChild(&quot;Humanoid&quot;) do
+&#9;script.ChildAdded:wait()
+end
+script.Humanoid.Value.Died:connect(function()
+&#9;script.Model.Value:Destroy()
+end)</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX5">
+				<Properties>
+					<string name="Name">Model</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBX6">
+				<Properties>
+					<string name="Name">Humanoid</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX7">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-23.9999657</X>
-					<Y>1.64746916</Y>
-					<Z>-9.32846546</Z>
-					<R00>1</R00>
-					<R01>6.2724331e-007</R01>
-					<R02>1.99589376e-005</R02>
-					<R10>-0</R10>
-					<R11>0.999506533</R11>
-					<R12>-0.0314111784</R12>
-					<R20>-1.99687929e-005</R20>
-					<R21>0.0314111784</R21>
-					<R22>0.999506533</R22>
+					<X>-21.0767994</X>
+					<Y>44.7236862</Y>
+					<Z>-12.5698385</Z>
+					<R00>-0.998805463</R00>
+					<R01>0.00688485941</R01>
+					<R02>-0.0483760945</R02>
+					<R10>-4.65661232e-010</R10>
+					<R11>0.990023911</R11>
+					<R12>0.140899688</R12>
+					<R20>0.0488635562</R20>
+					<R21>0.140731379</R21>
+					<R22>-0.988841295</R22>
 				</CoordinateFrame>
 				<CoordinateFrame name="Focus">
-					<X>-24</X>
-					<Y>1.70000005</Y>
-					<Z>-11.0000038</Z>
+					<X>-21</X>
+					<Y>44.5</Y>
+					<Z>-11</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
