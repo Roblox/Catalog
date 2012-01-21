@@ -511,12 +511,13 @@ end)
 
 
 
+
 Tool.AnimationProvider:registerAnimation(&apos;drink&apos;, &apos;http://www.roblox.com/asset/?id=70439232&apos;)
 Tool.AnimationProvider:registerAnimation(&apos;equip&apos;, &apos;http://www.roblox.com/asset/?id=70439247&apos;)
 
 local function GetEffectSource()
 &#9;if Tool.Character:FindFirstChild(&apos;Head&apos;) then
-&#9;&#9;return Tool.Character.Head.CFrame * CFrame.new(0, -0.5, -1)
+&#9;&#9;return Tool.Character.Head.CFrame * CFrame.new(0, -0.5, -3)
 &#9;else
 &#9;&#9;return CFrame.new()
 &#9;end
@@ -531,119 +532,28 @@ local function frand2(a,b)
 end
 
 class&apos;FlameEffect&apos;(function(this)
-&#9;local mObjectToToucherCount = {}
-&#9;
-&#9;this.BeginTouch = CreateSignal()
-&#9;this.EndTouch = CreateSignal()
-
-&#9;local function beginTouch(part, lick)
-&#9;&#9;if not mObjectToToucherCount[part] then
-&#9;&#9;&#9;this.BeginTouch:fire(part)
-&#9;&#9;end
-&#9;&#9;mObjectToToucherCount[part] = (mObjectToToucherCount[part] or 0)+1
-&#9;&#9;--try removal
-&#9;&#9;--removal strtegy:
-&#9;&#9;--try to figure out what&apos;s scenery. If it&apos;s hot a humanoid in it, definitely
-&#9;&#9;--don&apos;t remove the flame. Once it&apos;s established that there&apos;s no humanoid, it
-&#9;&#9;--must be Anchored. But not all anchored things are scenery, some are effects
-&#9;&#9;--from gear and what not, so only block on sufficiently large parts (flames
-&#9;&#9;--should be able to bend around small objects too, so this msakes sense).
-&#9;&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
-&#9;&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
-&#9;&#9;local partVolume = part.Size.x*part.Size.y*part.Size.z
-&#9;&#9;if part.Anchored and not hum and partVolume &gt; 17 then
-&#9;&#9;&#9;lick.QueuedForRemoval = true
-&#9;&#9;end
-&#9;end
-&#9;local function endTouch(part, lick)
-&#9;&#9;if not mObjectToToucherCount[part] then return end
-&#9;&#9;mObjectToToucherCount[part] = mObjectToToucherCount[part]-1
-&#9;&#9;if mObjectToToucherCount[part] &lt;= 0 then
-&#9;&#9;&#9;mObjectToToucherCount[part] = nil
-&#9;&#9;&#9;this.EndTouch:fire(part)
-&#9;&#9;end
-&#9;end
-
-&#9;local mFreeFlameBitList = {}
-&#9;local mFlameBitList = {}
-&#9;local function AddFlameBit()
-&#9;&#9;local lick = {}
-&#9;&#9;lick.Transparency = frand(0.4, 0.6)
-&#9;&#9;if #mFreeFlameBitList &gt; 0 then
-&#9;&#9;&#9;lick.Part = mFreeFlameBitList[#mFreeFlameBitList]
-&#9;&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList] = nil
-&#9;&#9;&#9;--
-&#9;&#9;&#9;lick.Part.Size = Vector3.new(frand(1,1.5), 0.2, frand(3,5))
-&#9;&#9;else
-&#9;&#9;&#9;lick.Part = Create&apos;Part&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;FireLick&apos;,
-&#9;&#9;&#9;&#9;Parent = Tool.Character,
-&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
-&#9;&#9;&#9;&#9;CanCollide = false,
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;Size = Vector3.new(frand(1,1.5), 0.2, frand(3,5)),
-&#9;&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;Create&apos;BodyVelocity&apos;{
-&#9;&#9;&#9;&#9;&#9;Name = &apos;Fly&apos;,
-&#9;&#9;&#9;&#9;&#9;maxForce = Vector3.new(100000,100000,100000),
-&#9;&#9;&#9;&#9;&#9;velocity = Vector3.new(),
-&#9;&#9;&#9;&#9;},
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;Create&apos;Decal&apos;{
-&#9;&#9;&#9;&#9;&#9;Name = &apos;TopDecal&apos;,
-&#9;&#9;&#9;&#9;&#9;Face = &apos;Top&apos;,
-&#9;&#9;&#9;&#9;&#9;Shiny = 0,
-&#9;&#9;&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=4723996&apos;,
-&#9;&#9;&#9;&#9;&#9;Transparency = lick.Transparency,
-&#9;&#9;&#9;&#9;},
-&#9;&#9;&#9;&#9;Create&apos;Decal&apos;{
-&#9;&#9;&#9;&#9;&#9;Name = &apos;BottomDecal&apos;,
-&#9;&#9;&#9;&#9;&#9;Face = &apos;Bottom&apos;,
-&#9;&#9;&#9;&#9;&#9;Shiny = 0,
-&#9;&#9;&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=4723996&apos;,
-&#9;&#9;&#9;&#9;&#9;Transparency = lick.Transparency,
-&#9;&#9;&#9;&#9;},
-&#9;&#9;&#9;}
-&#9;&#9;end
-&#9;&#9;lick.Part.Touched:connect(function(p) beginTouch(p, lick) end)
-&#9;&#9;lick.Part.TouchEnded:connect(function(p) endTouch(p, lick) end)
-&#9;&#9;lick.Part.CFrame = GetEffectSource()*
-&#9;&#9;                   CFrame.Angles(frand2(-0.3,0.3), frand2(-0.3, 0.3), frand(0,1.57))*
-&#9;&#9;                   CFrame.new(0, 0, -2)*CFrame.Angles(math.pi, 0, 0)
-&#9;&#9;lick.Part.Fly.velocity = lick.Part.CFrame.lookVector*(-40)
-&#9;&#9;lick.Timestamp = tick()
-&#9;&#9;mFlameBitList[lick] = true
-&#9;end
-
 &#9;local mRunNumber = 0
 &#9;function this:start()
 &#9;&#9;local thisRun = mRunNumber
 &#9;&#9;Spawn(function()
 &#9;&#9;&#9;while mRunNumber == thisRun do
-&#9;&#9;&#9;&#9;local t = tick()
-&#9;&#9;&#9;&#9;for lick, _ in pairs(mFlameBitList) do
-&#9;&#9;&#9;&#9;&#9;if (t-lick.Timestamp) &gt; 0.5 or lick.QueuedForRemoval then
-&#9;&#9;&#9;&#9;&#9;&#9;lick.Part:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;mFlameBitList[lick] = nil
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;local tfrac = (t-lick.Timestamp)/0.5
-&#9;&#9;&#9;&#9;&#9;&#9;lick.Part.TopDecal.Transparency = lick.Transparency*tfrac
-&#9;&#9;&#9;&#9;&#9;&#9;lick.Part.BottomDecal.Transparency = lick.Transparency*tfrac
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;AddFlameBit()
+&#9;&#9;&#9;&#9;local msg = Create&apos;CFrameValue&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;MSG_AddFlameBit&apos;,
+&#9;&#9;&#9;&#9;&#9;Value = GetEffectSource()*
+&#9;&#9;                    CFrame.Angles(frand2(-0.3,0.3), frand2(-0.3, 0.3), frand(0,1.57))*
+&#9;&#9;                    CFrame.new(0, 0, -2)*CFrame.Angles(math.pi, 0, 0),
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;msg.Parent = Tool.Character
 &#9;&#9;&#9;&#9;wait()
 &#9;&#9;&#9;end
 &#9;&#9;end)
 &#9;end
 &#9;function this:stop()
-&#9;&#9;for lick, _ in pairs(mFlameBitList) do
-&#9;&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList+1] = lick.Part
-&#9;&#9;&#9;lick.Part.Parent = nil
-&#9;&#9;&#9;mFlameBitList[lick] = nil
-&#9;&#9;end
 &#9;&#9;mRunNumber = mRunNumber+1
+&#9;&#9;Create&apos;BoolValue&apos;{
+&#9;&#9;&#9;Name = &apos;MSG_Stop&apos;,
+&#9;&#9;&#9;Parent = Tool.Character,
+&#9;&#9;}
 &#9;end
 &#9;function this:destroy()
 &#9;&#9;this:stop()
@@ -690,26 +600,6 @@ local RechargeGui = Create&apos;ScreenGui&apos;{
 }
 
 FlameEffect = CreateFlameEffect()
-
-local TouchingMap = {}
-FlameEffect.BeginTouch:connect(function(part)
-&#9;TouchingMap[part] = true
-&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
-&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
-&#9;--
-&#9;if hum and hum ~= Tool.Humanoid then
-&#9;&#9;Spawn(function()
-&#9;&#9;&#9;while TouchingMap[part] do
-&#9;&#9;&#9;&#9;TagHumanoid(hum)
-&#9;&#9;&#9;&#9;hum:TakeDamage(2)
-&#9;&#9;&#9;&#9;wait(0.1)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-end)
-FlameEffect.EndTouch:connect(function(part)
-&#9;TouchingMap[part] = nil
-end)
 
 local FireDebounce = false
 local LastFire = 0
@@ -973,23 +863,224 @@ end)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX5">
+		<Item class="Script" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">DragonHead_VelocityBugHack</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local CharAddPartCn;
+
+local Equipped = false
+
+local mObjectToToucherCount = {}
+
+local TouchingMap = {}
+
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+function TagHumanoid(humanoid)
+&#9;local player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;if player then
+&#9;&#9;local tag = Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;Name = &quot;creator&quot;, 
+&#9;&#9;&#9;Value = player,
+&#9;&#9;&#9;Parent = humanoid,
+&#9;&#9;}
+&#9;&#9;game.Debris:AddItem(tag, 1)
+&#9;end
+end
+
+function onBeginTouch(part)
+&#9;TouchingMap[part] = true
+&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;--
+&#9;if hum and hum ~= Tool.Parent.Humanoid then
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;while TouchingMap[part] do
+&#9;&#9;&#9;&#9;TagHumanoid(hum)
+&#9;&#9;&#9;&#9;hum:TakeDamage(2)
+&#9;&#9;&#9;&#9;wait(0.1)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+function onEndTouch(part)
+&#9;TouchingMap[part] = nil
+end
+
+local function beginTouch(part, lick)
+&#9;if not mObjectToToucherCount[part] then
+&#9;&#9;onBeginTouch(part)
+&#9;end
+&#9;mObjectToToucherCount[part] = (mObjectToToucherCount[part] or 0)+1
+&#9;--try removal
+&#9;--removal strtegy:
+&#9;--try to figure out what&apos;s scenery. If it&apos;s hot a humanoid in it, definitely
+&#9;--don&apos;t remove the flame. Once it&apos;s established that there&apos;s no humanoid, it
+&#9;--must be Anchored. But not all anchored things are scenery, some are effects
+&#9;--from gear and what not, so only block on sufficiently large parts (flames
+&#9;--should be able to bend around small objects too, so this msakes sense).
+&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;local partVolume = part.Size.x*part.Size.y*part.Size.z
+&#9;if part.Anchored and not hum and partVolume &gt; 17 then
+&#9;&#9;lick.QueuedForRemoval = true
+&#9;end
+end
+local function endTouch(part, lick)
+&#9;if not mObjectToToucherCount[part] then return end
+&#9;mObjectToToucherCount[part] = mObjectToToucherCount[part]-1
+&#9;if mObjectToToucherCount[part] &lt;= 0 then
+&#9;&#9;mObjectToToucherCount[part] = nil
+&#9;&#9;onEndTouch(part)
+&#9;end
+end
+
+local function frand(a,b)
+&#9;return a+math.random()*(b-a)
+end
+
+local function frand2(a,b)
+&#9;return frand(a,b)*frand(a,b)
+end
+
+local mFreeFlameBitList = {}
+local mFlameBitList = {}
+local function AddFlameBit(cf)
+&#9;local lick = {}
+&#9;lick.Transparency = frand(0.4, 0.6)
+&#9;if #mFreeFlameBitList &gt; 0 then
+&#9;&#9;lick.Part = mFreeFlameBitList[#mFreeFlameBitList]
+&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList] = nil
+&#9;&#9;--
+&#9;&#9;lick.Part.Size = Vector3.new(frand(1,1.5), 0.2, frand(3,5))
+&#9;else
+&#9;&#9;lick.Part = Create&apos;Part&apos;{
+&#9;&#9;&#9;Name = &apos;FireLick&apos;,
+&#9;&#9;&#9;Parent = Tool.Parent,
+&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Size = Vector3.new(frand(1,1.5), 0.2, frand(3,5)),
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Create&apos;Decal&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;TopDecal&apos;,
+&#9;&#9;&#9;&#9;Face = &apos;Top&apos;,
+&#9;&#9;&#9;&#9;Shiny = 0,
+&#9;&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=4723996&apos;,
+&#9;&#9;&#9;&#9;Transparency = lick.Transparency,
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create&apos;Decal&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;BottomDecal&apos;,
+&#9;&#9;&#9;&#9;Face = &apos;Bottom&apos;,
+&#9;&#9;&#9;&#9;Shiny = 0,
+&#9;&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=4723996&apos;,
+&#9;&#9;&#9;&#9;Transparency = lick.Transparency,
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create&apos;BodyVelocity&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Fly&apos;,
+&#9;&#9;&#9;&#9;maxForce = Vector3.new(100000,100000,100000),
+&#9;&#9;&#9;&#9;velocity = Vector3.new(0,0,0),&#9;
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;end
+&#9;lick.TouchCn = lick.Part.Touched:connect(function(p) beginTouch(p, lick) end)
+&#9;lick.EndTouchCn = lick.Part.TouchEnded:connect(function(p) endTouch(p, lick) end)
+&#9;lick.Part.CFrame = cf
+&#9;lick.Part.Fly.velocity = cf.lookVector*(-60)
+&#9;lick.Part.Parent = Tool.Parent
+&#9;lick.Timestamp = tick()
+&#9;mFlameBitList[lick] = true
+end
+
+
+local function Destroy()
+&#9;for lick, _ in pairs(mFlameBitList) do
+&#9;&#9;lick.Part.Parent = nil
+&#9;&#9;lick.TouchCn:disconnect()
+&#9;&#9;lick.EndTouchCn:disconnect()
+&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList+1] = lick.Part
+&#9;&#9;mFlameBitList[lick] = nil
+&#9;end
+end
+
+Tool.Equipped:connect(function()
+&#9;Equipped = true
+&#9;CharAddPartCn = Tool.Parent.ChildAdded:connect(function(msg)
+&#9;&#9;print(&quot;Got Message &quot;..msg.Name)
+&#9;&#9;if msg:IsA(&apos;CFrameValue&apos;) and msg.Name == &apos;MSG_AddFlameBit&apos; then
+&#9;&#9;&#9;local cf = msg.Value
+&#9;&#9;&#9;msg:Destroy()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;AddFlameBit(cf)
+&#9;&#9;elseif msg:IsA(&apos;BoolValue&apos;) and msg.Name == &apos;MSG_Stop&apos; then
+&#9;&#9;&#9;msg:Destroy()
+&#9;&#9;&#9;Destroy()
+&#9;&#9;end
+&#9;end)
+end)
+Tool.Unequipped:connect(function()
+&#9;Destroy()
+&#9;Equipped = false
+&#9;if CharAddPartCn then
+&#9;&#9;CharAddPartCn:disconnect()
+&#9;&#9;CharAddPartCn = nil
+&#9;end
+end)
+
+while true do
+&#9;local t = tick()
+&#9;for lick, _ in pairs(mFlameBitList) do
+&#9;&#9;if (t-lick.Timestamp) &gt; 0.5 or lick.QueuedForRemoval then
+&#9;&#9;&#9;lick.Part.Parent = nil
+&#9;&#9;&#9;lick.TouchCn:disconnect()
+&#9;&#9;&#9;lick.EndTouchCn:disconnect()
+&#9;&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList+1] = lick.Part
+&#9;&#9;&#9;mFlameBitList[lick] = nil
+&#9;&#9;else
+&#9;&#9;&#9;local tfrac = (t-lick.Timestamp)/0.5
+&#9;&#9;&#9;lick.Part.TopDecal.Transparency = lick.Transparency*tfrac
+&#9;&#9;&#9;lick.Part.BottomDecal.Transparency = lick.Transparency*tfrac
+&#9;&#9;end
+&#9;end
+&#9;wait()
+end
+ </ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX6">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-28.1947479</X>
-					<Y>44.6888237</Y>
-					<Z>-25.9763908</Z>
-					<R00>-0.904824376</R00>
-					<R01>0.0489468537</R01>
-					<R02>-0.422962308</R02>
-					<R10>-3.7252903e-009</R10>
-					<R11>0.993370533</R11>
-					<R12>0.114956729</R12>
-					<R20>0.425785065</R20>
-					<R21>0.104015648</R21>
-					<R22>-0.898825824</R22>
+					<X>-27.5176029</X>
+					<Y>44.5594711</Y>
+					<Z>-25.7609329</Z>
+					<R00>-0.999902666</R00>
+					<R01>0.000657539174</R01>
+					<R02>-0.0139427166</R02>
+					<R10>-0</R10>
+					<R11>0.998889923</R11>
+					<R12>0.0471076891</R12>
+					<R20>0.0139582139</R20>
+					<R21>0.0471031033</R21>
+					<R22>-0.998792529</R22>
 				</CoordinateFrame>
 				<CoordinateFrame name="Focus">
 					<X>-27.5</X>
