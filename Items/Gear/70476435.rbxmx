@@ -1,0 +1,1012 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.200000003</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">DragonHead</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=70433524</url></Content>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">DragonHead_Main</string>
+				<ProtectedString name="Source">--local mDebugId = game.Workspace.DebugId.Value
+--game.Workspace.DebugId.Value = game.Workspace.DebugId.Value+1
+--print(&quot;Running swordscript &lt;&quot;..mDebugId..&quot;&gt;&quot;)
+
+-------------------------------------
+-- Makes an RBX::Lua Instance using
+-- a table of key-value pairs to
+-- initialize it. Values with numeric 
+-- keys will be parented to the object
+-- and other values will be set
+-- as members of the object.
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+---------------------------------------
+-- Same as Make, but modifies an existing
+-- object rather than creating ones.
+function Modify(obj, data)
+&#9;for k, v in pairs(data) do
+&#9;&#9;if type(data) == &apos;number&apos; then
+&#9;&#9;&#9;data.Parent = obj
+&#9;&#9;else
+&#9;&#9;&#9;data[k] = v
+&#9;&#9;end
+&#9;end
+&#9;return obj
+end
+
+-----------------------------------------
+-- Creates a class which can be instantiated
+-- using `CreateCLASSNAME( ... )`.
+---usage:
+--class&apos;MyClass&apos;(function(this, arg1)
+--&#9;this.ClassMember = value
+--&#9;function this.ClassMethod(...) ... end
+--end, function(def)
+--&#9;def.StaticMember = value
+--&#9; function def.StaticMethod(...) ... end
+--end)
+--local obj = CreateMyClass(arg1)
+------------------------------------------
+local function class(name)
+&#9;local def = {}
+&#9;getfenv(0)[name] = def
+&#9;return function(ctor, static)
+&#9;&#9;local nctor = function(...)
+&#9;&#9;&#9;local this = {}
+&#9;&#9;&#9;if ctor then
+&#9;&#9;&#9;&#9;ctor(this, ...)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;return this
+&#9;&#9;end
+&#9;&#9;getfenv(0)[&apos;Create&apos;..name] = nctor
+&#9;&#9;if static then static(def) end
+&#9;end
+end
+
+
+---------------------------------------------
+-- Signal class for custom-made events
+--API:
+-- Signal:connect(callback)
+-- Signal:fire(...)
+-- Signal:wait()
+---------------------------------------------
+class&apos;Signal&apos;(function(this)
+&#9;local mListeners = {}
+&#9;local mWaitObject = Create&apos;BoolValue&apos;{}
+
+&#9;function this:connect(func)
+&#9;&#9;local connection = {}
+&#9;&#9;function connection:disconnect()
+&#9;&#9;&#9;mListeners[func] = nil
+&#9;&#9;end
+&#9;&#9;mListeners[func] = connection
+&#9;&#9;return connection
+&#9;end
+
+&#9;function this:fire(...)
+&#9;&#9;--print(&quot;Fire evt&lt;&quot;..tostring(this)..&quot;&gt; from script&lt;&quot;..mDebugId..&quot;&gt;&quot;)
+&#9;&#9;for func, conn in pairs(mListeners) do
+&#9;&#9;&#9;--print(&quot;-&gt; &quot;..tostring(func)..&quot;( ... )&quot;)
+&#9;&#9;&#9;func(...)
+&#9;&#9;end
+&#9;&#9;mWaitObject.Value = not mWaitObject.Value
+&#9;end
+
+&#9;function this:wait()
+&#9;&#9;mWaitObject.Changed:wait()
+&#9;end
+end)
+
+
+--------------------------------------------------
+-- Bin class for cleaning up assets
+--API: 
+-- Bin:add(func: Function, ident: String)
+-- Bin:clean(ident: String)
+-- Bin:cleanAll()
+--------------------------------------------------
+class&apos;Bin&apos;(function(this)
+&#9;local mGarbage = {}
+
+&#9;function this:add(func, ident)
+&#9;&#9;ident = ident or &apos;__unnamed&apos;
+&#9;&#9;if not mGarbage[ident] then
+&#9;&#9;&#9;mGarbage[ident] = {}
+&#9;&#9;end
+&#9;&#9;mGarbage[ident][#mGarbage[ident]+1] = func
+&#9;end
+
+&#9;function this:clean(ident)
+&#9;&#9;local listToCall = mGarbage[ident]
+&#9;&#9;if listToCall then
+&#9;&#9;&#9;for _, func in pairs(listToCall) do
+&#9;&#9;&#9;&#9;func()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;mGarbage[ident] = nil
+&#9;&#9;end
+&#9;end
+
+&#9;function this:cleanAll()
+&#9;&#9;for ident, list in pairs(mGarbage) do
+&#9;&#9;&#9;for _, func in pairs(list) do
+&#9;&#9;&#9;&#9;func()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;mGarbage[ident] = nil
+&#9;&#9;end
+&#9;end
+end)
+
+
+-----------------------------------------------------
+-- AnimationProvider class for easy loading of
+-- animation assets into animationtracks once 
+-- a humanoid is available.
+--API:
+-- AnimationProvider:registerAnimation(ident, assetid)
+-- AnimationProvider:setHumanoid(humanoid)
+-- AnimationProvider:setTool(tool)
+-- AnimationProvider:getAnimation(ident)
+-----------------------------------------------------
+class&apos;AnimationProvider&apos;(function(this)
+&#9;local mAnimations = {--[[ident =&gt; {AnimationId, CurrentTrack, CurrentAnim} ]]}
+&#9;local mCurrentHumanoid = nil
+
+&#9;function this:registerAnimation(ident, assetid)
+&#9;&#9;--check for an existing copy of the anim
+&#9;&#9;local existingAnim = Tool.Tool:FindFirstChild(&apos;ANIM_&apos;..ident)
+&#9;&#9;&#9;
+&#9;&#9;--make the data for this anim
+&#9;&#9;local animdat = {
+&#9;&#9;&#9;AnimationId = assetid, 
+&#9;&#9;&#9;CurrentAnim = existingAnim or Create&apos;Animation&apos;{
+&#9;&#9;&#9;&#9;Name = &quot;ANIM_&quot;..ident,
+&#9;&#9;&#9;&#9;AnimationId = assetid,&#9;
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;&#9;mAnimations[ident] = animdat
+
+&#9;&#9;--if there&apos;s a current tool, put it in there
+&#9;&#9;if Tool.Tool then
+&#9;&#9;&#9;Tool.HUGE_EQUIP_HACK = true
+&#9;&#9;&#9;animdat.CurrentAnim.Parent = Tool.Tool
+&#9;&#9;&#9;Tool.HUGE_EQUIP_HACK = false
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;--if there&apos;s a humanoid load the animation track
+&#9;&#9;if mCurrentHumanoid then
+&#9;&#9;&#9;animdat.CurrentTrack = mCurrentHumanoid:LoadAnimation(animdat.CurrentAnim)
+&#9;&#9;end
+&#9;end
+
+&#9;function this:setHumanoid(humanoid)
+&#9;&#9;mCurrentHumanoid = humanoid
+&#9;&#9;for _, anim in pairs(mAnimations) do
+&#9;&#9;&#9;anim.CurrentTrack = humanoid:LoadAnimation(anim.CurrentAnim)
+&#9;&#9;end
+&#9;end
+
+&#9;function this:getAnimation(ident)
+&#9;&#9;local dat = mAnimations[ident]
+&#9;&#9;if not dat then error(&quot;Gear Fatal Error: Animation `&quot;..ident..&quot;` not found&quot;) end
+&#9;&#9;if not dat.CurrentTrack then 
+&#9;&#9;&#9;error(&quot;Gear Fatal Error: No Humanoid for animation `&quot;..ident..&quot;` to run in&quot;) 
+&#9;&#9;end
+&#9;&#9;return dat.CurrentTrack
+&#9;end
+end)
+
+
+----------------------------------------------
+-- SoundProvider class
+-- functions similarily to the animationprovider
+----------------------------------------------
+class&apos;SoundProvider&apos;(function(this)
+&#9;local mSounds = {}
+
+&#9;function this:registerSound(ident, assetid, inpart)
+&#9;&#9;inpart = inpart or Tool.Tool:FindFirstChild(&apos;Handle&apos;)
+&#9;&#9;if not inpart then
+&#9;&#9;&#9;repeat
+&#9;&#9;&#9;&#9;inpart = Tool.Tool.ChildAdded:wait()
+&#9;&#9;&#9;until inpart.Name == &apos;Handle&apos;
+&#9;&#9;end
+&#9;&#9;local existingSound = inpart:FindFirstChild(&apos;SOUND_&apos;..ident)
+&#9;&#9;local sounddat = {
+&#9;&#9;&#9;SoundId = assetid,
+&#9;&#9;&#9;CurrentSound = existingSound or Create&apos;Sound&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;SOUND_&apos;..ident,
+&#9;&#9;&#9;&#9;SoundId = assetid,
+&#9;&#9;&#9;&#9;Parent = inpart,
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;&#9;mSounds[ident] = sounddat
+&#9;end
+
+&#9;function this:getSound(ident)
+&#9;&#9;local dat = mSounds[ident]
+&#9;&#9;if dat then
+&#9;&#9;&#9;return dat.CurrentSound
+&#9;&#9;end
+&#9;end
+end)
+
+
+----------------------------------------------
+-- DebounceProvider class -- Prevent events
+-- from happening in too rapid succession
+----------------------------------------------
+class&apos;DebounceProvider&apos;(function(this)
+&#9;local mFlagNameToLastTime = {}
+
+&#9;function this:test(ident, delta)
+&#9;&#9;local t = tick()
+&#9;&#9;local lastTime = mFlagNameToLastTime[ident] or 0
+&#9;&#9;if delta then
+&#9;&#9;&#9;return (t-lastTime) &gt; delta
+&#9;&#9;else
+&#9;&#9;&#9;return mFlagNameToLastTime[ident]
+&#9;&#9;end
+&#9;end
+&#9;function this:set(ident, state)
+&#9;&#9;if state then
+&#9;&#9;&#9;mFlagNameToLastTime[ident] = state
+&#9;&#9;elseif state == false then
+&#9;&#9;&#9;mFlagNameToLastTime[ident] = false
+&#9;&#9;else
+&#9;&#9;&#9;mFlagNameToLastTime[ident] = tick()
+&#9;&#9;end
+&#9;end
+end)
+
+
+function TagHumanoid(humanoid)
+&#9;if Tool.Player then
+&#9;&#9;local tag = Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;Name = &quot;creator&quot;, 
+&#9;&#9;&#9;Value = Tool.Player,
+&#9;&#9;&#9;Parent = humanoid,
+&#9;&#9;}
+&#9;&#9;game.Debris:AddItem(tag, 1)
+&#9;end
+end
+
+
+------- wait for any event in a set of events  to fire ------
+function WaitForAny(tb)
+&#9;local evt = tb
+&#9;local conn = {}
+&#9;local eventargs = nil
+&#9;local waitProxy = Create&apos;BoolValue&apos;{}
+&#9;for _, e in pairs(evt) do
+&#9;&#9;local c = e:connect(function(...)
+&#9;&#9;&#9;for _, c in pairs(conn) do
+&#9;&#9;&#9;&#9;c:disconnect()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;eventargs = {...}
+&#9;&#9;&#9;waitProxy.Value = not waitProxy.Value
+&#9;&#9;end)
+&#9;&#9;conn[#conn+1] = c
+&#9;end
+&#9;--
+&#9;waitProxy.Changed:wait()
+&#9;--
+&#9;return unpack(eventargs)
+end
+
+
+----------------------------------------------
+-- Tool singleton class
+--API:
+-- ...
+class&apos;Tool&apos;(nil, function(this)
+&#9;--need this here for the animationprovider to use
+&#9;this.HUGE_EQUIP_HACK = false
+
+&#9;this.Bin = CreateBin()
+&#9;this.AnimationProvider = CreateAnimationProvider()
+&#9;this.DebounceProvider = CreateDebounceProvider()
+&#9;this.SoundProvider = CreateSoundProvider()
+
+&#9;--general values
+&#9;this.Tool = script.Parent
+&#9;this.Player = nil
+&#9;this.Humanoid = nil
+&#9;this.Character = nil
+
+&#9;--============ several flags for the gear
+&#9;--nothing
+
+&#9;--some events
+&#9;this.Equipped = CreateSignal()
+&#9;this.Unequipped = CreateSignal()
+&#9;this.OwnerChange = CreateSignal()
+
+&#9;--mouse utility events
+&#9;this.MouseClick = CreateSignal()
+&#9;this.MouseRelease = CreateSignal()
+&#9;this.MouseDoubleClick = CreateSignal()
+&#9;this.DoubleClickThreshold = 0.2
+&#9;this.MouseDown = false
+&#9;this.KeyDown = CreateSignal()
+
+&#9;local mLastClickTime = 0
+
+&#9;--
+&#9;local mCharacterChangedCn = nil
+&#9;local mCharacterChildAddedCn = nil
+&#9;local function locateAndAssignParts(ch)
+&#9;&#9;if ch:FindFirstChild(&apos;Humanoid&apos;) then this.Humanoid = ch.Humanoid end
+&#9;&#9;if ch:FindFirstChild(&apos;Head&apos;) then this.HeadPart = ch.Head end
+&#9;&#9;if ch:FindFirstChild(&apos;Torso&apos;) then this.TorsoPart = ch.Torso end
+&#9;&#9;if ch:FindFirstChild(&apos;Right Arm&apos;) then &#9;this.RightArmPart = ch[&apos;Right Arm&apos;] end
+&#9;&#9;if ch:FindFirstChild(&apos;Left Arm&apos;) then &#9;this.LeftArmPart = &#9;ch[&apos;Left Arm&apos;] end
+&#9;&#9;if ch:FindFirstChild(&apos;Right Leg&apos;) then &#9;this.RightLegPart = ch[&apos;Right Leg&apos;] end
+&#9;&#9;if ch:FindFirstChild(&apos;Left Leg&apos;) then &#9;this.LeftLegPart = &#9;ch[&apos;Left Leg&apos;] end
+&#9;end
+&#9;local function listenForCharacterAndParts(player)
+&#9;&#9;this.Tool = script.Parent
+&#9;&#9;this.Player = player
+&#9;&#9;--
+&#9;&#9;if mCharacterChangedCn then mCharacterChangedCn:disconnect() end
+&#9;&#9;mCharacterChangedCn = player.Changed:connect(function(prop)
+&#9;&#9;&#9;if prop == &apos;Character&apos; and player.Character then
+&#9;&#9;&#9;&#9;if mCharacterChildAddedCn then mCharacterChildAddedCn:disconnect() end
+&#9;&#9;&#9;&#9;mCharacterChildAddedCn = player.Character.ChildAdded:connect(function(ch)
+&#9;&#9;&#9;&#9;&#9;locateAndAssignParts(player.Character)
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;if player.Character then
+&#9;&#9;&#9;if mCharacterChildAddedCn then mCharacterChildAddedCn:disconnect() end
+&#9;&#9;&#9;mCharacterChildAddedCn = player.Character.ChildAdded:connect(function(ch)
+&#9;&#9;&#9;&#9;locateAndAssignParts(player.Character)
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+&#9;script.Parent.Changed:connect(function(prop)
+&#9;&#9;if prop == &apos;Parent&apos; then
+&#9;&#9;&#9;--if it&apos;s in a character or backpack, find stuff
+&#9;&#9;&#9;local backpack = script.Parent.Parent
+&#9;&#9;&#9;if backpack and backpack:IsA(&apos;Backpack&apos;) then
+&#9;&#9;&#9;&#9;listenForCharacterAndParts(backpack.Parent)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;--if I&apos;m allready in the backpack, listen for character
+&#9;if script.Parent.Parent:IsA(&apos;Backpack&apos;) then
+&#9;&#9;listenForCharacterAndParts(script.Parent.Parent.Parent)
+&#9;end
+&#9;script.Parent.Equipped:connect(function(mouse)
+&#9;&#9;--print(&quot;Internal Equipped: Time b: &quot;..time())
+&#9;&#9;--set up general values in the tool
+&#9;&#9;this.Mouse = mouse
+&#9;&#9;local curOwner = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
+&#9;&#9;if curOwner ~= this.Player then
+&#9;&#9;&#9;this.Player = curOwner
+&#9;&#9;&#9;this.OwnerChange:fire(this.Player)
+&#9;&#9;end
+&#9;&#9;this.Character = this.Player.Character
+&#9;&#9;this.Humanoid = this.Character.Humanoid
+&#9;&#9;this.AnimationProvider:setHumanoid(this.Humanoid)
+
+&#9;&#9;--set up the mouse events
+&#9;&#9;mouse.Button1Down:connect(function()
+&#9;&#9;&#9;this.MouseDown = true
+&#9;&#9;&#9;local t = tick()
+&#9;&#9;&#9;if (t-mLastClickTime) &lt; this.DoubleClickThreshold then
+&#9;&#9;&#9;&#9;--prvent multiple double-clicks in a row
+&#9;&#9;&#9;&#9;mLastClickTime = 0
+&#9;&#9;&#9;&#9;this.MouseDoubleClick:fire(mouse)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;mLastClickTime = t
+&#9;&#9;&#9;&#9;this.MouseClick:fire(mouse)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;mouse.Button1Up:connect(function()
+&#9;&#9;&#9;this.MouseDown = false
+&#9;&#9;&#9;this.MouseRelease:fire()
+&#9;&#9;end)
+&#9;&#9;mouse.KeyDown:connect(function(key)
+&#9;&#9;&#9;this.KeyDown:fire(key)
+&#9;&#9;end)
+
+&#9;&#9;--done setup, call the equipped function
+&#9;&#9;if this.HUGE_EQUIP_HACK then
+&#9;&#9;&#9;--the HUGE_EQUIP_HACK flags tells the tool that the equip is a synchronous
+&#9;&#9;&#9;--call as a result of parenting an animation to the character, which happens 
+&#9;&#9;&#9;--when the tool is picked up from the workspace, but not during normal equips 
+&#9;&#9;&#9;--(Why does this happen???), if this is the case, the call should be rederrred 
+&#9;&#9;&#9;--one tick to ensure that all of the gear&apos;s loading can complete before it&apos;s 
+&#9;&#9;&#9;--equipped event is called.
+&#9;&#9;&#9;--TODO: Blame John for this.
+&#9;&#9;&#9;Delay(0, function()
+&#9;&#9;&#9;&#9;this.Equipped:fire(mouse)
+&#9;&#9;&#9;end)
+&#9;&#9;else
+&#9;&#9;&#9;--otherwise, proceed as normal
+&#9;&#9;&#9;this.Equipped:fire(mouse)
+&#9;&#9;end
+&#9;end)
+
+&#9;script.Parent.Unequipped:connect(function()
+&#9;&#9;--before my teardown, fire the event
+&#9;&#9;this.Unequipped:fire()
+
+&#9;&#9;--delete all my garbage
+&#9;&#9;this.Bin:cleanAll()
+&#9;end)
+end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Tool.AnimationProvider:registerAnimation(&apos;drink&apos;, &apos;http://www.roblox.com/asset/?id=70439232&apos;)
+Tool.AnimationProvider:registerAnimation(&apos;equip&apos;, &apos;http://www.roblox.com/asset/?id=70439247&apos;)
+
+local function GetEffectSource()
+&#9;if Tool.Character:FindFirstChild(&apos;Head&apos;) then
+&#9;&#9;return Tool.Character.Head.CFrame * CFrame.new(0, -0.5, -1)
+&#9;else
+&#9;&#9;return CFrame.new()
+&#9;end
+end
+
+local function frand(a,b)
+&#9;return a+math.random()*(b-a)
+end
+
+local function frand2(a,b)
+&#9;return frand(a,b)*frand(a,b)
+end
+
+class&apos;FlameEffect&apos;(function(this)
+&#9;local mObjectToToucherCount = {}
+&#9;
+&#9;this.BeginTouch = CreateSignal()
+&#9;this.EndTouch = CreateSignal()
+
+&#9;local function beginTouch(part, lick)
+&#9;&#9;if not mObjectToToucherCount[part] then
+&#9;&#9;&#9;this.BeginTouch:fire(part)
+&#9;&#9;end
+&#9;&#9;mObjectToToucherCount[part] = (mObjectToToucherCount[part] or 0)+1
+&#9;&#9;--try removal
+&#9;&#9;--removal strtegy:
+&#9;&#9;--try to figure out what&apos;s scenery. If it&apos;s hot a humanoid in it, definitely
+&#9;&#9;--don&apos;t remove the flame. Once it&apos;s established that there&apos;s no humanoid, it
+&#9;&#9;--must be Anchored. But not all anchored things are scenery, some are effects
+&#9;&#9;--from gear and what not, so only block on sufficiently large parts (flames
+&#9;&#9;--should be able to bend around small objects too, so this msakes sense).
+&#9;&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;local partVolume = part.Size.x*part.Size.y*part.Size.z
+&#9;&#9;if part.Anchored and not hum and partVolume &gt; 17 then
+&#9;&#9;&#9;lick.QueuedForRemoval = true
+&#9;&#9;end
+&#9;end
+&#9;local function endTouch(part, lick)
+&#9;&#9;if not mObjectToToucherCount[part] then return end
+&#9;&#9;mObjectToToucherCount[part] = mObjectToToucherCount[part]-1
+&#9;&#9;if mObjectToToucherCount[part] &lt;= 0 then
+&#9;&#9;&#9;mObjectToToucherCount[part] = nil
+&#9;&#9;&#9;this.EndTouch:fire(part)
+&#9;&#9;end
+&#9;end
+
+&#9;local mFreeFlameBitList = {}
+&#9;local mFlameBitList = {}
+&#9;local function AddFlameBit()
+&#9;&#9;local lick = {}
+&#9;&#9;lick.Transparency = frand(0.4, 0.6)
+&#9;&#9;if #mFreeFlameBitList &gt; 0 then
+&#9;&#9;&#9;lick.Part = mFreeFlameBitList[#mFreeFlameBitList]
+&#9;&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList] = nil
+&#9;&#9;&#9;--
+&#9;&#9;&#9;lick.Part.Size = Vector3.new(frand(1,1.5), 0.2, frand(3,5))
+&#9;&#9;else
+&#9;&#9;&#9;lick.Part = Create&apos;Part&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;FireLick&apos;,
+&#9;&#9;&#9;&#9;Parent = Tool.Character,
+&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Size = Vector3.new(frand(1,1.5), 0.2, frand(3,5)),
+&#9;&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Create&apos;BodyVelocity&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;Fly&apos;,
+&#9;&#9;&#9;&#9;&#9;maxForce = Vector3.new(100000,100000,100000),
+&#9;&#9;&#9;&#9;&#9;velocity = Vector3.new(),
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Create&apos;Decal&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;TopDecal&apos;,
+&#9;&#9;&#9;&#9;&#9;Face = &apos;Top&apos;,
+&#9;&#9;&#9;&#9;&#9;Shiny = 0,
+&#9;&#9;&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=4723996&apos;,
+&#9;&#9;&#9;&#9;&#9;Transparency = lick.Transparency,
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;Create&apos;Decal&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;BottomDecal&apos;,
+&#9;&#9;&#9;&#9;&#9;Face = &apos;Bottom&apos;,
+&#9;&#9;&#9;&#9;&#9;Shiny = 0,
+&#9;&#9;&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=4723996&apos;,
+&#9;&#9;&#9;&#9;&#9;Transparency = lick.Transparency,
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;}
+&#9;&#9;end
+&#9;&#9;lick.Part.Touched:connect(function(p) beginTouch(p, lick) end)
+&#9;&#9;lick.Part.TouchEnded:connect(function(p) endTouch(p, lick) end)
+&#9;&#9;lick.Part.CFrame = GetEffectSource()*
+&#9;&#9;                   CFrame.Angles(frand2(-0.3,0.3), frand2(-0.3, 0.3), frand(0,1.57))*
+&#9;&#9;                   CFrame.new(0, 0, -2)*CFrame.Angles(math.pi, 0, 0)
+&#9;&#9;lick.Part.Fly.velocity = lick.Part.CFrame.lookVector*(-40)
+&#9;&#9;lick.Timestamp = tick()
+&#9;&#9;mFlameBitList[lick] = true
+&#9;end
+
+&#9;local mRunNumber = 0
+&#9;function this:start()
+&#9;&#9;local thisRun = mRunNumber
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;while mRunNumber == thisRun do
+&#9;&#9;&#9;&#9;local t = tick()
+&#9;&#9;&#9;&#9;for lick, _ in pairs(mFlameBitList) do
+&#9;&#9;&#9;&#9;&#9;if (t-lick.Timestamp) &gt; 0.5 or lick.QueuedForRemoval then
+&#9;&#9;&#9;&#9;&#9;&#9;lick.Part:Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;mFlameBitList[lick] = nil
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;local tfrac = (t-lick.Timestamp)/0.5
+&#9;&#9;&#9;&#9;&#9;&#9;lick.Part.TopDecal.Transparency = lick.Transparency*tfrac
+&#9;&#9;&#9;&#9;&#9;&#9;lick.Part.BottomDecal.Transparency = lick.Transparency*tfrac
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;AddFlameBit()
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+&#9;function this:stop()
+&#9;&#9;for lick, _ in pairs(mFlameBitList) do
+&#9;&#9;&#9;mFreeFlameBitList[#mFreeFlameBitList+1] = lick.Part
+&#9;&#9;&#9;lick.Part.Parent = nil
+&#9;&#9;&#9;mFlameBitList[lick] = nil
+&#9;&#9;end
+&#9;&#9;mRunNumber = mRunNumber+1
+&#9;end
+&#9;function this:destroy()
+&#9;&#9;this:stop()
+&#9;end
+end)
+
+local DragonHead = Create&apos;Part&apos;{
+&#9;Name = &apos;DragonHead&apos;,
+&#9;FormFactor = &apos;Custom&apos;,
+&#9;Size = Vector3.new(1,1,1),
+&#9;CanCollide = false,&#9;
+&#9;Transparency = 1,
+&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;MeshType = &apos;FileMesh&apos;,
+&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=70433620&apos;,
+&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=70433639&apos;,
+&#9;},
+}
+
+local RechargeGui = Create&apos;ScreenGui&apos;{
+&#9;Name = &apos;DragonHeadGui&apos;,
+&#9;Create&apos;Frame&apos;{
+&#9;&#9;Name = &apos;MainFrame&apos;,
+&#9;&#9;Style = &apos;RobloxRound&apos;,
+&#9;&#9;Size = UDim2.new(0, 256, 0, 32),
+&#9;&#9;Position = UDim2.new(0.5, -128, 1, -150),
+&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;Name = &apos;ProgressBar&apos;,
+&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;BackgroundColor3 = Color3.new(1, 0.2, 0.2),
+&#9;&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;},
+&#9;&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;Name = &apos;ProgressText&apos;,
+&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;&#9;Font = &apos;ArialBold&apos;,
+&#9;&#9;&#9;FontSize = &apos;Size24&apos;,
+&#9;&#9;&#9;Text = &quot;~ Ready ~&quot;,
+&#9;&#9;&#9;TextColor3 = Color3.new(0.9, 0.9, 0.9),
+&#9;&#9;},
+&#9;}
+}
+
+FlameEffect = CreateFlameEffect()
+
+local TouchingMap = {}
+FlameEffect.BeginTouch:connect(function(part)
+&#9;TouchingMap[part] = true
+&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;hum = hum or ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;--
+&#9;if hum and hum ~= Tool.Humanoid then
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;while TouchingMap[part] do
+&#9;&#9;&#9;&#9;TagHumanoid(hum)
+&#9;&#9;&#9;&#9;hum:TakeDamage(2)
+&#9;&#9;&#9;&#9;wait(0.1)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end)
+FlameEffect.EndTouch:connect(function(part)
+&#9;TouchingMap[part] = nil
+end)
+
+local FireDebounce = false
+local LastFire = 0
+local FireNum = 0
+
+Tool.MouseClick:connect(function()
+&#9;if FireDebounce or (tick()-LastFire) &lt; 3 then return end
+&#9;FireDebounce = true
+&#9;FireNum = FireNum+1
+&#9;local thisFire = FireNum
+&#9;--
+&#9;Tool.AnimationProvider:getAnimation(&apos;drink&apos;):Play(0, 1, 2)
+&#9;repeat until Tool.AnimationProvider:getAnimation(&apos;drink&apos;).KeyframeReached:wait() == &apos;complete&apos;;
+&#9;DragonHead.Transparency = 1
+&#9;for i = 1, 0, -0.2 do
+&#9;&#9;DragonHead.Transparency = i
+&#9;&#9;wait()
+&#9;end
+&#9;DragonHead.Transparency = 0
+&#9;FlameEffect:start()
+&#9;Delay(4, function()
+&#9;&#9;FlameEffect:stop()
+&#9;&#9;FireDebounce = false
+&#9;&#9;LastFire = tick()
+&#9;&#9;DragonHead.Transparency = 0
+&#9;&#9;for i = 0, 1, 0.2 do
+&#9;&#9;&#9;if thisFire ~= FireNum then break end
+&#9;&#9;&#9;DragonHead.Transparency = i
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;DragonHead.Transparency = 1
+&#9;end)
+end)
+
+Tool.MouseDoubleClick:connect(function()
+&#9;Tool.Humanoid.Jump = true
+&#9;Tool.Humanoid.Torso.Velocity = Tool.Humanoid.Torso.Velocity+
+&#9;                               Tool.TorsoPart.CFrame.lookVector*(-100)
+end)
+
+local function SetProgress(frac)
+&#9;RechargeGui.MainFrame.ProgressBar.Size = UDim2.new(frac, 0, 1, 0)
+&#9;if frac == 1 then
+&#9;&#9;RechargeGui.MainFrame.ProgressText.Text = &quot;~ Ready ~&quot;
+&#9;else
+&#9;&#9;RechargeGui.MainFrame.ProgressText.Text = &quot;Charging &quot;..math.floor(frac*100)..&quot;%&quot;
+&#9;end
+end
+
+local Equipped = false
+Tool.Equipped:connect(function()
+&#9;Equipped = true
+&#9;Tool.AnimationProvider:getAnimation(&apos;equip&apos;):Play()
+&#9;Spawn(function()
+&#9;&#9;RechargeGui.Parent = Tool.Player.PlayerGui
+&#9;&#9;DragonHead.Parent = Tool.Character
+&#9;&#9;local attach = Create&apos;Weld&apos;{
+&#9;&#9;&#9;Name = &apos;DragonHeadAttach&apos;,
+&#9;&#9;&#9;Parent = Tool.Character.Head,
+&#9;&#9;&#9;Part0 = Tool.Character.Head,
+&#9;&#9;&#9;Part1 = DragonHead,
+&#9;&#9;}
+&#9;&#9;while Equipped do
+&#9;&#9;&#9;if FireDebounce then
+&#9;&#9;&#9;&#9;SetProgress(0)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;SetProgress(math.min(1, (tick()-LastFire)/3))
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;RechargeGui.Parent = nil
+&#9;Equipped = false
+&#9;Tool.AnimationProvider:getAnimation(&apos;equip&apos;):Stop()
+&#9;Tool.AnimationProvider:getAnimation(&apos;drink&apos;):Stop()
+&#9;DragonHead.Parent = nil
+&#9;FlameEffect:destroy()
+end)</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">MotorizeRightGrip</string>
+					<ProtectedString name="Source">print(&quot;Run RightgripScript, parent=&quot;, script.Parent)
+
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Tool = script.Parent.Parent
+
+local armChildRemovedConn = nil
+local Motor6DGrip = nil
+local EquippedNum = 0
+
+Tool.Equipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;local myEquip = EquippedNum
+&#9;--some vars
+&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;local Character = Player.Character
+
+&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
+&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
+&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
+&#9;&#9;local handle = rightGrip.Part1
+
+&#9;&#9;--kill my joint when the normal joint is removed
+&#9;&#9;--this must be done here so that the joint is removed 
+&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
+&#9;&#9;--glitch up.
+&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+&#9;&#9;&#9;if ch == rightGrip then
+&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
+&#9;&#9;&#9;&#9;Motor6DGrip = nil
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
+&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
+&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
+&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+
+&#9;&#9;--make my new joint
+&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
+&#9;&#9;&#9;Part0 = rightarm,
+&#9;&#9;&#9;Part1 = handle,
+&#9;&#9;}
+&#9;&#9;--kill the old weld
+&#9;&#9;rightGrip.Part1 = nil
+&#9;&#9;rightGrip.Part0 = nil
+&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;if armChildRemovedConn then
+&#9;&#9;armChildRemovedConn:disconnect()
+&#9;&#9;armChildRemovedConn = nil
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-27.5</X>
+					<Y>44.5</Y>
+					<Z>-24.5</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=70433485</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=70433504</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX5">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-28.1947479</X>
+					<Y>44.6888237</Y>
+					<Z>-25.9763908</Z>
+					<R00>-0.904824376</R00>
+					<R01>0.0489468537</R01>
+					<R02>-0.422962308</R02>
+					<R10>-3.7252903e-009</R10>
+					<R11>0.993370533</R11>
+					<R12>0.114956729</R12>
+					<R20>0.425785065</R20>
+					<R21>0.104015648</R21>
+					<R22>-0.898825824</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="Focus">
+					<X>-27.5</X>
+					<Y>44.5</Y>
+					<Z>-24.5</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
