@@ -1,0 +1,602 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>-0.699999988</Z>
+				<R00>-0</R00>
+				<R01>0</R01>
+				<R02>1</R02>
+				<R10>1</R10>
+				<R11>-0</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">RotateTool</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=59103214</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Part" referent="RBX1">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">199</int>
+				<CoordinateFrame name="CFrame">
+					<X>-35</X>
+					<Y>1.60000002</Y>
+					<Z>3.5</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>-1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>0.800000012</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX2">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=16884681</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.600000024</X>
+						<Y>0.600000024</Y>
+						<Z>0.600000024</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=16884673</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX3">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RotateScript</string>
+				<ProtectedString name="Source">-- NOTES:
+--      NEEDS:
+--            X  1.)  Make single blocks rotate always (they rotate 2x, then seem to think of themselves as blockers of themselves...  whaaa?)
+--&#9;&#9;&#9;&#9;  X  2.)  Make scripts continue to work through rotations (or else error on any objects which can&apos;t be rotated...  prehaps elevators?)
+--            3.)  File bug for #1 and for &quot;# of parts counted BEFORE instance-filter is applied for game.Workspace:FindPartsInRegion3&quot;
+--            4.)  Make things rotate separately (break and make welds)
+--&#9;&#9;&#9;&#9;  5.)  When something else is attached to a single block, stuff still breaks X&lt;
+
+-- general functions
+function waitForProperty(instance, name)
+&#9;while not instance[name] do
+&#9;&#9;instance.Changed:wait()
+&#9;end
+end
+function waitForChild(instance, name)
+&#9;while not instance:FindFirstChild(name) do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+local Tool = script.Parent
+local player
+local playerArea = nil
+local selectionBox = nil
+local selectedModel = nil
+
+local terrainSelectionBox = Instance.new(&quot;Part&quot;)
+terrainSelectionBox.Parent = nil
+terrainSelectionBox.formFactor = &quot;Custom&quot;
+terrainSelectionBox.Size = Vector3.new(4, 4, 4)
+terrainSelectionBox.CFrame = CFrame.new()
+
+local cluster = nil
+
+waitForChild(Tool, &quot;ErrorBox&quot;)
+local errorBox = Tool.ErrorBox
+
+waitForChild(Tool, &quot;PlayerOwner&quot;)
+local playerOwner = Tool.PlayerOwner
+
+waitForProperty(game,&quot;PlaceId&quot;)
+local isRestricted = (game.PlaceId == 41324860 or game.PlaceId == 129686177)
+
+game:GetService(&quot;ContentProvider&quot;):Preload(&quot;rbxasset://icons/configure_sel.png&quot;)
+
+
+function getBoundingBox2(partOrModel)
+-- for models, the bounding box is defined as the minimum and maximum individual part bounding boxes
+-- relative to the first part&apos;s coordinate frame.
+
+&#9;local minVec = Vector3.new(math.huge, math.huge, math.huge)
+&#9;local maxVec = Vector3.new(-math.huge, -math.huge, -math.huge)
+
+&#9;if partOrModel:IsA(&quot;Part&quot;) or partOrModel:IsA(&quot;WedgePart&quot;) or partOrModel:IsA(&quot;TrussPart&quot;)then
+&#9;&#9;minVec = partOrModel.CFrame:pointToWorldSpace(-0.5 * partOrModel.Size)
+&#9;&#9;maxVec = partOrModel.CFrame:pointToWorldSpace(0.5 * partOrModel.Size)
+&#9;else
+&#9;&#9;local part1 = partOrModel:GetChildren()[1]
+&#9;&#9;for i, object in pairs(partOrModel:GetChildren()) do
+&#9;&#9;&#9;if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
+&#9;&#9;&#9;&#9;boxMinInWorld1 = object.CFrame:pointToWorldSpace(-0.5 * object.Size)
+&#9;&#9;&#9;&#9;--boxMinInPart1 = part1.CFrame:pointToObjectSpace(boxMinInWorld)
+&#9;&#9;&#9;&#9;boxMaxInWorld1 = object.CFrame:pointToWorldSpace(0.5 * object.Size)
+&#9;&#9;&#9;&#9;--boxMaxInPart1 = part1.CFrame:pointToObjectSpace(boxMaxInWorld)
+
+&#9;&#9;&#9;&#9;local minX = minVec.x
+&#9;&#9;&#9;&#9;local minY = minVec.y
+&#9;&#9;&#9;&#9;local minZ = minVec.z
+&#9;&#9;&#9;&#9;local maxX = maxVec.x
+&#9;&#9;&#9;&#9;local maxY = maxVec.y
+&#9;&#9;&#9;&#9;local maxZ = maxVec.z
+&#9;&#9;&#9;&#9;if boxMinInWorld1.x &lt; minVec.x then
+&#9;&#9;&#9;&#9;&#9;minX = boxMinInWorld1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInWorld1.y &lt; minVec.y then
+&#9;&#9;&#9;&#9;&#9;minY = boxMinInWorld1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInWorld1.z &lt; minVec.z then
+&#9;&#9;&#9;&#9;&#9;minZ = boxMinInWorld1.z
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInWorld1.x &lt; minX then
+&#9;&#9;&#9;&#9;&#9;minX = boxMaxInWorld1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInWorld1.y &lt; minY then
+&#9;&#9;&#9;&#9;&#9;minY = boxMaxInWorld1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInWorld1.z &lt; minZ then
+&#9;&#9;&#9;&#9;&#9;minZ = boxMaxInWorld1.z
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;if boxMinInWorld1.x &gt; maxVec.x then
+&#9;&#9;&#9;&#9;&#9;maxX = boxMinInWorld1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInWorld1.y &gt; maxVec.y then
+&#9;&#9;&#9;&#9;&#9;maxY = boxMinInWorld1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMinInWorld1.z &gt; maxVec.z then
+&#9;&#9;&#9;&#9;&#9;maxZ = boxMinInWorld1.z
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInWorld1.x &gt; maxX then
+&#9;&#9;&#9;&#9;&#9;maxX = boxMaxInWorld1.x
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInWorld1.y &gt; maxY then
+&#9;&#9;&#9;&#9;&#9;maxY = boxMaxInWorld1.y
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if boxMaxInWorld1.z &gt; maxZ then
+&#9;&#9;&#9;&#9;&#9;maxZ = boxMaxInWorld1.z
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;minVec = Vector3.new(minX, minY, minZ)
+&#9;&#9;&#9;&#9;maxVec = Vector3.new(maxX, maxY, maxZ)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;return minVec, maxVec
+end
+
+function isInRobloxModel(part)
+&#9;if part == game.Workspace then
+&#9;&#9;return false, nil
+&#9;elseif part:FindFirstChild(&quot;RobloxModel&quot;) then 
+&#9;&#9;return true, part
+&#9;else
+&#9;&#9;return isInRobloxModel(part.Parent)
+&#9;end
+end
+
+function isInMyArea(part)
+&#9;if playerArea:FindFirstChild(&quot;PlayerArea&quot;)then
+&#9;&#9;return playerArea.PlayerArea:IsAncestorOf(part)
+&#9;end
+&#9;return false
+end
+
+
+function on3dButton1Down(mouse)
+&#9;-- don&apos;t do anything for now (can fix later: for now this means you can click one model, drag mouse to second model, and release mouse, and this will activate second model)
+end
+
+
+function offsetPartsByVector3(partOrModel, offsetVector)
+&#9;local insertCFrame
+&#9;if partOrModel:IsA(&quot;Model&quot;) then
+&#9;&#9;for i, object in pairs(partOrModel:GetChildren()) do
+&#9;&#9;&#9;if (object:IsA(&quot;Part&quot;) or object:IsA(&quot;WedgePart&quot;) or object:IsA(&quot;TrussPart&quot;)) then
+&#9;&#9;&#9;&#9;object.CFrame = object.CFrame + offsetVector
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;else
+&#9;&#9;partOrModel.CFrame = partOrModel.CFrame + offsetVector
+&#9;end
+end
+
+function storeAndDisableScriptsInModel(parent, scriptTable)
+&#9;for i, object in pairs(parent:GetChildren()) do
+&#9;&#9;if object:IsA(&quot;Script&quot;) or object:IsA(&quot;LocalScript&quot;) then if not object.Disabled then object.Disabled = true table.insert(scriptTable, object) end end
+&#9;&#9;if object.GetChildren then storeAndDisableScriptsInModel(object, scriptTable) end
+&#9;end
+end
+
+function isInternalWeld(weld, model)
+&#9;return (not weld.Part0 or weld.Part0:IsDescendantOf(model)) and (not weld.Part1 or weld.Part1:IsDescendantOf(model))
+end
+
+function storeAndRemoveWeldsInModel(initialmodel, model, welds, weldParents)
+&#9;for i, object in pairs(model:GetChildren()) do
+&#9;&#9;if object.className == &quot;ManualWeld&quot; then if isInternalWeld(object, initialmodel) then table.insert(welds, object) table.insert(weldParents, object.Parent) object.Parent = nil end end
+&#9;&#9;if object.GetChildren then storeAndRemoveWeldsInModel(initialmodel, object, welds, weldParents) end
+&#9;end
+end
+
+
+local debris = game:GetService(&quot;Debris&quot;)
+function flashRedBox(modelToFlash)
+&#9;if not modelToFlash then return end 
+
+&#9;errorBox.Parent = player.PlayerGui
+&#9;errorBox.Adornee = modelToFlash
+
+&#9;delay(0,function()
+&#9;&#9;for i = 1, 3 do
+&#9;&#9;&#9;errorBox.Visible = true
+&#9;&#9;&#9;wait(0.13)
+&#9;&#9;&#9;errorBox.Visible = false
+&#9;&#9;&#9;wait(0.13)
+&#9;&#9;end
+&#9;&#9;errorBox.Adornee = nil
+&#9;&#9;errorBox.Parent = Tool
+&#9;end)
+end
+
+
+-- below function should work as a Region3 query, returning true if a single cluster part is within this region
+function clusterPartsInRegion(startVector, endVector)
+&#9;if not cluster then return false end
+
+&#9;local startCell = cluster:WorldToCell(startVector)
+&#9;local endCell = cluster:WorldToCell(endVector)
+
+&#9;local startX = startCell.X
+&#9;local startY = startCell.Y
+&#9;local startZ = startCell.Z
+
+&#9;local endX = endCell.X
+&#9;local endY = endCell.Y
+&#9;local endZ = endCell.Z
+
+&#9;if startX &lt; cluster.MaxExtents.Min.X then startX = cluster.MaxExtents.Min.X end
+&#9;if startY &lt; cluster.MaxExtents.Min.Y then startY = cluster.MaxExtents.Min.Y end
+&#9;if startZ &lt; cluster.MaxExtents.Min.Z then startZ = cluster.MaxExtents.Min.Z end
+
+&#9;if endX &gt; cluster.MaxExtents.Max.X then endX = cluster.MaxExtents.Max.X end
+&#9;if endY &gt; cluster.MaxExtents.Max.Y then endY = cluster.MaxExtents.Max.Y end
+&#9;if endZ &gt; cluster.MaxExtents.Max.Z then endZ = cluster.MaxExtents.Max.Z end
+
+&#9;for x = startX, endX do
+&#9;&#9;for y = startY, endY do
+&#9;&#9;&#9;for z = startZ, endZ do
+&#9;&#9;&#9;&#9;if (cluster:GetCell(x, y, z).Value) &gt; 0 then return true end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;return false
+end
+
+
+local debounce = false
+function on3dButton1Up(mouse)
+&#9;local modelToRotate = selectedModel -- so that other mouse events can&apos;t give us race conditions
+
+&#9;if modelToRotate and not debounce then
+&#9;&#9;debounce = true
+
+&#9;&#9;if modelToRotate == terrainSelectionBox then
+&#9;&#9;&#9;-- just rotate the terrain cell if we&apos;re selecting on terrain
+&#9;&#9;&#9;local cellPos = game.Workspace.Terrain:WorldToCell(terrainSelectionBox.CFrame.p)
+&#9;&#9;&#9;local cellMat, cellType, cellOrient = game.Workspace.Terrain:GetCell(cellPos.X, cellPos.Y, cellPos.Z)
+&#9;&#9;&#9;game.Workspace.Terrain:SetCell(cellPos.X, cellPos.Y, cellPos.Z, cellMat, cellType, (cellOrient.Value + 1)%4)
+
+&#9;&#9;&#9;debounce = false
+&#9;&#9;&#9;return
+&#9;&#9;end
+
+&#9;&#9;-- get the model centroid
+&#9;&#9;local minBB, maxBB = getBoundingBox2(modelToRotate)
+&#9;&#9;local oldModelCentroid = (minBB + maxBB) / 2  -- point to rotate around
+
+&#9;&#9;local diagVector = minBB - oldModelCentroid
+&#9;&#9;local rotatedDiagVector = Vector3.new(diagVector.Z, diagVector.Y, diagVector.X)
+&#9;&#9;local rotatedMinBB = oldModelCentroid + rotatedDiagVector
+&#9;&#9;local rotatedMaxBB = oldModelCentroid - rotatedDiagVector
+
+&#9;&#9;-- check if part rotation will cause collision
+&#9;&#9;local fudgeVector = Vector3.new(0.4, 0.4, 0.4)  -- mmmmmm, fudge
+
+&#9;&#9;-- we need to check the even/odd parity on the x and z axes of the model.  If there is a difference, then the rotation will push the model off-grid, so we will
+&#9;&#9;&#9;--   need to adjust
+&#9;&#9;local adjustVector = Vector3.new(0, 0, 0)
+&#9;&#9;local diffVector = minBB - maxBB
+&#9;&#9;local garbage, xParity = math.modf(math.modf(math.abs(diffVector.X)/4 + .5)/2)
+&#9;&#9;local garbage, zParity = math.modf(math.modf(math.abs(diffVector.Z)/4 + .5)/2)
+&#9;&#9;xParity = math.floor(xParity*2 + .5)
+&#9;&#9;zParity = math.floor(zParity*2 + .5)
+&#9;&#9;if xParity ~= zParity then
+&#9;&#9;&#9;-- need to shift
+&#9;&#9;&#9;adjustVector = Vector3.new(2, 0, 2)
+&#9;&#9;&#9;local mouseHitFrame = mouse.Hit
+&#9;&#9;&#9;if mouseHitFrame then
+&#9;&#9;&#9;&#9;local mouseHit = mouseHitFrame.p
+&#9;&#9;&#9;&#9;if math.abs(diffVector.X) &gt; math.abs(diffVector.Z) then
+&#9;&#9;&#9;&#9;&#9;-- longest axis is X-axis
+&#9;&#9;&#9;&#9;&#9;if mouseHit.X &gt; oldModelCentroid.X then
+&#9;&#9;&#9;&#9;&#9;&#9;adjustVector = Vector3.new(2, 0, 2)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;adjustVector = Vector3.new(-2, 0, -2)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;-- longest axis is Z-axis
+&#9;&#9;&#9;&#9;&#9;if mouseHit.Z &gt; oldModelCentroid.Z then
+&#9;&#9;&#9;&#9;&#9;&#9;adjustVector = Vector3.new(-2, 0, 2)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;adjustVector = Vector3.new(2, 0, -2)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;-- below line checks CURRENT BB, not post-rotation BB
+&#9;&#9;--local blockingParts = game.Workspace:FindPartsInRegion3(Region3.new(minBB + fudgeVector, maxBB - fudgeVector), modelToRotate, 100)
+
+&#9;&#9;-- if blocked by the cluster, then exit out
+&#9;&#9;if cluster and clusterPartsInRegion(minBB + fudgeVector, maxBB - fudgeVector) then
+&#9;&#9;&#9;debounce = false
+&#9;&#9;&#9;flashRedBox(modelToRotate)
+&#9;&#9;&#9;return
+&#9;&#9;end
+
+&#9;&#9;local blockingParts = game.Workspace:FindPartsInRegion3(Region3.new(rotatedMinBB + fudgeVector + adjustVector, rotatedMaxBB - fudgeVector + adjustVector), modelToRotate, 100)
+
+&#9;&#9;if #blockingParts &gt; 1 or (#blockingParts &gt; 0 and blockingParts[1] ~= modelToRotate) then
+&#9;&#9;&#9;-- BLOCKED!!  MAKE ERROR NOISE!
+&#9;&#9;&#9;for j = 1, #blockingParts do 
+&#9;&#9;&#9;&#9;if blockingParts[j].className ~= &quot;WedgePart&quot; and (blockingParts[j].Size / 2):Dot(blockingParts[j].Size / 2) &gt; 9 and blockingParts[j] ~= modelToRotate then
+&#9;&#9;&#9;&#9;&#9;debounce = false
+&#9;&#9;&#9;&#9;&#9;flashRedBox(modelToRotate)
+&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;--else
+&#9;&#9;end
+&#9;&#9;&#9;-- do the rotation! :D
+&#9;&#9;&#9;local rotCF = CFrame.fromEulerAnglesXYZ(0, math.pi/2, 0)
+
+&#9;&#9;&#9;game.JointsService:SetJoinAfterMoveInstance(modelToRotate)
+&#9;&#9;&#9;game.JointsService:ClearJoinAfterMoveJoints()
+
+&#9;&#9;
+&#9;&#9;&#9;-- below simple script disabling/re-enabling works for all scripts in normal usabilityset except for elevators and retracting spike [see if just need to change &quot;Weld&quot; in spikescript to &quot;ManualWeld&quot;... may need to also make sure below script-table can store all descendent scripts of modelToRotate, and not just immediate children...]
+&#9;&#9;&#9;&#9;-- and elevator scripts only break if you rotate when the elevator is in the &quot;fully down&quot; position...  probably just need some sort of check in ElevatorScript for this case
+
+&#9;&#9;&#9;local scriptsToTurnBackOn = {}
+&#9;&#9;&#9;storeAndDisableScriptsInModel(modelToRotate, scriptsToTurnBackOn)
+
+&#9;&#9;&#9;local weldsToReturn = {}
+&#9;&#9;&#9;local weldParentsToReturn = {}
+&#9;&#9;&#9;storeAndRemoveWeldsInModel(modelToRotate, modelToRotate, weldsToReturn, weldParentsToReturn)
+
+&#9;&#9;&#9;modelToRotate:BreakJoints()
+
+&#9;&#9;&#9;if modelToRotate:IsA(&quot;Model&quot;) then
+&#9;&#9;&#9;&#9;for i, object in pairs(modelToRotate:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;if object:IsA(&quot;Part&quot;) or object:IsA(&quot;TrussPart&quot;) or object:IsA(&quot;WedgePart&quot;) then object.CFrame = rotCF * object.CFrame end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;modelToRotate.CFrame = rotCF * modelToRotate.CFrame
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;-- fix position so centroid remains in same place [and then move centroid by adjustVector so it stays on grid]
+&#9;&#9;&#9;local newMinBB, newMaxBB = getBoundingBox2(modelToRotate)
+&#9;&#9;&#9;local newModelCentroid = (newMinBB + newMaxBB) / 2
+&#9;&#9;&#9;offsetPartsByVector3(modelToRotate, oldModelCentroid - newModelCentroid + adjustVector)
+
+&#9;&#9;&#9;game.JointsService:CreateJoinAfterMoveJoints()
+&#9;&#9;&#9;modelToRotate:MakeJoints()
+
+&#9;&#9;&#9;-- return all manual welds
+&#9;&#9;&#9;for i = 1, #weldsToReturn do weldsToReturn[i].Parent = weldParentsToReturn[i] end
+
+&#9;&#9;&#9;-- turn back on scripts
+&#9;&#9;&#9;for i = 1, #scriptsToTurnBackOn do scriptsToTurnBackOn[i].Disabled = false end
+&#9;&#9;--end
+
+&#9;&#9;--[[ for debugging
+&#9;&#9;local tempPart = Instance.new(&quot;Part&quot;)
+&#9;&#9;tempPart.CanCollide = false
+&#9;&#9;tempPart.Anchored = true
+&#9;&#9;tempPart.Size = maxBB - minBB
+&#9;&#9;tempPart.CFrame = CFrame.new((minBB + maxBB)/2)
+&#9;&#9;tempPart.Parent = game.Workspace
+&#9;&#9;game:GetService(&quot;Debris&quot;):AddItem(tempPart, .5) ]]--
+
+
+&#9;&#9;debounce = false
+&#9;end
+end
+
+function on3dMouseMove(mouse)
+&#9;local mouseModel
+
+&#9;if mouse.Target and mouse.Target:IsA(&quot;Terrain&quot;) and not isRestricted and mouse.Hit and (mouse.Hit.p - Tool.Parent.Head.Position).magnitude &lt; 60 then
+&#9;&#9;-- do something special if we&apos;re selecting close-by terrain
+&#9;&#9;selectedModel = terrainSelectionBox
+
+&#9;&#9;local cell = game.Workspace.Terrain:WorldToCellPreferSolid(mouse.Hit.p)
+&#9;&#9;local cellCenter = game.Workspace.Terrain:CellCenterToWorld(cell.X, cell.Y, cell.Z)
+&#9;&#9;terrainSelectionBox.CFrame = CFrame.new(cellCenter)
+
+&#9;&#9;selectionBox.Adornee = selectedModel
+&#9;&#9;return
+&#9;end
+
+&#9;if mouse.Target == nil then mouseModel = nil
+&#9;else boolGarbage, mouseModel = isInRobloxModel(mouse.Target) end
+
+&#9;if mouseModel == nil or (isRestricted and (not isInMyArea(mouseModel))) then mouseModel = nil end
+
+&#9;-- see if need to switch selectionBox
+&#9;if mouseModel ~= selectedModel then
+&#9;&#9;selectedModel = mouseModel
+&#9;&#9;selectionBox.Adornee = selectedModel
+&#9;end
+end
+
+function canSelectObject(part)
+&#9;if isRestricted then
+&#9;&#9;waitForChild(playerArea,&quot;PlayerArea&quot;)
+&#9;&#9;if playerArea:FindFirstChild(&quot;PlayerArea&quot;) and part:IsDescendantOf(playerArea.PlayerArea) then
+&#9;&#9;&#9;return part and not (part.Locked) and part:IsA(&quot;BasePart&quot;) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60
+&#9;&#9;else
+&#9;&#9;&#9;return false
+&#9;&#9;end
+&#9;end
+
+&#9;return part and not (part.Locked) and part:IsA(&quot;BasePart&quot;) and (part.Position - Tool.Parent.Head.Position).Magnitude &lt; 60
+end
+
+function onEquippedLocal(mouse)
+&#9;if game.Workspace:FindFirstChild(&quot;Terrain&quot;) then
+&#9;&#9;cluster = game.Workspace.Terrain
+&#9;end
+
+&#9;local character = script.Parent.Parent
+&#9;player = game.Players:GetPlayerFromCharacter(character)
+
+&#9;if player == nil then return end
+&#9;if playerOwner.Value and playerOwner.Value ~= player then return end
+&#9;playerOwner.Value = player
+
+&#9;if isRestricted then
+&#9;&#9;waitForChild(game.Workspace,&quot;BuildingAreas&quot;)
+&#9;&#9;waitForChild(game.Workspace.BuildingAreas,&quot;Area1&quot;)
+&#9;&#9;waitForChild(game.Workspace.BuildingAreas.Area1,&quot;Player&quot;)
+&#9;&#9;local areas = game.Workspace.BuildingAreas:GetChildren()
+&#9;&#9;for i = 1, #areas do
+&#9;&#9;&#9;if areas[i]:FindFirstChild(&quot;Player&quot;) and areas[i].Player.Value == player.Name then
+&#9;&#9;&#9;&#9;playerArea = areas[i]
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;if game.Workspace:FindFirstChild(&quot;BaseplateBumpers&quot;) then mouse.TargetFilter = game.Workspace.BaseplateBumpers end
+
+&#9;mouse.Icon = &quot;http://www.roblox.com/asset?id=67163124&quot;
+&#9;mouse.Button1Down:connect(function() on3dButton1Down(mouse) end)
+&#9;mouse.Button1Up:connect(function() on3dButton1Up(mouse) end)
+&#9;mouse.Move:connect(function() on3dMouseMove(mouse) end)
+&#9;
+&#9;selectionBox = Instance.new(&quot;SelectionBox&quot;)
+&#9;selectionBox.Name = &quot;MainSelectionBox&quot;
+&#9;selectionBox.Color = BrickColor.Blue()
+&#9;selectionBox.Adornee = nil
+&#9;selectionBox.Parent = player.PlayerGui;
+
+&#9;on3dMouseMove(mouse) -- so if they unequip/reequip, they still have selection box
+end
+
+function onUnequippedLocal()
+&#9;if selectionBox then selectionBox:Remove() end
+&#9;selectedModel = nil
+&#9;player = nil
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="SelectionBox" referent="RBX4">
+			<Properties>
+				<Ref name="Adornee">null</Ref>
+				<int name="Color">21</int>
+				<string name="Name">ErrorBox</string>
+				<float name="Transparency">0</float>
+				<bool name="Visible">false</bool>
+			</Properties>
+		</Item>
+		<Item class="ObjectValue" referent="RBX5">
+			<Properties>
+				<string name="Name">PlayerOwner</string>
+				<Ref name="Value">null</Ref>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
