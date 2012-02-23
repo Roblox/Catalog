@@ -1,0 +1,558 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">Recent Parts</string>
+			<Content name="TextureId"><null></null></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Part" referent="RBX1">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>0.600000024</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">1</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>4</X>
+					<Y>1.20000005</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RecentScript</string>
+				<ProtectedString name="Source">-- basic functions
+function waitForChild(instance, name)
+&#9;while not instance:findFirstChild(name) do
+&#9;&#9;instance.ChildAdded:wait()
+&#9;end
+end
+
+function waitForProperty(instance, name)
+&#9;while not instance[name] do
+&#9;&#9;instance.Changed:wait()
+&#9;end
+end
+
+function getPlayer()
+&#9;waitForProperty(game.Players,&quot;LocalPlayer&quot;)
+&#9;return game.Players.LocalPlayer
+end
+
+-- locals
+local Tool = script.Parent
+local RbxStamper = LoadLibrary(&quot;RbxStamper&quot;)
+local stamperControl = nil
+local lastStampModel = nil
+
+local recentPartsGui = nil
+local loadingGui = nil
+
+local mouse = nil
+local keyCon = nil
+
+local maxNumOfButtons = 20
+local xSpacing = 90
+local ySpacing = xSpacing
+local yPos = 10
+local xPos = 10
+
+local recentButtons = {}
+
+local BaseUrl = game:GetService(&quot;ContentProvider&quot;).BaseUrl:lower()
+local thumbUrl = BaseUrl .. &quot;game/tools/thumbnailAsset.ashx?fmt=png&amp;wd=420&amp;ht=420&amp;aid=&quot;
+
+waitForChild(script.Parent,&quot;RecentHintGui&quot;)
+waitForChild(script.Parent.RecentHintGui,&quot;RecentHint&quot;)
+local hintGui = script.Parent.RecentHintGui
+local shortcutHint = script.Parent.RecentHintGui.RecentHint
+
+waitForProperty(game,&quot;PlaceId&quot;)
+local isRestricted = (game.PlaceId == 41324860 or game.PlaceId == 129686177)
+local modelToStampIn, stampRegion = nil
+
+waitForChild(getPlayer(), &quot;PlayerGui&quot;)
+waitForChild(getPlayer().PlayerGui, &quot;Waypoint&quot;)
+waitForChild(getPlayer().PlayerGui, &quot;showBaseplateWaypoint&quot;)
+waitForChild(getPlayer().PlayerGui, &quot;hideBaseplateWaypoint&quot;)
+local showBaseplateScript = getPlayer().PlayerGui.showBaseplateWaypoint
+local hideBaseplateScript = getPlayer().PlayerGui.hideBaseplateWaypoint
+
+-- functions
+function stampAttemptFailed()
+&#9;hint(&quot;You can only stamp in your baseplate&quot;, 5)
+&#9;showBaseplateWaypoint()
+end
+
+function hasPoints()
+&#9;waitForChild(game.Players.LocalPlayer, &quot;MaxPoints&quot;)
+&#9;local maxPoints = game.Players.LocalPlayer.MaxPoints
+&#9;waitForChild(game.Players.LocalPlayer, &quot;PointsUsed&quot;)
+&#9;local pointsUsed = game.Players.LocalPlayer.PointsUsed
+
+&#9;return ( (pointsUsed.Value/maxPoints.Value) &lt; 1 )
+end
+
+function hint(phrase, timeLength)
+&#9;waitForChild(game.Players.LocalPlayer.PlayerGui,&quot;topHint&quot;)
+&#9;waitForChild(game.Players.LocalPlayer.PlayerGui.topHint, &quot;Add&quot;)
+&#9;waitForChild(game.Players.LocalPlayer.PlayerGui.topHint.Add, &quot;Label&quot;)
+&#9;waitForChild(game.Players.LocalPlayer.PlayerGui.topHint.Add, &quot;Time&quot;)
+&#9;game.Players.LocalPlayer.PlayerGui.topHint.Add.Label.Value = tostring(phrase)
+&#9;game.Players.LocalPlayer.PlayerGui.topHint.Add.Time.Value = tonumber(timeLength)
+&#9;game.Players.LocalPlayer.PlayerGui.topHint.Add.Disabled = false
+end
+
+function showBaseplateWaypoint()
+&#9;if modelToStampIn and showBaseplateScript then
+&#9;&#9;local target = showBaseplateScript:FindFirstChild(&quot;target&quot;)
+&#9;&#9;if target then
+&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;target.Value = modelToStampIn.Parent:FindFirstChild(&quot;RegionBounds&quot;)
+&#9;&#9;&#9;&#9;showBaseplateScript.Disabled = false
+&#9;&#9;&#9;&#9;showBaseplateScript.Disabled = true
+&#9;&#9;&#9;&#9;wait(8)
+&#9;&#9;&#9;&#9;hideBaseplateScript.Disabled = false
+&#9;&#9;&#9;&#9;hideBaseplateScript.Disabled = true
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+end
+
+
+function setupStamper(model, mouse)
+&#9;if model then
+&#9;&#9;if isRestricted then
+&#9;&#9;&#9;if not hasPoints() then
+&#9;&#9;&#9;&#9;hint(&quot;Too many parts stamped, delete some to stamp more&quot;, 5)
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;stampControl = RbxStamper.SetupStamperDragger(model,mouse, modelToStampIn, stampRegion, stampAttemptFailed)
+&#9;&#9;&#9;end
+&#9;&#9;else
+&#9;&#9;&#9;stampControl = RbxStamper.SetupStamperDragger(model,mouse)
+&#9;&#9;end
+
+&#9;&#9;if stampControl then
+&#9;&#9;&#9;stampCon = stampControl.Stamped.Changed:connect(function()
+&#9;&#9;&#9;&#9;&#9;if stampControl.Stamped.Value then
+&#9;&#9;&#9;&#9;&#9;&#9;if not hasPoints() then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;hint(&quot;Too many parts stamped, delete some to stamp more&quot;, 5)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if stampCon then stampCon:disconnect() end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;stampControl.Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;stampControl.ReloadModel()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+end
+
+function makeLoadingGui(parent)
+&#9;local newLoadingFrame = Instance.new(&quot;Frame&quot;)
+&#9;newLoadingFrame.Name = &quot;LoadingFrame&quot;
+&#9;newLoadingFrame.Style = Enum.FrameStyle.RobloxRound
+&#9;newLoadingFrame.Size = UDim2.new(0,350,0,60)
+&#9;newLoadingFrame.Visible = false
+&#9;newLoadingFrame.Position = UDim2.new(0.5,-175,0.5,-30)
+
+&#9;local loadingText = Instance.new(&quot;TextLabel&quot;)
+&#9;loadingText.Name = &quot;LoadingText&quot;
+&#9;loadingText.BackgroundTransparency = 1
+&#9;loadingText.Size = UDim2.new(0,155,1,0)
+&#9;loadingText.Font = Enum.Font.ArialBold
+&#9;loadingText.FontSize = Enum.FontSize.Size36
+&#9;loadingText.Text = &quot;Loading...&quot;
+&#9;loadingText.TextColor3 = Color3.new(1,1,1)
+&#9;loadingText.TextStrokeTransparency = 0
+&#9;loadingText.Parent = newLoadingFrame
+
+&#9;loadingGui = newLoadingFrame
+
+&#9;newLoadingFrame.Parent = parent
+end
+
+function showLoadingDialog()
+&#9;loadingGui.LoadingText:TweenPosition(UDim2.new(0,150,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 2, true)
+&#9;recentPartsGui.RecentFrame.Visible = false
+&#9;shortcutHint.Visible = true
+&#9;loadingGui.Visible = true
+end
+
+function hideLoadingDialog()
+&#9;loadingGui.LoadingText:TweenPosition(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+&#9;loadingGui.Visible = false
+end
+
+
+function buildRecentButton(assetId, initTerrainShape)
+&#9;local recentButton = Instance.new(&quot;ImageButton&quot;)
+&#9;recentButton.Name = &quot;RecentButton&quot;
+&#9;recentButton.Position = UDim2.new(0,10,0,10)
+&#9;recentButton.Size = UDim2.new(0,85,0,85)
+&#9;recentButton.Style = Enum.ButtonStyle.RobloxButton
+&#9;if assetId then
+&#9;&#9;recentButton.Image = thumbUrl .. assetId
+&#9;end
+&#9;recentButton.ZIndex = 6
+
+&#9;local terrainShape = Instance.new(&quot;IntValue&quot;)
+&#9;terrainShape.Name = &quot;TerrainShape&quot;
+&#9;if initTerrainShape ~= nil then
+&#9;&#9;terrainShape.Value = initTerrainShape
+&#9;else
+&#9;&#9;terrainShape.Value = -1
+&#9;end
+&#9;terrainShape.Parent = recentButton
+
+&#9;recentButton.MouseButton1Click:connect(function()
+&#9;&#9;if stampControl then 
+&#9;&#9;&#9;stampControl.Destroy()
+&#9;&#9;end
+&#9;&#9;recentPartsGui.RecentFrame.Visible = false
+&#9;&#9;shortcutHint.Visible = true
+&#9;&#9;showLoadingDialog()
+&#9;&#9;&#9;local sStart, sEnd = string.find(recentButton.Image, &quot;aid&quot;)
+&#9;&#9;&#9;local assetIdToStamp = string.sub(recentButton.Image, sEnd + 2)
+&#9;&#9;&#9;if recentButton.TerrainShape.Value &gt;= 0 then
+&#9;&#9;&#9;&#9;lastStampModel = RbxStamper.GetStampModel(tonumber(assetIdToStamp), recentButton.TerrainShape.Value)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;lastStampModel = RbxStamper.GetStampModel(tonumber(assetIdToStamp))
+&#9;&#9;&#9;end
+&#9;&#9;&#9;setupStamper(lastStampModel, mouse)
+&#9;&#9;hideLoadingDialog()
+&#9;end)
+
+&#9;return recentButton
+end
+
+function buildGui()
+&#9;recentPartsGui = Instance.new(&quot;ScreenGui&quot;)
+&#9;recentPartsGui.Name = &quot;RecentPartsGui&quot;
+
+&#9;local recentFrame = Instance.new(&quot;Frame&quot;)
+&#9;recentFrame.Name = &quot;RecentFrame&quot;
+&#9;recentFrame.BackgroundColor3 = Color3.new(0,0,0)
+&#9;recentFrame.BackgroundTransparency = 0.5
+&#9;recentFrame.Size = UDim2.new(0,465,0,375)
+&#9;recentFrame.Position = UDim2.new(0.5,-238,0.5,-180)
+&#9;recentFrame.ZIndex = 5
+&#9;recentFrame.Parent = recentPartsGui
+&#9;
+&#9;makeLoadingGui(recentPartsGui)
+end
+
+function appendButton(button)
+&#9;if xPos &gt;= 370 then -- we need to start a new row
+&#9;&#9;yPos = yPos + ySpacing
+&#9;&#9;xPos = 10
+&#9;&#9;button.Position = UDim2.new(0, xPos, 0, yPos)
+&#9;else
+&#9;&#9;xPos = xPos + xSpacing
+&#9;&#9;button.Position = UDim2.new(0, xPos, 0, yPos)
+&#9;end
+&#9;button.Parent = recentPartsGui.RecentFrame 
+&#9;table.insert(recentButtons,button)
+end
+
+function pushButtonsBack()
+&#9;if #recentButtons == 1 then return end
+
+&#9;for i = #recentButtons - 1, 1, -1 do
+&#9;&#9;recentButtons[i + 1].Image = recentButtons[i].Image
+&#9;&#9;recentButtons[i + 1].TerrainShape.Value = recentButtons[i].TerrainShape.Value
+&#9;end
+end
+
+function pushToTop(buttonPos)
+&#9;if #recentButtons == 1 then return end
+
+&#9;local imageToTop = recentButtons[buttonPos].Image
+&#9;local terrainShapeTop = recentButtons[buttonPos].TerrainShape.Value
+&#9;for i = buttonPos - 1, 1, -1 do
+&#9;&#9;recentButtons[i + 1].Image = recentButtons[i].Image
+&#9;&#9;recentButtons[i + 1].TerrainShape.Value = recentButtons[i].TerrainShape.Value
+&#9;end
+&#9;recentButtons[1].Image = imageToTop
+&#9;recentButtons[1].TerrainShape.Value = terrainShapeTop
+end
+
+function addRecentPart(assetId, terrainShape)
+&#9;if not recentPartsGui then
+&#9;&#9;buildGui()
+&#9;end
+
+&#9;assetId = tostring(assetId)
+
+&#9;-- first check to see if we have this asset, and if so put it at the top
+&#9;for i = 1, #recentButtons do
+&#9;&#9;local sStart, sEnd = string.find(recentButtons[i].Image, &quot;aid&quot;)
+&#9;&#9;local recentAssetId = string.sub(recentButtons[i].Image, sEnd + 2)
+&#9;&#9;if recentAssetId == assetId then
+&#9;&#9;&#9;pushToTop(i)
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;end
+
+&#9;if #recentButtons &gt;= maxNumOfButtons then --have as many buttons as we can, need to remove some stuff
+&#9;&#9;pushButtonsBack()
+&#9;&#9;recentButtons[1].Image = thumbUrl .. assetId
+&#9;&#9;recentButtons[1].TerrainShape.Value = terrainShape
+&#9;&#9;return
+&#9;end
+
+&#9;local button = buildRecentButton(assetId, terrainShape)
+&#9;if #recentButtons &lt; 1 then -- first button
+&#9;&#9;table.insert(recentButtons,button)
+&#9;&#9;button.Parent = recentPartsGui.RecentFrame
+&#9;&#9;return
+&#9;end
+
+&#9;-- adding new button to front
+&#9;appendButton(button) 
+&#9;pushButtonsBack()
+&#9;recentButtons[1].Image = thumbUrl .. assetId
+&#9;recentButtons[1].TerrainShape.Value = terrainShape
+end
+
+function keyHandler(key)
+&#9;if not key then return end
+
+&#9;key = string.lower(key)
+
+&#9;if key == &apos;q&apos; then
+&#9;&#9;if recentPartsGui then
+&#9;&#9;&#9;hideLoadingDialog()
+&#9;&#9;&#9;recentPartsGui.RecentFrame.Visible = true
+&#9;&#9;&#9;shortcutHint.Visible = false
+&#9;&#9;&#9;if stampControl then
+&#9;&#9;&#9;&#9;stampControl.Destroy() -- need to remove our stamping object
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+
+function onEquipped(newMouse)
+&#9;if not newMouse then return end
+
+&#9;mouse = newMouse
+&#9;mouse.Icon = &quot;http://www.roblox.com/asset?id=66887745&quot;
+
+&#9;if not recentPartsGui then
+&#9;&#9;buildGui()
+&#9;end
+&#9;recentPartsGui.Parent = game.Players.LocalPlayer.PlayerGui
+&#9;hintGui.Parent = game.Players.LocalPlayer.PlayerGui
+
+&#9;keyCon = mouse.KeyDown:connect(function(key) keyHandler(key) end)
+end
+
+function onUnequipped()&#9;
+&#9;hideLoadingDialog()
+&#9;recentPartsGui.Parent = nil
+&#9;hintGui.Parent = nil
+&#9;recentPartsGui.RecentFrame.Visible = true
+&#9;shortcutHint.Visible = false
+
+&#9;if stampControl then
+&#9;&#9;stampControl.Destroy()
+&#9;end
+
+&#9;mouse.Icon = &quot;&quot;
+&#9;mouse = nil
+
+&#9;if keyCon then
+&#9;&#9;keyCon:disconnect()
+&#9;&#9;keyCon = nil
+&#9;end
+end
+
+------------------------------------------------------------------------------------------------
+if isRestricted then -- setup our variables
+&#9;waitForChild(game,&quot;Workspace&quot;)
+&#9;waitForChild(game.Workspace, &quot;BuildingAreas&quot;)
+&#9;waitForChild(game.Workspace.BuildingAreas, &quot;Area1&quot;)
+&#9;waitForChild(game.Workspace.BuildingAreas, &quot;Area9&quot;) -- all areas loaded
+
+&#9;while not modelToStampIn do -- check for build area until we find one
+&#9;&#9;local buildAreas = game.Workspace.BuildingAreas:GetChildren()
+&#9;&#9;for i = 1, #buildAreas do
+&#9;&#9;&#9;if buildAreas[i]:IsA(&quot;Model&quot;) then
+&#9;&#9;&#9;&#9;waitForChild(buildAreas[i],&quot;Player&quot;)
+&#9;&#9;&#9;&#9;if buildAreas[i].Player.Value == game.Players.LocalPlayer.Name then
+&#9;&#9;&#9;&#9;&#9;waitForChild(buildAreas[i],&quot;PlayerArea&quot;)
+&#9;&#9;&#9;&#9;&#9;modelToStampIn = buildAreas[i].PlayerArea
+&#9;&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if not modelToStampIn then
+&#9;&#9;&#9;wait(0.5)
+&#9;&#9;end
+&#9;end
+
+
+&#9;local lowPos = modelToStampIn.Parent:FindFirstChild(&quot;LowPos&quot;)
+&#9;local highPos = modelToStampIn.Parent:FindFirstChild(&quot;HighPos&quot;)
+&#9;if not lowPos or highPos then
+&#9;&#9;wait(0.5)
+&#9;&#9;lowPos = modelToStampIn.Parent:FindFirstChild(&quot;LowPos&quot;)
+&#9;&#9;highPos = modelToStampIn.Parent:FindFirstChild(&quot;HighPos&quot;)
+&#9;end
+&#9;while lowPos.Value == Vector3.new(0,0,0) or highPos.Value == Vector3.new(0,0,0) do
+&#9;&#9;wait(0.5)
+&#9;end -- tool doesn&apos;t work until these are defined
+&#9;&#9;
+&#9;stampRegion = Region3.new(lowPos.Value, highPos.Value) -- this is where we can stamp
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+
+waitForChild(Tool,&quot;RecentAsset&quot;)
+Tool.RecentAsset.Changed:connect(function()
+&#9;if Tool.RecentAsset.Value &gt; 0 then
+&#9;&#9;addRecentPart(Tool.RecentAsset.Value, Tool.RecentTerrainShape.Value)
+&#9;&#9;Tool.RecentAsset.Value = 0
+&#9;&#9;Tool.RecentTerrainShape.Value = -1
+&#9;end
+end)
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX3">
+			<Properties>
+				<string name="Name">RecentAsset</string>
+				<int name="Value">0</int>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX4">
+			<Properties>
+				<string name="Name">RecentTerrainShape</string>
+				<int name="Value">-1</int>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX5">
+			<Properties>
+				<string name="Name">RecentHintGui</string>
+			</Properties>
+			<Item class="TextLabel" referent="RBX6">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4278190080</Color3>
+					<float name="BackgroundTransparency">0.5</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<token name="Font">2</token>
+					<token name="FontSize">5</token>
+					<string name="Name">RecentHint</string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>-85</XO>
+						<YS>0</YS>
+						<YO>0</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>170</XO>
+						<YS>0</YS>
+						<YO>30</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<string name="Text">Press Q for Recent Parts</string>
+					<Color3 name="TextColor3">4294967295</Color3>
+					<bool name="TextScaled">false</bool>
+					<Color3 name="TextStrokeColor3">4278190080</Color3>
+					<float name="TextStrokeTransparency">0</float>
+					<float name="TextTransparency">0</float>
+					<bool name="TextWrapped">false</bool>
+					<token name="TextXAlignment">2</token>
+					<token name="TextYAlignment">1</token>
+					<bool name="Visible">false</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
