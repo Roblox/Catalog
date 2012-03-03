@@ -1,0 +1,1826 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.300000012</Y>
+				<Z>0</Z>
+				<R00>0</R00>
+				<R01>1</R01>
+				<R02>-0</R02>
+				<R10>0</R10>
+				<R11>-0</R11>
+				<R12>-1</R12>
+				<R20>-1</R20>
+				<R21>0</R21>
+				<R22>-0</R22>
+			</CoordinateFrame>
+			<string name="Name">RoMaze</string>
+			<Content name="TextureId"><null></null></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RoMaze_Main</string>
+				<ProtectedString name="Source">function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local function class(name)
+&#9;local def = {}
+&#9;getfenv(0)[name] = def
+&#9;return function(ctor, static)
+&#9;&#9;local nctor = function(...)
+&#9;&#9;&#9;local this = {}
+&#9;&#9;&#9;if ctor then
+&#9;&#9;&#9;&#9;ctor(this, ...)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;return this
+&#9;&#9;end
+&#9;&#9;getfenv(0)[&apos;Create&apos;..name] = nctor
+&#9;&#9;if static then static(def) end
+&#9;end
+end
+
+class&apos;Signal&apos;(function(this)
+&#9;local mListeners = {}
+&#9;local mWaitObject = Create&apos;BoolValue&apos;{}
+
+&#9;function this:connect(func)
+&#9;&#9;local connection = {}
+&#9;&#9;function connection:disconnect()
+&#9;&#9;&#9;mListeners[func] = nil
+&#9;&#9;end
+&#9;&#9;mListeners[func] = connection
+&#9;&#9;return connection
+&#9;end
+
+&#9;function this:fire(...)
+&#9;&#9;--print(&quot;Fire evt&lt;&quot;..tostring(this)..&quot;&gt; from script&lt;&quot;..mDebugId..&quot;&gt;&quot;)
+&#9;&#9;for func, conn in pairs(mListeners) do
+&#9;&#9;&#9;--print(&quot;-&gt; &quot;..tostring(func)..&quot;( ... )&quot;)
+&#9;&#9;&#9;func(...)
+&#9;&#9;end
+&#9;&#9;mWaitObject.Value = not mWaitObject.Value
+&#9;end
+
+&#9;function this:wait()
+&#9;&#9;mWaitObject.Changed:wait()
+&#9;end
+end)
+
+local function frand(a,b)
+&#9;return a+math.random()*(b-a)
+end
+
+local function frand2(a,b)
+&#9;return frand(a,b)*frand(a,b)
+end
+
+---------------------------------------------------------------------------------
+
+local Tool = script.Parent
+local Mouse;
+
+kBlueColor = Color3.new(0, 0.7, 1)
+kWhiteColor = Color3.new(1, 1, 1)
+kBlackColor = Color3.new(0, 0, 0)
+
+
+local function Color3Lerp(c1, c2, frac)
+&#9;local frac_ = 1-frac
+&#9;return Color3.new(c1.r*frac_ + c2.r*frac,
+&#9;                  c1.g*frac_ + c2.g*frac,
+&#9;                  c1.b*frac_ + c2.b*frac)
+end
+
+
+function ShowTitleScreen(container)
+&#9;local kTitleText = &apos;ROMAZE&apos;
+&#9;local kHighlightStart, kHighlightEnd = 1,2
+&#9;local kTextSize = &apos;Size36&apos;
+&#9;local kTextFont = &apos;Arial&apos;
+&#9;local kHighlightFont = &apos;ArialBold&apos;
+&#9;local kTextSpacing = 32
+&#9;--
+&#9;local kBaseTextColor = kWhiteColor
+&#9;local kHighlightTextColor = kBlueColor
+&#9;--
+&#9;local mGui = Create&apos;Frame&apos;{
+&#9;&#9;Name = &apos;ContentFrame&apos;,
+&#9;&#9;Parent = container,
+&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;}
+&#9;--
+&#9;local mLetterGuis = {}
+&#9;local mLetterOrigin;
+&#9;do
+&#9;&#9;local availW = container.AbsoluteSize.x
+&#9;&#9;mLetterOrigin = (availW - kTextSpacing*(#kTitleText))/2
+&#9;end
+&#9;for i = 1, #kTitleText do
+&#9;&#9;local letter = kTitleText:sub(i,i)
+&#9;&#9;local gui = Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;Name = &apos;LetterGui&apos;,
+&#9;&#9;&#9;Parent = mGui,
+&#9;&#9;&#9;Font = kTextFont,
+&#9;&#9;&#9;FontSize = kTextSize,
+&#9;&#9;&#9;TextColor3 = kBaseTextColor,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Text = letter,
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Size = UDim2.new(0, kTextSpacing, 0, kTextSpacing),
+&#9;&#9;&#9;Position = UDim2.new(0, mLetterOrigin+kTextSpacing*(i-1), 0.5, -kTextSpacing/2),
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Covering&apos;,
+&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &apos;CoveringBar&apos;,
+&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = kBaseTextColor,
+&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(0, 2, 1, 0),
+&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(1, 0, 0, 0),
+&#9;&#9;&#9;&#9;&#9;Visible = false,
+&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;&#9;mLetterGuis[i] = gui
+&#9;end
+
+&#9;Spawn(function()
+&#9;&#9;--reveal letters
+&#9;&#9;local nCompleted = 0
+&#9;&#9;for i = 1, #mLetterGuis do
+&#9;&#9;&#9;local gui = mLetterGuis[i]
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;gui.Covering.CoveringBar.Visible = true
+&#9;&#9;&#9;&#9;gui.Covering:TweenSize(UDim2.new(0, 0, 1, 0), &apos;Out&apos;, &apos;Quart&apos;, 1)
+&#9;&#9;&#9;&#9;for i = 0, 1, 1/30 do
+&#9;&#9;&#9;&#9;&#9;gui.Covering.CoveringBar.BackgroundTransparency = i
+&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;gui.Covering.CoveringBar.Visible = false
+&#9;&#9;&#9;&#9;nCompleted = nCompleted+1
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;wait(0.3)
+&#9;&#9;end
+&#9;&#9;while nCompleted &lt; #mLetterGuis do wait() end
+
+&#9;&#9;--Flash to bold the highlight letters
+&#9;&#9;nCompleted = 0
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;for i = kHighlightStart, kHighlightEnd do
+&#9;&#9;&#9;&#9;mLetterGuis[i].Font = kHighlightFont
+&#9;&#9;&#9;end
+&#9;&#9;&#9;for lerp = 0, 1, 0.02 do
+&#9;&#9;&#9;&#9;for i = kHighlightStart, kHighlightEnd do
+&#9;&#9;&#9;&#9;&#9;mLetterGuis[i].TextColor3 = Color3Lerp(kBaseTextColor,
+&#9;&#9;&#9;&#9;&#9;                                       kHighlightTextColor,
+&#9;&#9;&#9;&#9;&#9;                                       math.sqrt(lerp))
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;nCompleted = nCompleted+1
+&#9;&#9;end)
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;local lineLen = (kHighlightEnd-kHighlightStart+1)*kTextSpacing
+&#9;&#9;&#9;local f1 = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Overline&apos;,
+&#9;&#9;&#9;&#9;Parent = mGui,
+&#9;&#9;&#9;&#9;BackgroundColor3 = kHighlightTextColor,
+&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;Position = UDim2.new(0, mLetterOrigin, 0.5, -kTextSpacing/2)
+&#9;&#9;&#9;}
+&#9;&#9;&#9;local f2 = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Underline&apos;,
+&#9;&#9;&#9;&#9;Parent = mGui,
+&#9;&#9;&#9;&#9;BackgroundColor3 = kHighlightTextColor,
+&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;}
+&#9;&#9;&#9;for i = 0, 1, 0.02 do
+&#9;&#9;&#9;&#9;f1.BackgroundTransparency = (1-i)
+&#9;&#9;&#9;&#9;f2.BackgroundTransparency = (1-i)
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;f1.Size = UDim2.new(0, i*lineLen, 0, 2)
+&#9;&#9;&#9;&#9;f2.Size = UDim2.new(0, i*lineLen, 0, 2)
+&#9;&#9;&#9;&#9;f2.Position = UDim2.new(0, mLetterOrigin+(1-i)*lineLen, 0.5, kTextSpacing/2)
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;nCompleted = nCompleted+1
+&#9;&#9;end)
+&#9;&#9;while nCompleted &lt; 2 do wait() end
+
+&#9;&#9;wait(1)
+&#9;&#9;mGui.Parent = nil
+&#9;&#9;return ShowMainMenu(container)
+&#9;end)
+end
+
+function CreateFrightenedButton(name, x, y, text, hBegin, hEnd)
+&#9;hBegin = hBegin or 0
+&#9;hEnd = hEnd or 0
+&#9;--
+&#9;--use a temporary screengui to get text-bounds to update right away
+&#9;local tmpScreenGui = Create&apos;ScreenGui&apos;{
+&#9;&#9;Parent = game.Players:GetPlayerFromCharacter(Tool.Parent).PlayerGui,
+&#9;}
+&#9;local mGui = Create&apos;ImageButton&apos;{
+&#9;&#9;Name = name,
+&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;Size = UDim2.new(),
+&#9;&#9;Position = UDim2.new(0, x, 0, y),
+&#9;&#9;Parent = tmpScreenGui,
+&#9;&#9;--
+&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;Name = &apos;TextMover&apos;,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;},
+&#9;}
+
+&#9;local HTextLabel;
+&#9;local mCurOffset = 0
+&#9;if hBegin == hEnd and hBegin == 0 then
+&#9;&#9;local text1 = Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;Name = &apos;Letters&apos;,
+&#9;&#9;&#9;Parent = mGui.TextMover,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;&#9;TextColor3 = kWhiteColor,
+&#9;&#9;&#9;Text = text,
+&#9;&#9;}
+&#9;&#9;mCurOffset = text1.TextBounds.x
+&#9;else
+&#9;&#9;if hBegin &gt; 1 then
+&#9;&#9;&#9;local text1 = Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Letters&apos;,
+&#9;&#9;&#9;&#9;Parent = mGui.TextMover,
+&#9;&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;&#9;&#9;TextColor3 = kWhiteColor,
+&#9;&#9;&#9;&#9;Text = text:sub(1,hBegin-1),
+&#9;&#9;&#9;}
+&#9;&#9;&#9;text1.Size = UDim2.new(0, text1.TextBounds.x, 1, 0)
+&#9;&#9;&#9;text1.Position = UDim2.new(0, 0, 0, 0)
+&#9;&#9;&#9;mCurOffset = mCurOffset+text1.TextBounds.x
+&#9;&#9;end
+&#9;&#9;--
+&#9;&#9;local text2 = Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;Name = &apos;Letters&apos;,
+&#9;&#9;&#9;Parent = mGui.TextMover,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Font = &apos;ArialBold&apos;,
+&#9;&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;&#9;TextColor3 = kBlueColor,
+&#9;&#9;&#9;Text = text:sub(hBegin,hEnd),
+&#9;&#9;}
+&#9;&#9;text2.Size = UDim2.new(0, text2.TextBounds.x, 1, 0)
+&#9;&#9;text2.Position = UDim2.new(0, mCurOffset, 0, 0)
+&#9;&#9;mCurOffset = mCurOffset+text2.TextBounds.x 
+&#9;&#9;HTextLabel = text2
+&#9;&#9;--
+&#9;&#9;if hEnd &lt; #text then
+&#9;&#9;&#9;local text3 = Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Letters&apos;,
+&#9;&#9;&#9;&#9;Parent = mGui.TextMover,
+&#9;&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;&#9;&#9;TextColor3 = kWhiteColor,
+&#9;&#9;&#9;&#9;Text = text:sub(hEnd+1, #text),
+&#9;&#9;&#9;}
+&#9;&#9;&#9;text3.Size = UDim2.new(0, text3.TextBounds.x, 1, 0)
+&#9;&#9;&#9;text3.Position = UDim2.new(0, mCurOffset, 0, 0)
+&#9;&#9;&#9;mCurOffset = mCurOffset+text3.TextBounds.x
+&#9;&#9;end
+&#9;end
+
+&#9;--use the calculated width to patch the button size
+&#9;mGui.Size = UDim2.new(0, mCurOffset, 0, 20)
+
+&#9;--shake on hover
+&#9;local mMouseHoverN = 0
+&#9;local mMouseHovering = false
+&#9;mGui.MouseEnter:connect(function()
+&#9;&#9;mMouseHovering = true
+&#9;&#9;local thisMouseHover = mMouseHoverN
+&#9;&#9;while mMouseHoverN == thisMouseHover do
+&#9;&#9;&#9;mGui.TextMover.Position = UDim2.new(0, frand(-2,2), 0, frand(-2,2))
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;mGui.TextMover.Position = UDim2.new()
+&#9;end)
+&#9;mGui.MouseLeave:connect(function()
+&#9;&#9;mMouseHovering = false
+&#9;&#9;mMouseHoverN = mMouseHoverN+1
+&#9;end)
+
+&#9;--throb highlighted text label
+&#9;if HTextLabel then
+&#9;&#9;local tOffset = frand(1,20)
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;while mGui.Parent do
+&#9;&#9;&#9;&#9;if mMouseHovering then
+&#9;&#9;&#9;&#9;&#9;HTextLabel.TextColor3 = kBlueColor
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;local x = 2*(tick()+tOffset)
+&#9;&#9;&#9;&#9;&#9;--now everbody lets make some noise!
+&#9;&#9;&#9;&#9;&#9;local frac = math.abs(math.cos(x/10)^5 * (math.sin(x)^4*math.cos(x+1)^2+
+&#9;&#9;&#9;&#9;&#9;                                          0.5*math.cos(x+2)-math.sin(3*x+2)))
+&#9;&#9;&#9;&#9;&#9;frac = (frac &gt; 1) and 1 or frac
+&#9;&#9;&#9;&#9;&#9;HTextLabel.TextColor3 = Color3Lerp(kWhiteColor, kBlueColor, frac)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+
+&#9;return mGui
+end
+
+function ShowMainMenu(container)
+&#9;--make base gui
+&#9;local mGui = Create&apos;Frame&apos;{
+&#9;&#9;Name = &apos;MenuFrame&apos;,
+&#9;&#9;Parent = container,
+&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;ClipsDescendants = true,
+&#9;&#9;--
+&#9;&#9;Create&apos;ImageLabel&apos;{
+&#9;&#9;&#9;Name = &apos;LED_Image&apos;,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Image = &apos;http://www.roblox.com/asset/?id=70584247&apos;,
+&#9;&#9;&#9;Position = UDim2.new(0, 170, 0, 40),
+&#9;&#9;&#9;Size = UDim2.new(0, 200, 0, 150),
+&#9;&#9;},
+&#9;&#9;--
+&#9;&#9;CreateFrightenedButton(&apos;HelpButton&apos;, 10, 280, &quot;HELP&quot;, 1, 1),
+&#9;&#9;CreateFrightenedButton(&apos;EasyButton&apos;, 15, 305, &quot;&gt; NEWB&quot;, 4, 4),
+&#9;&#9;CreateFrightenedButton(&apos;MedButton&apos;,  25, 330, &quot;&gt; LEARNED&quot;, 3, 3),
+&#9;&#9;CreateFrightenedButton(&apos;HardButton&apos;, 40, 355, &quot;&gt; EXPERIEANCED&quot;, 5, 5),
+&#9;&#9;--
+&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;Name = &apos;Overlay&apos;,
+&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Position = UDim2.new(0, 170, 0, 40),
+&#9;&#9;&#9;Size = UDim2.new(0, 200, 0, 150),
+&#9;&#9;},
+&#9;&#9;--
+&#9;&#9;Create&apos;ImageButton&apos;{
+&#9;&#9;&#9;Name = &apos;HelpPanel&apos;,
+&#9;&#9;&#9;Style = &apos;RobloxButton&apos;,
+&#9;&#9;&#9;AutoButtonColor = false,
+&#9;&#9;&#9;Size = UDim2.new(0, 300, 0, 150),
+&#9;&#9;&#9;Position = UDim2.new(0.5, -150, 0, -152),
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Label1&apos;,
+&#9;&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;&#9;Font = &apos;ArialBold&apos;,
+&#9;&#9;&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;&#9;&#9;TextColor3 = Color3.new(0, 102/255, 204/255),
+&#9;&#9;&#9;&#9;Position = UDim2.new(0, 50, 0, 35),&#9;
+&#9;&#9;&#9;&#9;Text = &quot;B L U E&quot;,
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Label2&apos;,
+&#9;&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;&#9;&#9;FontSize = &apos;Size14&apos;,
+&#9;&#9;&#9;&#9;TextColor3 = kWhiteColor,
+&#9;&#9;&#9;&#9;Position = UDim2.new(0, 170, 0, 35),&#9;
+&#9;&#9;&#9;&#9;Text = &quot;is    your   friend,   seek   him&quot;,
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Label3&apos;,
+&#9;&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;&#9;Font = &apos;ArialBold&apos;,
+&#9;&#9;&#9;&#9;FontSize = &apos;Size18&apos;,
+&#9;&#9;&#9;&#9;TextColor3 = Color3.new(165/255, 0, 33/255),
+&#9;&#9;&#9;&#9;Position = UDim2.new(0, 50, 0, 90),&#9;
+&#9;&#9;&#9;&#9;Text = &quot;R  E  D&quot;,
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Label4&apos;,
+&#9;&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;&#9;Font = &apos;Arial&apos;,
+&#9;&#9;&#9;&#9;FontSize = &apos;Size14&apos;,
+&#9;&#9;&#9;&#9;TextColor3 = kWhiteColor,
+&#9;&#9;&#9;&#9;Position = UDim2.new(0, 170, 0, 90),&#9;
+&#9;&#9;&#9;&#9;Text = &quot;is    your   enemy,   flee   him&quot;,
+&#9;&#9;&#9;},
+&#9;&#9;},
+&#9;}
+
+&#9;--make flickering overlay
+&#9;local mOverlay = mGui.Overlay
+&#9;Spawn(function()
+&#9;&#9;local tOffset = frand(1,50)
+&#9;&#9;while mGui.Parent do
+&#9;&#9;&#9;local x = (tick()+tOffset)*2.5
+&#9;&#9;&#9;local y = x*10
+&#9;&#9;&#9;--now everbody lets make some noise!
+&#9;&#9;&#9;local frac = math.abs(math.cos(x/10)^20 * (math.sin(y)^4*math.cos(y+1)^2+
+&#9;&#9;&#9;                                           0.5*math.cos(y+2)-math.sin(3*y+2)))
+&#9;&#9;&#9;frac = 1-frac
+&#9;&#9;&#9;mOverlay.BackgroundTransparency = frac
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;end)
+
+&#9;--do button-ey stuff
+&#9;local HelpIsShown = false
+&#9;mGui.HelpButton.MouseButton1Down:connect(function()
+&#9;&#9;if HelpIsShown then
+&#9;&#9;&#9;HelpIsShown = false
+&#9;&#9;&#9;mGui.HelpPanel:TweenPosition(UDim2.new(0.5, -150, 0, -152), &apos;Out&apos;, &apos;Quart&apos;, 0.5)
+&#9;&#9;else
+&#9;&#9;&#9;HelpIsShown = true
+&#9;&#9;&#9;mGui.HelpPanel:TweenPosition(UDim2.new(0.5, -150, 0, 10), &apos;Out&apos;, &apos;Quart&apos;, 0.5)
+&#9;&#9;end
+&#9;end)
+&#9;mGui.HelpPanel.MouseButton1Down:connect(function()
+&#9;&#9;mGui.HelpPanel:TweenPosition(UDim2.new(0.5, -150, 0, -152), &apos;Out&apos;, &apos;Quart&apos;, 0.5)
+&#9;&#9;HelpIsShown = false
+&#9;end)
+&#9;mGui.EasyButton.MouseButton1Down:connect(function()
+&#9;&#9;mGui.Parent = nil
+&#9;&#9;DoLevelset(container, EasyGame)
+&#9;end)
+&#9;mGui.MedButton.MouseButton1Down:connect(function()
+&#9;&#9;mGui.Parent = nil
+&#9;&#9;DoLevelset(container, MediumGame)
+&#9;end)
+&#9;mGui.HardButton.MouseButton1Down:connect(function()
+&#9;&#9;mGui.Parent = nil
+&#9;&#9;DoLevelset(container, HardGame)
+&#9;end)
+end
+
+function PlayGame(container, levelData, onAction)
+&#9;local kSquareSize = 16
+&#9;--
+&#9;local mBoard = {}
+&#9;local mTotalWidth, mTotalHeight = 0, 0;
+
+&#9;--calculate the total space neede for all the panels
+&#9;for _, pane in pairs(levelData) do
+&#9;&#9;if pane.X+pane.W-1 &gt; mTotalWidth then
+&#9;&#9;&#9;mTotalWidth = pane.X+pane.W-1
+&#9;&#9;end
+&#9;&#9;if pane.Y+pane.H-1 &gt; mTotalHeight then
+&#9;&#9;&#9;mTotalHeight = pane.Y+pane.H-1
+&#9;&#9;end
+&#9;end
+
+&#9;--make the main gui container
+&#9;local mGui = Create&apos;Frame&apos;{
+&#9;&#9;Name = &apos;GameContainer&apos;,
+&#9;&#9;Parent = container,
+&#9;&#9;Size = UDim2.new(1, 0, 1, 0),
+&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;ClipsDescendants = true,
+&#9;&#9;--
+&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;Name = &apos;PanelContainer&apos;,
+&#9;&#9;&#9;BackgroundTransparency = 1,
+&#9;&#9;&#9;Size = UDim2.new(0, kSquareSize*mTotalWidth, 
+&#9;&#9;&#9;                 0, kSquareSize*mTotalHeight),
+&#9;&#9;&#9;Position = UDim2.new(0.5, -0.5*kSquareSize*mTotalWidth, 
+&#9;&#9;&#9;                     0.5, -0.5*kSquareSize*mTotalHeight),
+&#9;&#9;},
+&#9;}
+
+&#9;--key connection
+&#9;local mKeyCn;
+
+&#9;--generate the board
+&#9;local mPaneToGuiMap = {}
+&#9;--
+&#9;local mNoMoveFlag = false
+&#9;local mPlayerList = {}
+
+&#9;local MovePlayer;
+&#9;local function KillPlayer(player)
+&#9;&#9;--kill the player
+&#9;&#9;player.Gui.BackgroundTransparency = 1
+
+&#9;&#9;--do a death animation with some particles and then move
+&#9;&#9;--the players back where they started
+&#9;&#9;local particleList = {}
+&#9;&#9;for i = 1, 20 do
+&#9;&#9;&#9;local particle = {}
+&#9;&#9;&#9;particle.Gui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;DestroyParticlePlayer&apos;,
+&#9;&#9;&#9;&#9;Parent = player.Gui,
+&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;BackgroundColor3 = kWhiteColor,
+&#9;&#9;&#9;&#9;Size = UDim2.new(0, 2, 0, 2),
+&#9;&#9;&#9;}
+&#9;&#9;&#9;local theta = frand(0, math.pi*2)
+&#9;&#9;&#9;local dist = math.random(50, 100)
+&#9;&#9;&#9;particle.VX = math.sin(theta)*dist
+&#9;&#9;&#9;particle.VY = -math.cos(theta)*dist
+&#9;&#9;&#9;particle.Gui:TweenPosition(UDim2.new(0.5, particle.VX, 0.5, particle.VY), &apos;In&apos;, &apos;Linear&apos;, 1)
+&#9;&#9;&#9;--
+&#9;&#9;&#9;particleList[#particleList+1] =  particle
+&#9;&#9;end
+
+&#9;&#9;--disalow movement
+&#9;&#9;mNoMoveFlag = true
+
+&#9;&#9;--animate
+&#9;&#9;for i = 0, 1, 1/30 do
+&#9;&#9;&#9;for _, particle in pairs(particleList) do
+&#9;&#9;&#9;&#9;particle.Gui.BackgroundTransparency = i
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+
+&#9;&#9;--kill the particles
+&#9;&#9;for _, particle in pairs(particleList) do
+&#9;&#9;&#9;particle.Gui:Destroy()
+&#9;&#9;end
+
+&#9;&#9;--reshow the player
+&#9;&#9;player.Gui.BackgroundTransparency = 0
+
+&#9;&#9;--put each player back to their starting pos
+&#9;&#9;for _, p in pairs(mPlayerList) do
+&#9;&#9;&#9;p.OX, p.OY = p.StartOX, p.StartOY
+&#9;&#9;&#9;p.Gui.Parent = mPaneToGuiMap[p.StartPane]
+&#9;&#9;&#9;MovePlayer(p, p.StartX, p.StartY)
+&#9;&#9;end
+
+&#9;&#9;--turn back on movement
+&#9;&#9;mNoMoveFlag = false
+&#9;end
+
+&#9;MovePlayer = function(player, x, y)
+&#9;&#9;local tile = (mBoard[x] or {})[y]
+&#9;&#9;if tile and tile.Walkable then
+&#9;&#9;&#9;player.X, player.Y = x, y
+&#9;&#9;&#9;player.Gui.Position = UDim2.new(0, (player.X-player.OX+0.2)*kSquareSize-1,
+&#9;&#9;&#9;                                0, (player.Y-player.OY+0.2)*kSquareSize)
+&#9;&#9;&#9;if tile.Type == &apos;Kill&apos; then
+&#9;&#9;&#9;&#9;KillPlayer(player)
+&#9;&#9;&#9;&#9;return --we don&apos;t and to continue to the other move handling code now
+&#9;&#9;&#9;elseif tile.Type == &apos;Tele&apos; then
+&#9;&#9;&#9;&#9;--use spawn to give the other blocks a chance to move
+&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;--check for a player obstructing the destination
+&#9;&#9;&#9;&#9;&#9;local isObstructed = false
+&#9;&#9;&#9;&#9;&#9;for _, p in pairs(mPlayerList) do
+&#9;&#9;&#9;&#9;&#9;&#9;if p.X == tile.TeleportToX and p.Y == tile.TeleportToY then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;isObstructed = true
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;if not isObstructed then
+&#9;&#9;&#9;&#9;&#9;&#9;--fade player out
+&#9;&#9;&#9;&#9;&#9;&#9;mNoMoveFlag = true
+&#9;&#9;&#9;&#9;&#9;&#9;for i = 0, 1, 0.1 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;player.Gui.BackgroundTransparency = i
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;local toTile = mBoard[tile.TeleportToX][tile.TeleportToY]
+&#9;&#9;&#9;&#9;&#9;&#9;player.Gui.Parent = mPaneToGuiMap[toTile.Pane]
+&#9;&#9;&#9;&#9;&#9;&#9;player.OX, player.OY = toTile.Pane.X, toTile.Pane.Y
+&#9;&#9;&#9;&#9;&#9;&#9;MovePlayer(player, tile.TeleportToX, tile.TeleportToY)
+&#9;&#9;&#9;&#9;&#9;&#9;for i = 1, 0, -0.1 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;player.Gui.BackgroundTransparency = i
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;player.Gui.BackgroundTransparency = 0
+&#9;&#9;&#9;&#9;&#9;&#9;mNoMoveFlag = false
+&#9;&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;for paneIndex, pane in pairs(levelData) do
+&#9;&#9;--make a player for the pane
+&#9;&#9;local player = {}
+&#9;&#9;player.OX = pane.X
+&#9;&#9;player.StartOX = pane.X
+&#9;&#9;player.OY = pane.Y
+&#9;&#9;player.StartOY = pane.Y
+&#9;&#9;player.StartPane = pane
+
+&#9;&#9;--make a GUI for each pane
+&#9;&#9;local paneGui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;Name = &apos;GamePane&apos;,
+&#9;&#9;&#9;Parent = mGui.PanelContainer,
+&#9;&#9;&#9;Position = UDim2.new(0, (pane.X-1)*kSquareSize-400*pane.SlideInDirX, 
+&#9;&#9;&#9;                     0, (pane.Y-1)*kSquareSize-400*pane.SlideInDirY),
+&#9;&#9;&#9;Size = UDim2.new(0, pane.W*kSquareSize, 0, pane.H*kSquareSize),
+&#9;&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;&#9;BorderColor3 = kBlueColor,
+&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;}
+&#9;&#9;mPaneToGuiMap[pane] = paneGui
+&#9;&#9;--
+&#9;&#9;for y = pane.Y, pane.Y+pane.H-1 do
+&#9;&#9;&#9;local rowData = pane.Data[y-pane.Y+1]
+&#9;&#9;&#9;for x = pane.X, pane.X+pane.W-1 do
+&#9;&#9;&#9;&#9;local sym = rowData:sub(x-pane.X+1,x-pane.X+1)
+&#9;&#9;&#9;&#9;if not mBoard[x] then mBoard[x] = {} end
+
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;local square = {}
+&#9;&#9;&#9;&#9;square.Pane = pane
+
+&#9;&#9;&#9;&#9;--handle special symbols
+&#9;&#9;&#9;&#9;if sym == &apos;O&apos; then
+&#9;&#9;&#9;&#9;&#9;player.StartX, player.StartY = x, y
+&#9;&#9;&#9;&#9;&#9;player.X, player.Y = x, y
+&#9;&#9;&#9;&#9;&#9;sym = &apos; &apos;
+&#9;&#9;&#9;&#9;elseif sym == &apos;E&apos; then
+&#9;&#9;&#9;&#9;&#9;player.EndX, player.EndY = x, y
+&#9;&#9;&#9;&#9;elseif pane.Teleports[sym] then
+&#9;&#9;&#9;&#9;&#9;local tele = pane.Teleports[sym]
+&#9;&#9;&#9;&#9;&#9;tele.Pane = tele.Pane or paneIndex
+&#9;&#9;&#9;&#9;&#9;local destPane = levelData[tele.Pane]
+&#9;&#9;&#9;&#9;&#9;square.TeleportToX = destPane.X+tele.X-1
+&#9;&#9;&#9;&#9;&#9;square.TeleportToY = destPane.Y+tele.Y-1
+&#9;&#9;&#9;&#9;&#9;sym = &apos;Tele&apos;
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if sym == &apos;#&apos; then
+&#9;&#9;&#9;&#9;&#9;square.Type = &apos;Wall&apos;
+&#9;&#9;&#9;&#9;&#9;square.Walkable = false
+&#9;&#9;&#9;&#9;&#9;square.Gui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;WallTile&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;Parent = paneGui,
+&#9;&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(0, kSquareSize-1, 0, kSquareSize-1),
+&#9;&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(0, (x-pane.X)*kSquareSize, 
+&#9;&#9;&#9;&#9;&#9;&#9;                     0, 1+(y-pane.Y)*kSquareSize),
+&#9;&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = kWhiteColor,
+&#9;&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;elseif sym == &apos;E&apos; then
+&#9;&#9;&#9;&#9;&#9;square.Type = &apos;End&apos;
+&#9;&#9;&#9;&#9;&#9;square.Walkable = true
+&#9;&#9;&#9;&#9;&#9;square.Gui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;EndTile&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;Parent = paneGui,
+&#9;&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(0, kSquareSize-4, 0, kSquareSize-4),
+&#9;&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(0, 2+(x-pane.X)*kSquareSize, 
+&#9;&#9;&#9;&#9;&#9;&#9;                     0, 2+(y-pane.Y)*kSquareSize),
+&#9;&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = kBlackColor,
+&#9;&#9;&#9;&#9;&#9;&#9;BorderColor3 = kBlueColor,
+&#9;&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 1,&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;elseif sym == &apos;*&apos; then
+&#9;&#9;&#9;&#9;&#9;square.Type = &apos;Kill&apos;
+&#9;&#9;&#9;&#9;&#9;square.Walkable = true
+&#9;&#9;&#9;&#9;&#9;square.Gui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;KillTile&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;Parent = paneGui,
+&#9;&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(0, kSquareSize-3, 0, kSquareSize-3),
+&#9;&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(0, 2+(x-pane.X)*kSquareSize, 
+&#9;&#9;&#9;&#9;&#9;&#9;                     0, 2+(y-pane.Y)*kSquareSize),
+&#9;&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = Color3.new(0.5, 0, 0),
+&#9;&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 0,&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = Color3.new(1, 0, 0),
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(1, -4, 1, -4),
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(0, 2, 0, 2),
+&#9;&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;elseif sym == &apos;Tele&apos; then
+&#9;&#9;&#9;&#9;&#9;square.Type = &apos;Tele&apos;
+&#9;&#9;&#9;&#9;&#9;square.Walkable = true
+&#9;&#9;&#9;&#9;&#9;square.Gui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;Name = &apos;TeleTile&apos;,
+&#9;&#9;&#9;&#9;&#9;&#9;Parent = paneGui,
+&#9;&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(0, kSquareSize-3, 0, kSquareSize-3),
+&#9;&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(0, 2+(x-pane.X)*kSquareSize, 
+&#9;&#9;&#9;&#9;&#9;&#9;                     0, 2+(y-pane.Y)*kSquareSize),
+&#9;&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = Color3.new(0.2, 0.2, 0.2),
+&#9;&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 0,&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;BackgroundColor3 = Color3.new(0.4, 0.4, 0.4),
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(1, -4, 1, -4),
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Position = UDim2.new(0, 2, 0, 2),
+&#9;&#9;&#9;&#9;&#9;&#9;},
+&#9;&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;elseif sym == &apos; &apos; then
+&#9;&#9;&#9;&#9;&#9;square.Type = &apos;Empty&apos;
+&#9;&#9;&#9;&#9;&#9;square.Walkable = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;mBoard[x][y] = square
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+&#9;&#9;-- if there was a starting point in this pane, use the player from it.
+&#9;&#9;if player.X then
+&#9;&#9;&#9;mPlayerList[#mPlayerList+1] = player
+
+&#9;&#9;&#9;--make the player&apos;s gui
+&#9;&#9;&#9;player.Gui = Create&apos;Frame&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;PlayerSquare&apos;,
+&#9;&#9;&#9;&#9;Parent = paneGui,
+&#9;&#9;&#9;&#9;BorderSizePixel = 0,
+&#9;&#9;&#9;&#9;Size = UDim2.new(0, math.ceil(kSquareSize*0.6)+1, 0, math.ceil(kSquareSize*0.6)+1),
+&#9;&#9;&#9;&#9;BackgroundColor3 = kWhiteColor,
+&#9;&#9;&#9;}
+
+&#9;&#9;&#9;--do an initial move of the player to get them in the right position
+&#9;&#9;&#9;MovePlayer(player, player.X, player.Y)
+&#9;&#9;end
+&#9;end
+
+&#9;for _, pane in pairs(levelData) do
+&#9;&#9;--slide in the panes
+&#9;&#9;mPaneToGuiMap[pane]:TweenPosition(UDim2.new(0, (pane.X-1)*kSquareSize, 
+&#9;&#9;                                  0, (pane.Y-1)*kSquareSize),
+&#9;&#9;                                  &apos;In&apos;, &apos;Quad&apos;, 1)
+&#9;end
+&#9;wait(1)
+&#9;mKeyCn = Mouse.KeyDown:connect(function(key)
+&#9;&#9;if mNoMoveFlag then return end
+&#9;&#9;key = key:lower()
+&#9;&#9;local dx, dy = 0, 0;
+&#9;&#9;--
+&#9;&#9;if key == &apos;q&apos; then
+&#9;&#9;&#9;--reset
+&#9;&#9;&#9;KillPlayer(mPlayerList[1])
+&#9;&#9;&#9;return
+&#9;&#9;elseif key == &apos;w&apos; then
+&#9;&#9;&#9;dy = -1
+&#9;&#9;elseif key == &apos;s&apos; then
+&#9;&#9;&#9;dy = 1
+&#9;&#9;elseif key == &apos;a&apos; then
+&#9;&#9;&#9;dx = -1
+&#9;&#9;elseif key == &apos;d&apos; then
+&#9;&#9;&#9;dx = 1
+&#9;&#9;end
+&#9;&#9;--
+&#9;&#9;for _, player in pairs(mPlayerList) do
+&#9;&#9;&#9;MovePlayer(player, player.X+dx, player.Y+dy)
+&#9;&#9;end
+&#9;&#9;--check for a win
+&#9;&#9;local hasWon = true
+&#9;&#9;for _, player in pairs(mPlayerList) do
+&#9;&#9;&#9;if mBoard[player.X][player.Y].Type ~= &apos;End&apos; then
+&#9;&#9;&#9;&#9;hasWon = false
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if hasWon then
+&#9;&#9;&#9;mNoMoveFlag = true
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;--fade out players
+&#9;&#9;&#9;&#9;for i = 0, 1, 0.05 do
+&#9;&#9;&#9;&#9;&#9;for _, p in pairs(mPlayerList) do
+&#9;&#9;&#9;&#9;&#9;&#9;p.Gui.BackgroundTransparency = i
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;--slide out panes
+&#9;&#9;&#9;&#9;for _, pane in pairs(levelData) do
+&#9;&#9;&#9;&#9;&#9;mPaneToGuiMap[pane]:TweenPosition(UDim2.new(0, (pane.X-1)*kSquareSize-400*pane.SlideInDirX, 
+&#9;&#9;&#9;&#9;&#9;                                            0, (pane.Y-1)*kSquareSize-400*pane.SlideInDirY),
+&#9;&#9;&#9;&#9;&#9;                                  &apos;Out&apos;, &apos;Quad&apos;, 1)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;wait(1)
+
+&#9;&#9;&#9;&#9;--done, delete gui and announce viectory to listener
+&#9;&#9;&#9;&#9;mGui.Parent = nil
+&#9;&#9;&#9;&#9;mKeyCn:disconnect()
+&#9;&#9;&#9;&#9;return onAction(&apos;win&apos;)
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end)
+
+&#9;--do throb effect for feild
+&#9;Spawn(function()
+&#9;&#9;local mWaveSourceX = mTotalWidth/2
+&#9;&#9;local mWaveSourceY = mTotalHeight/2
+&#9;&#9;local freq = 0.5
+&#9;&#9;local lambda = 10
+&#9;&#9;local omega = 2*math.pi*freq
+&#9;&#9;local k = 2*math.pi/lambda
+&#9;&#9;--
+&#9;&#9;while mGui.Parent do
+&#9;&#9;&#9;local startT = tick()
+&#9;&#9;&#9;for i = 0, 1, 0.02 do
+&#9;&#9;&#9;&#9;local t = tick()-startT
+&#9;&#9;&#9;&#9;for x = 1, mTotalWidth do
+&#9;&#9;&#9;&#9;&#9;for y = 1, mTotalHeight do
+&#9;&#9;&#9;&#9;&#9;&#9;local tl = mBoard[x][y]
+&#9;&#9;&#9;&#9;&#9;&#9;if tl and tl.Type == &apos;Wall&apos; then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local dx = mWaveSourceX-x
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local dy = mWaveSourceY-y
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local x = math.sqrt(dx*dx + dy*dy)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;tl.Gui.BackgroundTransparency = 0.15*(i*math.sin(k*x - omega*t)^2)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;for i = 1, 0, -0.02 do
+&#9;&#9;&#9;&#9;local t = tick()-startT
+&#9;&#9;&#9;&#9;for x = 1, mTotalWidth do
+&#9;&#9;&#9;&#9;&#9;for y = 1, mTotalHeight do
+&#9;&#9;&#9;&#9;&#9;&#9;local tl = mBoard[x][y]
+&#9;&#9;&#9;&#9;&#9;&#9;if tl and tl.Type == &apos;Wall&apos; then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local dx = mWaveSourceX-x
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local dy = mWaveSourceY-y
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local x = math.sqrt(dx*dx + dy*dy)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;tl.Gui.BackgroundTransparency = 0.15*(i*math.sin(k*x - omega*t)^2)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(frand(1,3))
+&#9;&#9;end
+&#9;end)
+end
+
+function DoLevelset(container, levelSet, i)
+&#9;i = i or 1
+&#9;if i &lt;= #levelSet then
+&#9;&#9;PlayGame(container, levelSet[i], function(action)
+&#9;&#9;&#9;if action == &apos;win&apos; then
+&#9;&#9;&#9;&#9;DoLevelset(container, levelSet, i+1)
+&#9;&#9;&#9;elseif action == &apos;quit&apos; then
+&#9;&#9;&#9;&#9;--todo:
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+local gui;
+local Humanoid;
+Tool.Equipped:connect(function(mouse)
+&#9;Mouse = mouse
+&#9;Humanoid = Tool.Parent.Humanoid
+&#9;local player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;Humanoid.WalkSpeed = 0
+&#9;gui = Create&apos;ScreenGui&apos;{
+&#9;&#9;Name = &apos;RoMaze_Gui&apos;,
+&#9;&#9;Parent = player.PlayerGui,
+&#9;&#9;Create&apos;Frame&apos;{
+&#9;&#9;&#9;Name = &apos;Container&apos;,
+&#9;&#9;&#9;Style = &apos;RobloxRound&apos;,
+&#9;&#9;&#9;Size = UDim2.new(0, 400, 0, 400),
+&#9;&#9;&#9;Position = UDim2.new(0.5, -200, 0.5, -200),
+&#9;&#9;},
+&#9;}
+&#9;ShowTitleScreen(gui.Container)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;Humanoid.WalkSpeed = 16
+&#9;if gui then
+&#9;&#9;gui:Destroy()
+&#9;&#9;gui = nil
+&#9;end
+end)
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+--
+-- #  Corrosponds to generic walls.
+--
+-- O  the &quot;O&quot;rigin of the pane, where a player starts.
+--
+-- E  the &quot;E&quot;nd of the pane, where the player tries to 
+--    get to.
+--
+--    (Space) empty space, nothing here.
+--
+-- *  A killing block, kills the player if they move 
+--    onto it.
+-- 
+-- Teleporters:
+--   Any other symbol can be used as a teleport square.
+--   If you use another symbol and add it to the &quot;Teleports&quot;
+--   map of the given pane, it will be treated as a teleporter
+--   and will move players to the space specified by the 
+--
+
+Game_Level1 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### O####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### E####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level2 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### O####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### E####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},&#9;&#9;
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;# E     O#&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level3 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### O####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### E####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},&#9;&#9;
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;# E     O#&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 11,
+&#9;&#9;W = 20, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;# # E #   #   #   ##&quot;,
+&#9;&#9;&#9;&quot;# # # # # # # # # ##&quot;,
+&#9;&#9;&#9;&quot;#   #   #   #   #O##&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level4 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 20, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;# # E #   #   #   ##&quot;,
+&#9;&#9;&#9;&quot;# # # # # # # # # ##&quot;,
+&#9;&#9;&#9;&quot;#   #   #   #   #O##&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = 1,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##O   E ##&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;##E#######&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;#######E##&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;## E   O##&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level5 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##O   E ##&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;##E#######&quot;,
+&#9;&#9;&#9;&quot;## #######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},&#9;&#9;
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;####O#####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;# E     ##&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},&#9;
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;# E     O#&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;#######E##&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;####### ##&quot;,
+&#9;&#9;&#9;&quot;## E   O##&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level6 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 20, H = 20,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;&#9;&quot;#O  * *B  *   **** #&quot;,
+&#9;&#9;&#9;&quot;#** * *** * *    * #&quot;,
+&#9;&#9;&#9;&quot;#   *   * * ***    #&quot;,
+&#9;&#9;&#9;&quot;# ***** *   * * ***#&quot;,
+&#9;&#9;&#9;&quot;# *   * *** * ***  #&quot;,
+&#9;&#9;&#9;&quot;#   * *   ***   ** #&quot;,
+&#9;&#9;&#9;&quot;#**** * * *A*** ** #&quot;,
+&#9;&#9;&#9;&quot;#       * *   *    #&quot;,
+&#9;&#9;&#9;&quot;# ***** * * ***** *#&quot;,
+&#9;&#9;&#9;&quot;# *   * * * *   * *#&quot;,
+&#9;&#9;&#9;&quot;#   * * *** *** *  #&quot;,
+&#9;&#9;&#9;&quot;#**** *       *  * #&quot;,
+&#9;&#9;&#9;&quot;#C*   ***** * ** * #&quot;,
+&#9;&#9;&#9;&quot;# * *** * *****  * #&quot;,
+&#9;&#9;&#9;&quot;# *     *   *    * #&quot;,
+&#9;&#9;&#9;&quot;# ******* * **** * #&quot;,
+&#9;&#9;&#9;&quot;# *   *   * *    * #&quot;,
+&#9;&#9;&#9;&quot;#   *   ***   ****E#&quot;,
+&#9;&#9;&#9;&quot;####################&quot;,
+&#9;&#9;},
+&#9;&#9;Teleports = {
+&#9;&#9;&#9;[&apos;A&apos;] = {X=19,Y=2},
+&#9;&#9;&#9;[&apos;B&apos;] = {X=14,Y=11},
+&#9;&#9;&#9;[&apos;C&apos;] = {X=14,Y=5},
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = 0,
+&#9;},
+}
+
+Game_Level7 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##T     O#&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#      E #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {
+&#9;&#9;&#9;[&apos;T&apos;] = {X=7,Y=6},
+&#9;&#9;},
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;# E     O#&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = 1,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;###    ###&quot;,
+&#9;&#9;&#9;&quot;###  O ###&quot;,
+&#9;&#9;&#9;&quot;### E  ###&quot;,
+&#9;&#9;&#9;&quot;###    ###&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### O####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### E####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level8 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#       O#&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#   #    #&quot;,
+&#9;&#9;&#9;&quot;#   E    #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### O####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### E####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;###    ###&quot;,
+&#9;&#9;&#9;&quot;###  O ###&quot;,
+&#9;&#9;&#9;&quot;### E  ###&quot;,
+&#9;&#9;&#9;&quot;###    ###&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {},&#9;&#9;&#9;
+&#9;},
+}
+
+Game_Level9 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#       O#&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#   #    #&quot;,
+&#9;&#9;&#9;&quot;#   E    #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 1,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#### O####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### #####&quot;,
+&#9;&#9;&#9;&quot;#### E####&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;###    ###&quot;,
+&#9;&#9;&#9;&quot;###  O ###&quot;,
+&#9;&#9;&#9;&quot;### E  ###&quot;,
+&#9;&#9;&#9;&quot;###    ###&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {},&#9;&#9;&#9;
+&#9;},
+&#9;{
+&#9;&#9;X = 11, Y = 11,
+&#9;&#9;W = 10, H = 10,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;#       O#&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#    E  ##&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Game_Level10 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 20, H = 20,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########    *     &quot;,
+&#9;&#9;&#9;&quot;#O*     *#       #  &quot;,
+&#9;&#9;&#9;&quot;# * *** *#    #     &quot;,
+&#9;&#9;&#9;&quot;# *   * *#          &quot;,
+&#9;&#9;&#9;&quot;# **  *  #          &quot;,
+&#9;&#9;&#9;&quot;#   * *  #      *   &quot;,
+&#9;&#9;&#9;&quot;#*  * ** #          &quot;,
+&#9;&#9;&#9;&quot;# * * ** #  #    #  &quot;,
+&#9;&#9;&#9;&quot;# *    *E#      *   &quot;,
+&#9;&#9;&#9;&quot;##########          &quot;,
+&#9;&#9;&#9;&quot;            ##  *   &quot;,
+&#9;&#9;&#9;&quot;                    &quot;,
+&#9;&#9;&#9;&quot;   #    #  #        &quot;,
+&#9;&#9;&#9;&quot;   ##  *  * #       &quot;,
+&#9;&#9;&#9;&quot;   # * * *  *   *   &quot;,
+&#9;&#9;&#9;&quot; *    #  #  *  *    &quot;,
+&#9;&#9;&#9;&quot;          #*  *     &quot;,
+&#9;&#9;&#9;&quot;  #          *   *  &quot;,
+&#9;&#9;&#9;&quot; #     *    #       &quot;,
+&#9;&#9;&#9;&quot;      #             &quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Easy_1 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 10, H = 9,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;&#9;&quot;######   #&quot;,
+&#9;&#9;&#9;&quot;###### O #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;#        #&quot;,
+&#9;&#9;&#9;&quot;# E ######&quot;,
+&#9;&#9;&#9;&quot;#   ######&quot;,
+&#9;&#9;&#9;&quot;##########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Easy_2 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 16, H = 7,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;################&quot;,
+&#9;&#9;&#9;&quot;############# O#&quot;,
+&#9;&#9;&#9;&quot;###########    #&quot;,
+&#9;&#9;&#9;&quot;#########    ###&quot;,
+&#9;&#9;&#9;&quot;##         #####&quot;,
+&#9;&#9;&#9;&quot;##E      #######&quot;,
+&#9;&#9;&#9;&quot;################&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 8,
+&#9;&#9;W = 16, H = 5,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;################&quot;,
+&#9;&#9;&#9;&quot;############   #&quot;,
+&#9;&#9;&#9;&quot;#E           O #&quot;,
+&#9;&#9;&#9;&quot;############   #&quot;,
+&#9;&#9;&#9;&quot;################&quot;,&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Easy_3 = {
+&#9;{
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 7, H = 7,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;#######&quot;,
+&#9;&#9;&#9;&quot;#O*   #&quot;,
+&#9;&#9;&#9;&quot;# *   #&quot;,
+&#9;&#9;&#9;&quot;#   * #&quot;,
+&#9;&#9;&#9;&quot;#**** #&quot;,
+&#9;&#9;&#9;&quot;#E    #&quot;,
+&#9;&#9;&#9;&quot;#######&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = 1,
+&#9;&#9;Teleports = {},
+&#9;},
+}
+
+Easy_4 = {
+&#9;{ ----- pane #1 -----
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 7, H = 7,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;#######&quot;,
+&#9;&#9;&#9;&quot;#O   A#&quot;,
+&#9;&#9;&#9;&quot;#     #&quot;,
+&#9;&#9;&#9;&quot;#*****#&quot;,
+&#9;&#9;&#9;&quot;#     #&quot;,
+&#9;&#9;&#9;&quot;#    E#&quot;,
+&#9;&#9;&#9;&quot;#######&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,
+&#9;&#9;Teleports = {
+&#9;&#9;&#9;[&apos;A&apos;] = {Pane=1, X=2, Y=6},
+&#9;&#9;},
+&#9;}
+}
+
+Easy_5 = {
+&#9;{ --pane #1
+&#9;&#9;X = 1, Y = 1,
+&#9;&#9;W = 8, H = 5,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;########&quot;,
+&#9;&#9;&#9;&quot;#   ####&quot;,
+&#9;&#9;&#9;&quot;# T   O#&quot;,
+&#9;&#9;&#9;&quot;#   ####&quot;,
+&#9;&#9;&#9;&quot;########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {
+&#9;&#9;&#9;[&apos;T&apos;] = {Pane=2, X=6, Y=3},
+&#9;&#9;}
+&#9;},
+&#9;{ -- pane #2
+&#9;&#9;X = 9, Y = 1,
+&#9;&#9;W = 8, H = 5,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;########&quot;,
+&#9;&#9;&#9;&quot;#***   #&quot;,
+&#9;&#9;&#9;&quot;#*E    #&quot;,
+&#9;&#9;&#9;&quot;#***   #&quot;,
+&#9;&#9;&#9;&quot;########&quot;,
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1,
+&#9;&#9;SlideInDirY = 0,
+&#9;&#9;Teleports = {},
+&#9;},
+&#9;{
+&#9;&#9;X = 1, Y = 6,
+&#9;&#9;W = 16, H = 5,
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;################&quot;,
+&#9;&#9;&#9;&quot;#   #   #   # O#&quot;,
+&#9;&#9;&#9;&quot;# # # # # # # ##&quot;,
+&#9;&#9;&#9;&quot;#E#   #   #   ##&quot;,
+&#9;&#9;&#9;&quot;################&quot;,&#9;&#9;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 0,
+&#9;&#9;SlideInDirY = -1,&#9;
+&#9;&#9;Teleports = {},&#9;
+&#9;},
+}
+
+Easy_6 = {
+&#9;{ -- pane #1
+&#9;&#9;X = 1, Y = 1;
+&#9;&#9;W = 16, H = 5;
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;################&quot;;
+&#9;&#9;&#9;&quot;#   #   #   # O#&quot;;
+&#9;&#9;&#9;&quot;# # * * * * * *#&quot;;
+&#9;&#9;&#9;&quot;#E#   #   #   ##&quot;;
+&#9;&#9;&#9;&quot;################&quot;;&#9;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = -1;
+&#9;&#9;SlideInDirY = 0;&#9;
+&#9;&#9;Teleports = {};
+&#9;};
+&#9;{ -- pane #2
+&#9;&#9;X = 1, Y = 6;
+&#9;&#9;W = 8, H = 5;
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;########&quot;;
+&#9;&#9;&#9;&quot;####   #&quot;;
+&#9;&#9;&#9;&quot;#E     #&quot;;
+&#9;&#9;&#9;&quot;####   #&quot;;
+&#9;&#9;&#9;&quot;########&quot;;
+&#9;&#9;},
+&#9;&#9;SlideInDirX = 1;
+&#9;&#9;SlideInDirY = 0;
+&#9;&#9;Teleports = {};
+&#9;};
+&#9;{ --pane #3
+&#9;&#9;X = 9, Y = 6;
+&#9;&#9;W = 8, H = 5;
+&#9;&#9;Data = {
+&#9;&#9;&#9;&quot;########&quot;;
+&#9;&#9;&#9;&quot;#  J## #&quot;;
+&#9;&#9;&#9;&quot;# *   O#&quot;;
+&#9;&#9;&#9;&quot;#   ####&quot;;
+&#9;&#9;&#9;&quot;########&quot;;
+&#9;&#9;};
+&#9;&#9;SlideInDirX = 0;
+&#9;&#9;SlideInDirY = -1;
+&#9;&#9;Teleports = {
+&#9;&#9;&#9;[&apos;J&apos;] = {Pane=2, X=7, Y=3};
+&#9;&#9;}
+&#9;};
+}
+
+EasyGame = {Easy_1, Easy_2, Easy_3, Easy_4, Easy_5, Easy_6}
+
+MediumGame = {Game_Level1, Game_Level2, Game_Level3, 
+              Game_Level4, Game_Level5, Game_Level6, 
+              Game_Level7, Game_Level8, Game_Level9,
+              Game_Level10,}
+
+HardGame = {}</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-45.8343391</X>
+					<Y>2.1910584</Y>
+					<Z>-27.9696712</Z>
+					<R00>-0.684461951</R00>
+					<R01>-3.14392964e-005</R01>
+					<R02>-0.729048908</R02>
+					<R10>-0.00109395199</R10>
+					<R11>-0.999999166</R11>
+					<R12>0.00107017183</R12>
+					<R20>-0.729048073</R20>
+					<R21>0.0015300361</R21>
+					<R22>0.684460878</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.55999947</X>
+					<Y>1</Y>
+					<Z>0.460000098</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=58266976 </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=73808769</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX4">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-47.1989136</X>
+					<Y>2.56197834</Y>
+					<Z>-26.2157974</Z>
+					<R00>0.779023945</R00>
+					<R01>0.143815666</R01>
+					<R02>-0.610277534</R02>
+					<R10>-0</R10>
+					<R11>0.973338485</R11>
+					<R12>0.229373246</R12>
+					<R20>0.626994073</R20>
+					<R21>-0.178687245</R21>
+					<R22>0.758254111</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-35.5856857</X>
+					<Y>-1.80286169</Y>
+					<Z>-40.7449341</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
