@@ -6,8 +6,8 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
-				<Y>0</Y>
+				<X>0.5</X>
+				<Y>-0.5</Y>
 				<Z>0.25</Z>
 				<R00>1</R00>
 				<R01>0</R01>
@@ -20,7 +20,7 @@
 				<R22>1</R22>
 			</CoordinateFrame>
 			<string name="Name">Lobster</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=75838178 </url></Content>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=75928012</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
@@ -108,7 +108,7 @@
 						<Y>0.649999976</Y>
 						<Z>0.649999976</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=75838166 </url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=75927695</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -160,7 +160,7 @@ function tagHumanoid(humanoid)
 
 &#9;&#9;local new_tag = tag:clone()
 &#9;&#9;new_tag.Parent = humanoid
-&#9;&#9;debris:AddItem(new_tag, 1)
+&#9;&#9;debris:AddItem(new_tag, 1)&#9;
 &#9;end
 end
 
@@ -249,13 +249,18 @@ Tool.Handle.Transparency=1
 &#9;missile.DamageScript.Disabled = false
 
 &#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value = vCharacter
+&#9;creator_tag.Value = vPlayer
 &#9;creator_tag.Name = &quot;creator&quot;
 &#9;creator_tag.Parent = missile
+
+&#9;local weapontag = Instance.new(&quot;StringValue&quot;)
+&#9;weapontag.Name = &quot;WeaponTag&quot;
+&#9;weapontag.Value = &quot;Lobster&quot;
+&#9;weapontag.Parent = creator_tag
 &#9;
 &#9;missile.Parent = game.Workspace&#9;
 
-&#9;Tool:Destroy() 
+&#9;--Tool:Destroy() 
 end
 
 
@@ -321,8 +326,28 @@ function onActivated()
 &#9;Tool.Enabled = true
 end
 
+local vCharacter
+local vPlayer
+
+local initGripPos = Tool.GripPos
+
+function onEquipped()
+&#9;vCharacter = Tool.Parent 
+&#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
+&#9;if vPlayer and vPlayer:FindFirstChild(&quot;CName&quot;) then&#9;&#9;
+&#9;&#9;if vPlayer.CName.Value == &quot;Moe&quot; then 
+&#9;&#9;&#9;Tool.GripPos = Vector3.new(0.5, -0.5, 0.25) 
+&#9;&#9;end 
+&#9;end 
+end 
+
+function onUnequipped()
+&#9;Tool.GripPos = initGripPos
+end 
+
 Tool.Activated:connect(onActivated)
-</ProtectedString>
+--Tool.Equipped:connect(onEquipped)
+--Tool.Unequipped:connecrt</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX6">
@@ -342,23 +367,113 @@ end
 Tool.Equipped:connect(onEquippedLocal)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MapScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Gun = Tool.Handle
+
+local vCharacter
+local myTorso
+local myHumanoid 
+local vPlayer 
+
+local gunCrossHair
+
+local mapFrame 
+
+local guiSet = false
+
+function showMap(key) 
+&#9;key = key:lower() &#9;
+&#9;if key == &quot;v&quot; or key == &quot;e&quot; then 
+&#9;&#9;if mapFrame then 
+&#9;&#9;&#9;mapFrame.Visible = true 
+&#9;&#9;end 
+&#9;elseif key == &quot;q&quot; then 
+&#9;&#9;if gameVictoryScreen and not gameVictoryScreen.Visible then 
+&#9;&#9;&#9;guiSet = true
+&#9;&#9;&#9;gameVictoryScreen.Visible = true 
+&#9;&#9;end 
+&#9;elseif key == &quot;c&quot; then 
+&#9;&#9;if gameClassesFrame then 
+&#9;&#9;&#9;gameClassesFrame.Visible = not gameClassesFrame.Visible
+&#9;&#9;end 
+&#9;end 
+end 
+
+function closeMap(key)
+&#9;key = key:lower() 
+&#9;if key == &quot;v&quot; or key == &quot;e&quot; then 
+&#9;&#9;if mapFrame then 
+&#9;&#9;&#9;mapFrame.Visible = false 
+&#9;&#9;end 
+&#9;elseif key == &quot;q&quot; then 
+&#9;&#9;if gameVictoryScreen and guiSet then 
+&#9;&#9;&#9;guiSet = false 
+&#9;&#9;&#9;gameVictoryScreen.Visible = false
+&#9;&#9;end 
+&#9;end 
+end 
+
+function onEquipped(mouse)
+&#9;vCharacter = Tool.Parent 
+&#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
+&#9;if mouse then 
+&#9;&#9;mouse.KeyDown:connect(showMap)
+&#9;&#9;mouse.KeyUp:connect(closeMap)
+&#9;end 
+&#9;
+&#9;if vPlayer then 
+&#9;&#9;local playerGui = vPlayer:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;&#9;if playerGui then 
+&#9;&#9;&#9;gameGui = playerGui:FindFirstChild(&quot;GameGui&quot;)
+&#9;&#9;&#9;if gameGui then 
+&#9;&#9;&#9;&#9;mapFrame = gameGui:FindFirstChild(&quot;MapFrame&quot;)
+&#9;&#9;&#9;&#9;gameVictoryScreen = gameGui:FindFirstChild(&quot;GameVictoryScreen&quot;) 
+&#9;&#9;&#9;&#9;gameClassesFrame = gameGui:FindFirstChild(&quot;ClassesFrame&quot;)
+&#9;&#9;&#9;end 
+&#9;&#9;&#9;local gunGui = playerGui:FindFirstChild(&quot;GunHud&quot;)
+&#9;&#9;&#9;if gunGui then
+&#9;&#9;&#9;&#9;gunCrossHair = gunGui:FindFirstChild(&quot;Crosshair&quot;)
+&#9;&#9;&#9;&#9;if gunCrossHair then 
+&#9;&#9;&#9;&#9;&#9;gunCrossHair.Visible = true
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;end 
+&#9;&#9;end 
+&#9;end 
+end 
+
+function onUnequipped()
+&#9;if gunCrossHair then 
+&#9;&#9;gunCrossHair.Visible = false
+&#9;end 
+end 
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX8">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>14.983387</X>
-					<Y>10.0992775</Y>
-					<Z>2.38047099</Z>
-					<R00>0.999975622</R00>
-					<R01>-0.000874640478</R01>
-					<R02>-0.00692367554</R02>
-					<R10>-0</R10>
-					<R11>0.99211508</R11>
-					<R12>-0.125329971</R12>
-					<R20>0.0069787018</R20>
-					<R21>0.125326917</R21>
-					<R22>0.99209094</R22>
+					<X>15.0500975</X>
+					<Y>10.5882607</Y>
+					<Z>2.39152646</Z>
+					<R00>0.999780655</R00>
+					<R01>-0.0016432103</R01>
+					<R02>0.0208787918</R02>
+					<R10>1.16415322e-010</R10>
+					<R11>0.996917248</R11>
+					<R12>0.0784597397</R12>
+					<R20>-0.0209433548</R20>
+					<R21>-0.0784425288</R21>
+					<R22>0.996698618</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
