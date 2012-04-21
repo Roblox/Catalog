@@ -1,0 +1,585 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-1.20000005</Y>
+				<Z>-0.75</Z>
+				<R00>1</R00>
+				<R01>-0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>0</R11>
+				<R12>-1</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">FlakCannon</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=78002456</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">FlakCannonScript</string>
+				<ProtectedString name="Source">-- by QuantumSama
+-- click once to fire, again to detonate
+-- its flak not flack.  
+
+local ReloadTime = 5
+local inbetweenTime = .07
+local missileSpeed = 70.0  --The slower this is the easier it is to aim and thus the more powerful it is
+
+local Tool = script.Parent
+local Launcher = Tool.Handle
+
+local Rocket = Instance.new(&quot;Part&quot;)
+Rocket.BackSurface = 3
+Rocket.BottomSurface = 3
+Rocket.FrontSurface = 3
+Rocket.LeftSurface = 3
+Rocket.RightSurface = 3
+Rocket.TopSurface = 3
+Rocket.Size = Vector3.new(1, 1, 1)
+Rocket.FormFactor = &quot;Symmetric&quot;
+Rocket.Shape = &quot;Ball&quot;
+Rocket.BrickColor = BrickColor.new(23)
+Rocket.Locked = true
+
+--local rocketMesh = Instance.new(&quot;SpecialMesh&quot;)
+--rocketMesh.MeshId = &quot;http://www.roblox.com/asset/?id=31601976&quot;
+--rocketMesh.TextureId = &quot;http://www.roblox.com/asset/?id=31601599&quot;
+--rocketMesh.Parent = Rocket
+
+local debris = game:GetService(&quot;Debris&quot;)
+
+local swooshSound
+local explosionSound
+
+local vCharacter
+local vPlayer
+local userGui
+
+function blow(hit, missile)
+&#9;if missile  == nil then return end
+&#9;if swooshSound then swooshSound:stop() end
+&#9;explosion = Instance.new(&quot;Explosion&quot;)
+&#9;explosion.Position = missile.Position
+&#9;explosion.BlastPressure = 1200000
+&#9;explosion.BlastRadius = 7
+&#9;-- find instigator tag
+&#9;local creator = missile:FindFirstChild(&quot;creator&quot;)
+&#9;explosion.Hit:connect(function(part, distance) onPlayerBlownUp(part, distance, creator) end)
+&#9;explosion.Parent = game.Workspace&#9;
+&#9;if explosionSound then explosionSound:Play() end
+&#9;--wait(.1)
+&#9;--if missile then missile:Remove() end
+end
+
+function onPlayerBlownUp(part, distance, creator)
+&#9;if part.Name == &quot;Head&quot; or part.Name == &quot;Torso&quot; then&#9;
+&#9;&#9;local humanoid = part.Parent.Humanoid
+&#9;&#9;tagHumanoid(humanoid, creator)
+&#9;end
+end
+
+function tagHumanoid(humanoid, creator)
+&#9;-- tag does not need to expire if all explosions lethal&#9;
+&#9;if creator ~= nil then
+&#9;&#9;local new_tag = creator:clone()
+&#9;&#9;new_tag.Parent = humanoid&#9;&#9;
+&#9;end
+end
+
+local hasMissiles = false
+local numMissiles = 7
+local missiles = {}
+
+function triggerMissiles()
+&#9;if not hasMissiles then return end
+&#9;hasMissiles = false
+&#9;for j = 1, numMissiles do
+&#9;&#9;if missiles[j] ~= nil then
+&#9;&#9;&#9;blow(nil, missiles[j])
+&#9;&#9;&#9;wait(inbetweenTime)
+&#9;&#9;end
+&#9;end
+&#9;wait(.1)
+&#9;for k = 1, numMissiles do
+&#9;&#9;if missiles[k] ~= nil then missiles[k]:Destroy() end
+&#9;end
+
+end
+
+function fire(vTarget)
+&#9;local vCharacter = Tool.Parent&#9;
+&#9;local vHandle = Tool:findFirstChild(&quot;Handle&quot;)
+&#9;if vHandle == nil then
+&#9;&#9;print(&quot;Handle not found&quot;)
+&#9;&#9;return 
+&#9;end
+&#9;local direction = vTarget - vHandle.Position
+&#9;direction = direction.unit
+&#9;local unitOffsetVec = Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5)
+&#9;while true do
+&#9;&#9;unitOffsetVec = Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5)
+&#9;&#9;unitOffsetVec = direction:Cross(unitOffsetVec)
+&#9;&#9;unitOffsetVec = unitOffsetVec.unit
+&#9;&#9;if unitOffsetVec.magnitude &gt; 0 then break end
+&#9;&#9;wait()
+&#9;end
+
+&#9;local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
+
+
+&#9;for i = 1, numMissiles do
+&#9;&#9;local missile = Rocket:clone()
+&#9;&#9;missiles[i] = missile
+&#9;&#9;local offsetVec = CFrame.fromAxisAngle(direction, 2* math.pi *i /(numMissiles - 1)) * unitOffsetVec
+&#9;&#9;if i == 1 then offsetVec = Vector3.new(0,0,0) end
+&#9;&#9;offsetVec = offsetVec * 1.5 + Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5)/2
+&#9;&#9;local pos = vHandle.Position + (direction * 5.0) + offsetVec
+&#9;&#9;missile.CFrame = CFrame.new(pos,  pos + direction) * CFrame.Angles(math.pi/2, 0, 0)
+
+&#9;&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+
+&#9;&#9;if vPlayer == nil then
+&#9;&#9;&#9;print(&quot;Player not found&quot;)
+&#9;&#9;else
+&#9;&#9;&#9;if (vPlayer.Neutral == false) then -- nice touch
+&#9;&#9;&#9;&#9;missile.BrickColor = vPlayer.TeamColor
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+&#9;&#9;local floatForce = Instance.new(&quot;BodyForce&quot;)
+&#9;&#9;floatForce.force = Vector3.new(0, missile:GetMass() * 196.1, 0.0)
+&#9;&#9;floatForce.Parent = missile
+
+&#9;&#9;missile.Velocity = (direction + offsetVec * 0.15) * missileSpeed
+
+&#9;&#9;creator_tag.Value = vPlayer
+&#9;&#9;creator_tag.Name = &quot;creator&quot;
+&#9;&#9;creator_tag.Parent = missile&#9;
+
+&#9;&#9;missile.Parent = game.Workspace
+
+&#9;&#9;if swooshSound then swooshSound:Play() end
+
+&#9;end
+&#9;hasMissiles = true
+&#9;local torso = vCharacter:findFirstChild(&quot;Torso&quot;)
+&#9;local offset = direction * Vector3.new(-1.5,0,-1.5)
+&#9;if torso ~=  nil then
+&#9;&#9;torso.CFrame = torso.CFrame +  offset  --knockback
+&#9;end
+&#9;local fuseTime = Tool.Fuse.Value 
+&#9;local fuseGui = userGui.Background.Fuse
+&#9;while fuseTime &gt; 2 do   
+&#9;&#9;fuseTime = fuseTime - 1
+&#9;&#9;fuseGui.Size = UDim2.new(0,fuseTime,0,20)
+&#9;&#9;wait(1/40)
+&#9;end
+&#9;Tool.Fuse.Value = -1
+&#9;triggerMissiles()
+&#9;fuseGui.Size = UDim2.new(0,0,0,20)
+&#9;wait(ReloadTime)
+&#9;--for j = 1, numMissiles do
+&#9;--&#9;if missiles[j] ~= nil then missiles[j]:Destroy() end
+&#9;--end
+&#9;--hasMissiles = false
+&#9;Tool.Enabled = true
+&#9;fuseGui.Size = UDim2.new(0,100,0,20)
+end
+
+Tool.Enabled = true
+function onActivated()
+&#9;if Tool.Fuse.Value == -1 then return end
+&#9;--if not Tool.Enabled then
+&#9;--&#9;triggerMissiles()
+&#9;--&#9;return
+&#9;--end
+
+&#9;Tool.Enabled = false
+
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;return 
+&#9;end
+
+&#9;swooshSound = Launcher:FindFirstChild(&quot;Swoosh&quot;)
+&#9;explosionSound = Launcher:FindFirstChild(&quot;Explosion&quot;)
+
+&#9;local targetPos = humanoid.TargetPoint
+
+&#9;fire(targetPos)
+
+&#9;wait(7)
+
+
+end
+
+function onEquipped()
+&#9;userGui = Tool.UserGui:Clone()
+&#9;vPlayer = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;if vPlayer ~= nil then userGui.Parent = vPlayer.PlayerGui end
+end
+
+function onUnequipped()
+&#9;print(&quot;Tool unequipped, clean up...&quot;)
+&#9;if userGui ~= nil then userGui:Destroy() end
+end
+
+--script.Parent.Activated:connect(onActivated)
+Tool.Fuse.Changed:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">199</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.399999619</X>
+					<Y>0.900000095</Y>
+					<Z>5.96046448e-008</Z>
+					<R00>0</R00>
+					<R01>1</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>0</R11>
+					<R12>1</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0.400000006</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.680001736</X>
+					<Y>2.84999967</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=78002401</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1.5</X>
+						<Y>1.5</Y>
+						<Z>1.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=78002441</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Swoosh</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/Rocket whoosh 01.wav</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Explosion</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/collide.wav</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">--By QuantumSama
+Tool = script.Parent
+
+local checkConnection
+local userMouse
+
+function CheckEnabled()
+&#9;if userMouse ~= nil then
+&#9;&#9;if Tool.Enabled then
+&#9;&#9;&#9;userMouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;else
+&#9;&#9;&#9;userMouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;end
+&#9;end
+end
+
+function onEquippedLocal(mouse)
+&#9;if mouse == nil then 
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return
+&#9;end
+&#9;userMouse = mouse
+&#9;checkConnection = Tool.Changed:connect( CheckEnabled )
+end
+
+
+function onUnequippedLocal()
+&#9;if checkConnection then checkConnection:disconnect() end
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX7">
+			<Properties>
+				<string name="Name">UserGui</string>
+			</Properties>
+			<Item class="TextLabel" referent="RBX8">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">1</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">0</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<token name="Font">0</token>
+					<token name="FontSize">6</token>
+					<string name="Name">FuseText</string>
+					<UDim2 name="Position">
+						<XS>0.200000018</XS>
+						<XO>-150</XO>
+						<YS>1</YS>
+						<YO>-75</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>150</XO>
+						<YS>0</YS>
+						<YO>45</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<string name="Text">Fuse </string>
+					<Color3 name="TextColor3">4293585642</Color3>
+					<bool name="TextScaled">false</bool>
+					<Color3 name="TextStrokeColor3">4278190080</Color3>
+					<float name="TextStrokeTransparency">1</float>
+					<float name="TextTransparency">0</float>
+					<bool name="TextWrapped">false</bool>
+					<token name="TextXAlignment">1</token>
+					<token name="TextYAlignment">1</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+			</Item>
+			<Item class="ImageLabel" referent="RBX9">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4291559424</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<Content name="Image"><null></null></Content>
+					<string name="Name">Background</string>
+					<UDim2 name="Position">
+						<XS>0.200000018</XS>
+						<XO>0</XO>
+						<YS>1</YS>
+						<YO>-60</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>100</XO>
+						<YS>0</YS>
+						<YO>20</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+				<Item class="ImageLabel" referent="RBX10">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4281584691</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<Content name="Image"><null></null></Content>
+						<string name="Name">Fuse</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>100</XO>
+							<YS>0</YS>
+							<YO>20</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX11">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalFlakScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local charging = false
+
+function charge()
+&#9;if not Tool.Enabled then return end
+&#9;Tool.Enabled = false
+&#9;charging = true
+&#9;local vPlayer = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;if vPlayer ~= nil then
+&#9;&#9;local fuseGui = vPlayer.PlayerGui.UserGui.Background.Fuse
+&#9;&#9;local fuseTime = 100
+&#9;&#9;while charging do
+&#9;&#9;&#9;fuseTime =fuseTime - 1
+&#9;&#9;&#9;fuseGui.Size = UDim2.new(0,fuseTime,0,20)
+&#9;&#9;&#9;if fuseTime == 1 then break end
+&#9;&#9;&#9;wait(1/40)
+&#9;&#9;end
+&#9;&#9;Tool.Fuse.Value = fuseTime
+&#9;&#9;--fuseGui.Size = UDim2.new(0,0,0,20)
+&#9;end
+&#9;
+end
+
+function doneCharging()
+&#9;charging = false
+&#9;
+end
+
+function onEquipped(mouse)
+&#9;mouse.Button1Down:connect(charge)
+&#9;mouse.Button1Up:connect(doneCharging)
+end
+
+Tool.Equipped:connect(onEquipped)
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX12">
+			<Properties>
+				<string name="Name">Fuse</string>
+				<int name="Value">0</int>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX13">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>1.96380365</X>
+					<Y>0.765678525</Y>
+					<Z>2.03064942</Z>
+					<R00>0.792290986</R00>
+					<R01>0.0319324248</R01>
+					<R02>0.609307349</R02>
+					<R10>1.86264537e-009</R10>
+					<R11>0.99862957</R11>
+					<R12>-0.0523359217</R12>
+					<R20>-0.610143542</R20>
+					<R21>0.0414652787</R21>
+					<R22>0.791205049</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0.399999619</X>
+					<Y>0.900000095</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
