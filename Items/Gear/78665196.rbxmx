@@ -1,0 +1,1351 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">false</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>-2.25</Z>
+				<R00>-4.37113883e-008</R00>
+				<R01>0</R01>
+				<R02>1</R02>
+				<R10>1</R10>
+				<R11>-4.37113883e-008</R11>
+				<R12>4.37113883e-008</R12>
+				<R20>4.37113883e-008</R20>
+				<R21>1</R21>
+				<R22>1.91068547e-015</R22>
+			</CoordinateFrame>
+			<string name="Name">MoonKatana</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=74908832</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Damage</string>
+				<ProtectedString name="Source">local function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- Tiny Event Manager; Add: [[Event.EventName = (event)]]; Remove: [[Disconnect(&quot;EventName&quot;,...)]]
+local Event = {}
+local function Disconnect(...)
+&#9;for _,name in pairs{...} do
+&#9;&#9;if Event[name] then
+&#9;&#9;&#9;Event[name]:disconnect()
+&#9;&#9;&#9;Event[name] = nil
+&#9;&#9;end
+&#9;end
+end
+
+-- get an object; make it if it doesn&apos;t exist
+local function GetMake(parent,name,type)
+&#9;local object = parent:FindFirstChild(name)
+&#9;if not object then
+&#9;&#9;object = Create(type){Name=name}
+&#9;&#9;object.Parent = parent
+&#9;end
+&#9;return object
+end
+
+-- wait until child exists; return child
+local function WaitForChild(parent,name)
+&#9;while not parent:FindFirstChild(name) do
+&#9;&#9;parent.ChildAdded:wait()
+&#9;end
+&#9;return parent:FindFirstChild(name)
+end
+
+-- get a sibling humanoid of object; by humanoid, not by name
+local function GetHumanoid(object)
+&#9;if object and object.Parent then
+&#9;&#9;for i,v in pairs(object.Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA&quot;Humanoid&quot; then
+&#9;&#9;&#9;&#9;return v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+-- get the parent character from an object; verified by GetHumanoid
+local function GetCharacter(object)
+&#9;local humanoid = GetHumanoid(object)
+&#9;if humanoid then
+&#9;&#9;return object.Parent,humanoid
+&#9;end
+&#9;return nil
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+local Players = Game:GetService(&quot;Players&quot;)
+local Debris = Game:GetService(&quot;Debris&quot;)
+
+local Tool = script.Parent
+local DamageBin = WaitForChild(Tool,&quot;DamageBin&quot;)
+
+Tool.Equipped:connect(function()
+&#9;local Character,Humanoid = GetCharacter(Tool)
+&#9;local Player = Players:GetPlayerFromCharacter(Character)
+
+&#9;Event.DamageBin = DamageBin.ChildAdded:connect(function(dtag)
+&#9;&#9;if dtag:IsA&quot;ObjectValue&quot; then
+&#9;&#9;&#9;local humanoid = dtag.Value
+&#9;&#9;&#9;local damage = tonumber(dtag.Name)
+&#9;&#9;&#9;if humanoid and damage then
+&#9;&#9;&#9;&#9;local ctag = Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &quot;creator&quot;;
+&#9;&#9;&#9;&#9;&#9;Value = Player;
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;ctag.Parent = humanoid
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;&#9;&#9;Debris:AddItem(ctag,1)
+&#9;&#9;&#9;&#9;Debris:AddItem(dtag,1)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;Disconnect(&quot;DamageBin&quot;)
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Main</string>
+				<ProtectedString name="Source">local function class(name)
+&#9;local def = {}
+&#9;getfenv(0)[name] = def
+&#9;return function(ctor, static)
+&#9;&#9;local nctor = function(...)
+&#9;&#9;&#9;local this = {}
+&#9;&#9;&#9;if ctor then
+&#9;&#9;&#9;&#9;ctor(this, ...)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;return this
+&#9;&#9;end
+&#9;&#9;getfenv(0)[&apos;Create&apos;..name] = nctor
+&#9;&#9;if static then static(def) end
+&#9;end
+end
+
+local function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+--[[----------------------------------------------------------------------------
+AnimationProvider
+&#9;Manages animations.
+
+&#9;CreateAnimationProvider(animations)
+&#9;&#9;Returns a new AnimationProvider instance.
+&#9;&#9;`animations` is a table containing identity/asset_id pairs.
+&#9;&#9;`asset_id` may be a string (Content) or an integer.
+&#9;AnimationProvider:LoadHumanoid(humanoid)
+&#9;&#9;Loads the animations into `humanoid`.
+&#9;AnimationProvider:GetAnimation(identity)
+&#9;&#9;Returns an AnimationTrack.
+&#9;&#9;May only be called after LoadHumanoid.
+&#9;AnimationProvider:StopAnimations()
+&#9;&#9;Stops all animations.
+]]
+class&apos;AnimationProvider&apos;(function(def,anim_ids)
+&#9;local animations = {}
+&#9;local animationTracks = {}
+&#9;local catcherCallbacks = {}
+&#9;local keyframeCatchers = {}
+&#9;local workingHumanoid
+
+&#9;for name,id in pairs(anim_ids) do
+&#9;&#9;animations[name] = Create&apos;Animation&apos;{
+&#9;&#9;&#9;Name = name;
+&#9;&#9;&#9;AnimationId = type(id) == &quot;number&quot; and (&quot;rbxassetid://&quot;..id) or id;
+&#9;&#9;&#9;Archivable = false;
+&#9;&#9;}
+&#9;end
+
+&#9;function def:LoadHumanoid(humanoid)
+&#9;&#9;if humanoid ~= workingHumanoid then
+&#9;&#9;&#9;workingHumanoid = humanoid
+&#9;&#9;&#9;for name,anim in pairs(animations) do
+&#9;&#9;&#9;&#9;local old_track = animationTracks[name]
+&#9;&#9;&#9;&#9;if old_track then
+&#9;&#9;&#9;&#9;&#9;old_track:Stop()
+&#9;&#9;&#9;&#9;&#9;old_track:Destroy()
+&#9;&#9;&#9;&#9;&#9;if keyframeCatchers[name] then
+&#9;&#9;&#9;&#9;&#9;&#9;keyframeCatchers[name] = nil
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;local track = humanoid:LoadAnimation(anim)
+&#9;&#9;&#9;&#9;animationTracks[name] = track
+&#9;&#9;&#9;&#9;if catcherCallbacks[name] then
+&#9;&#9;&#9;&#9;&#9;local catcher = CreateKeyframeCatcher(track)
+&#9;&#9;&#9;&#9;&#9;keyframeCatchers[name] = catcher
+&#9;&#9;&#9;&#9;&#9;catcher:SetCallbacks(catcherCallbacks[name])
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;function def:GetAnimation(name)
+&#9;&#9;if not workingHumanoid then
+&#9;&#9;&#9;error(&quot;GetAnimation: humanoid has not been loaded&quot;,2)
+&#9;&#9;end
+&#9;&#9;return animationTracks[name]
+&#9;end
+
+&#9;function def:StopAnimations(...)
+&#9;&#9;for name,track in pairs(animationTracks) do
+&#9;&#9;&#9;track:Stop(...)
+&#9;&#9;end
+&#9;end
+
+&#9;-- lazy get
+&#9;setmetatable(def,{__index = animationTracks})
+end)
+
+--[[
+SoundProvider
+&#9;Manages sounds.
+
+&#9;CreateSoundProvider(sounds)
+&#9;&#9;Returns a new SoundProvider.
+&#9;&#9;`sounds` is a table containing identity/asset_id pairs.
+&#9;&#9;`asset_id` may be a string (Content) or an integer.
+&#9;SoundProvider:SetParent(parent)
+&#9;&#9;Sets the parent of all the sounds at once. Can be nil.
+&#9;SoundProvider:GetSound(identity)
+&#9;&#9;Returns a Sound.
+&#9;SoundProvider:StopSounds()
+&#9;&#9;Stops all sounds.
+&#9;SoundProvider:Fade(identity, goal, time, delta)
+&#9;&#9;Applies a fading effect to a Sound, starting with the current volume.
+&#9;&#9;`goal` is the volume to reach by the end of the transition.
+&#9;&#9;`time` is the amount of time the transition should take, in seconds.
+&#9;&#9;Optionally, `delta` is a function that transforms the progress of the fade (for non-linear transitions)
+]]
+class&apos;SoundProvider&apos;(function(def,sound_ids)
+&#9;local sounds = {}
+
+&#9;for name,id in pairs(sound_ids) do
+&#9;&#9;sounds[name] = Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = name;
+&#9;&#9;&#9;SoundId = type(id) == &quot;number&quot; and (&quot;rbxassetid://&quot;..id) or id;
+&#9;&#9;&#9;Archivable = false;
+&#9;&#9;}
+&#9;end
+
+&#9;function def:SetParent(parent)
+&#9;&#9;for name,sound in pairs(sounds) do
+&#9;&#9;&#9;sound.Parent = parent
+&#9;&#9;end
+&#9;end
+
+&#9;function def:GetSound(name)
+&#9;&#9;return sounds[name]
+&#9;end
+
+&#9;function def:StopSounds()
+&#9;&#9;for name,sound in pairs(sounds) do
+&#9;&#9;&#9;sound:Stop()
+&#9;&#9;end
+&#9;end
+
+&#9;function def:Fade(name,g,t,delta)
+&#9;&#9;local sound = sounds[name]
+&#9;&#9;delta = delta or function(n) return n end
+&#9;&#9;if sound then
+&#9;&#9;&#9;local s = sound.Volume
+&#9;&#9;&#9;local i = 0
+&#9;&#9;&#9;while i &lt; 1 do
+&#9;&#9;&#9;&#9;i = i + wait()/t
+&#9;&#9;&#9;&#9;sound.Volume = (g-s)*delta(i)+s
+&#9;&#9;&#9;end
+&#9;&#9;&#9;sound.Volume = g
+&#9;&#9;else
+&#9;&#9;&#9;error(&quot;SoundProvider::Fade: no such sound named `&quot;..name..&quot;`&quot;,2)
+&#9;&#9;end
+&#9;end
+
+&#9;-- lazy get
+&#9;setmetatable(def,{__index = sounds})
+end)
+
+--[[
+ThreadID
+&#9;Makes sure new threads override old ones.
+
+&#9;CreateThreadID()
+&#9;&#9;Returns a new ThreadID.
+&#9;ThreadID:Request()
+&#9;&#9;Returns a new ID and increments the current one.
+&#9;ThreadID:Assert(id)
+&#9;&#9;Returns whether the thread&apos;s ID equals the current one.
+&#9;ThreadID:Reset()
+&#9;&#9;Reset the current ID.
+]]
+class&apos;ThreadID&apos;(function(def)
+&#9;local thread_id = 0
+
+&#9;function def:Assert(id)
+&#9;&#9;return thread_id == id
+&#9;end
+
+&#9;function def:Request()
+&#9;&#9;thread_id = thread_id + 1
+&#9;&#9;return thread_id
+&#9;end
+
+&#9;function def:Reset()
+&#9;&#9;thread_id = 0
+&#9;end
+end)
+
+--[[
+&#9;WalkSpeedManager
+&#9;&#9;Manages a Humanoid&apos;s WalkSpeed.
+&#9;&#9;When the walkspeed is set externally (not by this instance), the new value will become the base walkspeed.
+&#9;&#9;However, the walkspeed can be locked. If so, the walkspeed will be reverted if it has been changed externally.
+&#9;&#9;This allows the tool to be compatible with, say, a speed potion.
+
+&#9;CreateWalkSpeedManager()
+&#9;&#9;Returns a new WalkSpeedManager.
+&#9;WalkSpeedManager:SetHumanoid(humanoid)
+&#9;&#9;Sets the humanoid and sets its WalkSpeed as the base.
+&#9;WalkSpeedManager:Set(walkspeed)
+&#9;&#9;Sets and locks the humanoid&apos;s walkspeed.
+&#9;WalkSpeedManager:Reset()
+&#9;&#9;Unlocks and resets the humanoid&apos;s walkspeed to the base walkspeed.
+&#9;WalkSpeedManager:GetBase()
+&#9;&#9;Returns the base walkspeed.
+]]
+class&apos;WalkSpeedManager&apos;(function(def)
+&#9;local baseWalkSpeed = 16
+&#9;local currentWalkSpeed = 16
+&#9;local locked = false
+&#9;local settingInternal = false
+&#9;local humanoid
+&#9;local changed
+
+&#9;function def:SetHumanoid(hum)
+&#9;&#9;humanoid = hum
+&#9;&#9;locked = false
+&#9;&#9;if changed then changed:disconnect() end
+&#9;&#9;if hum then
+&#9;&#9;&#9;baseWalkSpeed = hum.WalkSpeed
+&#9;&#9;&#9;currentWalkSpeed = baseWalkSpeed
+&#9;&#9;&#9;changed = hum.Changed:connect(function(p)
+&#9;&#9;&#9;&#9;if p == &quot;WalkSpeed&quot; and not settingInternal then
+&#9;&#9;&#9;&#9;&#9;-- something external is modifying the walkspeed; use that as the base
+&#9;&#9;&#9;&#9;&#9;baseWalkSpeed = hum.WalkSpeed
+&#9;&#9;&#9;&#9;&#9;if locked then
+&#9;&#9;&#9;&#9;&#9;&#9;settingInternal = true
+&#9;&#9;&#9;&#9;&#9;&#9;hum.WalkSpeed = currentWalkSpeed
+&#9;&#9;&#9;&#9;&#9;&#9;settingInternal = false
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+
+&#9;function def:Set(ws)
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;locked = true
+&#9;&#9;&#9;currentWalkSpeed = ws
+&#9;&#9;&#9;settingInternal = true
+&#9;&#9;&#9;humanoid.WalkSpeed = ws
+&#9;&#9;&#9;settingInternal = false
+&#9;&#9;end
+&#9;end
+
+&#9;function def:Reset()
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;currentWalkSpeed = baseWalkSpeed
+&#9;&#9;&#9;settingInternal = true
+&#9;&#9;&#9;humanoid.WalkSpeed = baseWalkSpeed
+&#9;&#9;&#9;settingInternal = false
+&#9;&#9;&#9;locked = false
+&#9;&#9;end
+&#9;end
+
+&#9;function def:GetBase()
+&#9;&#9;return baseWalkSpeed
+&#9;end
+end)
+
+--[[
+Sequencer
+&#9;Calls functions in a sequence through activation of a single function.
+
+&#9;:SetSequenceMap(map)
+&#9;&#9;Sets the sequence of functions to use.
+&#9;:SetMinInterval(interval)
+&#9;&#9;Sets the minimum amount of time allowed between activations.
+&#9;:SetResetDelay(delay,time)
+&#9;&#9;Sets the amount of time to wait after the most recent activation before the sequence is reset.
+&#9;&#9;`delay` is the time to wait after the last activation.
+&#9;&#9;`time` is used when comparing the current time with the last activation time.
+&#9;&#9;If `time` is greater than or close to `delay`, the sequence (probably) wont reset.
+&#9;:Activate(...)
+&#9;&#9;Calls the next function in the sequence. If the end of the sequence is reached, it wraps back to the beginning.
+&#9;&#9;The first value passed to the function is the current sequence index. Subsequent arguments are the values passed to Activate.
+]]
+class&apos;Sequencer&apos;(function(def)
+&#9;local min_interval = 0
+&#9;local reset_delay = 0
+&#9;local reset_time = 0
+&#9;local seq_map = {}
+
+&#9;local seq_index = 0
+&#9;local activate_time = 0
+
+&#9;function def:SetSequenceMap(map)
+&#9;&#9;seq_map = map
+&#9;&#9;if seq_index &gt; #map then
+&#9;&#9;&#9;seq_index = 0
+&#9;&#9;end
+&#9;end
+
+&#9;function def:SetMinInterval(interval)
+&#9;&#9;min_interval = interval
+&#9;end
+
+&#9;function def:SetResetDelay(delay,time)
+&#9;&#9;reset_delay = delay
+&#9;&#9;reset_time = time
+&#9;end
+
+&#9;local function act(...)
+&#9;&#9;local t = tick()
+&#9;&#9;if t-activate_time &gt; min_interval then
+&#9;&#9;&#9;activate_time = t
+&#9;&#9;&#9;seq_index = seq_index + 1 &gt; #seq_map and 1 or seq_index + 1
+&#9;&#9;&#9;if seq_map[seq_index] then
+&#9;&#9;&#9;&#9;coroutine.wrap(seq_map[seq_index])(seq_index,...)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(reset_delay)
+&#9;&#9;if tick()-activate_time &gt; reset_time then
+&#9;&#9;&#9;seq_index = 0
+&#9;&#9;end
+&#9;end
+
+&#9;function def:Activate(...)
+&#9;&#9;coroutine.wrap(act)(...)
+&#9;end
+end)
+
+--[[
+Particle
+&#9;Manages a particle.
+&#9;
+&#9;CreateParticle(constructor)
+&#9;&#9;Returns a new Particle.
+&#9;&#9;`constructor` is a function that creates a particle. It should return an Instance.
+&#9;:SetCountLimit(count)
+&#9;&#9;Sets the maximum number of particles that can exist at one time.
+&#9;:SetTimeLimit(time)
+&#9;&#9;Sets the maximum time a paricle is allowed to exist.
+&#9;&#9;Setting below 0 lets it exist forever.
+&#9;:Spawn(...)
+&#9;&#9;Spawns a particle.
+&#9;&#9;Received arguments are passed to the `constructor` function.
+&#9;&#9;Returns the spawned particle.
+&#9;:Despawn(particle)
+&#9;&#9;Removes a spawned particle.
+]]
+class&apos;Particle&apos;(function(def,newParticle)
+&#9;local Debris = Game:GetService(&quot;Debris&quot;)
+&#9;local queue = {}
+&#9;local changed = {}
+&#9;local maxParticles = 20
+&#9;local maxTime = 5
+
+&#9;local function search_remove(t,k)
+&#9;&#9;local i = 1
+&#9;&#9;while i &lt;= #t do
+&#9;&#9;&#9;if t[i] == k then
+&#9;&#9;&#9;&#9;table.remove(t,i)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;i = i + 1
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;function def:SetCountLimit(mp)
+&#9;&#9;maxParticles = mp
+&#9;end
+
+&#9;function def:SetTimeLimit(mt)
+&#9;&#9;maxTime = mt
+&#9;end
+
+&#9;function def:Despawn(particle)
+&#9;&#9;if changed[particle] then
+&#9;&#9;&#9;changed[particle]:disconnect()
+&#9;&#9;&#9;changed[particle] = nil
+&#9;&#9;end
+&#9;&#9;search_remove(queue,particle)
+&#9;&#9;particle:Destroy()
+&#9;end
+
+&#9;function def:Spawn(...)
+&#9;&#9;if #queue &lt; maxParticles then
+&#9;&#9;&#9;local particle = newParticle(...)
+&#9;&#9;&#9;if maxTime &gt;= 0 then Debris:AddItem(particle,maxTime) end
+&#9;&#9;&#9;queue[#queue+1] = particle
+&#9;&#9;&#9;changed[particle] = particle.AncestryChanged:connect(function(c,p)
+&#9;&#9;&#9;&#9;if p == nil then
+&#9;&#9;&#9;&#9;&#9;self:Despawn(particle)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;return particle
+&#9;end
+
+end)
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- Tiny Event Manager; Add: [[Event.EventName = (event)]]; Remove: [[Disconnect(&quot;EventName&quot;,...)]]
+local Event = {}
+local function Disconnect(...)
+&#9;for _,name in pairs{...} do
+&#9;&#9;if Event[name] then
+&#9;&#9;&#9;Event[name]:disconnect()
+&#9;&#9;&#9;Event[name] = nil
+&#9;&#9;end
+&#9;end
+end
+
+-- get an object; make it if it doesn&apos;t exist
+local function GetMake(parent,name,type)
+&#9;local object = parent:FindFirstChild(name)
+&#9;if not object then
+&#9;&#9;object = Create(type){Name=name}
+&#9;&#9;object.Parent = parent
+&#9;end
+&#9;return object
+end
+
+-- wait until child exists; return child
+local function WaitForChild(parent,name)
+&#9;while not parent:FindFirstChild(name) do
+&#9;&#9;parent.ChildAdded:wait()
+&#9;end
+&#9;return parent:FindFirstChild(name)
+end
+
+-- get a sibling humanoid of object; by humanoid, not by name
+local function GetHumanoid(object)
+&#9;if object and object.Parent then
+&#9;&#9;for i,v in pairs(object.Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA&quot;Humanoid&quot; then
+&#9;&#9;&#9;&#9;return v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+-- get the parent character from an object; verified by GetHumanoid
+local function GetCharacter(object)
+&#9;local humanoid = GetHumanoid(object)
+&#9;if humanoid then
+&#9;&#9;return object.Parent,humanoid
+&#9;end
+&#9;return nil
+end
+
+-- make a joint, if the objects exist
+local function AttemptJoint(x,y,c0,c1)
+&#9;if x and y then
+&#9;&#9;local weld = Instance.new(&quot;Motor6D&quot;)
+&#9;&#9;weld.Part0 = x
+&#9;&#9;weld.Part1 = y
+&#9;&#9;if c0 then weld.C0 = c0 end
+&#9;&#9;if c1 then weld.C1 = c1 end
+&#9;&#9;weld.Parent = x
+&#9;&#9;return weld
+&#9;end
+end
+
+-- destroy a joint used only by the two objects
+local function KillJoint(x,y)
+&#9;if x and y then
+&#9;&#9;for i,v in pairs(x:GetChildren()) do
+&#9;&#9;&#9;if v:IsA&quot;Motor6D&quot; then
+&#9;&#9;&#9;&#9;if v.Part0 == x and v.Part1 == y then
+&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-----SETTINGS-------------------------------------------------------------------
+--Damage
+&#9;local sword_damage&#9;&#9;&#9;= 5
+&#9;local charged_sword_damage&#9;= 10
+&#9;local arc_damage&#9;&#9;&#9;= 10
+&#9;local charged_arc_damage&#9;= 20
+
+--Charged Attack
+&#9;local charge_time&#9;&#9;&#9;= 6&#9;&#9;-- how long it takes to fully charge
+&#9;local charge_attack_time&#9;= 8&#9;&#9;-- how long charged attack lasts (at full charge)
+&#9;local cooldown_time&#9;&#9;&#9;= 12&#9;-- how long before sword can be charged again (at full charge)
+&#9;local charge_walk_mult&#9;&#9;= 1.5&#9;-- how much to multiply the base walkspeed when charged
+
+--Short-term Fatigue
+&#9;-- min slash interval increases after every slash
+&#9;-- more consecutive slashes means longer recovery time
+&#9;local fatigue_enabled&#9;= true
+&#9;local fatigue_increment&#9;= 0.05&#9;&#9;-- controls stamina (seconds added per slash)
+&#9;local rest_factor&#9;&#9;= 16&#9;&#9;-- controls recovery time (multiplied by current fatigue)
+
+--Moon Arc Effect
+&#9;local arc_angle_variance&#9;= Vector3.new(2,12,6)&#9;-- degrees
+&#9;local arc_distance_variance&#9;= 0.5&#9;&#9;&#9;&#9;&#9;-- distance from torso
+&#9;local arc_max_speed&#9;&#9;&#9;= 0.5&#9;&#9;&#9;&#9;&#9;-- initial outward speed (gets decayed)
+&#9;local arc_time&#9;&#9;&#9;&#9;= 0.3&#9;&#9;&#9;&#9;&#9;-- how long arc should exist
+&#9;local arc_decay&#9;&#9;&#9;&#9;= 2&#9;&#9;&#9;&#9;&#9;&#9;-- exp decay factor
+
+--Sphere Effect
+&#9;-- a growing sphere during charge
+&#9;-- not sure if looks good
+&#9;local sphere_enabled&#9;= false
+&#9;local sphere_radius&#9;&#9;= 5.3&#9;-- radius at end of effect
+&#9;local sphere_magnitude&#9;= 2&#9;&#9;-- wavyness
+&#9;local sphere_time&#9;&#9;= 4&#9;&#9;-- wavyness time scale
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+local Debris = Game:GetService(&quot;Debris&quot;)
+local Lighting = Game:GetService(&quot;Lighting&quot;)
+
+local Tool = script.Parent
+local Handle = WaitForChild(Tool,&quot;Handle&quot;)
+local Character,Humanoid
+
+local DamageBin = GetMake(Tool,&quot;DamageBin&quot;,&quot;Configuration&quot;)
+local Damage = sword_damage
+local ArcDamage = arc_damage
+
+local MoonArcTemplate = Create&apos;Part&apos;{
+&#9;Name = &quot;MoonArc&quot;;
+&#9;Anchored = true;
+&#9;CanCollide = false;
+&#9;Transparency = 1;
+&#9;FormFactor = Enum.FormFactor.Symmetric;
+&#9;TopSurface = Enum.SurfaceType.Smooth;
+&#9;BottomSurface = Enum.SurfaceType.Smooth;
+&#9;Size = Vector3.new(9,1,4);
+&#9;Create&apos;Decal&apos;{
+&#9;&#9;Name = &quot;DecalTop&quot;;
+&#9;&#9;Face = Enum.NormalId.Top;
+&#9;&#9;Texture = &quot;http://www.roblox.com/asset/?id=74132306&quot;;
+&#9;};
+&#9;Create&apos;Decal&apos;{
+&#9;&#9;Name = &quot;DecalBottom&quot;;
+&#9;&#9;Face = Enum.NormalId.Bottom;
+&#9;&#9;Texture = &quot;http://www.roblox.com/asset/?id=74132306&quot;;
+&#9;};
+&#9;Create&apos;BlockMesh&apos;{
+&#9;&#9;Scale = Vector3.new(1,0,1);
+&#9;};
+};
+Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=74132306&quot;)
+
+local WalkSpeed = CreateWalkSpeedManager()
+
+local Animation = CreateAnimationProvider{
+&#9;SlashLeft&#9;&#9;= &quot;http://www.roblox.com/asset/?id=74909537&quot;;
+&#9;SlashRight&#9;&#9;= &quot;http://www.roblox.com/asset/?id=74909551&quot;;
+&#9;Charge&#9;&#9;&#9;= &quot;http://www.roblox.com/asset/?id=74909500&quot;;
+&#9;SlashSides&#9;&#9;= &quot;http://www.roblox.com/asset/?id=74909569&quot;;
+&#9;SlashForward&#9;= &quot;http://www.roblox.com/asset/?id=74909528&quot;;
+&#9;DualSword&#9;&#9;= &quot;http://www.roblox.com/asset/?id=74909522&quot;;
+}                   
+
+local Sound = CreateSoundProvider{
+&#9;Slash&#9;= &quot;http://www.roblox.com/asset/?id=45885030&quot;;
+&#9;Charge&#9;= &quot;http://www.roblox.com/asset/?id=75421988&quot;;
+}
+Sound:SetParent(Handle)
+Sound.Slash.Volume = 0.25
+Sound.Charge.Volume = 0
+Sound.Charge.Looped = true
+
+local MoonParticleTemplate = Create&apos;Part&apos;{
+&#9;TopSurface = Enum.SurfaceType.Smooth;
+&#9;Reflectance = 2;
+&#9;BrickColor = BrickColor.new(1001);
+&#9;Locked = true;
+&#9;Anchored = true;
+&#9;CanCollide = false;
+&#9;Size = Vector3.new(1, 1, 8);
+&#9;FormFactor = Enum.FormFactor.Custom;
+&#9;BottomSurface = Enum.SurfaceType.Smooth;
+&#9;Name = &quot;MoonParticle&quot;;
+--[[
+&#9;Create&apos;RocketPropulsion&apos;{
+&#9;&#9;CartoonFactor = 1;
+&#9;&#9;MaxTorque = Vector3.new(math.huge, math.huge, math.huge);
+&#9;&#9;TurnP = 100000;
+&#9;&#9;MaxSpeed = 500;
+&#9;&#9;MaxThrust = math.huge;
+&#9;&#9;ThrustD = 100;
+&#9;&#9;Name = &quot;Rocket&quot;;
+&#9;&#9;ThrustP = 1000;
+&#9;&#9;TargetRadius = 8;
+&#9;};
+--]]
+&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;MeshType = Enum.MeshType.Sphere;
+&#9;};
+};
+local MoonParticle = CreateParticle(function()
+&#9;local pos = Handle.Position
+&#9;local dir = Lighting:GetMoonDirection()
+&#9;local particle = MoonParticleTemplate:Clone()
+&#9;particle.Archivable = false
+&#9;local r = Vector2.new(math.random(-14,14),math.random(-14,14))
+&#9;if r.magnitude &gt; 14 then r = r.unit*14 end
+&#9;local start = CFrame.new(pos,pos-dir) * CFrame.new(r.x,r.y,200)
+&#9;particle.CFrame = start
+&#9;Spawn(function()
+&#9;&#9;while ((particle.CFrame*CFrame.new(0,0,-4)).p-Handle.Position).magnitude &gt; 8 do
+&#9;&#9;&#9;particle.CFrame = CFrame.new(particle.Position,Handle.Position) * CFrame.new(0,0,-8)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;particle:Destroy()
+&#9;end)
+&#9;particle.Parent = Character
+--[[
+&#9;particle.Rocket.Target = Handle
+&#9;particle.Rocket.ReachedTarget:connect(function()
+&#9;&#9;particle:Destroy()
+&#9;end)
+&#9;particle.Parent = Workspace
+&#9;particle.Rocket:Fire()
+]]
+&#9;return particle
+end)
+MoonParticle:SetCountLimit(10)
+MoonParticle:SetTimeLimit(10)
+
+local SmallParticleTemplate = Create&apos;Part&apos;{
+&#9;TopSurface = Enum.SurfaceType.Smooth;
+&#9;Reflectance = 2;
+&#9;BrickColor = BrickColor.new(1001);
+&#9;Locked = true;
+&#9;Anchored = true;
+&#9;CanCollide = false;
+&#9;Size = Vector3.new(0.5, 0.5, 1);
+&#9;FormFactor = Enum.FormFactor.Custom;
+&#9;BottomSurface = Enum.SurfaceType.Smooth;
+&#9;Name = &quot;SmallParticle&quot;;
+&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;MeshType = Enum.MeshType.Sphere;
+&#9;};
+--[[
+&#9;Create&apos;RocketPropulsion&apos;{
+&#9;&#9;CartoonFactor = 1;
+&#9;&#9;MaxTorque = Vector3.new(math.huge, math.huge, math.huge);
+&#9;&#9;TurnP = 100000;
+&#9;&#9;ThrustD = 50;
+&#9;&#9;Name = &quot;Rocket&quot;;
+&#9;&#9;ThrustP = 1000;
+&#9;&#9;TargetRadius = 1;
+&#9;};
+--]]
+};
+local SmallParticle = CreateParticle(function()
+&#9;local pos = Handle.Position
+&#9;local particle = SmallParticleTemplate:Clone()
+&#9;particle.Archivable = false
+&#9;local r = Vector3.new(math.random(-12,12),math.random(-12,12),math.random(-12,12))
+&#9;if r.magnitude &gt; 12 then r = r.unit*12 end
+&#9;local start = CFrame.new(pos+r,pos)
+&#9;particle.CFrame = start
+&#9;Spawn(function()
+&#9;&#9;while (particle.Position-Handle.Position).magnitude &gt; 2 do
+&#9;&#9;&#9;particle.CFrame = CFrame.new(particle.Position,Handle.Position) * CFrame.new(0,0,-1)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;particle:Destroy()
+&#9;end)
+&#9;particle.Parent = Character
+--[[
+&#9;particle.Rocket.Target = Handle
+&#9;particle.Rocket.ReachedTarget:connect(function()
+&#9;&#9;particle:Destroy()
+&#9;end)
+&#9;particle.Parent = Workspace
+&#9;particle.Rocket:Fire()
+]]
+&#9;return particle
+end)
+SmallParticle:SetCountLimit(10)
+SmallParticle:SetTimeLimit(10)
+
+local SphereParticleTemplate = Create&apos;Part&apos;{
+&#9;TopSurface = Enum.SurfaceType.Smooth;
+&#9;Reflectance = 0.75;
+&#9;Transparency = 0.9;
+&#9;BrickColor = BrickColor.new(1001);
+&#9;Size = Vector3.new(1, 1, 1);
+&#9;FormFactor = Enum.FormFactor.Custom;
+&#9;BottomSurface = Enum.SurfaceType.Smooth;
+&#9;Name = &quot;SphereParticle&quot;;
+&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;Scale = Vector3.new(0, 0, 0);
+&#9;&#9;MeshType = Enum.MeshType.Sphere;
+&#9;};
+};
+
+-- if theres a character, get a body part from it
+local function GetBodyPart(name)
+&#9;local character = Character or GetCharacter(Tool)
+&#9;if character then
+&#9;&#9;local object = character:FindFirstChild(name)
+&#9;&#9;if object then
+&#9;&#9;&#9;return object
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+local function DealDamage(hit,damage)
+&#9;local humanoid = GetHumanoid(hit)
+&#9;if humanoid then
+&#9;&#9;local dtag = Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;Name = tostring(damage);
+&#9;&#9;&#9;Value = humanoid;
+&#9;&#9;&#9;Archivable = false;
+&#9;&#9;}
+&#9;&#9;dtag.Parent = DamageBin
+&#9;end
+end
+
+local function MakeMoonArc(start,angle,off)
+&#9;local arc = MoonArcTemplate:Clone()
+&#9;arc.Archivable = false
+&#9;arc.CFrame = start
+&#9;&#9;* angle
+&#9;&#9;* CFrame.Angles(
+&#9;&#9;&#9;math.rad(math.random(-arc_angle_variance.x,arc_angle_variance.x)),
+&#9;&#9;&#9;math.rad(math.random(-arc_angle_variance.y,arc_angle_variance.y)),
+&#9;&#9;&#9;math.rad(math.random(-arc_angle_variance.z,arc_angle_variance.z))
+&#9;&#9;)
+&#9;&#9;* off
+&#9;&#9;* CFrame.new(0,0,math.random(-arc_distance_variance*10,arc_distance_variance*10)/10)
+
+
+&#9;arc.Touched:connect(function(hit)
+&#9;&#9;if not hit:IsDescendantOf(Character) then
+&#9;&#9;&#9;DealDamage(hit,ArcDamage)
+&#9;&#9;end
+&#9;end)
+&#9;arc.Parent = Character
+
+&#9;Spawn(function()
+&#9;&#9;local MoonArc = arc
+&#9;&#9;local DecalTop = MoonArc:FindFirstChild(&quot;DecalTop&quot;)
+&#9;&#9;local DecalBottom = MoonArc:FindFirstChild(&quot;DecalBottom&quot;)
+&#9;&#9;local i = 0
+&#9;&#9;while i &lt; 1 do
+&#9;&#9;&#9;local n = math.pow(i,arc_decay)
+&#9;&#9;&#9;if DecalTop then DecalTop.Transparency = n end
+&#9;&#9;&#9;if DecalBottom then DecalBottom.Transparency = n end
+&#9;&#9;&#9;MoonArc.CFrame = MoonArc.CFrame * CFrame.new(0,0,-math.pow(1-i,arc_decay)*arc_max_speed)
+&#9;&#9;&#9;i = i + wait()/arc_time
+&#9;&#9;end
+&#9;&#9;MoonArc:Destroy()
+&#9;end)
+end
+
+local function MoonIsVisible(Character)
+&#9;local dir = Lighting:GetMoonDirection()
+&#9;if Vector3.new(0,1,0):Dot(dir) &gt; 0 then
+&#9;-- BUG: particles block raycast
+&#9;&#9;if not Workspace:FindPartOnRay(Ray.new(Handle.Position,dir*999),Character) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+local function SwordTouched(hit)
+&#9;if not hit:IsDescendantOf(Character) then
+&#9;&#9;DealDamage(hit,Damage)
+&#9;end
+end
+
+local toolEquipped = false
+local attackEnabled = true
+local chargedAttackEnabled = false
+local canCharge = true
+-- charging sequence
+local function Charge(Mouse)
+---- READY CHARGE
+&#9;attackEnabled = false
+&#9;canCharge = false
+&#9;WalkSpeed:Set(0)
+
+&#9;-- make shiny handle
+&#9;local ShinyHandle
+&#9;do
+&#9;&#9;ShinyHandle = Handle:Clone()
+&#9;&#9;ShinyHandle.BrickColor = BrickColor.new(&quot;Institutional white&quot;)
+&#9;&#9;ShinyHandle.Archivable = false
+&#9;&#9;ShinyHandle.Parent = Tool
+&#9;&#9;local mesh = ShinyHandle:FindFirstChild(&quot;Mesh&quot;)
+&#9;&#9;if mesh then mesh.TextureId = &quot;&quot; end
+&#9;&#9;AttemptJoint(ShinyHandle,Handle)
+&#9;end
+&#9;-- make sphere, if enabled
+&#9;local SphereParticle
+&#9;if sphere_enabled then
+&#9;&#9;SphereParticle = SphereParticleTemplate:Clone()
+&#9;&#9;SphereParticle.Archivable = false
+&#9;&#9;SphereParticle.Parent = Tool
+&#9;&#9;AttemptJoint(SphereParticle,Handle)
+&#9;end
+
+&#9;local charging = true
+&#9;local charge_level = 0&#9;-- main value; determines charge
+&#9;Event.MouseCharge = Mouse.Button1Up:connect(function()
+&#9;&#9;charging = false
+&#9;end)
+
+&#9;Animation:StopAnimations(0)
+&#9;Animation.Charge:Play()
+
+&#9;local moon_visible = false&#9;
+&#9;-- particle thread
+&#9;Spawn(function()
+&#9;&#9;while charging and toolEquipped do
+&#9;&#9;&#9;moon_visible = MoonIsVisible(Character)
+&#9;&#9;&#9;if moon_visible then
+&#9;&#9;&#9;&#9;-- spawn particles
+&#9;&#9;&#9;&#9;MoonParticle:Spawn()
+&#9;&#9;&#9;&#9;SmallParticle:Spawn()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(0.1)
+&#9;&#9;end
+&#9;end)
+
+---- CHARGE
+&#9;-- fade in charge sound
+&#9;Sound.Charge.Pitch = 0.5
+&#9;Sound.Charge:Play()
+&#9;coroutine.wrap(function()
+&#9;&#9;Sound:Fade(&quot;Charge&quot;,0.8,0.5)
+&#9;end)()
+&#9;-- charge loop
+&#9;while charging and toolEquipped do
+&#9;&#9;local t = wait()
+&#9;&#9;if moon_visible then
+&#9;&#9;&#9;charge_level = charge_level + t/charge_time
+&#9;&#9;&#9;ShinyHandle.Reflectance = charge_level
+&#9;&#9;&#9;Sound.Charge.Pitch = 0.5 + charge_level*2
+
+&#9;&#9;&#9;if sphere_enabled then
+&#9;&#9;&#9;&#9;local i = ((sphere_magnitude*math.sin(math.pi*charge_level*sphere_radius*sphere_time))/math.pi + charge_level*sphere_radius*sphere_time)/sphere_time
+&#9;&#9;&#9;&#9;SphereParticle.Mesh.Scale = Vector3.new(i,i,i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if charge_level &gt;= 1 then
+&#9;&#9;&#9;charging = false
+&#9;&#9;&#9;charge_level = 1
+&#9;&#9;&#9;break
+&#9;&#9;end
+&#9;end
+
+&#9;-- fade out charge sound
+&#9;coroutine.wrap(function()
+&#9;&#9;Sound:Fade(&quot;Charge&quot;,0,0.5)
+&#9;&#9;Sound.Charge:Stop()
+&#9;end)()
+
+&#9;if sphere_enabled then
+&#9;&#9;-- shrink sphere
+&#9;&#9;local s = charge_level
+&#9;&#9;while s &gt; 0 do
+&#9;&#9;&#9;s = s - wait()/0.25
+&#9;&#9;&#9;local i = (1-math.pow(1-s,2))*sphere_radius
+&#9;&#9;&#9;SphereParticle.Mesh.Scale = Vector3.new(i,i,i)
+&#9;&#9;end
+&#9;end
+
+---- READY CHARGE ATTACK
+&#9;Animation:StopAnimations()
+&#9;Animation.DualSword:Play(0.2)
+&#9;Disconnect(&quot;MouseCharge&quot;)
+&#9;WalkSpeed:Set(WalkSpeed:GetBase()*charge_walk_mult)
+&#9;if sphere_enabled then
+&#9;&#9;SphereParticle:Destroy()
+&#9;end
+
+&#9;-- split shiny handle from normal handle; give to left hand
+&#9;KillJoint(ShinyHandle,Handle)
+&#9;AttemptJoint(ShinyHandle,GetBodyPart(&quot;Left Arm&quot;),nil,CFrame.new(0,-1,-2.25)*CFrame.Angles(0,math.pi,math.pi/2))
+&#9;ShinyHandle.Touched:connect(SwordTouched)
+
+&#9;Damage = charged_sword_damage
+&#9;ArcDamage = charged_arc_damage
+
+---- CHARGE ATTACK
+&#9;local attack_level = charge_level
+&#9;chargedAttackEnabled = true
+&#9;attackEnabled = true
+&#9;do -- sword glow indicator
+&#9;&#9;local i = 1 + (math.pow(1-charge_level,10))
+&#9;&#9;Handle.Mesh.VertexColor = Vector3.new(i,i,i)
+&#9;end
+
+&#9;while attack_level &gt; 0 and toolEquipped do
+&#9;&#9;attack_level = attack_level - wait()/charge_attack_time
+&#9;&#9;ShinyHandle.Reflectance = attack_level
+&#9;&#9;ShinyHandle.Transparency = 1-attack_level
+&#9;end
+
+---- CHARGE ATTACK END
+&#9;chargedAttackEnabled = false
+&#9;Animation.DualSword:Stop(0.2)
+&#9;WalkSpeed:Reset()
+&#9;Damage = sword_damage
+&#9;ArcDamage = arc_damage
+&#9;ShinyHandle:Destroy()
+
+---- COOLDOWN
+&#9;local cooldown = charge_level
+&#9;while cooldown &gt; 0 do
+&#9;&#9;cooldown = cooldown - wait()/cooldown_time
+&#9;&#9;local i = 1 + (math.pow(1-cooldown,10))
+&#9;&#9;Handle.Mesh.VertexColor = Vector3.new(i,i,i)
+&#9;end
+&#9;canCharge = true
+end
+
+local fatigue = 0
+Tool.Equipped:connect(function(Mouse)
+&#9;toolEquipped = true
+&#9;Character,Humanoid = GetCharacter(Tool)
+&#9;if not Character then return end
+&#9;Animation:LoadHumanoid(Humanoid)
+&#9;WalkSpeed:SetHumanoid(Humanoid)
+
+&#9;local Torso = GetBodyPart(&quot;Torso&quot;)
+
+&#9;-- Slash Sequencer
+&#9;&#9;-- basic left-right slash
+&#9;&#9;-- primary attack
+&#9;local SlashSeq = CreateSequencer()
+&#9;SlashSeq:SetMinInterval(0)
+&#9;SlashSeq:SetResetDelay(1.15,0.8)
+&#9;local function add_fatigue()
+&#9;&#9;local inc = fatigue_increment -- may change, so save it for later
+&#9;&#9;fatigue = fatigue + inc
+&#9;&#9;SlashSeq:SetMinInterval(fatigue) -- set as amount of time between slashes
+&#9;&#9;-- recovery time; dependant on current fatigue
+&#9;&#9;-- therefore, more fatigue causes longer recovery
+&#9;&#9;wait(fatigue*rest_factor)
+&#9;&#9;fatigue = fatigue - inc
+&#9;&#9;SlashSeq:SetMinInterval(fatigue)
+&#9;end
+&#9;SlashSeq:SetSequenceMap{
+&#9;&#9;function()
+&#9;&#9;&#9;if fatigue_enabled then Spawn(add_fatigue) end
+&#9;&#9;&#9;Sound.Slash.Pitch = math.random(1000,1020)/1000
+&#9;&#9;&#9;Sound.Slash:Play()
+
+&#9;&#9;&#9;Animation.SlashRight:Stop(0)
+&#9;&#9;&#9;Animation.SlashLeft:Play()
+&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;MakeMoonArc(
+&#9;&#9;&#9;&#9;Torso.CFrame,
+&#9;&#9;&#9;&#9;CFrame.Angles(-math.pi/32,-math.pi/4,0),
+&#9;&#9;&#9;&#9;CFrame.new(0,0,-5)
+&#9;&#9;&#9;)
+&#9;&#9;end;
+&#9;&#9;function()
+&#9;&#9;&#9;if fatigue_enabled then Spawn(add_fatigue) end
+&#9;&#9;&#9;Sound.Slash.Pitch = math.random(1000,1020)/1000
+&#9;&#9;&#9;Sound.Slash:Play()
+
+&#9;&#9;&#9;Animation.SlashLeft:Stop(0)
+&#9;&#9;&#9;Animation.SlashRight:Play()
+&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;MakeMoonArc(
+&#9;&#9;&#9;&#9;Torso.CFrame,
+&#9;&#9;&#9;&#9;CFrame.Angles(math.pi/32,math.pi/6,0),
+&#9;&#9;&#9;&#9;CFrame.new(0,0,-4)
+&#9;&#9;&#9;)
+&#9;&#9;end;
+&#9;}
+
+&#9;-- Charged Slash Sequencer
+&#9;&#9;-- dual-sword forward-side slash
+&#9;&#9;-- secondary attack
+&#9;local ChargedSeq = CreateSequencer()
+&#9;ChargedSeq:SetMinInterval(0.1)
+&#9;ChargedSeq:SetResetDelay(0.6,0.4)
+&#9;ChargedSeq:SetSequenceMap{
+&#9;&#9;function()
+&#9;&#9;&#9;Sound.Slash.Pitch = math.random(900,920)/1000
+&#9;&#9;&#9;Sound.Slash:Play()
+
+&#9;&#9;&#9;Animation.SlashSides:Stop(0)
+&#9;&#9;&#9;Animation.SlashForward:Play()
+&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;MakeMoonArc(
+&#9;&#9;&#9;&#9;Torso.CFrame,
+&#9;&#9;&#9;&#9;CFrame.Angles(math.pi/32,0,math.pi/6),
+&#9;&#9;&#9;&#9;CFrame.new(0,0,-5)
+&#9;&#9;&#9;)
+&#9;&#9;&#9;MakeMoonArc(
+&#9;&#9;&#9;&#9;Torso.CFrame,
+&#9;&#9;&#9;&#9;CFrame.Angles(math.pi/32,0,-math.pi/6),
+&#9;&#9;&#9;&#9;CFrame.new(0,0,-5)
+&#9;&#9;&#9;)
+&#9;&#9;end;
+&#9;&#9;function()
+&#9;&#9;&#9;Sound.Slash.Pitch = math.random(900,920)/1000
+&#9;&#9;&#9;Sound.Slash:Play()
+
+&#9;&#9;&#9;Animation.SlashForward:Stop(0)
+&#9;&#9;&#9;Animation.SlashSides:Play()
+&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;MakeMoonArc(
+&#9;&#9;&#9;&#9;Torso.CFrame,
+&#9;&#9;&#9;&#9;CFrame.Angles(-math.pi/32,-math.pi/2,0),
+&#9;&#9;&#9;&#9;CFrame.new(0,0,-5)
+&#9;&#9;&#9;)
+&#9;&#9;&#9;MakeMoonArc(
+&#9;&#9;&#9;&#9;Torso.CFrame,
+&#9;&#9;&#9;&#9;CFrame.Angles(-math.pi/32,math.pi/2,0),
+&#9;&#9;&#9;&#9;CFrame.new(0,0,-5)
+&#9;&#9;&#9;)
+&#9;&#9;end;
+&#9;}
+
+&#9;local ClickThread = CreateThreadID()
+&#9;local down = false
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;if attackEnabled and GetBodyPart(&quot;Right Arm&quot;) then
+&#9;&#9;&#9;down = true
+&#9;&#9;&#9;if chargedAttackEnabled then
+&#9;&#9;&#9;&#9;ChargedSeq:Activate()
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;SlashSeq:Activate()
+&#9;&#9;&#9;&#9;if canCharge and GetBodyPart(&quot;Left Arm&quot;) then
+&#9;&#9;&#9;&#9;&#9;local cid = ClickThread:Request()
+&#9;&#9;&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;&#9;&#9;if ClickThread:Assert(cid) and down then
+&#9;&#9;&#9;&#9;&#9;&#9;Charge(Mouse)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;down = false
+&#9;end)
+
+&#9;Event.Touched = Handle.Touched:connect(SwordTouched)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;toolEquipped = false
+&#9;chargedAttackEnabled = false
+&#9;attackEnabled = true
+&#9;Disconnect(&quot;Touched&quot;,&quot;Lighting&quot;)
+&#9;Animation:StopAnimations()
+&#9;Sound:StopSounds()
+&#9;WalkSpeed:Reset()
+&#9;Damage = sword_damage
+&#9;ArcDamage = arc_damage
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.100000381</X>
+					<Y>2.80000091</Y>
+					<Z>-0.5</Z>
+					<R00>0</R00>
+					<R01>1</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>0</R11>
+					<R12>1</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>0.25</Y>
+					<Z>5.5</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=74908699</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.600000024</X>
+						<Y>0.600000024</Y>
+						<Z>0.600000024</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=74908713</url></Content>
+					<Vector3 name="VertexColor">
+						<X>2</X>
+						<Y>2</Y>
+						<Z>2</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX5">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-4.40486717</X>
+					<Y>3.958462</Y>
+					<Z>-0.248142868</Z>
+					<R00>0.0558206029</R00>
+					<R01>0.24830237</R01>
+					<R02>-0.967072904</R02>
+					<R10>9.31322575e-010</R10>
+					<R11>0.968583047</R11>
+					<R12>0.248690128</R12>
+					<R20>0.998440802</R20>
+					<R21>-0.0138820335</R21>
+					<R22>0.0540668964</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0.100000381</X>
+					<Y>2.80000114</Y>
+					<Z>-0.5</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
