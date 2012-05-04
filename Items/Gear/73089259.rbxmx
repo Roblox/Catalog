@@ -36,9 +36,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>-35</X>
+					<X>0</X>
 					<Y>1.60000002</Y>
-					<Z>3.5</Z>
+					<Z>-0.5</Z>
 					<R00>0</R00>
 					<R01>0</R01>
 					<R02>-1</R02>
@@ -149,7 +149,6 @@ local playerOwner = Tool.PlayerOwner
 local CONNECT_BILLBOARD_GUI = &quot;ConnectBillboardGui&quot;
 local WIRE_LASSO = &quot;WireLasso&quot;
 local WIRE_TEXTURE = &quot;http://www.roblox.com/asset?id=56954045&quot;
---local WIRE_TEXTURE = &quot;rbxasset://Textures/ui/playerlist_small_hide_dn.png&quot;
 local KILL_WIRE_TEXTURE = &quot;rbxasset://Textures/ui/CloseButton_dn.png&quot;
 local STATIC_PLAYER_GUI = nil
 local STATIC_BASE_PLATE = nil
@@ -208,19 +207,28 @@ function clearScreenMessage()
 end
 
 function clearHover()
-&#9;if LAST_HOVERED_PART ~= nil then
-&#9;&#9;local lastHover = LAST_HOVERED_PART
-&#9;&#9;if not ANNOTATIONS[lastHover] then
-&#9;&#9;&#9;lastHover = findModel(lastHover)
-&#9;&#9;end
+&#9;if LAST_HOVERED_PART == nil then return end
 
-&#9;&#9;ANNOTATIONS[lastHover].Transparency = BASE_ANNOTATION_TRANSPARENCY
-&#9;&#9;if WIRING_PANEL_MAP[lastHover] ~= nil then
-&#9;&#9;&#9;WIRING_PANEL_MAP[lastHover]:Remove()
-&#9;&#9;&#9;WIRING_PANEL_MAP[lastHover] = nil
-&#9;&#9;end
-&#9;&#9;setPartWireTransparency(LAST_HOVERED_PART, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
+&#9;local lastHover = LAST_HOVERED_PART
+&#9;if not ANNOTATIONS[lastHover] then
+&#9;&#9;lastHover = findModel(lastHover)
 &#9;end
+
+&#9;if not lastHover or not ANNOTATIONS[lastHover] then return end
+
+&#9;ANNOTATIONS[lastHover].Transparency = BASE_ANNOTATION_TRANSPARENCY
+
+&#9;local hoverGui = WIRING_PANEL_MAP[lastHover]
+&#9;if hoverGui then hoverGui.Enabled = false end
+
+&#9;-- hack: destroy object on server
+&#9;local destroyObj = Instance.new(&quot;ObjectValue&quot;)
+&#9;destroyObj.Value = hoverGui
+&#9;destroyObj.Name = &quot;ObjectToDestroy&quot;
+&#9;destroyObj.Parent = script.Parent.DestroyScript
+&#9;WIRING_PANEL_MAP[lastHover] = nil
+
+&#9;setPartWireTransparency(LAST_HOVERED_PART, BASE_WIRE_TRANSPARENCY, BASE_WIRE_RADIUS, &quot;&quot;)
 end
 
 function getPlayerGui()
@@ -507,6 +515,8 @@ end
 -- Hover
 
 function setPartWireTransparency(part, transparency, wireRadius, texture)
+&#9;if not part then return end
+
 &#9;for idx, child in ipairs(part:GetChildren()) do
 &#9;&#9;if child:IsA(&quot;CustomEvent&quot;) then
 &#9;&#9;&#9;for idx2, recv in ipairs(child:GetAttachedReceivers()) do
@@ -540,26 +550,30 @@ function canHighlight(part,model)
 end
 
 function hoverListener(mouse)
-&#9;if mouse.Target == nil then return end
+&#9;if mouse.Target == nil then 
+&#9;&#9;clearHover()
+&#9;&#9;LAST_HOVERED_PART = nil
+&#9;&#9;return
+&#9;end
 
 &#9;local part = mouse.Target
 &#9;local model = findModel(part)
 &#9;if LAST_HOVERED_PART ~= part and findModel(LAST_HOVERED_PART) ~= model then
 &#9;&#9;clearHover()
+
+&#9;&#9;LAST_HOVERED_PART = part
 &#9;&#9;local highlight, instance = canHighlight(part,model)
+
 &#9;&#9;if highlight then
-&#9;&#9;&#9;LAST_HOVERED_PART = part
 &#9;&#9;&#9;ANNOTATIONS[model].Transparency = 0
 &#9;&#9;&#9;buildScreenPanel(model, mouse.X, mouse.Y)
 &#9;&#9;&#9;setPartWireTransparency(part, 0, ENHANCED_WIRE_RADIUS, &quot;&quot;)
-&#9;&#9;else
-&#9;&#9;&#9;LAST_HOVERED_PART = nil
 &#9;&#9;end
 
 &#9;&#9;-- Point the temporary wire to the LAST_HOVERED_PART if not nil,
 &#9;&#9;-- otherwise point it at the character
 &#9;&#9;local otherEndOfWire = game.Players.LocalPlayer.Character.Humanoid.Torso
-&#9;&#9;if LAST_HOVERED_PART ~= nil then
+&#9;&#9;if canHighlight(LAST_HOVERED_PART, model) then
 &#9;&#9;&#9;otherEndOfWire = LAST_HOVERED_PART
 &#9;&#9;end
 &#9;&#9;if SELECTED_SOURCE ~= nil then
@@ -838,20 +852,23 @@ function buildScreenPanel(part, x, y)
 &#9;getSourcesAndSinks(part,sources,sinks)
 
 &#9;local gui = nil
-&#9;local mouseFrame = nil
-&#9;if USE_BILLBOARD_GUI then
-&#9;&#9;gui = Instance.new(&quot;BillboardGui&quot;, getPlayerGui())
-&#9;&#9;gui.Name = &quot;WiringGui&quot;
-&#9;&#9;gui.StudsOffset = Vector3.new(0, 1.5, 0)
-&#9;&#9;gui.ExtentsOffset = Vector3.new(0,0, 0)
-&#9;&#9;gui.Adornee = part
-&#9;&#9;gui.Active = true
-&#9;&#9;gui.AlwaysOnTop = true
-&#9;else 
-&#9;&#9;gui = Instance.new(&quot;ScreenGui&quot;, getPlayerGui())
+
+&#9;if not gui then
+&#9;&#9;local mouseFrame = nil
+&#9;&#9;if USE_BILLBOARD_GUI then
+&#9;&#9;&#9;gui = Instance.new(&quot;BillboardGui&quot;, getPlayerGui())
+&#9;&#9;&#9;gui.Name = &quot;WiringGui&quot;
+&#9;&#9;&#9;gui.StudsOffset = Vector3.new(0, 1.5, 0)
+&#9;&#9;&#9;gui.ExtentsOffset = Vector3.new(0,0, 0)
+&#9;&#9;&#9;gui.Adornee = part
+&#9;&#9;&#9;gui.Active = true
+&#9;&#9;&#9;gui.AlwaysOnTop = true
+&#9;&#9;else 
+&#9;&#9;&#9;gui = Instance.new(&quot;ScreenGui&quot;, getPlayerGui())
+&#9;&#9;end
 &#9;end
 
-&#9;frame = Instance.new(&quot;Frame&quot;, gui)
+&#9;local frame = Instance.new(&quot;Frame&quot;, gui)
 &#9;frame.Style = Enum.FrameStyle.RobloxRound
 &#9;frame.ZIndex = 1
 &#9;frame.Active = true
@@ -995,6 +1012,9 @@ Tool.Equipped:connect(function(mouse)
 &#9;LAST_HOVERED_PART = nil
 
 &#9;if isRestricted then
+&#9;&#9;local theBumps = game.Workspace:FindFirstChild(&quot;BaseplateBumpers&quot;, true)
+print(&quot;theBumps =&quot;,theBumps)
+&#9;&#9;mouse.TargetFilter = game.Workspace:FindFirstChild(&quot;BaseplateBumpers&quot;, true)
 &#9;&#9;root = findMyBasePlate()
 &#9;else
 &#9;&#9;root = game.Workspace
@@ -1054,20 +1074,24 @@ Tool.Unequipped:connect(function()
 &#9;clearHover()
 
 &#9;for part, gui in pairs(WIRING_PANEL_MAP) do
-&#9;&#9;if gui then gui:Remove() end
+&#9;&#9;if gui then gui:Destroy() end
 &#9;end
 &#9;WIRING_PANEL_MAP = {}
 
 &#9;for source, submap in pairs(WIRE_LASSO_MAP) do
 &#9;&#9;for sink, wire in pairs(submap) do
-&#9;&#9;&#9;wire:Remove()
+&#9;&#9;&#9;wire:Destroy()
 &#9;&#9;end
 &#9;end
 &#9;WIRE_LASSO_MAP = {}
 
-&#9;for k,box in pairs(ANNOTATIONS) do
-&#9;&#9;box:Remove()
+&#9;for k,adorneeTable in pairs(adornmentTable) do
+&#9;&#9;for i = 1, #adorneeTable do
+&#9;&#9;&#9;adorneeTable[i]:Destroy()
+&#9;&#9;end
+&#9;&#9;adorneeTable = nil
 &#9;end
+&#9;adornmentTable = {}
 &#9;ANNOTATIONS = {}
 
 &#9;KNOWN_SOURCE_PARTS = {}
@@ -1080,20 +1104,16 @@ end)
 
 function findBillboard(guiTable)
 &#9;if not guiTable then return end
-
 &#9;for i = 1, #guiTable do
-&#9;&#9;if guiTable[i] and guiTable[i]:IsA(&quot;BillboardGui&quot;) then
+&#9;&#9;if guiTable[i]:IsA(&quot;BillboardGui&quot;) then
 &#9;&#9;&#9;return guiTable[i]
 &#9;&#9;end
 &#9;end
 end
 
-function getBillboard(adornee)
-&#9;local guiKey = adornee
-
-&#9;
-&#9;local billboard = findBillboard(adornmentTable[guiKey])
-&#9;if not billboard then
+function getBillboard(adornee, parent)
+&#9;local billboard = findBillboard(adornmentTable[adornee])
+&#9;if not billboard and parent then
 &#9;&#9;local screen = Instance.new(&quot;BillboardGui&quot;)
 &#9;&#9;screen.Name = adornee.Name .. &quot;BadgeGUI&quot;
 &#9;&#9;screen.Size = UDim2.new(1.5,0,1.5,0)
@@ -1102,10 +1122,7 @@ function getBillboard(adornee)
 &#9;&#9;screen.AlwaysOnTop = true
 &#9;&#9;screen.ExtentsOffset = Vector3.new(0,0,0)
 &#9;&#9;screen.Adornee = adornee
-&#9;&#9;screen.Parent = game.Players.LocalPlayer.PlayerGui
-
-&#9;&#9;if not adornmentTable[guiKey] then return end
-&#9;&#9;table.insert(adornmentTable[guiKey],screen)
+&#9;&#9;screen.Parent = parent
 
 &#9;&#9;local badgeFrame = Instance.new(&quot;Frame&quot;)
 &#9;&#9;badgeFrame.Name = &quot;BadgeFrame&quot;
@@ -1113,6 +1130,7 @@ function getBillboard(adornee)
 &#9;&#9;badgeFrame.Position = UDim2.new(-0.5,0,0,0)
 &#9;&#9;badgeFrame.BackgroundTransparency = 1
 &#9;&#9;badgeFrame.Parent = screen
+&#9;&#9;table.insert(adornmentTable[adornee],screen)
 
 &#9;&#9;return screen
 &#9;end
@@ -1132,17 +1150,18 @@ end
 
 function hasBadge(adornee, type)
 &#9;local screen = getBillboard(adornee)
-&#9;return screen:FindFirstChild(type .. &quot;Badge&quot;,true)
+&#9;return screen and screen:FindFirstChild(type .. &quot;Badge&quot;,true)
 end
 
 function removeBadge(adornee, type)
 &#9;local screen = getBillboard(adornee)
 &#9;local badge = screen:FindFirstChild(type .. &quot;Badge&quot;,true)
-&#9;if badge then badge:remove() end
+&#9;if badge then badge:Destroy() end
+&#9;if screen then screen:remove() end
 end
 
-function createBadge(adornee,type)
-&#9;local screen = getBillboard(adornee)
+function createBadge(adornee,type,parent)
+&#9;local screen = getBillboard(adornee, parent)
 
 &#9;local wiringBadge = Instance.new(&quot;ImageLabel&quot;)
 &#9;wiringBadge.Name = type .. &quot;Badge&quot;
@@ -1215,29 +1234,25 @@ function createAdornment(adornee,adornColor,type)
 &#9;&#9;box.Adornee = adornee
 &#9;&#9;box.Transparency = 0.5
 &#9;&#9;box.Parent = game.Players.LocalPlayer.PlayerGui
+
+&#9;&#9;ANNOTATIONS[adornee] = box
 &#9;&#9;if not adornmentTable[adornee] then
 &#9;&#9;&#9;adornmentTable[adornee] = {}
 &#9;&#9;end
-
-&#9;&#9;ANNOTATIONS[adornee] = box
 &#9;&#9;table.insert(adornmentTable[adornee],box)
 
 &#9;&#9;if not hasBadge(adornee,type) then
-&#9;&#9;&#9;createBadge(adornee,type)
+&#9;&#9;&#9;createBadge(adornee, type, box)
 &#9;&#9;end
 &#9;end
 end
 
-function doRemoveAdornment(adornee, type)
-&#9;local key = adornee
-&#9;if not adornmentTable[key] then return end
-&#9;for i = 1, #adornmentTable[key] do
-&#9;&#9;if adornmentTable[key] and adornmentTable[key][i] then
-&#9;&#9;&#9;if string.find(adornmentTable[key][i].Name,type) then
-&#9;&#9;&#9;&#9;adornmentTable[key][i]:remove()
-&#9;&#9;&#9;&#9;adornmentTable[key][i] = nil
-&#9;&#9;&#9;end
-&#9;&#9;end
+function doRemoveAdornment(adornee)
+&#9;if not adornmentTable[adornee] then return end
+
+&#9;local adorneeTable = adornmentTable[adornee]
+&#9;for i = 1, #adorneeTable do
+&#9;&#9;adorneeTable[i]:Destroy()
 &#9;end
 end
 
@@ -1245,14 +1260,12 @@ function removeAdornment(adornee, type)
 &#9;downAdorneeCount(adornee,type)
 
 &#9;if type == &quot;Receiver&quot; then
-&#9;&#9;if not receiverBadgeCount[adornee]then
-&#9;&#9;&#9;removeBadge(adornee, type)
-&#9;&#9;&#9;doRemoveAdornment(adornee, type)
+&#9;&#9;if not receiverBadgeCount[adornee] then
+&#9;&#9;&#9;doRemoveAdornment(adornee)
 &#9;&#9;end
 &#9;elseif type == &quot;Event&quot; then
 &#9;&#9;if not eventBadgeCount[adornee] then
-&#9;&#9;&#9;removeBadge(adornee, type)
-&#9;&#9;&#9;doRemoveAdornment(adornee, type)
+&#9;&#9;&#9;doRemoveAdornment(adornee)
 &#9;&#9;end
 &#9;end
 end
@@ -1335,20 +1348,20 @@ function setUpConfigurationService()
 &#9;end
 
 &#9;-- Now lets listen for any future additions/removals
-&#9;ServiceConnections[#ServiceConnections+1] = collectionService.ItemAdded:connect(function(instance)
+&#9;table.insert(ServiceConnections, collectionService.ItemAdded:connect(function(instance)
 &#9;&#9;if instance:IsA(&quot;CustomEventReceiver&quot;) then
 &#9;&#9;&#9;eventReceiverAdded(instance)
 &#9;&#9;elseif instance:IsA(&quot;CustomEvent&quot;) then
 &#9;&#9;&#9;eventAdded(instance)
 &#9;&#9;end 
-&#9;end)
-&#9;ServiceConnections[#ServiceConnections+1] = collectionService.ItemRemoved:connect(function(instance)
+&#9;end))
+&#9;table.insert(ServiceConnections, collectionService.ItemRemoved:connect(function(instance)
 &#9;&#9;if instance:IsA(&quot;CustomEventReceiver&quot;) then
 &#9;&#9;&#9;eventReceiverRemoved(instance)
 &#9;&#9;elseif instance:IsA(&quot;CustomEvent&quot;) then
 &#9;&#9;&#9;eventRemoved(instance)
 &#9;&#9;end
-&#9;end)
+&#9;end))
 
 &#9;return wirePartCount
 end
@@ -1364,11 +1377,12 @@ function destroyConfigurationService()
 &#9;for event, object in pairs(eventTable) do
 &#9;&#9;eventRemoved(event)
 &#9;end
+&#9;eventTable = {}
 &#9;for eventReceiver, object in pairs(receiverTable) do
 &#9;&#9;eventReceiverRemoved(eventReceiver)
 &#9;end
+&#9;receiverTable = {}
 end
-
 </ProtectedString>
 			</Properties>
 		</Item>
@@ -1377,6 +1391,31 @@ end
 				<string name="Name">PlayerOwner</string>
 				<Ref name="Value">null</Ref>
 			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">DestroyScript</string>
+				<ProtectedString name="Source">local destroyObject = function(object)
+&#9;if object and object.Value then
+&#9;&#9;object.Value:Destroy()
+&#9;&#9;object:Destroy()
+&#9;end
+end
+
+script.ChildAdded:connect(function(child)
+&#9;if child:IsA(&quot;ObjectValue&quot;) and child.Name == &quot;ObjectToDestroy&quot; then
+&#9;&#9;destroyObject(child)
+&#9;end
+end)</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX6">
+				<Properties>
+					<string name="Name">ObjectToDestroy</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
 		</Item>
 	</Item>
 </roblox>
