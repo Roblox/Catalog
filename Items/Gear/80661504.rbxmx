@@ -1,0 +1,562 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>-2</Z>
+				<R00>0</R00>
+				<R01>0</R01>
+				<R02>1</R02>
+				<R10>1</R10>
+				<R11>0</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">SpaceSwordGreen</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=80557843</url></Content>
+			<string name="ToolTip">press Q for shield</string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">-- by QuantumSama
+-- creates a defensive orb
+
+local r = game:service(&quot;RunService&quot;)
+local debris = game:GetService(&quot;Debris&quot;)
+
+sword = script.Parent.Handle
+Tool = script.Parent
+
+local damage = 12
+
+local default_damage = 12
+local slash_damage = 19
+local lunge_damage = 40 --also projectile damage
+
+local orbHP = 12
+local orbRegen = 12
+local orb = nil
+local lastOrbTime = 0
+
+local lungeAnim = nil
+
+function makeLargeOrb()
+&#9;if r.Stepped:wait() - lastOrbTime &lt; orbRegen then return end
+&#9;if orb then orb:Destroy() end
+&#9;lastOrbTime = r.Stepped:wait()
+&#9;local orbHealth = orbHP
+&#9;orb = Instance.new(&quot;Part&quot;)
+&#9;orb.FormFactor = &quot;Symmetric&quot;
+&#9;orb.Shape = &quot;Ball&quot;
+&#9;orb.Size = Vector3.new(20,20,20)
+&#9;orb.Transparency = .8
+&#9;orb.BrickColor = BrickColor.new(&quot;Bright blue&quot;)
+&#9;local loacation = CFrame.new(sword.Position)
+&#9;orb.CFrame = loacation
+&#9;orb.Anchored = true
+&#9;orb.CanCollide = false
+&#9;orb.BottomSurface = &quot;Smooth&quot;
+&#9;orb.TopSurface = &quot;Smooth&quot;
+&#9;orb.Touched:connect(function(hit)
+&#9;&#9;print(&quot;TouchedA&quot;)
+&#9;&#9;if hit == nil or (hit.Parent == nil) or hit.Anchored == true then return end
+&#9;&#9;if Tool == nil or Tool.Parent == nil or hit:IsDescendantOf(Tool.Parent) then return end
+&#9;&#9;local vCharacter = Tool.Parent
+&#9;&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
+&#9;&#9;print(&quot;TouchedB&quot;)
+&#9;&#9;if hum ~= nil then
+&#9;&#9;-- final check, make sure sword is in-hand
+&#9;&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;&#9;if (right_arm ~= nil) then
+&#9;&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
+&#9;&#9;&#9;&#9;print(&quot;TouchedC&quot;)
+&#9;&#9;&#9;&#9;orbHealth = orbHealth - 1
+&#9;&#9;&#9;&#9;local vec = hit.Position - orb.Position 
+&#9;&#9;&#9;&#9;hit.Velocity = vec.unit * (hit.Velocity.magnitude + 10)
+&#9;&#9;&#9;&#9;orb.Transparency = .6
+&#9;&#9;&#9;&#9;if orbHealth == 0 then orb:Destroy() end
+&#9;&#9;&#9;&#9;wait(.1)
+&#9;&#9;&#9;&#9;if orb then orb.Transparency = .8 end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;debris:AddItem(orb,8)
+&#9;orb.Parent = game.Workspace
+&#9;--for i = 1, 40 do
+&#9;--&#9;orb.Size = Vector3.new(i/2,i/2,i/2)
+&#9;--&#9;orb.CFrame = loacation
+&#9;--&#9;wait(.1)
+&#9;--end
+&#9;sword.Sparkles.Enabled = false
+&#9;wait(orbRegen)
+&#9;sword.Sparkles.Enabled = true
+end 
+
+
+
+
+local SlashSound = Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+SlashSound.Parent = sword
+SlashSound.Volume = .7
+
+local LungeSound = Instance.new(&quot;Sound&quot;)
+LungeSound.SoundId = &quot;rbxasset://sounds\\swordlunge.wav&quot;
+LungeSound.Parent = sword
+LungeSound.Volume = .6
+
+local UnsheathSound = Instance.new(&quot;Sound&quot;)
+UnsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
+UnsheathSound.Parent = sword
+UnsheathSound.Volume = 1
+
+
+function blow(hit)
+&#9;if (hit.Parent == nil) then return end -- happens when bullet hits sword
+
+
+&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+&#9;local vCharacter = Tool.Parent
+&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
+&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
+&#9;if humanoid~=nil and humanoid ~= hum and hum ~= nil then
+&#9;&#9;-- final check, make sure sword is in-hand
+
+&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;if (right_arm ~= nil) then
+&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
+&#9;&#9;&#9;&#9;tagHumanoid(humanoid, vPlayer)
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;untagHumanoid(humanoid)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function fire(v, part)
+
+&#9;local vCharacter = Tool.Parent
+&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
+
+&#9;local missile = Instance.new(&quot;Part&quot;)
+
+&#9;local PewPew = Tool.Handle:FindFirstChild(&quot;PewPew&quot;)
+
+&#9;if (PewPew == nil) then
+&#9;&#9;PewPew = Instance.new(&quot;Sound&quot;)
+&#9;&#9;PewPew.Name = &quot;PewPew&quot;
+&#9;&#9;PewPew.SoundId = &quot;http://www.roblox.com/asset/?id=22968437&quot;
+&#9;&#9;--PewPew.SoundId = &quot;http://www.roblox.com/asset/?id=13510352&quot;
+&#9;&#9;PewPew.Parent = Tool.Handle
+&#9;&#9;PewPew.Pitch = 1 --.85
+&#9;&#9;PewPew.Volume = .85
+&#9;end
+
+&#9;missile.CFrame = part.CFrame * CFrame.Angles(math.pi/2,0,0)
+&#9;missile.Size = Vector3.new(1,1,1)
+&#9;missile.Velocity = v.unit * 300
+&#9;missile.BrickColor = BrickColor.new(&quot;Camo&quot;)
+&#9;missile.Transparency = .5
+&#9;missile.Shape = 0
+&#9;missile.BottomSurface = 0
+&#9;missile.TopSurface = 0
+&#9;missile.CanCollide = false
+&#9;print(missile.CanCollide)
+&#9;missile.Material = Enum.Material.CorrodedMetal
+&#9;missile.Elasticity = .05
+&#9;missile.Friction = .7
+&#9;missile.Name = &quot;Bullet&quot;
+
+&#9;missile.Touched:connect(blow)
+
+&#9;local mesh = Instance.new(&quot;CylinderMesh&quot;)
+&#9;mesh.Scale = Vector3.new(.3,10,.3)
+&#9;--mesh.VertexColor = Vector3.new(0,1,0)
+&#9;mesh.Parent = missile
+
+&#9;local force = Instance.new(&quot;BodyForce&quot;)
+&#9;force.Name = &quot;BulletFloat&quot;
+&#9;force.force = Vector3.new(0,98.1,0)
+&#9;force.Parent = missile
+&#9;
+&#9;debris:AddItem(missile,5)
+&#9;missile.Parent = game.Workspace
+
+&#9;PewPew:Play()
+
+end
+
+function tagHumanoid(humanoid, player)
+&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value = player
+&#9;creator_tag.Name = &quot;creator&quot;
+&#9;creator_tag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+&#9;if humanoid ~= nil then
+&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
+&#9;&#9;if tag ~= nil then
+&#9;&#9;&#9;tag.Parent = nil
+&#9;&#9;end
+&#9;end
+end
+
+local lunging = false
+
+--function lunge()
+--&#9;lunging = true
+--&#9;wait(.75)
+--&#9;lunging = false
+--end
+
+function doLunge()
+&#9;print(&quot;lunging&quot;)
+&#9;--makeLargeOrb()
+&#9;damage = lunge_damage
+
+&#9;LungeSound:play()
+
+&#9;--local anim = Instance.new(&quot;StringValue&quot;)
+&#9;--anim.Name = &quot;toolanim&quot;
+&#9;--anim.Value = &quot;Lunge&quot;
+&#9;--anim.Parent = Tool
+&#9;lungeAnim:Play()
+&#9;
+&#9;--force = Instance.new(&quot;BodyVelocity&quot;)
+&#9;--force.velocity = Vector3.new(0,10,0) --Tool.Parent.Torso.CFrame.lookVector * 80
+&#9;--force.Parent = Tool.Parent.Torso
+&#9;--wait(.25)
+&#9;swordOut()
+&#9;wait(.25)
+&#9;fire(-sword.CFrame.lookVector, sword)
+&#9;wait(.25)
+&#9;--force.Parent = nil
+&#9;--wait(.5)
+&#9;swordUp()
+
+&#9;lunging = false
+end
+
+function attack()
+&#9;--if lunging then return end
+
+&#9;damage = slash_damage
+&#9;SlashSound:play()
+&#9;local anim = Instance.new(&quot;StringValue&quot;)
+&#9;anim.Name = &quot;toolanim&quot;
+&#9;anim.Value = &quot;Slash&quot;
+&#9;anim.Parent = Tool
+&#9;wait(.2)
+&#9;if lunging then doLunge() end
+&#9;damage = default_damage
+end
+
+function swordUp()
+&#9;Tool.GripForward = Vector3.new(-1,0,0)
+&#9;Tool.GripRight = Vector3.new(0,1,0)
+&#9;Tool.GripUp = Vector3.new(0,0,1)
+end
+
+function swordOut()
+&#9;local initTime = tick()
+&#9;local time = tick()
+&#9;local duration = .25
+&#9;local initGrip = Tool.Grip
+&#9;while (time - initTime) &lt; duration do
+&#9;--local frames =5&#9;for i = 1, frames do
+&#9;&#9;time = tick()
+&#9;&#9;Tool.Grip = initGrip * CFrame.Angles( (time - initTime)/duration * math.pi/2,0,0)
+&#9;&#9;wait()
+&#9;end
+
+&#9;Tool.GripForward = Vector3.new(0,0,-1)
+&#9;Tool.GripRight = Vector3.new(0,1,0)
+&#9;Tool.GripUp = Vector3.new(1,0,0)
+&#9;wait(.25)
+end
+
+function swordAcross()
+&#9;-- parry
+end
+
+
+Tool.Enabled = true
+local last_attack = r.Stepped:wait() - .2
+local t = 0
+
+function onActivated()
+&#9;if not Tool.Enabled then
+
+&#9;&#9;t = r.Stepped:wait()
+&#9;&#9;if (t - last_attack &lt; .2) then
+&#9;&#9;&#9;print(&quot;Lunging on&quot;)
+&#9;&#9;&#9;lunging = true
+&#9;&#9;end
+&#9;&#9;return
+&#9;end
+
+&#9;Tool.Enabled = false
+&#9;
+
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;return 
+&#9;end
+
+&#9;t = r.Stepped:wait()
+&#9;last_attack = t
+&#9;--if (t - last_attack &lt; .2) then
+&#9;--&#9;lunge()
+&#9;--else
+&#9;&#9;lunging = false
+&#9;&#9;attack()
+&#9;--end
+
+
+
+&#9;--wait(.5)
+
+&#9;Tool.Enabled = true
+end
+
+
+function onEquipped()
+&#9;UnsheathSound:play()
+&#9;local vCharacter = Tool.Parent
+&#9;local humanoid = vCharacter:findFirstChild(&quot;Humanoid&quot;) 
+&#9;if humanoid ~= nil then lungeAnim = humanoid:LoadAnimation(Tool.Lunge) else print(&quot;humanoid error&quot;) end
+end
+
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.ChildAdded:connect(function(child)
+&#9;if child:IsA(&quot;StringValue&quot;) and child.Name == &quot;KeyPress&quot; and child.Value == &quot;q&quot; then
+&#9;&#9;child:Destroy()
+&#9;&#9;makeLargeOrb() 
+&#9;end
+end)
+
+
+connection = sword.Touched:connect(blow)
+
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">199</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.5</X>
+					<Y>0.400000006</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>0</R11>
+					<R12>1</R12>
+					<R20>0</R20>
+					<R21>-1</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0.400000006</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>0.800000012</Y>
+					<Z>4</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=80557857</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=80557833</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sparkles" referent="RBX4">
+				<Properties>
+					<bool name="Enabled">true</bool>
+					<string name="Name">Sparkles</string>
+					<Color3 name="SparkleColor">4278222848</Color3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalSwordScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+&#9;if not enabled then
+&#9;&#9;return
+&#9;end
+
+&#9;enabled = false
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+&#9;wait(.5)
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;enabled = true
+
+end
+
+function onKeyDown( key )
+&#9;key = key:lower()
+&#9;if key == &quot;q&quot; then
+&#9;&#9;local sv = Instance.new(&quot;StringValue&quot;)
+&#9;&#9;sv.Value = &quot;q&quot;
+&#9;&#9;sv.Name = &quot;KeyPress&quot;
+&#9;&#9;sv.Parent = script.Parent:FindFirstChild(&quot;SwordScript&quot;)
+&#9;end
+end
+
+function onEquippedLocal(mouse)
+
+&#9;if mouse == nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
+
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+&#9;mouse.KeyDown:connect(onKeyDown)
+end
+
+function onUnequippedLocal()
+
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=80395075</url></Content>
+				<string name="Name">Lunge</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX7">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-0.573559463</X>
+					<Y>-0.0700746775</Y>
+					<Z>5.2666173</Z>
+					<R00>0.999902487</R00>
+					<R01>-0.0012414651</R01>
+					<R02>-0.0139104668</R02>
+					<R10>1.16415322e-010</R10>
+					<R11>0.996041179</R11>
+					<R12>-0.0888935104</R12>
+					<R20>0.0139657548</R20>
+					<R21>0.0888848454</R21>
+					<R22>0.995944023</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.5</X>
+					<Y>0.400000036</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
