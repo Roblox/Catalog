@@ -1,0 +1,695 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.75</Y>
+				<Z>0</Z>
+				<R00>0</R00>
+				<R01>0</R01>
+				<R02>-0.99999994</R02>
+				<R10>-0.261768907</R10>
+				<R11>0.965130627</R11>
+				<R12>0</R12>
+				<R20>0.965130568</R20>
+				<R21>0.261768937</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">DualSaber</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=81130905</url></Content>
+			<string name="ToolTip">Swing like a bee</string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">--[[
+&#9;// Now, I arrange my gear with a handle and 2 hidden blades under it. 
+]]
+
+local function waitForChild(parent, instance)
+&#9;while parent:FindFirstChild(instance) == nil do 
+&#9;&#9;print(parent, &quot; waiting for &quot;, instance)
+&#9;&#9;wait()
+&#9;end 
+&#9;return parent[instance]
+end 
+
+local Tool = script.Parent 
+local Saber = Tool.Handle
+
+Tool.Enabled = true 
+
+local vCharacter 
+local vTorso
+local vHumanoid 
+local vRightArm 
+local vLeftArm
+
+local Slash_Anim
+local Split_Anim
+local DoubleSlash_Anim 
+local Switch_Anim    
+local SwordWalk_Anim
+
+local RightGrip_Weld
+local LeftGrip_Weld 
+
+local UnsheathSound = waitForChild(Saber, &quot;SaberSound&quot;)
+
+local LeftSaber = Instance.new(&quot;Part&quot;)
+
+local TopBlade = waitForChild(Saber, &quot;TopBlade&quot;)
+local BottomBlade = waitForChild(Saber, &quot;BottomBlade&quot;)
+
+local TopWeld = waitForChild(Saber, &quot;TopWeld&quot;)
+local BottomWeld = waitForChild(Saber, &quot;BottomWeld&quot;)
+
+local damage = 19  
+
+local Mouse 
+
+local function blow(blade, hit)
+&#9;if blade and blade.Transparency ~= 1.0 and hit and hit.Parent then 
+&#9;&#9;local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if hit.Parent:IsA(&quot;Hat&quot;) and hit.Parent.Parent then
+&#9;&#9;&#9;humanoid = hit.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;end 
+&#9;&#9;if humanoid and humanoid ~= vHumanoid and vHumanoid then 
+&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;end 
+&#9;end 
+end 
+
+local function SlashIt(hum, torso)
+&#9;local lungeSlash = hum:LoadAnimation(Tool[&quot;LungeSlash&quot;])&#9;
+&#9;
+&#9;lungeSlash:Play()
+
+&#9;local target = hum.TargetPoint
+&#9;local direction = (target - torso.Position) * Vector3.new(1, 0, 1)
+&#9;local newBV = nil
+&#9;if direction.magnitude &gt; .01 then 
+&#9;&#9;-- make &apos;em dash forwards too
+&#9;&#9;direction = direction.unit
+&#9;&#9;newBV = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;newBV.P = 100000
+&#9;&#9;newBV.maxForce = Vector3.new(newBV.P, 0, newBV.P)
+&#9;&#9;newBV.velocity = direction * 50
+&#9;&#9;newBV.Parent = torso
+
+&#9;&#9;torso.CFrame = CFrame.new(torso.Position, target * Vector3.new(1, 0, 1) + Vector3.new(0, torso.Position.Y, 0))
+&#9;end
+&#9;
+&#9;wait(.5)
+&#9;if dashSound then dashSound:Play() end 
+&#9;if newBV ~= nil then newBV:remove() end
+&#9;wait(.5)
+end
+
+local function Shred(key)
+&#9;key = key:lower() 
+&#9;if key == &quot;q&quot; then 
+&#9;&#9;-- Release the other part of the saber 
+&#9;&#9;if BottomBlade and not LeftSaber.Parent then
+&#9;&#9;&#9;if UnsheathSound then UnsheathSound:Play() end
+&#9;&#9;&#9;if BottomBlade.Transparency == 1.0 then 
+&#9;&#9;&#9;&#9;for i = 1, 10 do 
+&#9;&#9;&#9;&#9;&#9;BottomBlade.Transparency = 1 - (i/10)
+&#9;&#9;&#9;&#9;&#9;wait(0.15)
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;for i = 1, 10 do 
+&#9;&#9;&#9;&#9;&#9;BottomBlade.Transparency = 0 + (i/10)
+&#9;&#9;&#9;&#9;&#9;wait(0.15)
+&#9;&#9;&#9;&#9;end  
+&#9;&#9;&#9;end 
+&#9;&#9;end 
+&#9;elseif key == &quot;x&quot; then 
+&#9;&#9;-- Split the sabers
+&#9;&#9;if not LeftSaber.Parent and BottomBlade.Transparency == 0.0 then &#9;&#9;&#9;
+&#9;&#9;&#9;-- Now split them sabers 
+&#9;&#9;&#9;Split_Anim = vHumanoid:LoadAnimation(Tool.SplitAnim)
+&#9;&#9;&#9;if Split_Anim then Split_Anim:Play() end 
+&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;BottomBlade.Transparency = 1.0 &#9;&#9;
+&#9;&#9;&#9;LeftSaber = Saber:Clone()
+&#9;&#9;&#9;LeftSaber.Parent = vCharacter 
+&#9;&#9;&#9;
+&#9;&#9;&#9;LeftGrip_Weld = RightGrip_Weld:Clone()
+&#9;&#9;&#9;LeftGrip_Weld.Part1 = LeftSaber
+&#9;&#9;&#9;LeftGrip_Weld.Part0 = vLeftArm
+&#9;&#9;&#9;LeftGrip_Weld.Parent = vLeftArm
+
+&#9;&#9;&#9;local topBlade = waitForChild(LeftSaber, &quot;TopBlade&quot;)
+&#9;&#9;&#9;local topWeld = TopWeld:Clone()
+&#9;&#9;&#9;topWeld.Part1 = topBlade
+&#9;&#9;&#9;topWeld.Part0 = LeftSaber 
+&#9;&#9;&#9;topWeld.Parent = LeftSaber 
+
+&#9;&#9;&#9;wait(0.5)
+
+&#9;&#9;&#9;LeftSaber.Touched:connect(function(hit) blow(LeftSaber, hit) end)
+&#9;&#9;&#9;topBlade.Touched:connect(function(hit) blow(topBlade, hit) end)
+
+&#9;&#9;&#9;SwordWalk_Anim = vHumanoid:LoadAnimation(Tool.SwordWalk)
+&#9;&#9;&#9;--if SwordWalk_Anim then SwordWalk_Anim:Play() end 
+
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;if not LeftSaber.Parent and SwordWalk_Anim then 
+&#9;&#9;&#9;&#9;&#9;SwordWalk_Anim:Stop() 
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;end)
+&#9;&#9;end 
+&#9;elseif key == &quot;e&quot; then 
+&#9;&#9;-- Combine the sabers if they are separated 
+&#9;&#9;if LeftSaber and LeftSaber.Parent then 
+&#9;&#9;&#9;LeftSaber.Parent = nil
+&#9;&#9;&#9;TopBlade.Transparency = 0.0
+&#9;&#9;&#9;BottomBlade.Transparency = 0.0
+&#9;&#9;end
+&#9;end 
+end 
+
+local function onActivated()
+&#9;if Tool.Enabled == false then 
+&#9;&#9;return 
+&#9;end 
+
+&#9;if vTorso == nil and vHumanoid == nil then 
+&#9;&#9;return 
+&#9;end 
+
+&#9;Tool.Enabled = false 
+
+&#9;if TopBlade and TopBlade.Transparency ~= 0.0 then 
+&#9;&#9;if UnsheathSound then UnsheathSound:Play() end
+&#9;&#9;for i = 1, 10 do
+&#9;&#9;&#9;TopBlade.Transparency = 1 - (i/10)
+&#9;&#9;&#9;wait(0.15)
+&#9;&#9;end 
+&#9;elseif BottomBlade.Transparency == 0.0 then 
+&#9;&#9;local theta = 0    
+&#9;&#9;Tool.GripUp = Vector3.new(1, 0, 0) 
+&#9;&#9;Tool.GripRight = Vector3.new(0, -1, 0) 
+&#9;&#9;Tool.GripForward = Vector3.new(0, 0, 1) 
+&#9;&#9;for i = 1, 120 do 
+&#9;&#9;&#9;theta = i%6 * math.pi/3 
+&#9;&#9;&#9;Tool.GripRight = Vector3.new(0, -math.sin(theta), math.cos(theta)) 
+&#9;&#9;&#9;Tool.GripUp = Vector3.new(0, math.cos(theta), math.sin(theta))&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;wait() 
+&#9;&#9;end   
+&#9;&#9;Tool.Grip =  CFrame.new(0, -0.75, 0, 0, 0, -0.99999994, -0.261768907, 0.965130627, 0, 0.965130568, 0.261768937, 0)&#9;
+&#9;&#9;wait(5.0)   
+&#9;elseif LeftSaber.Parent then 
+&#9;&#9;SlashIt(vHumanoid, vTorso)
+&#9;&#9;wait(2.0)
+&#9;else 
+&#9;&#9;Tool.Grip = CFrame.new(0, 0, 0, 0, 1, -0, 0, -0, -1, -1, 0, -0)
+&#9;&#9;Slash_Anim = vHumanoid:LoadAnimation(Tool.SlashAnim)
+&#9;&#9;if Slash_Anim then Slash_Anim:Play() end 
+&#9;&#9;wait(1.0)
+&#9;&#9;Tool.Grip =  CFrame.new(0, -0.75, 0, 0, 0, -0.99999994, -0.261768907, 0.965130627, 0, 0.965130568, 0.261768937, 0)&#9;
+&#9;end &#9;&#9;
+&#9;Tool.Enabled = true 
+end
+
+local function onEquipped(mouse)
+&#9;vCharacter = Tool.Parent 
+&#9;vTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;vHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;vRightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;vLeftArm = vCharacter:FindFirstChild(&quot;Left Arm&quot;)
+
+&#9;RightGrip_Weld = waitForChild(vRightArm, &quot;RightGrip&quot;)
+
+&#9;if mouse then
+&#9;&#9;Mouse = mouse 
+&#9;&#9;Mouse.KeyDown:connect(Shred)
+&#9;end 
+
+&#9;if TopWeld then 
+&#9;&#9;TopWeld.Parent = Tool
+&#9;end 
+&#9;if BottomWeld then 
+&#9;&#9;BottomWeld.Parent = Tool 
+&#9;end 
+&#9;TopBlade.Transparency = 1.0
+&#9;BottomBlade.Transparency = 1.0&#9;
+end 
+
+local function onUnequipped()
+&#9;if Slash_Anim then Slash_Anim:Stop() end 
+&#9;if Split_Anim then Split_Anim:Stop() end 
+&#9;if DoubleSlash_Anim then DoubleSlash_Anim:Stop() end 
+&#9;if Switch_Anim then Switch_Anim:Stop() end 
+&#9;if UnsheathSound then UnsheathSound:Stop() end
+&#9;if SwordWalk_Anim then SwordWalk_Anim:Stop() end&#9;
+&#9;LeftSaber.Parent = nil 
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+
+TopBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)
+BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.996450245</X>
+					<Y>0.900862515</Y>
+					<Z>-0.300000012</Z>
+					<R00>-0.988639355</R00>
+					<R01>-0.150304601</R01>
+					<R02>0</R02>
+					<R10>0.150304601</R10>
+					<R11>-0.988639355</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>-1.1464576e-013</X>
+					<Y>5.2442807e-012</Y>
+					<Z>0.000955340744</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0.000742552395</X>
+					<Y>-0.0093431985</Y>
+					<Z>4.09942208e-013</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.379999995</X>
+					<Y>2.68000007</Y>
+					<Z>0.5300017</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=81130658</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.75</X>
+						<Y>0.75</Y>
+						<Z>0.75</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=81130829</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Part" referent="RBX4">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">4</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>0.605658293</X>
+						<Y>-1.66959953</Y>
+						<Z>-0.300000012</Z>
+						<R00>-0.988639355</R00>
+						<R01>-0.150304601</R01>
+						<R02>0</R02>
+						<R10>0.150304601</R10>
+						<R11>-0.988639355</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">TopBlade</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>-1.1464576e-013</X>
+						<Y>5.2442807e-012</Y>
+						<Z>0.000955340744</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">3</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>0.00319821946</X>
+						<Y>-0.00971653778</Y>
+						<Z>2.75405762e-012</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.200000003</X>
+						<Y>2.75</Y>
+						<Z>0.200000003</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBX5">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=81131690</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>0.75</X>
+							<Y>0.75</Y>
+							<Z>0.75</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=81130829</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX6">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">4</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>1.4022733</X>
+						<Y>3.57018852</Y>
+						<Z>-0.300000012</Z>
+						<R00>-0.988639295</R00>
+						<R01>0.150304854</R01>
+						<R02>8.64295941e-008</R02>
+						<R10>0.150304854</R10>
+						<R11>0.988639295</R11>
+						<R12>-1.31400686e-008</R12>
+						<R20>-8.74227766e-008</R20>
+						<R21>0</R21>
+						<R22>-1</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">BottomBlade</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>-1.1464576e-013</X>
+						<Y>5.2442807e-012</Y>
+						<Z>0.000955340744</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">3</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>-0.00180756371</X>
+						<Y>-0.00895549916</Y>
+						<Z>-2.02433469e-012</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.200000003</X>
+						<Y>2.75</Y>
+						<Z>0.200000003</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBX7">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=81131690</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>0.75</X>
+							<Y>0.75</Y>
+							<Z>0.75</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=81130829</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Sound" referent="RBX8">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SaberSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=81146867</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX9">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>0</X>
+						<Y>-2.69999981</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>-2.62268316e-007</R01>
+						<R02>-8.74227766e-008</R02>
+						<R10>-2.62268316e-007</R10>
+						<R11>-1</R11>
+						<R12>0</R12>
+						<R20>-8.74227766e-008</R20>
+						<R21>2.29282264e-014</R21>
+						<R22>-1</R22>
+					</CoordinateFrame>
+					<string name="Name">BottomWeld</string>
+					<Ref name="Part0">RBX2</Ref>
+					<Ref name="Part1">RBX6</Ref>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX10">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>0</X>
+						<Y>-2.59999967</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<string name="Name">TopWeld</string>
+					<Ref name="Part0">RBX2</Ref>
+					<Ref name="Part1">RBX4</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX11">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=77319318</url></Content>
+				<string name="Name">SlashAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX12">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=45873069</url></Content>
+				<string name="Name">LungeSlash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX13">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=47919724</url></Content>
+				<string name="Name">SplitAnim</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX14">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><url>http://www.roblox.com/asset/?id=1014476</url></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source"></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX15">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=49867748</url></Content>
+				<string name="Name">SwordWalk</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX16">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>1.04636431</X>
+					<Y>1.80422235</Y>
+					<Z>6.8506794</Z>
+					<R00>0.999975622</R00>
+					<R01>-0.000874841528</R01>
+					<R02>0.00692510605</R02>
+					<R10>-0</R10>
+					<R11>0.992114782</R11>
+					<R12>0.125332832</R12>
+					<R20>-0.00698014628</R20>
+					<R21>-0.125329778</R21>
+					<R22>0.992090642</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0.996450305</X>
+					<Y>0.900862455</Y>
+					<Z>-0.300000191</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
