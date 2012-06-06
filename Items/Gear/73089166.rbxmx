@@ -121,6 +121,10 @@ local Tool = script.Parent
 waitForProperty(game,&quot;PlaceId&quot;)
 local isRestricted = (game.PlaceId == 41324860 or game.PlaceId == 129686177)
 
+local setPanelVisibility, getPanelVisibility, waterTypeChangedEvent = nil
+local waterForceAndDirection = {&quot;None&quot;,&quot;NegX&quot;}
+local currStampId = nil
+
 local testIds = {11744447,18881789,18881808}
 if isRestricted then
 &#9;table.insert(testIds,2409156)
@@ -317,6 +321,37 @@ function makeLoadingGui(parent)
 &#9;newLoadingFrame.Parent = parent
 end
 
+function updateWaterInfo()
+&#9;if stampControl then
+&#9;&#9;stampControl.Destroy()
+&#9;end
+&#9;if stampCon then
+&#9;&#9;stampCon:disconnect()
+&#9;&#9;stampCon = nil
+&#9;end
+
+&#9;showLoadingDialog()
+&#9;&#9;lastStampModel = RbxStamper.GetStampModel(currStampId)
+&#9;hideLoadingDialog()
+
+&#9;if lastStampModel.Name == &quot;MegaClusterCube&quot; then
+&#9;&#9;local clusterTag = lastStampModel:FindFirstChild(&quot;ClusterMaterial&quot;)
+&#9;&#9;-- we are going to stamp water, send info to stamper about this
+&#9;&#9;if clusterTag and clusterTag.Value.X == 17 then
+&#9;&#9;&#9;local waterForceTag = Instance.new(&quot;StringValue&quot;,lastStampModel)
+&#9;&#9;&#9;waterForceTag.Name = &quot;WaterForceTag&quot;
+&#9;&#9;&#9;waterForceTag.Value = waterForceAndDirection[1]
+
+&#9;&#9;&#9;local waterForceDirectionTag = Instance.new(&quot;StringValue&quot;,lastStampModel)
+&#9;&#9;&#9;waterForceDirectionTag.Name = &quot;WaterForceDirectionTag&quot;
+&#9;&#9;&#9;waterForceDirectionTag.Value = waterForceAndDirection[2]
+&#9;&#9;end
+&#9;end
+
+&#9;setupStamper(lastStampModel, mouse)
+end
+
+
 function initStamper()
 &#9;local partSelected = function(name, id, terrainShape)
 &#9;&#9;if stampControl then 
@@ -327,6 +362,7 @@ function initStamper()
 &#9;&#9;&#9;stampCon = nil
 &#9;&#9;end
 
+&#9;&#9;currStampId = id
 &#9;&#9;
 &#9;&#9;currStampGui.SetPanel.Visible = false
 &#9;&#9;shortcutHint.Visible = true
@@ -336,6 +372,20 @@ function initStamper()
 &#9;&#9;&#9;addToRecentPartList(id, terrainShape)
 &#9;&#9;&#9;setupStamper(lastStampModel, mouse)
 &#9;&#9;hideLoadingDialog()
+
+&#9;&#9;if lastStampModel.Name == &quot;MegaClusterCube&quot; then
+&#9;&#9;&#9;local clusterTag = lastStampModel:FindFirstChild(&quot;ClusterMaterial&quot;)
+&#9;&#9;&#9;-- we are going to stamp water, send info to stamper about this
+&#9;&#9;&#9;if clusterTag and clusterTag.Value.X == 17 then
+&#9;&#9;&#9;&#9;local waterForceTag = Instance.new(&quot;StringValue&quot;,lastStampModel)
+&#9;&#9;&#9;&#9;waterForceTag.Name = &quot;WaterForceTag&quot;
+&#9;&#9;&#9;&#9;waterForceTag.Value = waterForceAndDirection[1]
+
+&#9;&#9;&#9;&#9;local waterForceDirectionTag = Instance.new(&quot;StringValue&quot;,lastStampModel)
+&#9;&#9;&#9;&#9;waterForceDirectionTag.Name = &quot;WaterForceDirectionTag&quot;
+&#9;&#9;&#9;&#9;waterForceDirectionTag.Value = waterForceAndDirection[2]
+&#9;&#9;&#9;end
+&#9;&#9;end
 &#9;end
 
 &#9;local dialogClosed = function()
@@ -347,10 +397,15 @@ function initStamper()
 &#9;&#9;end
 &#9;end
 
-&#9;currStampGui = RbxGui.CreateSetPanel(testIds, partSelected, dialogClosed, UDim2.new(0.6,-58,0.64,0), UDim2.new(0.2,29,0.1,24))
+&#9;currStampGui, setPanelVisibility, getPanelVisibility, waterTypeChangedEvent = RbxGui.CreateSetPanel(testIds, partSelected, dialogClosed, UDim2.new(0.6,-58,0.64,0), UDim2.new(0.2,29,0.1,24))
 &#9;makeLoadingGui(currStampGui)
 &#9;currStampGui.Parent = getPlayer().PlayerGui
 &#9;hintGui.Parent = getPlayer().PlayerGui
+
+&#9;waterTypeChangedEvent.Event:connect(function(waterTable)
+&#9;&#9;waterForceAndDirection = waterTable
+&#9;&#9;updateWaterInfo()
+&#9;end)
 end
 
 function onEquippedLocal(newMouse)
