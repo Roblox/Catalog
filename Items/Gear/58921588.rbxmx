@@ -829,6 +829,12 @@ local handles
 local previousDistance
 local needsCursor = true
 
+-- Wether a handle is being dragged, true if it is and false if not.
+local isDragging = false
+
+-- Hold the anchor state a piece was in when dragging started.
+local anchorState = false
+
 local currMouseTarget
 local connections = {}
 
@@ -841,9 +847,25 @@ function onHandlesDrag(normal, distance)
 &#9;&#9;local delta = distance - previousDistance 
 &#9;&#9;if math.abs(delta) &gt;= handles.Adornee.ResizeIncrement then
 &#9;&#9;&#9;local sizeDelta = math.floor(delta / handles.Adornee.ResizeIncrement + 0.5) * handles.Adornee.ResizeIncrement
+&#9;&#9;&#9;
+&#9;&#9;&#9;-- Keep the piece from falling while resizing.
+&#9;&#9;&#9;-- Auto join the piece to other pieces.
+&#9;&#9;&#9;if not isDragging then
+&#9;&#9;&#9;&#9;isDragging = true
+&#9;&#9;&#9;&#9;anchorState = handles.Adornee.Anchored
+&#9;&#9;&#9;&#9;handles.Adornee.Anchored = true
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;game.JointsService:SetJoinAfterMoveInstance(handles.Adornee)
+
 &#9;&#9;&#9;if handles.Adornee:Resize(normal, sizeDelta) then
 &#9;&#9;&#9;&#9;previousDistance = distance
 &#9;&#9;&#9;end
+
+&#9;&#9;&#9;game.JointsService:CreateJoinAfterMoveJoints()
+&#9;&#9;&#9;game.JointsService:SetJoinAfterMoveInstance(nil)
+
 &#9;&#9;end
 &#9;end
 end
@@ -900,6 +922,14 @@ function onEquippedLocal(mouse)
 &#9;currMouseTarget = nil
 
 &#9;table.insert(connections,mouse.Button1Down:connect(function() onButton1Down(mouse) end) )
+
+&#9;-- Track mouse up since up won&apos;t happen for the handle unless the mouse is over the handle.
+&#9;table.insert(connections,mouse.Button1Up:connect(function()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if isDragging then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;handles.Adornee.Anchored = anchorState
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;isDragging = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9; &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9; end) )
 &#9;table.insert(connections, mouse.Move:connect(function()
 &#9;&#9;&#9;if currMouseTarget ~= mouse.Target then
 &#9;&#9;&#9;&#9;mouseTargetChanged(mouse)
