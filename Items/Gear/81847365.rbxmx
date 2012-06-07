@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>1.00000072</X>
-					<Y>0.100000121</Y>
-					<Z>1.70000005</Z>
-					<R00>0</R00>
-					<R01>1</R01>
+					<X>-8.94069672e-008</X>
+					<Y>0.400000066</Y>
+					<Z>1.78813934e-007</Z>
+					<R00>1</R00>
+					<R01>0</R01>
 					<R02>0</R02>
-					<R10>-1</R10>
+					<R10>0</R10>
 					<R11>0</R11>
-					<R12>0</R12>
+					<R12>1</R12>
 					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<R21>-1</R21>
+					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -132,7 +132,9 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">CannonScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent 
+				<ProtectedString name="Source">-- Assuming 0 air resistance
+
+local Tool = script.Parent 
 local Cannon = Tool.Handle 
 
 local vCharacter
@@ -149,8 +151,9 @@ Potato.Name = &quot;Potato&quot;
 Potato.FormFactor = 3 
 Potato.Shape = &quot;Block&quot;
 Potato.Size = Vector3.new(2.5, 2.5, 2.5)
+Potato.CanCollide = false 
 
-local PotatoMesh = Instance.new(&quot;SpecialMesh&quot;)
+local PotatoMesh = Instance.new(&quot;SpecialMesh&quot;) 
 PotatoMesh.MeshId = &quot;http://www.roblox.com/asset/?id=81684482&quot;
 PotatoMesh.TextureId = &quot;http://www.roblox.com/asset/?id=81684510&quot;
 PotatoMesh.Parent = Potato 
@@ -158,16 +161,22 @@ PotatoMesh.Scale = Vector3.new(2.5, 2.5, 2.5)
 
 local RBX_Debris = game:GetService(&quot;Debris&quot;)
 
--- Assuming 0 air resistance
-local MaxDistance = 217.2
 local Gravity = 196.2
-local TimeTravelled = 8.0 
-local VELOCITY = 200.0
-local MaxHeight = 203.8
+local TimeTaken = 0
+local Velocity = 300.0
+
+local initY = 0
+local oY = 0
 
 local CannonSound 
 
-local function blow(missile, hit)
+local function blow(missile, hit, initPos)&#9;
+&#9;if missile and hit and hit.Parent and not hit.Parent:FindFirstChild(&quot;Humanoid&quot;) then 
+&#9;&#9;--print(&quot;Maximum distance travelled - &quot;, (missile.Position - initPos).magnitude, &quot; studs&quot;) 
+&#9;&#9;--missile:Destroy() 
+&#9;&#9;--print(&quot;Maximum height reached - &quot;, initY - oY, &quot; studs&quot;) 
+&#9;&#9;--print(&quot;Time taken - &quot;, tick() - TimeTaken, &quot; seconds&quot;) 
+&#9;end  
 &#9;if hit and hit.Parent then 
 &#9;&#9;local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;if hit.Parent:IsA(&quot;Hat&quot;) and hit.Parent.Parent then
@@ -183,74 +192,91 @@ local function blow(missile, hit)
 end
 
 function computeLaunchAngle(dx, dy, grav)&#9;
+&#9;-- This function is nasty or what? :P 
+&#9;-- There are ways to solve launch angle of a projectile given a point in 3D space 
+&#9;-- This one solves for tan(theta) 
+&#9;&#9;
+&#9;-- Simplify the distance formula of a projectile 
 &#9;local g = math.abs(grav)
-&#9;local inRoot = (VELOCITY * VELOCITY * VELOCITY * VELOCITY) - (g * ((g * dx * dx) + (2 * dy * VELOCITY * VELOCITY)))
+&#9;local inRoot = (Velocity * Velocity * Velocity * Velocity) - (g * ((g * dx * dx) + (2 * dy * Velocity * Velocity)))
 &#9;if inRoot &lt;= 0 then
 &#9;&#9;return 0.25 * math.pi
 &#9;end
 &#9;local root = math.sqrt(inRoot)
-&#9;local inATan1 = ((VELOCITY*VELOCITY) + root) / (g*dx)
+&#9;local inATan1 = ((Velocity * Velocity) + root) / (g*dx)
 
-&#9;local inATan2 = ((VELOCITY*VELOCITY) - root) / (g*dx)
+&#9;local inATan2 = ((Velocity * Velocity) - root) / (g*dx)
 &#9;local a1 = math.atan(inATan1)
 &#9;local a2 = math.atan(inATan2)
 &#9;if a1 &lt; a2 then return a1 end
 &#9;return a2
 end
 
-function computeDirection(vec)
-&#9;local lenSquared = vec.magnitude * vec.magnitude
-&#9;local invSqrt = 1 / math.sqrt(lenSquared)
-&#9;return Vector3.new(vec.x * invSqrt, vec.y * invSqrt, vec.z * invSqrt)
-end
-
 function fire(target)&#9;&#9;
 
 &#9;local head = vCharacter:findFirstChild(&quot;Head&quot;)
+&#9;local torso = vCharacter:FindFirstChild(&quot;Torso&quot;) 
 &#9;if head == nil then return end
-
-&#9;local direction = target - head.Position
-&#9;direction = computeDirection(direction)
-
-&#9;local spawnPos = head.Position + 5 * direction
-
-&#9;local delta = target - spawnPos
 &#9;
-&#9;local dy = delta.y
-&#9;
-&#9;local new_delta = Vector3.new(delta.x, 0, delta.z)
-&#9;delta = new_delta
+&#9;--local direction = (target - (torso.Position - Vector3.new(0, 3, 0))).unit&#9;&#9;
+&#9;local spawnPos = (torso.Position - Vector3.new(0, 3, 0)) 
 
-&#9;local dx = delta.magnitude
-&#9;local unit_delta = delta.unit
+&#9;local toTarget = target - spawnPos&#9;
+&#9;local dY = toTarget.Y
+&#9;toTarget = Vector3.new(toTarget.X, 0, toTarget.Z)
+&#9;local dXZ = toTarget.magnitude
+&#9;toTarget = toTarget.unit 
 &#9;
-&#9;-- acceleration due to gravity in RBX units&#9;
 
 &#9;CannonSound = Cannon:FindFirstChild(&quot;CannonSound&quot;)
 &#9;if CannonSound then CannonSound:Play() end 
 
-&#9;local theta = computeLaunchAngle(dx, dy, Gravity)
+&#9;local theta = computeLaunchAngle(dXZ, dY, Gravity)
 
-&#9;local vy = math.sin(theta)
-&#9;local xz = math.cos(theta)
-&#9;local vx = unit_delta.x * xz
-&#9;local vz = unit_delta.z * xz&#9;
+&#9;print(&quot;Muzzle Velocity - &quot;, Velocity, &quot; studs/second&quot;) 
+&#9;print(&quot;Gravity - &quot;, Gravity, &quot; studs/seconds^2&quot;)
+&#9;print(&quot;Launch angle - &quot;, math.deg(theta), &quot; degrees&quot;) 
+
+&#9;local angleY = math.sin(theta)
+&#9;local angleXZ = math.cos(theta)
+
+&#9;local vY = angleY *  Velocity  
+&#9;local vX = toTarget.X * angleXZ * Velocity 
+&#9;local vZ = toTarget.Z * angleXZ * Velocity &#9;&#9;
 
 &#9;local missile = Potato:clone()        &#9;&#9;
 
-&#9;missile.Position = spawnPos
-&#9;missile.Velocity = Vector3.new(vx,vy,vz) * VELOCITY
-
+&#9;missile.CFrame = CFrame.new(spawnPos)
+&#9;missile.Velocity = Vector3.new(vX, vY, vZ) 
+&#9;
 &#9;local smoke = Instance.new(&quot;Smoke&quot;)
 &#9;smoke.Parent = missile
 
 &#9;RBX_Debris:AddItem(smoke, 0.5)
 
-&#9;missile.Parent = game.Workspace
+&#9;initPos = missile.Position 
 
-&#9;RBX_Debris = game:GetService(&quot;Debris&quot;)
+&#9;missile.Parent = game.Workspace&#9;
 
-&#9;missile.Touched:connect(function(hit) blow(missile, hit) end)
+&#9;oY = missile.Position.Y &#9;
+&#9;TimeTaken =  tick() 
+
+&#9;RBX_Debris:AddItem(missile, 500.0)
+
+&#9;Spawn(function()
+&#9;&#9;initY = missile.Position.Y 
+&#9;&#9;while missile do 
+&#9;&#9;&#9;if missile.Position.Y &gt; initY then 
+&#9;&#9;&#9;&#9;initY = missile.Position.Y
+&#9;&#9;&#9;end 
+&#9;&#9;&#9;wait() 
+&#9;&#9;end 
+&#9;end) 
+&#9;
+&#9;wait(0.25)
+&#9;missile.Touched:connect(function(hit) blow(missile, hit, initPos) end)&#9;
+&#9;wait(0.25)
+&#9;missile.CanCollide = true 
 end
 
 
@@ -265,13 +291,11 @@ local function onActivated()
 
 &#9;Tool.Enabled = false 
 
-&#9;local target = vHumanoid.TargetPoint
-&#9;local direction = (target - vTorso.Position).unit 
-&#9;local distance = math.min((target - vTorso.Position).magnitude, MaxDistance)
+&#9;local target = vHumanoid.TargetPoint&#9;
 
 &#9;fire(target)
 
-&#9;wait(3.5)
+&#9;wait(0.5)
 &#9;Tool.Enabled = true 
 end
 
@@ -353,16 +377,16 @@ local stillEquipped = false
 function onEquippedLocal(mouse)
 &#9;stillEquipped = true
 &#9;if mouse == nil then 
-&#9;&#9;print(&quot;No mouse&quot;)
+&#9;&#9;--print(&quot;No mouse&quot;)
 &#9;&#9;return
 &#9;end
 &#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
+&#9;&#9;--print(&quot;Setting Mouse to go&quot;)
 &#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
 &#9;&#9;while Tool.Enabled and stillEquipped do 
 &#9;&#9;&#9;wait(0.01)
 &#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
+&#9;&#9;--print(&quot;Setting Mouse to wait&quot;)
 &#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
 &#9;&#9;while not Tool.Enabled and stillEquipped do 
 &#9;&#9;&#9;wait(0.01)
@@ -383,24 +407,24 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-2.50363064</X>
-					<Y>0.0183468759</Y>
-					<Z>3.40881276</Z>
-					<R00>0.438366503</R00>
-					<R01>-0.0188227184</R01>
-					<R02>-0.898599207</R02>
-					<R10>-0</R10>
-					<R11>0.999780774</R11>
-					<R12>-0.0209421385</R12>
-					<R20>0.89879638</R20>
-					<R21>0.0091803316</R21>
-					<R22>0.43827033</R22>
+					<X>1.78365469</X>
+					<Y>0.797640026</Y>
+					<Z>4.08268929</Z>
+					<R00>0.916365147</R00>
+					<R01>-0.0355895385</R01>
+					<R02>0.39875865</R02>
+					<R10>-3.72529074e-009</R10>
+					<R11>0.99604094</R11>
+					<R12>0.0888974592</R12>
+					<R20>-0.400343746</R20>
+					<R21>-0.0814625323</R21>
+					<R22>0.912737012</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>1.00000072</X>
-					<Y>0.100000113</Y>
-					<Z>1.70000005</Z>
+					<X>-8.94069672e-008</X>
+					<Y>0.400000066</Y>
+					<Z>2.38418579e-007</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
