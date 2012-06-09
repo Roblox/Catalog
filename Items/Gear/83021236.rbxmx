@@ -1,0 +1,581 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Script" referent="RBX0">
+		<Properties>
+			<bool name="Disabled">false</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">StarFish</string>
+			<ProtectedString name="Source">local Tool = script.Parent
+
+local Char = Tool.Parent
+local torso = nil
+local RightShoulder = nil
+local RightArm = nil
+
+local reload = 1
+local numNeedles = 5
+
+local debris = game:GetService(&quot;Debris&quot;)
+
+Tool.Enabled = true
+
+function fire(dPos)
+&#9;local character = Tool.Parent
+&#9;if character == nil then 
+&#9;&#9;return
+&#9;end
+&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if humanoid == nil then
+&#9;&#9;return
+&#9;end
+&#9;local player = game.Players:playerFromCharacter(character)
+&#9;local spawnPosition = Tool.Handle.Position
+&#9;spawnPosition = spawnPosition + dPos*5
+
+&#9;local shuriken = Tool.Handle:Clone()
+&#9;shuriken.Transparency = 0
+&#9;shuriken.CFrame = CFrame.new (spawnPosition, spawnPosition + dPos) 
+
+&#9;shuriken.Velocity = dPos * 50
+&#9;shuriken.RotVelocity = Vector3.new(0, 0, 0)
+&#9;shuriken.Name = &quot;ThrownFish&quot;
+&#9;shuriken.CanCollide = false
+
+&#9;local force = Instance.new(&quot;BodyForce&quot;)
+&#9;force.force = Vector3.new(0, shuriken:GetMass()*196.1,0)
+&#9;force.Parent = shuriken
+
+&#9;local creatorTag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creatorTag.Value = vPlayer
+&#9;creatorTag.Name = &quot;creator&quot;
+&#9;creatorTag.Parent = shuriken
+&#9;
+&#9;local newScript = Tool.ProjectileScript:Clone()
+&#9;newScript.Parent = shuriken
+&#9;newScript.Disabled = false
+&#9;shuriken.Parent = game.Workspace
+&#9;
+&#9;debris:AddItem(shuriken, 3.5)
+
+&#9;wait(0.5)
+
+&#9;if shuriken ~= nil and shuriken.Parent ~= nil then
+&#9;&#9;shuriken.Anchored = true
+&#9;&#9;local smoke = Instance.new(&quot;Smoke&quot;)
+&#9;&#9;smoke.Size = 0.1
+&#9;&#9;smoke.Color = Color3.new(1,(153/255), (51/255))
+&#9;&#9;smoke.Opacity = 1
+&#9;&#9;smoke.Parent = shuriken
+&#9;&#9;shuriken.Transparency = 1
+&#9;&#9;wait(.8)
+&#9;&#9;if shuriken ~= nil and shuriken.Parent ~= nil then
+&#9;&#9;&#9;local shotPos = shuriken.Position
+&#9;&#9;&#9;local splitFish = {}
+&#9;&#9;&#9;shuriken.CanCollide = false
+&#9;&#9;&#9;
+&#9;&#9;&#9;for i = 1, numNeedles do
+&#9;&#9;&#9;&#9;splitFish[i] = shuriken:Clone()&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;splitFish[i].CanCollide = true
+&#9;&#9;&#9;&#9;splitFish[i].Transparency = 0
+&#9;&#9;&#9;&#9;splitFish[i].Smoke.Enabled = false
+&#9;&#9;&#9;&#9;splitFish[i].Anchored = false
+&#9;&#9;&#9;&#9;splitFish[i].CFrame = CFrame.new (shotPos) * CFrame.Angles((math.pi * 2) * (i/numNeedles), 0, 0) * CFrame.new(0,0,2)
+
+&#9;&#9;&#9;&#9;splitFish[i].Parent = game.Workspace
+&#9;&#9;&#9;&#9;debris:AddItem(splitFish[i], 3.5)
+&#9;&#9;&#9;end 
+&#9;&#9;end
+&#9;&#9;wait(0.5)
+&#9;end
+end
+
+function onActivated()
+&#9;if not Tool.Enabled  then
+&#9;&#9;return
+&#9;end
+
+&#9;Tool.Enabled = false
+&#9;Tool.Handle.Transparency = 1
+
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;return 
+&#9;end
+&#9;
+&#9;local targetPos = humanoid.TargetPoint
+&#9;local lookAt = (targetPos - Tool.Handle.Position).unit
+
+&#9;confettiBang = Tool.Handle:FindFirstChild(&quot;ThrowSound&quot;)
+&#9;if confettiBang ~= nil then 
+&#9;&#9;confettiBang.Volume = 0.6
+&#9;&#9;confettiBang:Play() 
+&#9;end
+
+&#9;xNoise = (math.random()-.5)*.1
+&#9;yNoise = (math.random()-.5)*.1
+&#9;zNoise = (math.random()-.5)*.1
+&#9;fire(CFrame.Angles(xNoise, yNoise, zNoise) * lookAt)
+
+&#9;RightShoulder.MaxVelocity = 0.5
+&#9;RightShoulder.DesiredAngle = 1.9 -- 3.14
+&#9;wait(0.5)
+
+&#9;wait(reload)
+
+&#9;confettiBang = Tool.Handle:FindFirstChild(&quot;ThrowSound&quot;)
+&#9;if confettiBang ~= nil then confettiBang.Volume = 0 end
+
+&#9;Tool.Handle.Transparency = 0
+&#9;Tool.Enabled = true
+end
+
+function onEquipped()
+&#9;vChar = Tool.Parent
+&#9;torso = nil
+&#9;RightShoulder = nil
+&#9;RightArm = nil
+&#9;while vChar == nil or vChar.Name == &quot;BackPack&quot; or torso == nil or RightShoulder == nil or RightArm == nil do
+&#9;&#9;vChar = Tool.Parent
+&#9;&#9;if vChar ~= nil and vChar.Name ~= &quot;BackPack&quot; then
+&#9;&#9;&#9;torso = vChar:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;if torso ~= nil then
+&#9;&#9;&#9;&#9;RightShoulder = torso:FindFirstChild(&quot;Right Shoulder&quot;)
+&#9;&#9;&#9;&#9;RightArm = vChar:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(1)
+&#9;end
+end
+
+
+function onUnequipped()
+&#9;Tool.Handle.Transparency = 0
+end
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+</ProtectedString>
+		</Properties>
+	</Item>
+	<Item class="Tool" referent="RBX1">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">StarfishShuriken</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=82897865</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>5.5</X>
+					<Y>1.80000007</Y>
+					<Z>4</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>3</X>
+					<Y>1.20000005</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=82897477</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=82897779</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sparkles" referent="RBX4">
+				<Properties>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Sparkles</string>
+					<Color3 name="SparkleColor">4294940979</Color3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">ThrowSound</string>
+					<float name="Pitch">2</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/swordslash.wav</url></Content>
+					<float name="Volume">0</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX0">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">StarFish</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+
+local Char = Tool.Parent
+local torso = nil
+local RightShoulder = nil
+local RightArm = nil
+
+local reload = 1
+local numNeedles = 5
+
+local debris = game:GetService(&quot;Debris&quot;)
+
+Tool.Enabled = true
+
+function fire(dPos)
+&#9;local character = Tool.Parent
+&#9;if character == nil then 
+&#9;&#9;return
+&#9;end
+&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if humanoid == nil then
+&#9;&#9;return
+&#9;end
+&#9;local player = game.Players:playerFromCharacter(character)
+&#9;local spawnPosition = Tool.Handle.Position
+&#9;spawnPosition = spawnPosition + dPos*5
+
+&#9;local shuriken = Tool.Handle:Clone()
+&#9;shuriken.Transparency = 0
+&#9;shuriken.CFrame = CFrame.new (spawnPosition, spawnPosition + dPos) 
+
+&#9;shuriken.Velocity = dPos * 50
+&#9;shuriken.RotVelocity = Vector3.new(0, 0, 0)
+&#9;shuriken.Name = &quot;ThrownFish&quot;
+&#9;shuriken.CanCollide = false
+
+&#9;local force = Instance.new(&quot;BodyForce&quot;)
+&#9;force.force = Vector3.new(0, shuriken:GetMass()*196.1,0)
+&#9;force.Parent = shuriken
+
+&#9;local creatorTag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creatorTag.Value = vPlayer
+&#9;creatorTag.Name = &quot;creator&quot;
+&#9;creatorTag.Parent = shuriken
+&#9;
+&#9;local newScript = Tool.ProjectileScript:Clone()
+&#9;newScript.Parent = shuriken
+&#9;newScript.Disabled = false
+&#9;shuriken.Parent = game.Workspace
+&#9;
+&#9;debris:AddItem(shuriken, 3.5)
+
+&#9;wait(0.5)
+
+&#9;if shuriken ~= nil and shuriken.Parent ~= nil then
+&#9;&#9;shuriken.Anchored = true
+&#9;&#9;local smoke = Instance.new(&quot;Smoke&quot;)
+&#9;&#9;smoke.Size = 0.1
+&#9;&#9;smoke.Color = Color3.new(1,(153/255), (51/255))
+&#9;&#9;smoke.Opacity = 1
+&#9;&#9;smoke.Parent = shuriken
+&#9;&#9;shuriken.Transparency = 1
+&#9;&#9;wait(.8)
+&#9;&#9;if shuriken ~= nil and shuriken.Parent ~= nil then
+&#9;&#9;&#9;local shotPos = shuriken.Position
+&#9;&#9;&#9;local splitFish = {}
+&#9;&#9;&#9;shuriken.CanCollide = false
+&#9;&#9;&#9;
+&#9;&#9;&#9;for i = 1, numNeedles do
+&#9;&#9;&#9;&#9;splitFish[i] = shuriken:Clone()&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;splitFish[i].CanCollide = true
+&#9;&#9;&#9;&#9;splitFish[i].Transparency = 0
+&#9;&#9;&#9;&#9;splitFish[i].Smoke.Enabled = false
+&#9;&#9;&#9;&#9;splitFish[i].Anchored = false
+&#9;&#9;&#9;&#9;splitFish[i].CFrame = CFrame.new (shotPos) * CFrame.Angles((math.pi * 2) * (i/numNeedles), 0, 0) * CFrame.new(0,0,2)
+
+&#9;&#9;&#9;&#9;splitFish[i].Parent = game.Workspace
+&#9;&#9;&#9;&#9;debris:AddItem(splitFish[i], 3.5)
+&#9;&#9;&#9;end 
+&#9;&#9;end
+&#9;&#9;wait(0.5)
+&#9;end
+end
+
+function onActivated()
+&#9;if not Tool.Enabled  then
+&#9;&#9;return
+&#9;end
+
+&#9;Tool.Enabled = false
+&#9;Tool.Handle.Transparency = 1
+
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;return 
+&#9;end
+&#9;
+&#9;local targetPos = humanoid.TargetPoint
+&#9;local lookAt = (targetPos - Tool.Handle.Position).unit
+
+&#9;confettiBang = Tool.Handle:FindFirstChild(&quot;ThrowSound&quot;)
+&#9;if confettiBang ~= nil then 
+&#9;&#9;confettiBang.Volume = 0.6
+&#9;&#9;confettiBang:Play() 
+&#9;end
+
+&#9;xNoise = (math.random()-.5)*.1
+&#9;yNoise = (math.random()-.5)*.1
+&#9;zNoise = (math.random()-.5)*.1
+&#9;fire(CFrame.Angles(xNoise, yNoise, zNoise) * lookAt)
+
+&#9;RightShoulder.MaxVelocity = 0.5
+&#9;RightShoulder.DesiredAngle = 1.9 -- 3.14
+&#9;wait(0.5)
+
+&#9;wait(reload)
+
+&#9;confettiBang = Tool.Handle:FindFirstChild(&quot;ThrowSound&quot;)
+&#9;if confettiBang ~= nil then confettiBang.Volume = 0 end
+
+&#9;Tool.Handle.Transparency = 0
+&#9;Tool.Enabled = true
+end
+
+function onEquipped()
+&#9;vChar = Tool.Parent
+&#9;torso = nil
+&#9;RightShoulder = nil
+&#9;RightArm = nil
+&#9;while vChar == nil or vChar.Name == &quot;BackPack&quot; or torso == nil or RightShoulder == nil or RightArm == nil do
+&#9;&#9;vChar = Tool.Parent
+&#9;&#9;if vChar ~= nil and vChar.Name ~= &quot;BackPack&quot; then
+&#9;&#9;&#9;torso = vChar:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;if torso ~= nil then
+&#9;&#9;&#9;&#9;RightShoulder = torso:FindFirstChild(&quot;Right Shoulder&quot;)
+&#9;&#9;&#9;&#9;RightArm = vChar:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(1)
+&#9;end
+end
+
+
+function onUnequipped()
+&#9;Tool.Handle.Transparency = 0
+end
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent
+
+local stillEquipped = false
+
+function onEquippedLocal(mouse)
+&#9;stillEquipped = true
+&#9;if mouse == nil then 
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return
+&#9;end
+&#9;while stillEquipped do 
+&#9;&#9;print(&quot;Setting Mouse to go&quot;)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;while Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;while not Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end&#9;
+&#9;end
+end
+
+
+function onUnequippedLocal()
+&#9;stillEquipped = false
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ProjectileScript</string>
+				<ProtectedString name="Source">ball = script.Parent
+damage = 9
+
+hitSound = Instance.new(&quot;Sound&quot;)
+hitSound.Name = &quot;hitSound&quot;
+hitSound.SoundId = &quot;http://www.roblox.com/asset/?id=11945266&quot;
+hitSound.Parent = ball
+hitSound.Volume = 1
+
+while script:FindFirstChild(&quot;ShurikenPierceScript&quot;) == nil do 
+&#9;wait()
+end
+
+function onTouched(hit)
+&#9;print(hit)
+&#9;if hit == nil or hit.Parent == nil or hit.Name == script.Parent.Name then 
+&#9;&#9;print(&quot;yup&quot;) 
+&#9;&#9;return 
+&#9;end
+&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+&#9;print(&quot;2&quot;)
+&#9;if humanoid ~= nil then
+&#9;&#9;print(&quot;3&quot;)
+&#9;&#9;if hitSound then 
+&#9;&#9;&#9;hitSound:Play() 
+&#9;&#9;end
+&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;if humanoid.Parent:FindFirstChild(&quot;ShurikenPierceScript&quot;) == nil then 
+&#9;&#9;&#9;local cloneScript = script.ShurikenPierceScript:Clone()
+&#9;&#9;&#9;cloneScript.Parent = humanoid.Parent 
+&#9;&#9;&#9;cloneScript.Disabled = false
+&#9;&#9;end
+&#9;end
+&#9;if connection then 
+&#9;&#9;connection:disconnect() 
+&#9;end
+
+&#9;ball.Velocity = Vector3.new(0, 0, 0) -- have the kunai drop dead upon impact
+&#9;ballFloat = ball:FindFirstChild(&quot;BodyForce&quot;)
+&#9;if ballFloat ~= nil then 
+&#9;&#9;ballFloat:remove() 
+&#9;end
+end
+
+connection = ball.Touched:connect(onTouched)
+print(&quot;5&quot;)
+wait(4)
+--ball.Parent = nil
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX8">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">ShurikenPierceScript</string>
+					<ProtectedString name="Source">local vCharacter = script.Parent
+local myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+local myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+
+if myTorso == nil or myHumanoid == nil then 
+&#9;script:Remove()
+end
+
+local duration = 7.0
+
+while duration &gt; 0 do 
+&#9;myHumanoid:TakeDamage(4.0)
+&#9;duration = duration - wait(1.0)
+&#9;wait(1.0)
+end
+
+wait(1.0)
+
+script:Remove()
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
