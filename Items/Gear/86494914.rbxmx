@@ -1,0 +1,872 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>-2.0999999</Z>
+				<R00>0</R00>
+				<R01>0</R01>
+				<R02>1</R02>
+				<R10>1</R10>
+				<R11>0</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>1</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<string name="Name">UltraKatana</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=86290987</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">-------- Ultra Katana ---------
+
+r = game:service(&quot;RunService&quot;)
+
+
+local damage = 4
+
+
+local slash_damage = 5
+local lunge_damage = 6
+
+
+local Tool = script.Parent
+local sword = Tool.Handle
+
+
+local leftSword
+
+local leftSwordWeld
+local leftSwordConnection
+
+local bodyGyro
+
+local vCharacter
+local vTorso
+local vHumanoid
+
+
+local vJumpForce
+
+
+local attackList = nil
+
+
+Tool.Enabled = true
+
+
+
+local SlashSound = Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+SlashSound.Parent = sword
+SlashSound.Volume = .7
+
+local LungeSound = Instance.new(&quot;Sound&quot;)
+LungeSound.SoundId = &quot;rbxasset://sounds\\swordlunge.wav&quot;
+LungeSound.Parent = sword
+LungeSound.Volume = .6
+
+local UnsheathSound = Instance.new(&quot;Sound&quot;)
+UnsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
+UnsheathSound.Parent = sword
+UnsheathSound.Volume = 1
+
+local lastHitTarget = nil
+
+function blow(hit)
+&#9;if not hit.Parent then return end
+&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+&#9;local vCharacter = Tool.Parent
+&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
+&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
+&#9;if humanoid~=nil and humanoid ~= hum and hum ~= nil then
+&#9;&#9;-- final check, make sure sword is in-hand
+&#9;&#9;--[[for index, child in pairs(vTorso:GetChildren()) do
+&#9;&#9;    if child.Name == &apos;BodyVelocity&apos; then
+&#9;&#9;&#9;&#9;child.Parent = nil
+&#9;&#9;&#9;&#9;end
+&#9;&#9;end]]
+&#9;&#9;--if vJumpForce then vJumpForce.maxForce = Vector3.new(0, 0, 0) end
+&#9;&#9;
+&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;if (right_arm ~= nil) then
+&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
+&#9;&#9;&#9;&#9;tagHumanoid(humanoid, vPlayer)
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;&#9;&#9;lastHitTarget = humanoid
+&#9;&#9;&#9;&#9;--if humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;--&#9;lunge()
+&#9;&#9;&#9;&#9;--end
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;untagHumanoid(humanoid)
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+
+&#9;end
+&#9;
+end
+
+
+function tagHumanoid(humanoid, player)
+&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value = player
+&#9;creator_tag.Name = &quot;creator&quot;
+&#9;creator_tag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+&#9;if humanoid ~= nil then
+&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
+&#9;&#9;if tag ~= nil then
+&#9;&#9;&#9;tag.Parent = nil
+&#9;&#9;end
+&#9;end
+end
+
+
+function attack()
+&#9;damage = slash_damage
+&#9;SlashSound:play()
+&#9;local anim = Instance.new(&quot;StringValue&quot;)
+&#9;anim.Name = &quot;toolanim&quot;
+&#9;anim.Value = &quot;Slash&quot;
+&#9;anim.Parent = Tool
+end
+
+function slamdown()
+
+
+&#9;bothSwordsDown()
+&#9;wait(1.5)
+&#9;swordUp()
+&#9;
+
+end
+
+function lunge()
+&#9;if Tool:FindFirstChild(&apos;Lunging&apos;).Value then return end
+&#9;Tool:FindFirstChild(&apos;Lunging&apos;).Value = true
+&#9;attackList = {}
+&#9;local lungeDir
+
+&#9;local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)&#9;&#9;&#9;&#9;&#9;
+&#9;local players = game.Players:GetChildren()
+&#9;local maxDistance = 48
+&#9;--local neareastDist = maxDistance
+&#9;--local nearestCharacter = nil
+&#9;if #players &gt; 1 then 
+&#9;&#9;for i = 1, #players do 
+&#9;&#9;&#9;local currPlayer = players[i]
+&#9;&#9;&#9;if currPlayer ~= vPlayer then 
+&#9;&#9;&#9;&#9;local tempChar = players[i].Character
+&#9;&#9;&#9;&#9;if tempChar then
+&#9;&#9;&#9;&#9;&#9;local tempTorso = tempChar:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;&#9;if tempTorso then
+&#9;&#9;&#9;&#9;&#9;&#9;local distance = (tempTorso.Position - vTorso.Position).magnitude
+&#9;&#9;&#9;&#9;&#9;&#9;--print(&apos;distance is&apos; .. distance)
+&#9;&#9;&#9;&#9;&#9;&#9;if distance &lt; maxDistance then --and distance &lt; nearestDist then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if distance &gt; 10 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(attackList, tempChar)
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;--nearestDist = distance
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;--neareastCharacter = tempChar
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;--print(&apos;nearestPlayer is&apos; .. neareastCharacter.Name)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+
+&#9;damage = lunge_damage
+
+&#9;LungeSound:play()
+
+&#9;local anim = Instance.new(&quot;StringValue&quot;)
+&#9;anim.Name = &quot;toolanim&quot;
+&#9;anim.Value = &quot;Lunge&quot;
+&#9;anim.Parent = Tool
+&#9;
+&#9;if vJumpForce == nil then
+&#9;&#9;vJumpForce = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;vJumpForce.Parent = Tool.Parent.Torso
+
+&#9;&#9;vJumpForce.Name = &quot;JumpForce&quot;
+&#9;end
+
+&#9;print(#attackList .. &apos;enemies in the list&apos;)
+&#9;if attackList and #attackList &gt; 0 then
+
+&#9;&#9;for _, v in ipairs(attackList) do
+&#9;&#9;&#9;local nextVictim = v
+&#9;&#9;&#9;local nextVictimTorso = nextVictim:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;-- get the direction to the next target and normalize it to a velocity of 80
+&#9;&#9;&#9;--print(&quot;lunging from &quot; .. vTorso.Position .. &quot; to &quot; .. nextTorsoPosition)
+&#9;&#9;&#9;lungeDir = (nextVictimTorso.Position - vTorso.Position).unit * 80
+&#9;&#9;&#9;vTorso.CFrame = CFrame.new(vTorso.CFrame.p, nextVictimTorso.Position)
+&#9;&#9;&#9;vJumpForce.velocity = lungeDir --Vector3.new(0,10,0) --Tool.Parent.Torso.CFrame.lookVector * 80
+&#9;&#9;&#9;-- Let it apply a large amount of force
+&#9;&#9;&#9;vJumpForce.maxForce = Vector3.new(1000000, 1000000, 1000000)
+&#9;&#9;&#9;wait(0.6)
+&#9;&#9;&#9;if vJumpForce ~= nil then
+&#9;&#9;&#9;&#9;vJumpForce.maxForce = Vector3.new()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(0.25)
+&#9;&#9;end
+&#9;&#9;
+&#9;else
+&#9;&#9;lungeDir = vTorso.CFrame.lookVector * 80
+&#9;&#9;vJumpForce.velocity = lungeDir --Vector3.new(0,10,0) --Tool.Parent.Torso.CFrame.lookVector * 80
+&#9;&#9;-- Let it apply a large amount of force
+&#9;&#9;vJumpForce.maxForce = Vector3.new(1000000, 1000000, 1000000)
+&#9;&#9;wait(1.0)
+&#9;&#9;if vJumpForce ~= nil then
+&#9;&#9;&#9;vJumpForce.maxForce = Vector3.new()
+&#9;&#9;end
+&#9;&#9;wait(.2)
+&#9;end&#9;&#9;
+
+&#9;wait(.2)
+&#9;swordUp()
+&#9;
+
+&#9;damage = slash_damage
+&#9;Tool:FindFirstChild(&apos;Lunging&apos;).Value = false
+end
+
+function swordUp()
+&#9;Tool.GripForward = Vector3.new(-1,0,0)
+&#9;Tool.GripRight = Vector3.new(0,1,0)
+&#9;Tool.GripUp = Vector3.new(0,0,1)
+&#9;if leftSwordWeld then
+&#9;&#9;--leftSwordWeld.C1 = leftSwordWeld.C1 * CFrame.Angles(180, 0, 0)
+&#9;&#9;-- CFrame for pointing the sword down
+&#9;&#9;leftSwordWeld.C1 = CFrame.new(0, 0, -2.1, 0, 0, 1, 1, 0, 0, 0, 1, 0)
+&#9;end
+end
+
+function bothSwordsDown()
+&#9;Tool.GripForward = Vector3.new(-1,0,0)
+&#9;Tool.GripRight = Vector3.new(0,1,0)
+&#9;Tool.GripUp = Vector3.new(0,0,-1)
+&#9;if leftSwordWeld then
+&#9;&#9;--leftSwordWeld.C1 = leftSwordWeld.C1 * CFrame.Angles(180, 0, 0)
+&#9;&#9;-- CFrame for pointing the sword down
+&#9;&#9;leftSwordWeld.C1 = CFrame.new(0, 0, -2.1, 0, 0, 1, -1, 0, 0, 0, -1, 0)
+&#9;end
+end
+
+function swordOut()
+&#9;Tool.GripForward = Vector3.new(0,0,1)
+&#9;Tool.GripRight = Vector3.new(0,-1,0)
+&#9;Tool.GripUp = Vector3.new(-1,0,0)
+end
+
+function swordAcross()
+&#9;-- parry
+end
+
+
+function findNearestPlayer()
+&#9;local vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)&#9;&#9;&#9;&#9;&#9;
+&#9;local players = game.Players:GetChildren()
+&#9;local maxDistance = 100
+&#9;local neareastDist = maxDistance
+&#9;local nearestCharacter = nil
+&#9;if #players &gt; 1 then 
+&#9;&#9;for i = 1, #players do 
+&#9;&#9;&#9;local currPlayer = players[i]
+&#9;&#9;&#9;if currPlayer ~= vPlayer then 
+&#9;&#9;&#9;&#9;local tempChar = players[i].Character
+&#9;&#9;&#9;&#9;if tempChar then
+&#9;&#9;&#9;&#9;&#9;local tempTorso = tempChar:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;&#9;if tempTorso then
+&#9;&#9;&#9;&#9;&#9;&#9;local distance = (tempTorso.Position - vTorso.Position).magnitude
+&#9;&#9;&#9;&#9;&#9;&#9;print(&apos;distance is&apos; .. distance)
+&#9;&#9;&#9;&#9;&#9;&#9;if distance &lt; maxDistance then --and distance &lt; nearestDist then
+
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;nearestDist = distance
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;neareastCharacter = tempChar
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;print(&apos;nearestPlayer is&apos; .. neareastCharacter.Name)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;return Vector3.new(tempTorso.Position.x, tempTorso.Position.y, tempTorso.Position.z)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return nearestCharacter
+end
+
+Tool.Enabled = true
+local last_attack = 0
+function onActivated()
+&#9;--[[
+&#9;if not Tool.Enabled then
+&#9;&#9;return
+&#9;end
+
+&#9;Tool.Enabled = false
+&#9;]]
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;return 
+&#9;end
+&#9;
+&#9;-- Pull out the swords on first use
+&#9;if Tool:FindFirstChild(&apos;JustEquipped&apos;).Value then
+&#9;&#9;wait(0.3)
+&#9;
+
+&#9;&#9;--wait(0.1)
+&#9;&#9;local rightHandWeld = vCharacter:FindFirstChild(&apos;Right Arm&apos;):FindFirstChild(&apos;RightGrip&apos;)
+&#9;&#9;-- These numbers grip to the hand
+&#9;&#9;rightHandWeld.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
+&#9;&#9;rightHandWeld.C1 = CFrame.new(0, 0, -2.1, 0, 0, 1, 1, 0, 0, 0, 1, 0)
+&#9;&#9;rightHandWeld.Part0 = Tool.Parent:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;rightHandWeld.Part1 = sword
+&#9;&#9;--wait(0.1)
+&#9;&#9;if not Tool.Parent:FindFirstChild(&quot;Left Arm&quot;):FindFirstChild(&quot;LeftGrip&quot;) then
+&#9;&#9;&#9;-- These numbers grip to the hand
+&#9;&#9;&#9;leftSwordWeld.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
+&#9;&#9;&#9;leftSwordWeld.C1 = CFrame.new(0, 0, -2.1, 0, 0, 1, 1, 0, 0, 0, 1, 0)
+&#9;&#9;&#9;leftSwordWeld.Name = &apos;LeftGrip&apos;
+&#9;&#9;&#9;leftSwordWeld.Parent = Tool.Parent:FindFirstChild(&quot;Left Arm&quot;)
+&#9;&#9;&#9;leftSwordWeld.Part0 = Tool.Parent:FindFirstChild(&quot;Left Arm&quot;)
+&#9;&#9;&#9;leftSwordWeld.Part1 = leftSword
+&#9;&#9;end
+
+&#9;&#9;return
+&#9;end
+
+&#9;print(&apos;Attacking&apos;)
+&#9;t = r.Stepped:wait()
+&#9;
+&#9;if (t - last_attack &lt; 0.2) then
+&#9;&#9;lastHitTarget = nil
+&#9;&#9;lunge()
+&#9;else
+&#9;&#9;attack()
+&#9;end
+
+&#9;last_attack = t
+
+&#9;--wait(.5)
+
+&#9;--Tool.Enabled = true
+end
+
+
+function onEquipped()
+&#9;--print(&apos;onEquip Called&apos;)
+&#9;UnsheathSound:play()
+&#9;lunging = false
+&#9;vCharacter = Tool.Parent
+&#9;vTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;bodyGyro = vTorso:FindFirstChild(&apos;BodyGyro&apos;)
+&#9;if not bodyGyro then
+&#9;&#9;bodyGyro = Instance.new(&apos;BodyGyro&apos;, vTorso)
+&#9;&#9;bodyGyro.maxTorque = Vector3.new(50000000, 0, 50000000)
+&#9;end
+&#9;vHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;local vLeftArm = vCharacter:FindFirstChild(&quot;Left Arm&quot;)
+&#9;if vTorso and vLeftArm and vCharacter:FindFirstChild(&quot;LeftSword&quot;) == nil and leftSwordWeld == nil then 
+&#9;&#9;leftSword = sword:Clone()
+&#9;&#9;leftSword.Name = &quot;LeftSword&quot;
+&#9;&#9;leftSword.Parent = vCharacter
+&#9;&#9;leftSwordWeld = Instance.new(&quot;Weld&quot;)&#9;&#9;
+&#9;&#9;leftSwordWeld.Part0 = vTorso
+&#9;&#9;leftSwordWeld.Part1 = leftSword
+&#9;&#9;-- This CFrame grips the sword to the back at a 45 degree angle
+&#9;&#9;leftSwordWeld.C0 = CFrame.new(-0.4, 0.45, 0.65) * CFrame.Angles(math.pi / 2, math.pi / 6, math.pi)
+&#9;&#9;leftSwordWeld.Parent = vTorso 
+&#9;&#9;leftSwordWeld.Name = &quot;LeftGrip&quot;
+
+&#9;&#9;leftSwordConnection = leftSword.Touched:connect(blow)
+&#9;end
+&#9;--wait(0.1)
+&#9;-- Set the Right Weapon to weld on the back
+&#9;local rightWeld = vCharacter:FindFirstChild(&apos;Right Arm&apos;):FindFirstChild(&apos;RightGrip&apos;)
+&#9;rightWeld.C1 = CFrame.new()
+&#9;rightWeld.Part0 = vTorso
+&#9;-- This CFrame grips the sword to the back at a 45 degree angle
+&#9;rightWeld.C0 = CFrame.new(0.4, 0.45, 0.65) * CFrame.Angles(math.pi / 2, -math.pi / 6, 0)
+&#9;rightWeld.Part1 = sword
+&#9;
+end
+
+function onUnequipped()
+&#9;-- RightGrip is remove automagically, but we have to remember to clean
+&#9;-- the left sword and grip that we added
+&#9;if leftSword then leftSword:Remove() leftSword = nil end
+&#9;if leftSwordWeld then leftSwordWeld:Remove() leftSwordWeld = nil end
+&#9;if vJumpForce then vJumpForce:Remove() vJumpForce = nil end
+&#9;bodyGyro = vTorso:FindFirstChild(&apos;BodyGyro&apos;)
+&#9;if bodyGyro then
+&#9;&#9;bodyGyro:Remove()
+&#9;&#9;bodyGyro = nil
+&#9;end
+&#9;--if slashSound then slashSound:Stop() end
+end
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+script.Parent.Unequipped:connect(onUnequipped)
+
+connection = sword.Touched:connect(blow)
+
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">199</int>
+				<CoordinateFrame name="CFrame">
+					<X>8</X>
+					<Y>1.60000002</Y>
+					<Z>-10.5</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>-1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">2</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>0.800000012</Y>
+					<Z>6</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX3">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=86297695</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.600000024</X>
+						<Y>0.600000024</Y>
+						<Z>0.600000024</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=86290910</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX4">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+&#9;if not enabled then
+&#9;&#9;return
+&#9;end
+
+&#9;enabled = false
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+&#9;wait(.5)
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;enabled = true
+
+end
+
+function slamDown(mouse, key)
+&#9;if not Tool:FindFirstChild(&apos;JustEquipped&apos;).Value and key:lower() == &quot;x&quot; then
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+
+&#9;&#9;wait(17.5)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;end
+end
+
+
+function onEquippedLocal(mouse)
+
+&#9;if mouse == nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
+
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;--mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+&#9;mouse.KeyDown:connect(function(key) slamDown(mouse, key) end)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=85875280</url></Content>
+				<string name="Name">UnsheathAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=85877138</url></Content>
+				<string name="Name">HoldAnim</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalSwordScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+
+local vCharacter
+local myHumanoid
+local myTorso
+
+local leftSwordWeld
+
+local UnsheathAnim
+local holdAnim
+local slamAnim
+local thrustAnim
+local attackAnim
+
+local runService = game:service(&quot;RunService&quot;) 
+local last_attack
+
+local animating = false&#9;
+
+local justEquipped =  Tool:FindFirstChild(&apos;JustEquipped&apos;)
+
+local SlashSound = Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+SlashSound.Parent = myTorso
+SlashSound.Volume = .7
+
+local RBX_Debris = game:GetService(&quot;Debris&quot;)
+
+local Wave_Part = Instance.new(&quot;Part&quot;)
+Wave_Part.FormFactor = 3 
+Wave_Part.Size = Vector3.new(10, 0.2, 4) 
+
+local Top_Decal = Instance.new(&quot;Decal&quot;)
+Top_Decal.Texture = &quot;http://www.roblox.com/asset/?id=83658504&quot;
+Top_Decal.Parent = Wave_Part 
+Top_Decal.Face = &quot;Top&quot;
+
+local Bottom_Decal = Top_Decal:Clone()
+Bottom_Decal.Face = &quot;Bottom&quot;
+Bottom_Decal.Parent = Wave_Part
+
+local onSpecialCooldown = false
+
+
+local function waveHit(hit, wp)
+&#9;if hit and hit.Parent then 
+&#9;&#9;local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if hit.Parent:IsA(&quot;Hat&quot;) and hit.Parent.Parent then 
+&#9;&#9;&#9;humanoid = hit.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;end 
+&#9;&#9;if humanoid and humanoid ~= myHumanoid then
+&#9;&#9;&#9;print(&apos;Hit something&apos;) 
+&#9;&#9;&#9;humanoid:TakeDamage(45)
+&#9;&#9;&#9;wp:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+local function releaseTheShockWave(position)&#9;
+&#9;local wp = Wave_Part:Clone()
+&#9;wp.CFrame = CFrame.new(position, position + myTorso.CFrame.lookVector) * CFrame.Angles(0, 0, math.pi/2)
+&#9;wp.Transparency = 1.0 
+&#9;wp.CanCollide = false
+&#9;--wp.Anchored = true 
+
+&#9;local float_BodyForce = Instance.new(&quot;BodyForce&quot;)
+&#9;float_BodyForce.Name = &quot;Float&quot;
+&#9;float_BodyForce.force = Vector3.new(0, 196.1 * wp:GetMass(), 0)
+&#9;float_BodyForce.Parent = wp 
+
+&#9;wp.Parent = game.Workspace 
+
+&#9;wp.Velocity = wp.CFrame.lookVector * 40.0 
+&#9;wp.Touched:connect(function(hit) waveHit(hit, wp) end) 
+
+
+&#9;RBX_Debris:AddItem(wp, 2.5)&#9;
+end 
+
+function swordUp()
+&#9;leftSwordWeld = vCharacter:FindFirstChild(&quot;Left Arm&quot;):FindFirstChild(&quot;LeftGrip&quot;)
+&#9;Tool.GripForward = Vector3.new(-1,0,0)
+&#9;Tool.GripRight = Vector3.new(0,1,0)
+&#9;Tool.GripUp = Vector3.new(0,0,1)
+&#9;if leftSwordWeld then
+&#9;&#9;--leftSwordWeld.C1 = leftSwordWeld.C1 * CFrame.Angles(180, 0, 0)
+&#9;&#9;-- CFrame for pointing the sword down
+&#9;&#9;leftSwordWeld.C1 = CFrame.new(0, 0, -2.1, 0, 0, 1, 1, 0, 0, 0, 1, 0)
+&#9;end
+end
+
+function bothSwordsDown()
+&#9;leftSwordWeld = vCharacter:FindFirstChild(&quot;Left Arm&quot;):FindFirstChild(&quot;LeftGrip&quot;)
+&#9;Tool.GripForward = Vector3.new(-1,0,0)
+&#9;Tool.GripRight = Vector3.new(0,1,0)
+&#9;Tool.GripUp = Vector3.new(0,0,-1)
+&#9;if leftSwordWeld then
+&#9;&#9;--leftSwordWeld.C1 = leftSwordWeld.C1 * CFrame.Angles(180, 0, 0)
+&#9;&#9;-- CFrame for pointing the sword down
+&#9;&#9;leftSwordWeld.C1 = CFrame.new(0, 0, -2.1, 0, 0, 1, -1, 0, 0, 0, -1, 0)
+&#9;end
+end
+
+function slamDown(key)
+&#9;if not onSpecialCooldown and not Tool:FindFirstChild(&apos;JustEquipped&apos;).Value and key:lower() == &quot;x&quot; then
+&#9;&#9;onSpecialCooldown = true
+&#9;&#9;print(&quot;Preparing to Slam!&quot;)
+&#9;&#9;if thrustAnim then
+&#9;&#9;&#9;thrustAnim:Stop() 
+&#9;&#9;end
+&#9;&#9;if SlashSound then
+&#9;&#9;&#9;SlashSound:Play()
+&#9;&#9;end
+&#9;&#9;bothSwordsDown()
+&#9;&#9;wait()
+&#9;&#9;slamAnim = myHumanoid:LoadAnimation(Tool.SlamAnim)
+&#9;&#9;if slamAnim then slamAnim:Play() end
+&#9;
+&#9;&#9;wait(0.5)
+&#9;&#9;local rightarmPos = vCharacter:FindFirstChild(&apos;Right Arm&apos;).Position
+&#9;&#9;releaseTheShockWave(rightarmPos)
+&#9;&#9;local leftarmPos = vCharacter:FindFirstChild(&apos;Left Arm&apos;).Position
+&#9;&#9;releaseTheShockWave(leftarmPos)&#9;
+&#9;&#9;wait(2.0)
+&#9;&#9;swordUp()
+&#9;&#9;-- weapon cooldown
+&#9;&#9;wait(15)
+&#9;&#9;onSpecialCooldown = false
+&#9;end
+end
+
+
+function blow(hit)
+end
+
+function lunge()
+&#9;if not thrustAnim then thrustAnim = myHumanoid:LoadAnimation(Tool.ThrustAnim) thrustAnim:AdjustSpeed(0.65) end
+&#9;if thrustAnim then thrustAnim:Play() end
+&#9;repeat
+&#9;&#9;wait()
+&#9;until not Tool:FindFirstChild(&apos;Lunging&apos;).Value
+&#9;if thrustAnim then thrustAnim:Stop() end
+end
+
+function attack()
+&#9;if not attackAnim then attackAnim = myHumanoid:LoadAnimation(Tool.AttackAnim) end
+&#9;if attackAnim then attackAnim:Play() end
+end
+
+
+local last_attack = 0
+function onActivated()
+&#9;if Tool.Enabled == false then
+&#9;&#9;return 
+&#9;end
+&#9;Tool.Enabled = false
+&#9;if thrustAnim then thrustAnim:Stop() end
+&#9;if Tool:FindFirstChild(&apos;JustEquipped&apos;).Value then
+&#9;&#9;UnsheathAnim = myHumanoid:LoadAnimation(Tool.UnsheathAnim)
+&#9;&#9;if UnsheathAnim then UnsheathAnim:Play() end
+&#9;&#9;holdAnim = myHumanoid:LoadAnimation(Tool.HoldAnim)
+&#9;&#9;if holdAnim then holdAnim:Play() end
+&#9;&#9;wait(1.5)
+&#9;&#9;Tool:FindFirstChild(&apos;JustEquipped&apos;).Value = false
+&#9;else
+
+&#9;&#9;t = runService.Stepped:wait()
+&#9;&#9;if (t - last_attack &lt; 0.2) then
+&#9;&#9;&#9;lunge()
+&#9;&#9;else
+&#9;&#9;&#9;attack()
+&#9;&#9;end
+
+&#9;&#9;last_attack = t
+&#9;&#9;--wait(1.0)
+&#9;end
+&#9;Tool.Enabled = true&#9;
+end
+
+function onEquipped(mouse)
+&#9;Tool.Enabled = true&#9;
+&#9;Tool:FindFirstChild(&apos;JustEquipped&apos;).Value = true
+&#9;if mouse then 
+&#9;&#9;vCharacter = Tool.Parent
+&#9;&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;mouse.KeyDown:connect(slamDown)
+&#9;&#9;--[[wait(1.0)
+&#9;&#9;holdAnim = myHumanoid:LoadAnimation(Tool.HoldAnim)
+&#9;&#9;if holdAnim then holdAnim:Play() end ]]
+&#9;end
+end
+
+function onUnequipped()
+&#9;if holdAnim then print(&quot;Stopping hold Anim&quot;) holdAnim:Stop() holdAnim:Remove() end 
+&#9;if UnsheathAnim then UnsheathAnim:Stop() end
+&#9;if thrustAnim then thrustAnim:Stop() end
+&#9;if attackAnim then attackAnim:Stop() end
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+
+Tool.Handle.Touched:connect(blow)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX8">
+			<Properties>
+				<string name="Name">JustEquipped</string>
+				<bool name="Value">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86146856</url></Content>
+				<string name="Name">SlamAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX10">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86159303</url></Content>
+				<string name="Name">ThrustAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX11">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86169319</url></Content>
+				<string name="Name">AttackAnim</string>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX12">
+			<Properties>
+				<string name="Name">Lunging</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX13">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>5.34144974</X>
+					<Y>4.36979198</Y>
+					<Z>-7.53497124</Z>
+					<R00>0.932325959</R00>
+					<R01>0.206381783</R01>
+					<R02>-0.296942681</R02>
+					<R10>-0</R10>
+					<R11>0.821147621</R11>
+					<R12>0.570715845</R12>
+					<R20>0.361619145</R20>
+					<R21>-0.532093227</R21>
+					<R22>0.765577197</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>11.280302</X>
+					<Y>-7.04452229</Y>
+					<Z>-22.8465118</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
