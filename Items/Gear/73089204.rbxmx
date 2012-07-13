@@ -307,7 +307,7 @@ function isOnGrid(partOrModel)
 &#9;&#9;else return true end
 end
 
-function setupFakeTerrainPart(cellMat, cellType, cellOrient)
+function setupFakeTerrainPart(cellMat, cellType, cellOrient, isWater, waterForce,waterDirection)
 &#9;&#9;local newTerrainPiece = nil
 &#9;&#9;if (cellType == 1 or cellType == 4) then 
 &#9;&#9;&#9;newTerrainPiece = Instance.new(&quot;WedgePart&quot;) 
@@ -345,6 +345,16 @@ function setupFakeTerrainPart(cellMat, cellType, cellOrient)
 &#9;&#9;materialTag.Value = Vector3.new(cellMat, cellType, cellOrient)
 &#9;&#9;materialTag.Name = &quot;ClusterMaterial&quot;
 &#9;&#9;materialTag.Parent = newTerrainPiece
+
+&#9;&#9;if isWater then
+&#9;&#9;&#9;local waterForceTag = Instance.new(&quot;StringValue&quot;,newTerrainPiece)
+&#9;&#9;&#9;waterForceTag.Name = &quot;WaterForceTag&quot;
+&#9;&#9;&#9;waterForceTag.Value = string.sub(tostring(waterForce),17)
+
+&#9;&#9;&#9;local waterForceDirectionTag = Instance.new(&quot;StringValue&quot;,newTerrainPiece)
+&#9;&#9;&#9;waterForceDirectionTag.Name = &quot;WaterForceDirectionTag&quot;
+&#9;&#9;&#9;waterForceDirectionTag.Value = string.sub(tostring(waterDirection),21)
+&#9;&#9;end
 
 &#9;&#9;return newTerrainPiece
 end
@@ -443,8 +453,8 @@ function onEyeDropperMouseButton1Down()
 &#9;&#9;-- make the fake part here
 &#9;&#9;local hitCell = game.Workspace.Terrain:WorldToCellPreferSolid(Mouse.Hit.p)
 &#9;&#9;local cellMat, cellType, cellOrient = game.Workspace.Terrain:GetCell(hitCell.x, hitCell.y, hitCell.z)
-&#9;&#9;cloneInstance = setupFakeTerrainPart(cellMat.Value, cellType.Value, cellOrient.Value)
-
+&#9;&#9;local hasAnyWater, waterForce, waterDirection = game.Workspace.Terrain:GetWaterCell(hitCell.x, hitCell.y, hitCell.z)
+&#9;&#9;cloneInstance = setupFakeTerrainPart(cellMat.Value, cellType.Value, cellOrient.Value, hasAnyWater, waterForce, waterDirection)
 &#9;&#9;isTerrainEyedroppering = true
 &#9;end
 
