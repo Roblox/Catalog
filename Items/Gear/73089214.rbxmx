@@ -349,6 +349,15 @@ function clusterPartsInRegion(startVector, endVector)
 &#9;return false
 end
 
+function waterDirectionRotated(waterDirection)
+&#9;if waterDirection == Enum.WaterDirection.NegX then return Enum.WaterDirection.NegZ end
+&#9;if waterDirection == Enum.WaterDirection.NegZ then return Enum.WaterDirection.X end
+&#9;if waterDirection == Enum.WaterDirection.X then return Enum.WaterDirection.Z end
+&#9;if waterDirection == Enum.WaterDirection.Z then return Enum.WaterDirection.NegX end
+
+&#9;return waterDirection
+end
+
 
 local debounce = false
 function on3dButton1Up(mouse)
@@ -361,7 +370,13 @@ function on3dButton1Up(mouse)
 &#9;&#9;&#9;-- just rotate the terrain cell if we&apos;re selecting on terrain
 &#9;&#9;&#9;local cellPos = game.Workspace.Terrain:WorldToCell(terrainSelectionBox.CFrame.p)
 &#9;&#9;&#9;local cellMat, cellType, cellOrient = game.Workspace.Terrain:GetCell(cellPos.X, cellPos.Y, cellPos.Z)
-&#9;&#9;&#9;game.Workspace.Terrain:SetCell(cellPos.X, cellPos.Y, cellPos.Z, cellMat, cellType, (cellOrient.Value + 1)%4)
+&#9;&#9;&#9;local isWater, waterForce, waterDirection = game.Workspace.Terrain:GetWaterCell(cellPos.X, cellPos.Y, cellPos.Z)
+&#9;&#9;&#9;if isWater then
+&#9;&#9;&#9;&#9;game.Workspace.Terrain:SetWaterCell(cellPos.X, cellPos.Y, cellPos.Z, waterForce, waterDirectionRotated(waterDirection))
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;game.Workspace.Terrain:SetCell(cellPos.X, cellPos.Y, cellPos.Z, cellMat, cellType, (cellOrient.Value + 1)%4)
+&#9;&#9;&#9;end
+
 
 &#9;&#9;&#9;debounce = false
 &#9;&#9;&#9;return
