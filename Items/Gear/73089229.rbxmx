@@ -118,15 +118,19 @@ end
 -- locals
 local Tool = script.Parent
 local RbxStamper = LoadLibrary(&quot;RbxStamper&quot;)
+local RbxGui = LoadLibrary(&quot;RbxGui&quot;)
 local stamperControl = nil
 local lastStampModel = nil
+local currStampId = nil
 
 local recentPartsGui = nil
 local loadingGui = nil
+local waterGui, waterChangedEvent, waterForceAndDirection = nil, nil, {&quot;None&quot;,&quot;NegX&quot;}
 
 local mouse = nil
 local keyCon = nil
 
+local waterMaterial = 17
 local maxNumOfButtons = 20
 local xSpacing = 90
 local ySpacing = xSpacing
@@ -300,11 +304,108 @@ function buildRecentButton(assetId, initTerrainShape)
 &#9;&#9;&#9;else
 &#9;&#9;&#9;&#9;lastStampModel = RbxStamper.GetStampModel(tonumber(assetIdToStamp))
 &#9;&#9;&#9;end
+&#9;&#9;&#9;local clusterMaterial = lastStampModel:FindFirstChild(&quot;ClusterMaterial&quot;,true)
+&#9;&#9;&#9;if clusterMaterial and clusterMaterial:IsA(&quot;Vector3Value&quot;) then
+&#9;&#9;&#9;&#9;waterGui.Visible = (clusterMaterial.Value.X == waterMaterial)
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;currStampId = assetIdToStamp
+
 &#9;&#9;&#9;setupStamper(lastStampModel, mouse)
+&#9;&#9;&#9;if waterGui.Visible then
+&#9;&#9;&#9;&#9;updateWaterInfo()
+&#9;&#9;&#9;end
 &#9;&#9;hideLoadingDialog()
 &#9;end)
 
 &#9;return recentButton
+end
+
+function updateWaterInfo()
+&#9;if stampControl then
+&#9;&#9;stampControl.Destroy()
+&#9;end
+&#9;if stampCon then
+&#9;&#9;stampCon:disconnect()
+&#9;&#9;stampCon = nil
+&#9;end
+
+&#9;showLoadingDialog()
+&#9;&#9;lastStampModel = RbxStamper.GetStampModel(tonumber(currStampId))
+&#9;hideLoadingDialog()
+
+&#9;if lastStampModel.Name == &quot;MegaClusterCube&quot; then
+&#9;&#9;local clusterTag = lastStampModel:FindFirstChild(&quot;ClusterMaterial&quot;)
+&#9;&#9;-- we are going to stamp water, send info to stamper about this
+&#9;&#9;if clusterTag and clusterTag.Value.X == 17 then
+&#9;&#9;&#9;local waterForceTag = Instance.new(&quot;StringValue&quot;,lastStampModel)
+&#9;&#9;&#9;waterForceTag.Name = &quot;WaterForceTag&quot;
+&#9;&#9;&#9;waterForceTag.Value = waterForceAndDirection[1]
+
+&#9;&#9;&#9;local waterForceDirectionTag = Instance.new(&quot;StringValue&quot;,lastStampModel)
+&#9;&#9;&#9;waterForceDirectionTag.Name = &quot;WaterForceDirectionTag&quot;
+&#9;&#9;&#9;waterForceDirectionTag.Value = waterForceAndDirection[2]
+&#9;&#9;end
+&#9;end
+
+&#9;setupStamper(lastStampModel, mouse)
+end
+
+function createWaterGui()
+&#9;local waterForceDirections = {&quot;NegX&quot;,&quot;X&quot;,&quot;NegY&quot;,&quot;Y&quot;,&quot;NegZ&quot;,&quot;Z&quot;}
+&#9;local waterForces = {&quot;None&quot;, &quot;Small&quot;, &quot;Medium&quot;, &quot;Strong&quot;, &quot;Max&quot;}
+
+&#9;local waterForceDirection = &quot;NegX&quot;
+&#9;local waterForce = &quot;None&quot;
+
+&#9;local waterFrame = Instance.new(&quot;Frame&quot;)
+&#9;waterFrame.Name = &quot;WaterFrame&quot;
+&#9;waterFrame.Style = Enum.FrameStyle.RobloxSquare
+&#9;waterFrame.Size = UDim2.new(0,150,0,110)
+&#9;waterFrame.Visible = false
+
+&#9;local waterForceLabel = Instance.new(&quot;TextLabel&quot;)
+&#9;waterForceLabel.Name = &quot;WaterForceLabel&quot;
+&#9;waterForceLabel.BackgroundTransparency = 1
+&#9;waterForceLabel.Size = UDim2.new(1,0,0,12)
+&#9;waterForceLabel.Font = Enum.Font.ArialBold
+&#9;waterForceLabel.FontSize = Enum.FontSize.Size12
+&#9;waterForceLabel.TextColor3 = Color3.new(1,1,1)
+&#9;waterForceLabel.TextXAlignment = Enum.TextXAlignment.Left
+&#9;waterForceLabel.Text = &quot;Water Force&quot;
+&#9;waterForceLabel.Parent = waterFrame
+
+&#9;local waterForceDirLabel = waterForceLabel:Clone()
+&#9;waterForceDirLabel.Name = &quot;WaterForceDirectionLabel&quot;
+&#9;waterForceDirLabel.Text = &quot;Water Force Direction&quot;
+&#9;waterForceDirLabel.Position = UDim2.new(0,0,0,50)
+&#9;waterForceDirLabel.Parent = waterFrame
+
+&#9;local waterTypeChangedEvent = Instance.new(&quot;BindableEvent&quot;,waterFrame)
+&#9;waterTypeChangedEvent.Name = &quot;WaterTypeChangedEvent&quot;
+
+&#9;local waterForceDirectionSelectedFunc = function(newForceDirection)
+&#9;&#9;waterForceDirection = newForceDirection
+&#9;&#9;waterTypeChangedEvent:Fire({waterForce, waterForceDirection})
+&#9;end
+&#9;local waterForceSelectedFunc = function(newForce)
+&#9;&#9;waterForce = newForce
+&#9;&#9;waterTypeChangedEvent:Fire({waterForce, waterForceDirection})
+&#9;end
+
+&#9;local waterForceDirectionDropDown, forceWaterDirectionSelection = RbxGui.CreateDropDownMenu(waterForceDirections, waterForceDirectionSelectedFunc)
+&#9;waterForceDirectionDropDown.Size = UDim2.new(1,0,0,25)
+&#9;waterForceDirectionDropDown.Position = UDim2.new(0,0,1,3)
+&#9;forceWaterDirectionSelection(&quot;NegX&quot;)
+&#9;waterForceDirectionDropDown.Parent = waterForceDirLabel
+
+&#9;local waterForceDropDown, forceWaterForceSelection = RbxGui.CreateDropDownMenu(waterForces, waterForceSelectedFunc)
+&#9;forceWaterForceSelection(&quot;None&quot;)
+&#9;waterForceDropDown.Size = UDim2.new(1,0,0,25)
+&#9;waterForceDropDown.Position = UDim2.new(0,0,1,3)
+&#9;waterForceDropDown.Parent = waterForceLabel
+
+&#9;return waterFrame, waterTypeChangedEvent
 end
 
 function buildGui()
@@ -321,6 +422,14 @@ function buildGui()
 &#9;recentFrame.Parent = recentPartsGui
 &#9;
 &#9;makeLoadingGui(recentPartsGui)
+
+&#9;waterGui, waterChangedEvent = createWaterGui()
+&#9;waterGui.Parent = recentPartsGui
+
+&#9;waterChangedEvent.Event:connect(function(waterTable)
+&#9;&#9;waterForceAndDirection = waterTable
+&#9;&#9;updateWaterInfo()
+&#9;end)
 end
 
 function appendButton(button)
@@ -423,6 +532,7 @@ function onEquipped(newMouse)
 &#9;if not recentPartsGui then
 &#9;&#9;buildGui()
 &#9;end
+&#9;waterGui.Visible = false
 &#9;recentPartsGui.Parent = game.Players.LocalPlayer.PlayerGui
 &#9;hintGui.Parent = game.Players.LocalPlayer.PlayerGui
 
@@ -491,35 +601,22 @@ end
 Tool.Equipped:connect(onEquipped)
 Tool.Unequipped:connect(onUnequipped)
 
-waitForChild(Tool,&quot;RecentAsset&quot;)
-Tool.RecentAsset.Changed:connect(function()
-&#9;if Tool.RecentAsset.Value &gt; 0 then
-&#9;&#9;addRecentPart(Tool.RecentAsset.Value, Tool.RecentTerrainShape.Value)
-&#9;&#9;Tool.RecentAsset.Value = 0
-&#9;&#9;Tool.RecentTerrainShape.Value = -1
-&#9;end
-end)
-
+script.AddRecentPart.OnInvoke = function(assetId, terrainShape)
+&#9;addRecentPart(assetId, terrainShape)
+end
 </ProtectedString>
 			</Properties>
+			<Item class="BindableFunction" referent="RBX3">
+				<Properties>
+					<string name="Name">AddRecentPart</string>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="IntValue" referent="RBX3">
-			<Properties>
-				<string name="Name">RecentAsset</string>
-				<int name="Value">0</int>
-			</Properties>
-		</Item>
-		<Item class="IntValue" referent="RBX4">
-			<Properties>
-				<string name="Name">RecentTerrainShape</string>
-				<int name="Value">-1</int>
-			</Properties>
-		</Item>
-		<Item class="ScreenGui" referent="RBX5">
+		<Item class="ScreenGui" referent="RBX4">
 			<Properties>
 				<string name="Name">RecentHintGui</string>
 			</Properties>
-			<Item class="TextLabel" referent="RBX6">
+			<Item class="TextLabel" referent="RBX5">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Color3 name="BackgroundColor3">4278190080</Color3>
