@@ -1,0 +1,809 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0.25</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">ChimeraPetTool</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=86908017</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+
+local sg
+local frame
+
+local stillEquipped = false
+
+local function onEquippedLocal(mouse)
+&#9;stillEquipped = true
+
+&#9;local vPlayer = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;if vPlayer then
+&#9;&#9;local playerGui = vPlayer:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;&#9;if playerGui and playerGui:FindFirstChild(&quot;PetGui&quot;) == nil then
+&#9;&#9;&#9;sg = Instance.new(&quot;ScreenGui&quot;)
+&#9;&#9;&#9;sg.Name = &quot;PetGui&quot;
+&#9;&#9;&#9;sg.Parent = playerGui
+
+&#9;&#9;&#9;frame = Instance.new(&quot;Frame&quot;)
+&#9;&#9;&#9;frame.Parent = sg
+&#9;&#9;&#9;frame.Size = UDim2.new(0, 220, 0, 30)
+&#9;&#9;&#9;frame.Position = UDim2.new(0.5, -110, 1, -130)
+&#9;&#9;&#9;frame.Style = Enum.FrameStyle.RobloxRound
+
+&#9;&#9;&#9;local genericTextLabel = Instance.new(&quot;TextLabel&quot;)
+&#9;&#9;&#9;genericTextLabel.BackgroundTransparency = 1.0
+&#9;&#9;&#9;genericTextLabel.Size = UDim2.new(1, 0, 1, 0)
+&#9;&#9;&#9;genericTextLabel.Visible = true
+&#9;&#9;&#9;genericTextLabel.ZIndex = 10
+&#9;&#9;&#9;genericTextLabel.FontSize = Enum.FontSize.Size10
+&#9;&#9;&#9;genericTextLabel.Font = Enum.Font.Legacy
+&#9;&#9;&#9;genericTextLabel.TextColor3 = Color3.new(1, 1, 0)
+&#9;&#9;&#9;genericTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+&#9;&#9;&#9;genericTextLabel.TextYAlignment = Enum.TextYAlignment.Top
+&#9;&#9;&#9;genericTextLabel.Parent = frame
+&#9;&#9;&#9;genericTextLabel.Text = &quot;Summon the Chimera!&quot;
+&#9;&#9;end
+&#9;end
+
+&#9;if not mouse then return end
+
+&#9;while stillEquipped do
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;while Tool.Enabled and stillEquipped do
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;while not Tool.Enabled and stillEquipped do
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;end
+end
+
+local function onActivatedLocal()
+&#9;if frame and frame:FindFirstChild(&quot;TextLabel&quot;) then
+&#9;&#9;frame.TextLabel.Text = &quot;Click on a player to target them!&quot;
+&#9;end
+end
+
+local function onUnequippedLocal()
+&#9;if sg then sg:Remove() end
+&#9;stillEquipped = false
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Activated:connect(onActivatedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ChimeraTool</string>
+				<ProtectedString name="Source">local Debris = Game:GetService(&quot;Debris&quot;)
+
+local Tool = script.Parent
+local ToolHandle = Tool.Handle
+
+local summonSound = ToolHandle:FindFirstChild(&quot;Summon&quot;)
+
+local cooldown = 4 -- Seconds until tool can be used again
+local timeToLive = 60 -- Seconds until the pet is destroyed
+local respawnTime = 4 -- Seconds until pet can be re-summoned (only after death)
+
+local myModel
+local myTorso
+local myHumanoid
+
+local pet
+local aiScript
+local animScript
+
+local function summon()
+&#9;if not myTorso or not myHumanoid then return end
+
+&#9;pet = Game:GetService(&quot;InsertService&quot;):LoadAsset(87350670):GetChildren()[1]
+&#9;Debris:AddItem(pet, timeToLive) -- Make sure it will get deleted
+
+&#9;if pet and pet:FindFirstChild(&quot;Humanoid&quot;) and pet.Humanoid.Health &gt; 0 then
+&#9;&#9;pet.Parent = myModel
+
+&#9;&#9;if summonSound then summonSound:Play() end
+
+&#9;&#9;ToolHandle.Transparency = 1.0
+
+&#9;&#9;while pet.Humanoid.Health &lt; 350 do
+&#9;&#9;&#9;pet.Humanoid.Health = 350 -- Health has problems being set directly
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+
+&#9;&#9;-- Clone original aiScript to myModel
+&#9;&#9;local aiScriptOriginal = Tool:FindFirstChild(&quot;ChimeraAi&quot;)
+&#9;&#9;if aiScriptOriginal then
+&#9;&#9;&#9;aiScript = aiScriptOriginal:Clone()
+&#9;&#9;&#9;Debris:AddItem(aiScript, timeToLive)
+&#9;&#9;&#9;aiScript.Parent = myModel
+
+&#9;&#9;&#9;while not aiScript:FindFirstChild(&quot;Pet&quot;) do wait() end
+&#9;&#9;&#9;aiScript.Pet.Value = pet
+
+&#9;&#9;&#9;aiScript.Disabled = false
+&#9;&#9;end
+
+&#9;&#9;-- Clone original animScript to myModel
+&#9;&#9;local animScriptOriginal = Tool:FindFirstChild(&quot;PetAnimation&quot;)
+&#9;&#9;if animScriptOriginal then
+&#9;&#9;&#9;animScript = animScriptOriginal:Clone()
+&#9;&#9;&#9;Debris:AddItem(animScript, timeToLive)
+&#9;&#9;&#9;animScript.Parent = myModel
+&#9;&#9;&#9;animScript.Disabled = false
+&#9;&#9;end
+
+&#9;&#9;-- On pet death, clean up and show the handle
+&#9;&#9;pet.Humanoid.Died:connect(function()
+&#9;&#9;&#9;Debris:AddItem(aiScript, 0)
+&#9;&#9;&#9;Debris:AddItem(aiScript, 0)
+&#9;&#9;&#9;Debris:AddItem(pet, respawnTime)
+&#9;&#9;&#9;wait(respawnTime)
+&#9;&#9;&#9;ToolHandle.Transparency = 0.0
+&#9;&#9;end)
+
+&#9;&#9;-- After timeToLive, show the handle
+&#9;&#9;coroutine.resume(coroutine.create(function()
+&#9;&#9;&#9;wait(timeToLive + 0.1)
+&#9;&#9;&#9;if not pet:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;&#9;ToolHandle.Transparency = 0.0
+&#9;&#9;&#9;end
+&#9;&#9;end))
+
+&#9;&#9;pet:MoveTo(myTorso.Position + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3)))
+&#9;end
+end
+
+local function onActivated()
+&#9;if not Tool.Enabled or not myTorso or not myHumanoid then return end
+
+&#9;Tool.Enabled = false
+
+&#9;if not pet or not pet.Parent then
+&#9;&#9;summon()
+&#9;end
+
+&#9;-- Raycast to click location for ClickTarget setting
+&#9;local target = myHumanoid.TargetPoint
+&#9;local direction = (target - myTorso.Position).unit
+&#9;local hit = Game.Workspace:FindPartOnRay(Ray.new(myTorso.Position, direction * 150), myModel)
+&#9;if hit and pet and pet:FindFirstChild(&quot;ClickTarget&quot;) then
+&#9;&#9;local clickedHumanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if clickedHumanoid and clickedHumanoid.Health &gt; 0 then
+&#9;&#9;&#9;pet.ClickTarget.Value = clickedHumanoid
+&#9;&#9;else
+&#9;&#9;&#9;pet.ClickTarget.Value = nil
+&#9;&#9;end
+&#9;end
+
+&#9;wait(cooldown)
+
+&#9;Tool.Enabled = true
+end
+
+local function onEquipped()
+&#9;myModel = Tool.Parent
+&#9;myTorso = myModel:FindFirstChild(&quot;Torso&quot;)
+&#9;myHumanoid = myModel:FindFirstChild(&quot;Humanoid&quot;)
+end
+
+local function onUnequipped()
+&#9;if pet then pet:Destroy() end
+&#9;if aiScript then aiScript:Destroy() end
+&#9;if summonSound then summonSound:Stop() end
+&#9;ToolHandle.Transparency = 0.0
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.600000143</X>
+					<Y>0.699999928</Y>
+					<Z>0.700000286</Z>
+					<R00>-1</R00>
+					<R01>0</R01>
+					<R02>-0</R02>
+					<R10>-0</R10>
+					<R11>1</R11>
+					<R12>-0</R12>
+					<R20>-0</R20>
+					<R21>0</R21>
+					<R22>-1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.720001161</X>
+					<Y>1.32000113</Y>
+					<Z>1.32000184</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Summon</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=87348009</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX5">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id= 86899426</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.5</X>
+						<Y>0.5</Y>
+						<Z>0.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=86592923</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ChimeraAi</string>
+				<ProtectedString name="Source">local Debris = Game:GetService(&quot;Debris&quot;)
+
+-- Constants --
+
+local offset = Vector3.new(5, 0, 5) -- Distance from player
+local timeBetweenShots = 0.25 -- Seconds between each poison shot (between animations)
+local chaseTime = 10 -- How long to chase a target before giving up
+local chanceToBurn = 0.5 -- % chance that biting will also burn the target
+local chanceToPoison = 0.5 -- % chance that biting will also poison the target
+
+-- Script Children --
+
+local myModel = script.Parent
+local myHumanoid = myModel:FindFirstChild(&quot;Humanoid&quot;)
+
+local ballScript = script:FindFirstChild(&quot;FireBall&quot;)
+local burnScript = ballScript:FindFirstChild(&quot;Burning&quot;)
+
+local blobScript = script:FindFirstChild(&quot;PoisonBlob&quot;)
+local poisonScript = blobScript:FindFirstChild(&quot;Poisoned&quot;)
+
+local roarAnimation = script:FindFirstChild(&quot;QuadHeadUp&quot;)
+local tailAnimation = script:FindFirstChild(&quot;TailShoot&quot;)
+
+while not script:FindFirstChild(&quot;Pet&quot;) or not script.Pet.Value do wait() end
+local pet = script.Pet.Value
+
+while not pet:FindFirstChild(&quot;ClickTarget&quot;) do wait() end
+local targetHumanoid = pet.ClickTarget.Value
+
+while not myModel:FindFirstChild(&quot;PetAnimation&quot;) do wait() end
+local petAnimScript = myModel.PetAnimation
+
+-- Chimera Variables --
+
+while not pet:FindFirstChild(&quot;Humanoid&quot;) or not pet:FindFirstChild(&quot;Head&quot;) or not pet:FindFirstChild(&quot;Tail&quot;) do wait() end
+
+local petHumanoid = pet.Humanoid
+local petHead = pet.Head
+local petTail = pet.Tail
+
+local roarSound = petHead:FindFirstChild(&quot;FieryRoar&quot;)
+local chompSound = petHead:FindFirstChild(&quot;Chomp&quot;)
+local snakeSound = petTail:FindFirstChild(&quot;Snake&quot;)
+local shootSound = petTail:FindFirstChild(&quot;Whoosh&quot;)
+
+local fireBall = Instance.new(&quot;Part&quot;) do
+&#9;fireBall.Name = &quot;FireBall&quot;
+&#9;fireBall.Transparency = 1
+&#9;fireBall.CanCollide = false
+&#9;fireBall.TopSurface = Enum.SurfaceType.Smooth
+&#9;fireBall.BottomSurface = Enum.SurfaceType.Smooth
+&#9;fireBall.Size = Vector3.new(4, 4, 4)
+&#9;Instance.new(&quot;BodyForce&quot;, fireBall).force = Vector3.new(0, fireBall:GetMass() * 196.2, 0) -- Antigravity
+&#9;Instance.new(&quot;Fire&quot;, fireBall) -- Fire it up
+&#9;local scriptClone = ballScript:Clone()
+&#9;scriptClone.Parent = fireBall
+&#9;scriptClone:FindFirstChild(&quot;Creator&quot;).Value = pet
+end
+
+local poisonBlob = Instance.new(&quot;Part&quot;) do
+&#9;poisonBlob.Name = &quot;PoisonBlob&quot;
+&#9;poisonBlob.BrickColor = BrickColor.new(&quot;Lime green&quot;)
+&#9;poisonBlob.CanCollide = false
+&#9;poisonBlob.TopSurface = Enum.SurfaceType.Smooth
+&#9;poisonBlob.BottomSurface = Enum.SurfaceType.Smooth
+&#9;poisonBlob.Size = Vector3.new(0.25, 0.66, 0.25)
+&#9;Instance.new(&quot;BodyForce&quot;, poisonBlob).force = Vector3.new(0, poisonBlob:GetMass() * 196.2, 0) -- Antigravity
+&#9;local mesh = Instance.new(&quot;SpecialMesh&quot;, poisonBlob)
+&#9;mesh.MeshId = &quot;http://www.roblox.com/asset/?id=87142124&quot;
+&#9;mesh.Scale = Vector3.new(0.2, 0.4, 0.2)
+&#9;local scriptClone = blobScript:Clone()
+&#9;scriptClone.Parent = poisonBlob
+&#9;scriptClone:FindFirstChild(&quot;Creator&quot;).Value = pet
+end
+
+local petMode = 0
+local startTime = 0
+
+-- Functions --
+
+local function stop()
+&#9;targetHumanoid = myHumanoid
+&#9;petMode = 0
+end
+
+-- Function that updates the target (when the player clicks)
+pet.ClickTarget.Changed:connect(function(newValue)
+&#9;if newValue and newValue:IsA(&quot;Humanoid&quot;) then
+&#9;&#9;targetHumanoid = newValue
+&#9;&#9;if petMode == 0 then
+&#9;&#9;&#9;petMode = math.random(2, 3) -- (1 is not a targeted attack)
+&#9;&#9;&#9;startTime = time()
+&#9;&#9;end
+&#9;else
+&#9;&#9;stop()
+&#9;end
+end)
+
+-- Returns the closest living Humanoid to position who isn&apos;t in excludeList
+local function findClosestHumanoid(position, excludeList) -- (Vector3, table)
+&#9;if not position then print(&quot;Need a Vector3 position&quot;) return nil end
+
+&#9;-- Change list values to keys so we can use indexing
+&#9;local excludeSet = {}
+&#9;if excludeList and type(excludeList) == &quot;table&quot; then
+&#9;&#9;for _, l in ipairs(excludeList) do
+&#9;&#9;&#9;excludeSet[l] = true
+&#9;&#9;end
+&#9;end
+
+&#9;-- Search through workspace children
+&#9;local list = Game.Workspace:getChildren()
+&#9;local closestHumanoid = nil
+&#9;for i = 1, #list do
+&#9;&#9;item = list[i]
+&#9;&#9;if (item and item:FindFirstChild(&quot;Humanoid&quot;) and item.Humanoid.Health &gt; 0 and not excludeSet[item.Humanoid])
+&#9;&#9;and (not closestHumanoid or (item.Humanoid.Torso.Position - position).magnitude &lt; (closestHumanoid.Torso.Position - position).magnitude) then
+&#9;&#9;&#9;closestHumanoid = item.Humanoid
+&#9;&#9;end
+&#9;end
+&#9;return closestHumanoid --NOTE: Can be nil
+end
+
+-- Coroutine to decide when to automatically start
+coroutine.resume(coroutine.create(function()
+&#9;wait(4)
+&#9;while pet do
+&#9;&#9;if petMode == 0 and math.random() &lt; 0.33 then
+&#9;&#9;&#9;targetHumanoid = findClosestHumanoid(myHumanoid.Torso.Position, {myHumanoid, petHumanoid})
+&#9;&#9;&#9;if targetHumanoid then
+&#9;&#9;&#9;&#9;petMode = math.random(3)
+&#9;&#9;&#9;else -- No other living humanoids nearby
+&#9;&#9;&#9;&#9;petMode = 1
+&#9;&#9;&#9;end
+&#9;&#9;&#9;startTime = time()
+&#9;&#9;end
+&#9;&#9;wait(6)
+&#9;end
+end))
+
+-- Clones theScript to the target if it doesn&apos;t already exist there
+local function cloneScriptToTarget(theScript, target)
+&#9;if theScript and target and not target:FindFirstChild(theScript.Name) then
+&#9;&#9;local scriptClone = theScript:Clone()
+&#9;&#9;scriptClone.Parent = target
+&#9;&#9;scriptClone.Disabled = false
+&#9;end
+end
+
+-- Rotates the pet to face the target
+local function faceTarget()
+&#9;if petHumanoid and petHumanoid.Torso then
+&#9;&#9;local position = petHumanoid.Torso.Position
+&#9;&#9;local lookPoint = targetHumanoid.Torso.Position
+&#9;&#9;petHumanoid.Torso.CFrame = CFrame.new(position, Vector3.new(lookPoint.x, position.y, lookPoint.z)) -- Face target but stay horizontal
+&#9;end
+end
+
+-- Tells petAnimScript to try to play the animation
+local function sendAnimation(animation)
+&#9;if petAnimScript and petAnimScript:FindFirstChild(&quot;Current&quot;) then
+&#9;&#9;petAnimScript.Current.Value = animation --NOTE: Allowed to be nil
+&#9;end
+end
+
+-- Main Pet AI Loop
+
+while true do
+&#9;if not myHumanoid or not myHumanoid.Torso or not petHumanoid or not petHumanoid.Torso or not petHead then break end
+
+&#9;-- Jumping over obstacles
+&#9;local hit = Game.Workspace:FindPartOnRay(Ray.new(petHead.Position, petHead.CFrame.lookVector * 3.0), nil)
+&#9;if hit and hit.Parent ~= myModel then
+&#9;&#9;petHumanoid.Jump = true
+&#9;end
+
+&#9;if petMode == 0 then -- Default: Follow the player
+&#9;&#9;petHumanoid:MoveTo(myHumanoid.Torso.Position + offset, myHumanoid.Torso)
+&#9;elseif petMode == 1 then -- Mode 1: Fire-breathing roar!
+&#9;&#9;petHumanoid:MoveTo(petHumanoid.Torso.Position, petHumanoid.Torso) -- Stand still (reset possible move target)
+&#9;&#9;if roarAnimation then sendAnimation(roarAnimation) end
+&#9;&#9;wait(0.25) -- Animating: Head up
+&#9;&#9;if roarSound then roarSound:Play() end
+&#9;&#9;for i = -0.20, 0.25, 0.05 do -- 10 times
+&#9;&#9;&#9;local ballClone = fireBall:Clone()
+&#9;&#9;&#9;ballClone.Parent = Workspace
+&#9;&#9;&#9;ballClone.CFrame = CFrame.new(petHead.Position)
+&#9;&#9;&#9;ballClone.FireBall.Disabled = false -- Ball armed
+&#9;&#9;&#9;ballClone.Velocity = (petHead.CFrame * CFrame.Angles(0, i * math.pi, 0)).lookVector * 30
+&#9;&#9;&#9;Debris:AddItem(ballClone, 2.5)
+&#9;&#9;&#9;wait(0.25) -- Animation is holding still for 2.5 seconds
+&#9;&#9;end
+&#9;&#9;wait(0.25) -- Animating: Head down
+&#9;&#9;sendAnimation(nil)
+&#9;&#9;stop()
+&#9;elseif petMode == 2 then -- Mode 2: Shoot poison at target
+&#9;&#9;if targetHumanoid and targetHumanoid.Torso and targetHumanoid.Health &gt; 0 then
+&#9;&#9;&#9;petHumanoid:MoveTo(petHumanoid.Torso.Position, petHumanoid.Torso) -- Stand still (reset possible move target)
+&#9;&#9;&#9;if snakeSound then snakeSound:Play() end
+&#9;&#9;&#9;do -- Follow target until sound finishes (Sound:IsPlaying is buggy)
+&#9;&#9;&#9;&#9;local startTime = time()
+&#9;&#9;&#9;&#9;repeat
+&#9;&#9;&#9;&#9;&#9;faceTarget()
+&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;until time() - startTime &gt; 1.5
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local totalShots = math.random(3, 6)
+&#9;&#9;&#9;for i = 1, totalShots do
+&#9;&#9;&#9;&#9;if targetHumanoid and targetHumanoid.Health &lt;= 0 then break end
+&#9;&#9;&#9;&#9;if tailAnimation then sendAnimation(tailAnimation) end
+&#9;&#9;&#9;&#9;wait(0.5) -- Animating: Pull back
+&#9;&#9;&#9;&#9;if shootSound then shootSound:Play() end
+&#9;&#9;&#9;&#9;wait(0.1) -- Animating: Fire
+&#9;&#9;&#9;&#9;if petTail and petHead and targetHumanoid and targetHumanoid.Health &gt; 0 and targetHumanoid.Torso then
+&#9;&#9;&#9;&#9;&#9;local blobClone = poisonBlob:Clone()
+&#9;&#9;&#9;&#9;&#9;blobClone.Parent = Workspace
+&#9;&#9;&#9;&#9;&#9;local spawnPoint = petHead.Position
+&#9;&#9;&#9;&#9;&#9;blobClone.CFrame = CFrame.new(spawnPoint, targetHumanoid.Torso.Position) -- Facing is off
+&#9;&#9;&#9;&#9;&#9;blobClone.CFrame = blobClone.CFrame - blobClone.CFrame.p -- Remove position from CFrame
+&#9;&#9;&#9;&#9;&#9;blobClone.CFrame = blobClone.CFrame + spawnPoint -- Add new position to CFrame
+&#9;&#9;&#9;&#9;&#9;blobClone.CFrame = blobClone.CFrame * CFrame.Angles(-math.pi / 2, 0, 0) -- Facing fixed
+&#9;&#9;&#9;&#9;&#9;blobClone.PoisonBlob.Disabled = false -- Blob armed
+&#9;&#9;&#9;&#9;&#9;blobClone.Velocity = (targetHumanoid.Torso.Position - petTail.Position).unit * 100
+&#9;&#9;&#9;&#9;&#9;Debris:AddItem(blobClone, 2)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;wait(0.15) -- Animating: Reset 
+&#9;&#9;&#9;&#9;sendAnimation(nil)
+&#9;&#9;&#9;&#9;wait(timeBetweenShots)
+&#9;&#9;&#9;&#9;faceTarget()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;stop()
+&#9;elseif petMode == 3 then -- Mode 3: Chase and bite the target
+&#9;&#9;if targetHumanoid and targetHumanoid.Torso and targetHumanoid.Health &gt; 0 then
+&#9;&#9;&#9;if time() - startTime &gt; chaseTime then -- Give up trying to reach target
+&#9;&#9;&#9;&#9;stop()
+&#9;&#9;&#9;elseif (targetHumanoid.Torso.Position - petHumanoid.Torso.Position).magnitude &gt; offset.magnitude then -- Get up close
+&#9;&#9;&#9;&#9;petHumanoid:MoveTo(targetHumanoid.Torso.Position, targetHumanoid.Torso)
+&#9;&#9;&#9;else -- We&apos;ve reached the player, bite &apos;em
+&#9;&#9;&#9;&#9;petHumanoid.Jump = true
+&#9;&#9;&#9;&#9;wait(0.25) -- Imagine the fear in their eyes at this moment
+&#9;&#9;&#9;&#9;if targetHumanoid then
+&#9;&#9;&#9;&#9;&#9;if chompSound then chompSound:Play() end
+&#9;&#9;&#9;&#9;&#9;targetHumanoid:TakeDamage(math.random(30, 60))
+&#9;&#9;&#9;&#9;&#9;if math.random() &gt; 0.5 then -- Equal chance for burn-check or poison-check
+&#9;&#9;&#9;&#9;&#9;&#9;if math.random() &lt;= chanceToBurn then cloneScriptToTarget(burnScript, targetHumanoid) end
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;if math.random() &lt;= chanceToPoison then cloneScriptToTarget(poisonScript, targetHumanoid) end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;stop()
+&#9;&#9;&#9;end
+&#9;&#9;else
+&#9;&#9;&#9;stop()
+&#9;&#9;end
+&#9;end
+
+&#9;wait()
+end
+</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX7">
+				<Properties>
+					<string name="Name">Pet</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX8">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">FireBall</string>
+					<ProtectedString name="Source">local Ball = script.Parent
+local BurnScript = script.Burning
+local Creator = script.Creator.Value
+
+-- OnTouched: Do damage, move BurnScript, and destroy Ball
+Ball.Touched:connect(function(otherPart)
+&#9;if otherPart and otherPart.Parent and otherPart.Parent:IsA(&quot;Model&quot;) then
+&#9;&#9;local otherModel = otherPart.Parent
+&#9;&#9;if otherModel ~= Creator and not otherModel:IsAncestorOf(Creator) then
+&#9;&#9;&#9;local humanoid = otherModel:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(10)
+&#9;&#9;&#9;&#9;BurnScript.Parent = humanoid
+&#9;&#9;&#9;&#9;BurnScript.Disabled = false
+&#9;&#9;&#9;&#9;Ball:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+				<Item class="Script" referent="RBX9">
+					<Properties>
+						<bool name="Disabled">true</bool>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">Burning</string>
+						<ProtectedString name="Source">-- Burn the humanoid this script is attached to
+local victim = script.Parent
+if victim and victim:IsA(&quot;Humanoid&quot;) then
+&#9;local fire = Instance.new(&quot;Fire&quot;, victim.Torso)
+&#9;for i = 1, 8 do
+&#9;&#9;if not fire or not fire.Enabled or not victim or victim.Health &lt;= 0 then break end
+&#9;&#9;victim:TakeDamage(2)
+&#9;&#9;wait(1.5)
+&#9;end
+&#9;if fire then fire:Destroy() end
+end
+script:Destroy()
+</ProtectedString>
+					</Properties>
+				</Item>
+				<Item class="ObjectValue" referent="RBX10">
+					<Properties>
+						<string name="Name">Creator</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Script" referent="RBX11">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">PoisonBlob</string>
+					<ProtectedString name="Source">local Blob = script.Parent
+local PoisonScript = script.Poisoned
+local Creator = script.Creator.Value
+
+-- OnTouched: Do damage, move PoisonScript, and destroy Blob
+Blob.Touched:connect(function(otherPart)
+&#9;if otherPart and otherPart.Parent and otherPart.Parent:IsA(&quot;Model&quot;) then
+&#9;&#9;local otherModel = otherPart.Parent
+&#9;&#9;if otherModel ~= Creator and not otherModel:IsAncestorOf(Creator) then
+&#9;&#9;&#9;local humanoid = otherModel:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(5)
+&#9;&#9;&#9;&#9;PoisonScript.Parent = humanoid
+&#9;&#9;&#9;&#9;PoisonScript.Disabled = false
+&#9;&#9;&#9;&#9;Blob:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+				<Item class="Script" referent="RBX12">
+					<Properties>
+						<bool name="Disabled">true</bool>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">Poisoned</string>
+						<ProtectedString name="Source">-- Poison the humanoid this script is attached to
+local victim = script.Parent
+if victim and victim:IsA(&quot;Humanoid&quot;) then
+&#9;local victimHead = victim.Parent:FindFirstChild(&quot;Head&quot;)
+&#9;local originalColor = victimHead.BrickColor
+&#9;for i = 1, 5 do
+&#9;&#9;if not victimHead or not victim or victim.Health &lt;= 0 then break end
+&#9;&#9;victimHead.BrickColor = BrickColor.new(&quot;Lime green&quot;)
+&#9;&#9;victim:TakeDamage(5)
+&#9;&#9;wait(1.5)
+&#9;&#9;if not victimHead then break end
+&#9;&#9;victimHead.BrickColor = originalColor
+&#9;&#9;wait(1.5)
+&#9;end
+end
+script:Destroy()
+</ProtectedString>
+					</Properties>
+				</Item>
+				<Item class="ObjectValue" referent="RBX13">
+					<Properties>
+						<string name="Name">Creator</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Animation" referent="RBX14">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86889844</url></Content>
+					<string name="Name">QuadHeadUp</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX15">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86895433</url></Content>
+					<string name="Name">TailShoot</string>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX16">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">PetAnimation</string>
+				<ProtectedString name="Source">while not script:FindFirstChild(&quot;Current&quot;) do wait() end
+
+local myModel = script.Parent
+
+-- Safely wait for petHumanoid
+local petHumanoid = nil
+if myModel then
+&#9;local aiScript = myModel:FindFirstChild(&quot;ChimeraAi&quot;)
+&#9;if aiScript then
+&#9;&#9;while not aiScript:FindFirstChild(&quot;Pet&quot;) do wait() end
+&#9;&#9;local pet = aiScript.Pet.Value
+&#9;&#9;if pet then
+&#9;&#9;&#9;petHumanoid = pet:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;end
+&#9;end
+end
+
+-- When Current is changed, tell petHumanoid to play the Animation there
+if petHumanoid then
+&#9;script.Current.Changed:connect(function(newValue)
+&#9;&#9;if petHumanoid and newValue and newValue:IsA(&quot;Animation&quot;) then
+&#9;&#9;&#9;local animationTrack = petHumanoid:LoadAnimation(newValue)
+&#9;&#9;&#9;if animationTrack then animationTrack:Play() end
+&#9;&#9;end
+&#9;end)
+end
+</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX17">
+				<Properties>
+					<string name="Name">Current</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX18">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>0.653436184</X>
+					<Y>1.36655605</Y>
+					<Z>2.18105221</Z>
+					<R00>0.763325691</R00>
+					<R01>-0.209890887</R01>
+					<R02>0.610966265</R02>
+					<R10>-0</R10>
+					<R11>0.945747972</R11>
+					<R12>0.324901462</R12>
+					<R20>-0.646013975</R20>
+					<R21>-0.248005629</R21>
+					<R22>0.721913576</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.600000143</X>
+					<Y>0.699999928</Y>
+					<Z>0.700000286</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
