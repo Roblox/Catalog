@@ -1,0 +1,445 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">DegearingMine</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88794975</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MineScript</string>
+				<ProtectedString name="Source">------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+--clean us up after 4 mins or so if we haven&apos;t been tripped
+game.Debris:AddItem(script.Parent, 60*4)
+
+----------------------------------------
+
+local Mine = script.Parent
+local MineScript = WaitFor(Mine).MineScript()
+local Creator = WaitFor(MineScript).creator().Value
+local ExplodeSound = WaitFor(Mine).ExplodeSound()
+local Character = Creator.Character
+
+---------------------------------------
+
+local Handling = false
+Mine.Touched:connect(function(part)
+&#9;--ignore collisions with firer&apos;s stuff
+&#9;if Character and part:IsDescendantOf(Character) then return end
+
+&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;if not hum then return end
+
+&#9;if Handling then return end
+&#9;Handling = true
+
+&#9;--end Mine
+&#9;Mine.Anchored = true
+&#9;Mine.CanCollide = false
+&#9;Mine.Transparency = 1
+
+&#9;--do explode
+&#9;local BlastPart = Instance.new(&apos;Part&apos;, game.Workspace)
+&#9;BlastPart.FormFactor = &apos;Custom&apos;
+&#9;BlastPart.Size = Vector3.new(1,1,1)
+&#9;BlastPart.Transparency = 0.3
+&#9;BlastPart.Anchored = true
+&#9;BlastPart.CanCollide = false
+&#9;BlastPart.CFrame = CFrame.new(Mine.Position)*CFrame.Angles(-math.pi/2,0,0)
+&#9;local BlastCFrame = CFrame.new(Mine.Position)*CFrame.Angles(-math.pi/2,0,0)
+&#9;local BlastMesh = Instance.new(&apos;SpecialMesh&apos;, BlastPart)
+&#9;BlastMesh.MeshId = &apos;http://www.roblox.com/asset/?id=1080954&apos;
+&#9;BlastMesh.TextureId = &apos;http://www.roblox.com/asset/?id=37856148&apos;
+&#9;game.Debris:AddItem(BlastPart, 10)
+
+&#9;--damage the humanoid
+&#9;local tag = MineScript.creator:Clone()
+&#9;game.Debris:AddItem(tag, 2)
+&#9;tag.Parent = hum
+&#9;--
+&#9;hum:TakeDamage(60)
+&#9;ExplodeSound:Play()
+&#9;--and kill their gear if they&apos;re holding any
+&#9;local ToolToDestroy = nil
+&#9;for _, ch in pairs(hum.Parent:GetChildren()) do
+&#9;&#9;if ch:IsA(&apos;Tool&apos;) or ch:IsA(&apos;HopperBin&apos;) then
+&#9;&#9;&#9;ToolToDestroy = ch
+&#9;&#9;end
+&#9;end
+&#9;hum:UnequipTools()
+&#9;Delay(0, function()
+&#9;&#9;if ToolToDestroy then ToolToDestroy:Destroy() end
+&#9;end)
+
+&#9;--display a blast
+&#9;for i = 0, 1, 0.2 do
+&#9;&#9;wait()
+&#9;&#9;BlastPart.CFrame = CFrame.new(0, math.sqrt(i)*5,0)*BlastCFrame
+&#9;&#9;BlastMesh.Scale = Vector3.new(2 + 2*i, 2 + 2*i, 2 + math.sqrt(i)*12)
+&#9;end
+&#9;for i = 0, 1, 0.1 do
+&#9;&#9;wait()
+&#9;&#9;BlastPart.CFrame = CFrame.new(0,5 - i*i*2,0)*BlastCFrame
+&#9;&#9;BlastMesh.Scale = Vector3.new(4 + i*1, 4 + i*1, 14 - i*i*4)
+&#9;&#9;BlastPart.Transparency = 0.3 + 0.7*i*i
+&#9;end
+&#9;BlastPart:Destroy()
+
+&#9;wait(1) --let sound wind down for a bit
+
+&#9;--and finally get rid of us
+&#9;Mine:Destroy()
+end)
+
+</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX2">
+				<Properties>
+					<string name="Name">creator</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.100000001</X>
+					<Y>0.5</Y>
+					<Z>0.100000001</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.79999995</X>
+					<Y>1</Y>
+					<Z>1.79999995</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">ThrowSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//clickfast.wav</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">ExplodeSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//Rocket shot.wav</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX6">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=88794987</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2</X>
+						<Y>2</Y>
+						<Z>2</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88794958 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="NumberValue" referent="RBX7">
+			<Properties>
+				<string name="Name">NextFireAt</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><null></null></Content>
+				<string name="Name">HoldAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><null></null></Content>
+				<string name="Name">ThrowAnim</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX10">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalMain</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Character;
+local Player;
+
+local RELOAD_TIME = 4
+
+------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+local Handle = WaitFor(Tool).Handle()
+local NextFireAt = WaitFor(Tool).NextFireAt()
+local ThrowSound = WaitFor(Handle).ThrowSound()
+
+local MineScript = WaitFor(Tool).MineScript()
+
+local function Now()
+&#9;return game.Workspace.DistributedGameTime
+end
+
+---------------------------------------------
+
+local Velocity = 120
+function computeLaunchAngle(dx, dy, grav)&#9;
+&#9;-- This function is nasty or what? :P 
+&#9;-- There are ways to solve launch angle of a projectile given a point in 3D space 
+&#9;-- This one solves for tan(theta) 
+&#9;&#9;
+&#9;-- Simplify the distance formula of a projectile 
+&#9;local g = math.abs(grav)
+&#9;local inRoot = (Velocity * Velocity * Velocity * Velocity) - (g * ((g * dx * dx) + (2 * dy * Velocity * Velocity)))
+&#9;if inRoot &lt;= 0 then
+&#9;&#9;return 0.25 * math.pi
+&#9;end
+&#9;local root = math.sqrt(inRoot)
+&#9;local inATan1 = ((Velocity * Velocity) + root) / (g*dx)
+
+&#9;local inATan2 = ((Velocity * Velocity) - root) / (g*dx)
+&#9;local a1 = math.atan(inATan1)
+&#9;local a2 = math.atan(inATan2)
+&#9;if a1 &lt; a2 then return a1 end
+&#9;return a2
+end
+
+---------------------------------------------
+
+Tool.Equipped:connect(function(mouse)
+&#9;Character = Tool.Parent
+&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+
+&#9;--setup first anim / cursor cycle
+&#9;if Now() &gt; NextFireAt.Value then
+&#9;&#9;Handle.Transparency = 0
+&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
+&#9;else
+&#9;&#9;Handle.Transparency = 1
+&#9;&#9;Delay(NextFireAt.Value - Now(), function()
+&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
+&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;end)
+&#9;end
+
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;--we track the reload time like this so that the player can&apos;t fire faster with
+&#9;&#9;--rapid dis / re-equipping, which will actually be common usage with this gear.
+&#9;&#9;if Now() &gt; NextFireAt.Value then
+
+&#9;&#9;&#9;--find where to place the mine
+&#9;&#9;&#9;local function getPartsRec(tb, o)
+&#9;&#9;&#9;&#9;for _, ch in pairs(o:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;if ch:IsA(&apos;Part&apos;) then tb[#tb+1] = ch end
+&#9;&#9;&#9;&#9;&#9;getPartsRec(tb, ch)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return tb
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local ignore = getPartsRec({}, Character)
+&#9;&#9;&#9;local ray = Ray.new(Handle.Position, Vector3.new(0,-999,0))
+&#9;&#9;&#9;local hit, at = game.Workspace:FindPartOnRayWithIgnoreList(ray, ignore)
+&#9;&#9;&#9;while hit and (not hit.CanCollide or (hit.Parent or game):FindFirstChild(&apos;Humanoid&apos;)) do
+&#9;&#9;&#9;&#9;ignore[#ignore+1] = hit
+&#9;&#9;&#9;&#9;hit, at = game.Workspace:FindPartOnRayWithIgnoreList(ray, ignore)
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;--if we hit somewhere, place the mine there
+&#9;&#9;&#9;if hit then
+&#9;&#9;&#9;&#9;NextFireAt.Value = Now() + RELOAD_TIME
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;local mine = Handle:Clone()
+&#9;&#9;&#9;&#9;mine.CFrame = CFrame.new(at + Vector3.new(0,0.4,0))
+&#9;&#9;&#9;&#9;mine.Anchored = true
+&#9;&#9;&#9;&#9;mine.CanCollide = false
+&#9;&#9;&#9;&#9;local sc = MineScript:Clone()
+&#9;&#9;&#9;&#9;sc.Parent = mine
+&#9;&#9;&#9;&#9;sc.Disabled = false
+&#9;&#9;&#9;&#9;sc.creator.Value = Player
+&#9;&#9;&#9;&#9;mine.Parent = game.Workspace
+
+&#9;&#9;&#9;&#9;--play sound 
+&#9;&#9;&#9;&#9;ThrowSound:Play()
+&#9;&#9;&#9;&#9;local animReq = Instance.new(&apos;StringValue&apos;)
+&#9;&#9;&#9;&#9;animReq.Name = &apos;toolanim&apos;
+&#9;&#9;&#9;&#9;animReq.Value = &apos;Slash&apos;
+&#9;&#9;&#9;&#9;animReq.Parent = Tool
+
+&#9;&#9;&#9;&#9;--reload
+&#9;&#9;&#9;&#9;Handle.Transparency = 1
+&#9;&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
+&#9;&#9;&#9;&#9;wait(RELOAD_TIME)
+&#9;&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;if ThrowSound then
+&#9;&#9;ThrowSound:Stop()
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX11">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>2.01803088</X>
+					<Y>2.09579158</Y>
+					<Z>1.95222509</Z>
+					<R00>0.694659173</R00>
+					<R01>-0.369409621</R01>
+					<R02>0.617239952</R02>
+					<R10>1.49011612e-008</R10>
+					<R11>0.858065426</R11>
+					<R12>0.513540387</R12>
+					<R20>-0.719339013</R20>
+					<R21>-0.356735528</R21>
+					<R22>0.596063018</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0.100000024</X>
+					<Y>0.5</Y>
+					<Z>0.100000024</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
