@@ -1,0 +1,482 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">StunGrenade</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88794911</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalMain</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Character;
+local Player;
+
+local RELOAD_TIME = 2
+
+------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+local Handle = WaitFor(Tool).Handle()
+local NextFireAt = WaitFor(Tool).NextFireAt()
+local ThrowSound = WaitFor(Handle).ThrowSound()
+local ExplodeSound = WaitFor(Handle).ExplodeSound()
+
+local GrenadeScript = WaitFor(Tool).GrenadeScript()
+
+local function Now()
+&#9;return game.Workspace.DistributedGameTime
+end
+
+---------------------------------------------
+
+local Velocity = 120
+function computeLaunchAngle(dx, dy, grav)&#9;
+&#9;-- This function is nasty or what? :P 
+&#9;-- There are ways to solve launch angle of a projectile given a point in 3D space 
+&#9;-- This one solves for tan(theta) 
+&#9;&#9;
+&#9;-- Simplify the distance formula of a projectile 
+&#9;local g = math.abs(grav)
+&#9;local inRoot = (Velocity * Velocity * Velocity * Velocity) - (g * ((g * dx * dx) + (2 * dy * Velocity * Velocity)))
+&#9;if inRoot &lt;= 0 then
+&#9;&#9;return 0.25 * math.pi
+&#9;end
+&#9;local root = math.sqrt(inRoot)
+&#9;local inATan1 = ((Velocity * Velocity) + root) / (g*dx)
+
+&#9;local inATan2 = ((Velocity * Velocity) - root) / (g*dx)
+&#9;local a1 = math.atan(inATan1)
+&#9;local a2 = math.atan(inATan2)
+&#9;if a1 &lt; a2 then return a1 end
+&#9;return a2
+end
+
+---------------------------------------------
+
+local HoldAnim, ThrowAnim;
+
+Tool.Equipped:connect(function(mouse)
+&#9;Character = Tool.Parent
+&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+
+&#9;local HoldAnimSrc = WaitFor(Tool).HoldAnim()
+&#9;HoldAnimSrc.AnimationId = &apos;http://www.roblox.com/asset/?id=88743592&apos;
+&#9;local ThrowAnimSrc = WaitFor(Tool).ThrowAnim()
+&#9;ThrowAnimSrc.AnimationId = &apos;http://www.roblox.com/asset/?id=88743566&apos;
+
+&#9;HoldAnim = Character.Humanoid:LoadAnimation(HoldAnimSrc)
+&#9;ThrowAnim = Character.Humanoid:LoadAnimation(ThrowAnimSrc)
+
+&#9;--setup first anim / cursor cycle
+&#9;if Now() &gt; NextFireAt.Value then
+&#9;&#9;Handle.Transparency = 0
+&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
+&#9;&#9;HoldAnim:Play()
+&#9;else
+&#9;&#9;Handle.Transparency = 1
+&#9;&#9;Delay(NextFireAt.Value - Now(), function()
+&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
+&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;&#9;HoldAnim:Play()
+&#9;&#9;end)
+&#9;end
+
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;--we track the reload time like this so that the player can&apos;t fire faster with
+&#9;&#9;--rapid dis / re-equipping, which will actually be common usage with this gear.
+&#9;&#9;if Now() &gt; NextFireAt.Value then
+&#9;&#9;&#9;NextFireAt.Value = Now() + RELOAD_TIME
+&#9;&#9;&#9;--
+&#9;&#9;&#9;local gr = Instance.new(&apos;Part&apos;)
+&#9;&#9;&#9;gr.TopSurface = &apos;Smooth&apos;
+&#9;&#9;&#9;gr.BottomSurface = &apos;Smooth&apos;
+&#9;&#9;&#9;gr.FormFactor = &apos;Custom&apos;
+&#9;&#9;&#9;gr.Size = Vector3.new(1,1,1)
+&#9;&#9;&#9;gr.CFrame = Handle.CFrame
+&#9;&#9;&#9;ExplodeSound:Clone().Parent = gr
+&#9;&#9;&#9;local mesh = Instance.new(&apos;SpecialMesh&apos;, gr)
+&#9;&#9;&#9;mesh.MeshId = &apos;http://www.roblox.com/asset/?id=88794862&apos;
+&#9;&#9;&#9;mesh.TextureId = &apos;http://www.roblox.com/asset/?id=88794893&apos;
+&#9;&#9;&#9;mesh.Scale = Vector3.new(4,3,4)
+&#9;&#9;&#9;local sc = GrenadeScript:Clone()
+&#9;&#9;&#9;sc.Parent = gr
+&#9;&#9;&#9;sc.Disabled = false
+&#9;&#9;&#9;WaitFor(sc).creator().Value = Player
+
+&#9;&#9;&#9;--calc velocity
+&#9;&#9;&#9;local toTarget = mouse.Hit.p - gr.Position
+&#9;&#9;&#9;local dy = toTarget.y
+&#9;&#9;&#9;toTarget = Vector3.new(toTarget.x, 0, toTarget.z)
+&#9;&#9;&#9;local dx = toTarget.magnitude
+&#9;&#9;&#9;toTarget = toTarget.unit
+
+&#9;&#9;&#9;Velocity = math.min(120, 40 + dx)
+
+&#9;&#9;&#9;local theta = computeLaunchAngle(dx, dy, 196.2)
+
+&#9;&#9;&#9;local vY = math.sin(theta)*Velocity
+&#9;&#9;&#9;local vX = toTarget.x * math.cos(theta) * Velocity
+&#9;&#9;&#9;local vZ = toTarget.z * math.cos(theta) * Velocity
+
+&#9;&#9;&#9;gr.CanCollide = false
+&#9;&#9;&#9;Delay(0.1, function()
+&#9;&#9;&#9;&#9;gr.CanCollide = true
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;gr.Velocity = Vector3.new(vX, vY, vZ)
+&#9;&#9;&#9;gr.Parent = game.Workspace
+
+&#9;&#9;&#9;--play sound / anim
+&#9;&#9;&#9;ThrowSound:Play()
+&#9;&#9;&#9;HoldAnim:Stop(0)
+&#9;&#9;&#9;ThrowAnim:Play(0,1,1)
+
+&#9;&#9;&#9;--reload
+&#9;&#9;&#9;Handle.Transparency = 1
+&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
+&#9;&#9;&#9;wait(RELOAD_TIME)
+&#9;&#9;&#9;HoldAnim:Play()
+&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;if ThrowSound then
+&#9;&#9;ThrowSound:Stop()
+&#9;end
+&#9;if ThrowAnim then
+&#9;&#9;ThrowAnim:Stop()
+&#9;end
+&#9;if HoldAnim then
+&#9;&#9;HoldAnim:Stop()
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.5</X>
+					<Y>0.5</Y>
+					<Z>-0.5</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Sound" referent="RBX3">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">ThrowSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=88794862</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>4</X>
+						<Y>3</Y>
+						<Z>4</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88794893 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">ExplodeSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/collide.wav</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">GrenadeScript</string>
+				<ProtectedString name="Source">------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+game.Debris:AddItem(script.Parent, 30)
+
+----------------------------------------
+
+local Grenade = script.Parent
+local GrenadeScript = WaitFor(Grenade).GrenadeScript()
+local Creator = WaitFor(GrenadeScript).creator().Value
+local ExplodeSound = WaitFor(Grenade).ExplodeSound()
+local Character = Creator.Character
+
+---------------------------------------
+
+local Handling = false
+Grenade.Touched:connect(function(part)
+&#9;--ignore collisions with firer&apos;s stuff
+&#9;if Character and part:IsDescendantOf(Character) then return end
+&#9;if Handling then return end
+&#9;Handling = true
+
+&#9;--wait a second, this is a grenade so it won&apos;t explode on contact
+&#9;wait(0.1)
+
+&#9;--end grenade
+&#9;Grenade.Anchored = true
+&#9;Grenade.CanCollide = false
+&#9;Grenade.Transparency = 1
+
+&#9;--play soud
+&#9;ExplodeSound:Play()
+
+&#9;--do explode
+&#9;local BlastPart = Instance.new(&apos;Part&apos;, game.Workspace)
+&#9;BlastPart.FormFactor = &apos;Custom&apos;
+&#9;BlastPart.Size = Vector3.new(1,1,1)
+&#9;BlastPart.Transparency = 0.3
+&#9;BlastPart.Anchored = true
+&#9;BlastPart.CanCollide = false
+&#9;BlastPart.CFrame = CFrame.new(Grenade.Position)*CFrame.Angles(-math.pi/2,0,0)
+&#9;local BlastCFrame = CFrame.new(Grenade.Position)*CFrame.Angles(-math.pi/2,0,0)
+&#9;local BlastMesh = Instance.new(&apos;SpecialMesh&apos;, BlastPart)
+&#9;BlastMesh.MeshId = &apos;http://www.roblox.com/asset/?id=1080954&apos;
+&#9;BlastMesh.TextureId = &apos;http://www.roblox.com/asset/?id=37856148&apos;
+&#9;game.Debris:AddItem(BlastPart, 10)
+
+&#9;Delay(7*0.03, function()
+&#9;&#9;local Explosion = Instance.new(&apos;Explosion&apos;)
+&#9;&#9;Explosion.BlastPressure = 0
+&#9;&#9;Explosion.BlastRadius = 12
+&#9;&#9;Explosion.Position = Grenade.Position
+&#9;&#9;--
+&#9;&#9;local HitHumanoidMap = {}
+&#9;&#9;Explosion.Hit:connect(function(part, rad)
+&#9;&#9;&#9;if Character and part:IsDescendantOf(Character) then return end
+&#9;&#9;&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;if hum and hum.Parent:FindFirstChild(&apos;Torso&apos;) and not HitHumanoidMap[hum] then 
+&#9;&#9;&#9;&#9;HitHumanoidMap[hum] = true
+&#9;&#9;&#9;&#9;hum.Sit = true
+&#9;&#9;&#9;&#9;local tag = GrenadeScript.creator:Clone()
+&#9;&#9;&#9;&#9;tag.Parent = hum
+&#9;&#9;&#9;&#9;game.Debris:AddItem(tag, 2)
+&#9;&#9;&#9;&#9;hum:TakeDamage(20)
+&#9;&#9;&#9;&#9;local twist = Instance.new(&apos;BodyAngularVelocity&apos;, hum.Parent.Torso)
+&#9;&#9;&#9;&#9;twist.angularvelocity = Vector3.new(10,10,10)
+&#9;&#9;&#9;&#9;local throw = Instance.new(&apos;BodyVelocity&apos;, hum.Parent.Torso)
+&#9;&#9;&#9;&#9;throw.maxForce = Vector3.new(10000,10000,10000)
+&#9;&#9;&#9;&#9;throw.velocity = (hum.Parent.Torso.Position - Grenade.Position).unit * 40
+&#9;&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;&#9;twist:Destroy()
+&#9;&#9;&#9;&#9;throw:Destroy()
+&#9;&#9;&#9;&#9;hum.Sit = false
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;--
+&#9;&#9;Explosion.Parent = game.Workspace
+&#9;end)
+&#9;for i = 0, 1, 0.2 do
+&#9;&#9;wait()
+&#9;&#9;BlastPart.CFrame = CFrame.new(0, math.sqrt(i)*10,0)*BlastCFrame
+&#9;&#9;BlastMesh.Scale = Vector3.new(4 + 4*i, 4 + 4*i, 4 + math.sqrt(i)*24)
+&#9;end
+&#9;for i = 0, 1, 0.1 do
+&#9;&#9;wait()
+&#9;&#9;BlastPart.CFrame = CFrame.new(0,10 - i*i*4,0)*BlastCFrame
+&#9;&#9;BlastMesh.Scale = Vector3.new(8 + i*2, 8 + i*2, 28 - i*i*8)
+&#9;&#9;BlastPart.Transparency = 0.3 + 0.7*i*i
+&#9;end
+&#9;BlastPart:Destroy()
+
+&#9;wait(0.5)
+
+&#9;--and finally get rid of us
+&#9;Grenade:Destroy()
+end)
+
+</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX7">
+				<Properties>
+					<string name="Name">creator</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="NumberValue" referent="RBX8">
+			<Properties>
+				<string name="Name">NextFireAt</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><null></null></Content>
+				<string name="Name">ThrowAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX10">
+			<Properties>
+				<Content name="AnimationId"><null></null></Content>
+				<string name="Name">HoldAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX11">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-2.05782199</X>
+					<Y>0.805639207</Y>
+					<Z>-0.510875821</Z>
+					<R00>-0.00698125735</R00>
+					<R01>0.192516819</R01>
+					<R02>-0.981268883</R02>
+					<R10>-0</R10>
+					<R11>0.981292784</R11>
+					<R12>0.192521513</R12>
+					<R20>0.999975622</R20>
+					<R21>0.00134404225</R21>
+					<R22>-0.00685065752</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.5</X>
+					<Y>0.5</Y>
+					<Z>-0.5</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
