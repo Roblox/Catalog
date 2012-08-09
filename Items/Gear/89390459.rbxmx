@@ -1,0 +1,467 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0.100000009</X>
+				<Y>-0.299999982</Y>
+				<Z>0.699999988</Z>
+				<R00>1.00000012</R00>
+				<R01>0</R01>
+				<R02>-4.65661287e-010</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>-4.65661287e-010</R20>
+				<R21>0</R21>
+				<R22>0.99999994</R22>
+			</CoordinateFrame>
+			<string name="Name">Plasma Gun</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88546751</url></Content>
+			<string name="ToolTip">Plasma Gun</string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Stickmasterluke
+
+
+sp=script.Parent
+
+
+firerate=.7
+power=150
+floats=true
+rate=1/30
+
+debris=game:GetService(&quot;Debris&quot;)
+equipped=false
+check=true
+
+function waitfor(parent,name)
+&#9;while parent:FindFirstChild(name)==nil do
+&#9;&#9;wait()
+&#9;end
+&#9;return parent:FindFirstChild(name)
+end
+
+handle=waitfor(sp,&quot;Handle&quot;)
+local storeweld=waitfor(sp.Handle,&quot;ShotWeld&quot;)
+
+function removejetpacks()
+&#9;local plr=game.Players.LocalPlayer
+&#9;if plr and plr.Character then
+&#9;&#9;local t=plr.Character:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;if t~=nil then
+&#9;&#9;&#9;for i,v in ipairs(t:GetChildren()) do
+&#9;&#9;&#9;&#9;if v.Name==&quot;Effect&quot; then
+&#9;&#9;&#9;&#9;&#9;v:remove()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function makejetpack()
+&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;if t~=nil and t:FindFirstChild(&quot;Effect&quot;)==nil then
+&#9;&#9;local cf=CFrame.new(0,1,0)*CFrame.Angles(0,math.pi,0)
+&#9;&#9;local jp=Instance.new(&quot;Part&quot;)
+&#9;&#9;jp.Name=&quot;Effect&quot;
+&#9;&#9;jp.formFactor=&quot;Custom&quot;
+&#9;&#9;jp.CanCollide=false
+&#9;&#9;jp.Size=Vector3.new(3,3,3)
+&#9;&#9;jp.CFrame=t.CFrame*cf
+&#9;&#9;local m=Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;m.MeshId=&quot;http://www.roblox.com/asset/?id=88654099&quot;
+&#9;&#9;m.TextureId=&quot;http://www.roblox.com/asset/?id=88655181&quot;
+&#9;&#9;m.Scale=Vector3.new(1.5,1.5,1.5)
+&#9;&#9;m.Parent=jp
+&#9;&#9;local w=Instance.new(&quot;Motor&quot;)
+&#9;&#9;w.Part0=t
+&#9;&#9;w.Part1=jp
+&#9;&#9;w.C0=cf
+&#9;&#9;w.Parent=jp
+&#9;&#9;local bf=Instance.new(&quot;BodyForce&quot;)
+&#9;&#9;bf.force=Vector3.new(0,(196.2*jp:GetMass())+100,0)
+&#9;&#9;bf.Parent=jp
+&#9;&#9;jp.Parent=t
+&#9;end
+end
+
+function onEquipped(mouse)
+&#9;if mouse~=nil then
+&#9;&#9;equipped=true
+&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;mouse.Button1Down:connect(function()
+&#9;&#9;&#9;local hu=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;if check and hu and hu.Health&gt;0 and t then
+&#9;&#9;&#9;&#9;check=false
+&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;&#9;&#9;if sp:FindFirstChild(&quot;Effect&quot;)~=nil then
+&#9;&#9;&#9;&#9;&#9;sp.Effect.Transparency=1
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;Sound&quot;)
+&#9;&#9;&#9;&#9;if sound~=nil then
+&#9;&#9;&#9;&#9;&#9;sound:Play()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local shoulder=t:FindFirstChild(&quot;Right Shoulder&quot;)
+&#9;&#9;&#9;&#9;if shoulder~=nil then
+&#9;&#9;&#9;&#9;&#9;shoulder.CurrentAngle=2
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local p=Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;&#9;p.Name=&quot;Effect&quot;
+&#9;&#9;&#9;&#9;p.BrickColor=BrickColor.new(&quot;Medium stone grey&quot;)
+&#9;&#9;&#9;&#9;p.CanCollide=false
+&#9;&#9;&#9;&#9;p.TopSurface=&quot;Smooth&quot;
+&#9;&#9;&#9;&#9;p.BottomSurface=&quot;Smooth&quot;
+&#9;&#9;&#9;&#9;p.Shape=&quot;Ball&quot;
+&#9;&#9;&#9;&#9;p.formFactor=&quot;Symmetric&quot;
+&#9;&#9;&#9;&#9;p.Size=Vector3.new(1,1,1)
+&#9;&#9;&#9;&#9;local vec=(mouse.Hit.p-t.Position).unit
+&#9;&#9;&#9;&#9;p.CFrame=CFrame.new(t.Position,t.Position+vec)*CFrame.new(0,0,-5)
+&#9;&#9;&#9;&#9;p.Velocity=(vec*power)+Vector3.new(0,power*.15,0)
+
+&#9;&#9;&#9;&#9;local m=Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;&#9;&#9;m.MeshId=&quot;http://www.roblox.com/asset/?id=88545836&quot;
+&#9;&#9;&#9;&#9;m.TextureId=&quot;http://www.roblox.com/asset/?id=88545941&quot;
+&#9;&#9;&#9;&#9;m.Scale=Vector3.new(2.5,2.5,2.5)
+&#9;&#9;&#9;&#9;m.Parent=p
+
+&#9;&#9;&#9;&#9;local f=Instance.new(&quot;Fire&quot;)
+&#9;&#9;&#9;&#9;f.Color=Color3.new(0,1,1)
+&#9;&#9;&#9;&#9;f.SecondaryColor=Color3.new(1,1,1)
+&#9;&#9;&#9;&#9;f.Parent=p
+
+&#9;&#9;&#9;&#9;local c=Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;&#9;c.Name=&quot;creator&quot;
+&#9;&#9;&#9;&#9;c.Value=game.Players.LocalPlayer
+&#9;&#9;&#9;&#9;c.Parent=p
+
+&#9;&#9;&#9;&#9;local s=script.Script:clone()
+&#9;&#9;&#9;&#9;s.Parent=p
+&#9;&#9;&#9;&#9;s.Disabled=false
+
+&#9;&#9;&#9;&#9;if floats then
+&#9;&#9;&#9;&#9;&#9;local bf=Instance.new(&quot;BodyForce&quot;)
+&#9;&#9;&#9;&#9;&#9;bf.force=Vector3.new(0,196.2*p:GetMass(),0)
+&#9;&#9;&#9;&#9;&#9;bf.Parent=p
+&#9;&#9;&#9;&#9;&#9;p.Velocity=(vec*power)
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;debris:AddItem(p,5)
+&#9;&#9;&#9;&#9;p.Parent=game.Workspace
+&#9;&#9;&#9;&#9;wait(firerate)
+&#9;&#9;&#9;&#9;if sp:FindFirstChild(&quot;Effect&quot;)~=nil then
+&#9;&#9;&#9;&#9;&#9;sp.Effect.Transparency=0
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;&#9;&#9;check=true
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;makejetpack()
+&#9;end
+&#9;if storeweld~=nil then
+&#9;&#9;storeweld.Parent=sp.Handle
+&#9;end
+end
+
+function onUnequipped()
+&#9;equipped=false
+&#9;removejetpacks()
+end
+
+sp.Equipped:connect(onEquipped)
+sp.Unequipped:connect(onUnequipped)
+
+
+
+
+
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Script</string>
+					<ProtectedString name="Source">--Made by Stickmasterluke
+
+
+sp=script.Parent
+
+damage=15
+
+sp.Touched:connect(function(hit)
+&#9;if hit and hit~=nil and sp~=nil then
+&#9;&#9;local ct=sp:FindFirstChild(&quot;creator&quot;)
+&#9;&#9;if ct.Value~=nil and ct.Value.Character~=nil then
+&#9;&#9;&#9;if hit.Parent~=ct.Value.Character and hit.Name~=&quot;Handle&quot; and hit.Name~=&quot;Effect&quot; and hit.Name~=&quot;Handle2&quot; then
+&#9;&#9;&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;local t=hit.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;damage=damage
+&#9;&#9;&#9;&#9;if h~=nil and t~=nil and h.Health&gt;0 then
+&#9;&#9;&#9;&#9;&#9;for i,v in ipairs(h:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Name==&quot;creator&quot; then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:remove()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;ct:clone().Parent=h
+&#9;&#9;&#9;&#9;&#9;h:TakeDamage(damage)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if sp and sp~=nil and sp.Parent~=nil then
+&#9;&#9;&#9;&#9;&#9;sp:remove()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">21</int>
+				<CoordinateFrame name="CFrame">
+					<X>-22.3148384</X>
+					<Y>4.69730282</Y>
+					<Z>-40.280304</Z>
+					<R00>0.851145208</R00>
+					<R01>-0.000417547621</R01>
+					<R02>0.524929941</R02>
+					<R10>-3.74802738e-007</R10>
+					<R11>0.999999642</R11>
+					<R12>0.000796042266</R12>
+					<R20>-0.524930179</R20>
+					<R21>-0.000677744334</R21>
+					<R22>0.85114485</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.699999988</X>
+					<Y>1.39999998</Y>
+					<Z>3</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=88545739</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2.5</X>
+						<Y>2.5</Y>
+						<Z>2.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88545941</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Sound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=84318179</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="Motor" referent="RBX6">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0</X>
+						<Y>-0.200000003</Y>
+						<Z>-1.39999998</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<float name="DesiredAngle">0</float>
+					<float name="MaxVelocity">0</float>
+					<string name="Name">ShotWeld</string>
+					<Ref name="Part0">RBX3</Ref>
+					<Ref name="Part1">RBX7</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX7">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-23.0496559</X>
+					<Y>4.49618864</Y>
+					<Z>-41.4717712</Z>
+					<R00>0.851145208</R00>
+					<R01>-0.000417547621</R01>
+					<R02>0.524929941</R02>
+					<R10>-3.74802738e-007</R10>
+					<R11>0.999999642</R11>
+					<R12>0.000796042266</R12>
+					<R20>-0.524930179</R20>
+					<R21>-0.000677744334</R21>
+					<R22>0.85114485</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Effect</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.200000003</X>
+					<Y>0.200000003</Y>
+					<Z>0.200000003</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX8">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=88545836</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2.5</X>
+						<Y>2.5</Y>
+						<Z>2.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88545941</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
