@@ -1,0 +1,572 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">GhostPet</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=89472132</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">GhostScript</string>
+				<ProtectedString name="Source">local RbxUtility = LoadLibrary(&apos;RbxUtility&apos;)
+local Create = RbxUtility.Create
+
+------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+local creator = WaitFor(script).creator()
+local Ghost = script.Parent
+repeat wait() until creator.Value
+local Player = creator.Value
+local Character = Player.Character
+local Humanoid = Character.Humanoid
+local Alive = true
+
+local Health = Create&apos;NumberValue&apos;{
+&#9;Parent = Ghost;
+&#9;Name = &apos;Health&apos;;
+&#9;Value = 150;
+}
+
+----------------------------------------
+
+--change alive and remove us soon when health reaches 0
+Health.Changed:connect(function()
+&#9;if Health.Value &lt;= 0 then
+&#9;&#9;Alive = false
+&#9;&#9;--if the humanoid is dead, explode will handle us
+&#9;&#9;if Humanoid.Health &lt;= 0 then
+&#9;&#9;&#9;--nothing to do
+&#9;&#9;else
+&#9;&#9;&#9;--otherwise, play a dissapearing anim here
+&#9;&#9;&#9;for i = 0, 1, 0.05 do
+&#9;&#9;&#9;&#9;Ghost.Torso.Transparency = i
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Ghost:Destroy()
+&#9;&#9;end
+&#9;end
+end)
+
+
+--kill us on character died
+Character.Humanoid.Died:connect(function()
+&#9;--kill us
+&#9;local damageToDo = Health.Value
+&#9;Health.Value = 0
+
+&#9;--explode
+&#9;local ringAt = Character.Torso.Position
+&#9;local ring = Create&apos;Part&apos;{
+&#9;&#9;Parent = Ghost;
+&#9;&#9;Transparency = 1;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;Size = Vector3.new(1,1,1);
+&#9;&#9;Anchored = true;
+&#9;&#9;CanCollide = false;
+&#9;&#9;--
+&#9;&#9;Create&apos;Decal&apos;{
+&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=11187115&apos;;
+&#9;&#9;&#9;Face = &apos;Top&apos;;
+&#9;&#9;&#9;Shiny = 0;
+&#9;&#9;&#9;Name = &apos;DecalA&apos;;
+&#9;&#9;};
+&#9;&#9;--
+&#9;&#9;Create&apos;Decal&apos;{
+&#9;&#9;&#9;Texture = &apos;http://www.roblox.com/asset/?id=11187115&apos;;
+&#9;&#9;&#9;Face = &apos;Bottom&apos;;
+&#9;&#9;&#9;Shiny = 0;
+&#9;&#9;&#9;Name = &apos;DecalB&apos;;
+&#9;&#9;};
+&#9;}
+
+&#9;--expand
+&#9;for i = 0, 1, 0.05 do
+&#9;&#9;ring.Size = Vector3.new(i*i*22*2, 0, i*i*22*2)
+&#9;&#9;ring.CFrame = CFrame.new(ringAt)
+&#9;&#9;ring.DecalA.Transparency = i
+&#9;&#9;ring.DecalB.Transparency = i
+&#9;&#9;Ghost.Torso.Mesh.Scale = Vector3.new(1+i*2, 1+i*2, 1+i*2)
+&#9;&#9;Ghost.Torso.Transparency = 0.2 + 0.8*i
+&#9;&#9;wait()
+&#9;end
+
+&#9;--do damage
+&#9;local allParts = game.Workspace:FindPartsInRegion3(Region3.new(ringAt - Vector3.new(15, 5, 15),
+&#9;                                                               ringAt + Vector3.new(15, 5, 15)))
+&#9;local didDamageTo = {[Humanoid] = true}
+&#9;for _, part in pairs(allParts) do
+&#9;&#9;if (part.Position - ringAt).magnitude &lt; 15 then
+&#9;&#9;&#9;if part.Parent and part.Parent:FindFirstChild(&apos;Humanoid&apos;) then
+&#9;&#9;&#9;&#9;local hum = part.Parent:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;&#9;if not didDamageTo[hum] then
+&#9;&#9;&#9;&#9;&#9;didDamageTo[hum] = true
+&#9;&#9;&#9;&#9;&#9;hum:TakeDamage(hum.Health)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;--get rid of ring and ghost
+&#9;ring:Destroy()
+&#9;Ghost:Destroy()
+end)
+
+
+--tracking of &quot;healing bits&quot; to show when the ghost is healing you
+local HealingBitList = {}
+local ToBeHealed = 0
+function AddHealingBit(health)
+&#9;ToBeHealed = ToBeHealed + health
+&#9;local bit = {}
+&#9;bit.Part = Create&apos;Part&apos;{
+&#9;&#9;Name = &apos;HealingBit&apos;;
+&#9;&#9;Parent = Ghost;
+&#9;&#9;Shape = &apos;Ball&apos;;
+&#9;&#9;Anchored = true;
+&#9;&#9;CanCollide = false;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;Size = Vector3.new(1,1,1);
+&#9;&#9;BrickColor = BrickColor.new(28);
+&#9;&#9;Transparency = 0.2;
+&#9;}
+&#9;bit.Direction = Vector3.new(math.random(-10,10), math.random(-10,10), math.random(-10,10)).unit
+&#9;bit.From = Ghost.Torso.Position
+&#9;bit.Timestamp = tick()
+&#9;bit.Health = health
+&#9;HealingBitList[bit] = true
+end
+Spawn(function()
+&#9;local LastTime = tick()
+&#9;while true do
+&#9;&#9;wait()
+&#9;&#9;local Now = tick()
+&#9;&#9;local dt = LastTime-Now
+&#9;&#9;LastTime = Now
+&#9;&#9;--
+&#9;&#9;local torsoPos = Character.Torso.Position
+&#9;&#9;for bit, _ in pairs(HealingBitList) do
+&#9;&#9;&#9;local elapsed = (Now - bit.Timestamp)/1.0
+&#9;&#9;&#9;if elapsed &gt; 1 then
+&#9;&#9;&#9;&#9;--done, heal player and remove bit
+&#9;&#9;&#9;&#9;HealingBitList[bit] = nil
+&#9;&#9;&#9;&#9;bit.Part:Destroy()
+&#9;&#9;&#9;&#9;Humanoid.Health = Humanoid.Health + bit.Health
+&#9;&#9;&#9;&#9;ToBeHealed = ToBeHealed - bit.Health
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;local toTorso = torsoPos - bit.From
+&#9;&#9;&#9;&#9;bit.Part.CFrame = CFrame.new(bit.From + toTorso*elapsed + bit.Direction*6*(1-elapsed))
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+
+--set up the healing loop
+Spawn(function()
+&#9;local LastHealedAt = tick()
+&#9;while true do
+&#9;&#9;wait()
+&#9;&#9;if not Alive then break end
+&#9;&#9;--
+&#9;&#9;if Health.Value &gt; 0 and Humanoid.Health + ToBeHealed &lt; Humanoid.MaxHealth then
+&#9;&#9;&#9;if tick()-LastHealedAt &gt; 0.5 then
+&#9;&#9;&#9;&#9;local toHeal = math.min(Humanoid.MaxHealth-Humanoid.Health, Health.Value, 5)
+&#9;&#9;&#9;&#9;Health.Value = Health.Value - toHeal
+&#9;&#9;&#9;&#9;AddHealingBit(toHeal)
+&#9;&#9;&#9;&#9;LastHealedAt = tick()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+
+--create the Ghost
+Create&apos;Part&apos;{
+&#9;Name = &apos;Torso&apos;;
+&#9;Parent = Ghost;
+&#9;Shape = &apos;Ball&apos;;
+&#9;Size = Vector3.new(2,2,2);
+&#9;Transparency = 0.2;
+&#9;CanCollide = false;
+&#9;CFrame = CFrame.new(Character.Torso.Position + Vector3.new(1,1,1),
+&#9;&#9;                Character.Torso.Position + Vector3.new(1,1,1) + Character.Torso.CFrame.lookVector);
+&#9;--
+&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=89391602&apos;;
+&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=89391636&apos;;
+&#9;&#9;VertexColor = Vector3.new(0.8, 1.0, 0.8);
+&#9;&#9;Scale = Vector3.new(0.8,0.8,0.8);
+&#9;&#9;Name = &apos;Mesh&apos;;
+&#9;};
+&#9;--
+&#9;Create&apos;BodyPosition&apos;{
+&#9;&#9;Name = &apos;Float&apos;;
+&#9;&#9;position = Character.Torso.Position + Vector3.new(1,1,1);
+&#9;};
+&#9;Create&apos;BodyGyro&apos;{
+&#9;&#9;Name = &apos;Rotate&apos;;
+&#9;&#9;cframe = Character.Torso.CFrame;
+&#9;&#9;maxTorque = Vector3.new(40000, 20000, 40000);
+&#9;};
+}
+
+
+--set up ghost following you
+Spawn(function()
+&#9;while Alive do
+&#9;&#9;local torsoAt = Character.Torso.Position
+&#9;&#9;local toGhost = Ghost.Torso.Position - torsoAt
+&#9;&#9;toGhost = Vector3.new(toGhost.x, 0, toGhost.z).unit
+&#9;&#9;local ghostAt = torsoAt + toGhost*3 + Vector3.new(0, 2 + 1*math.sin(tick()), 0)
+&#9;&#9;--
+&#9;&#9;Ghost.Torso.Float.position = ghostAt
+&#9;&#9;Ghost.Torso.Rotate.cframe = Character.Torso.CFrame
+&#9;&#9;--
+&#9;&#9;wait()
+&#9;end
+end)
+
+
+--and finally set up a veiw of our health
+local GhostLocal = WaitFor(script).GhostLocal()
+WaitFor(GhostLocal).Target()
+--
+local sc = GhostLocal:Clone()
+sc.Target.Value = Ghost
+sc.Parent = Character
+sc.Disabled = false</ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBX2">
+				<Properties>
+					<string name="Name">creator</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="LocalScript" referent="RBX3">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">GhostLocal</string>
+					<ProtectedString name="Source">local RbxUtility = LoadLibrary(&apos;RbxUtility&apos;)
+local Create = RbxUtility.Create
+
+------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+local GhostValue = WaitFor(script).Target()
+while not GhostValue.Value do wait() end
+
+local Ghost = GhostValue.Value
+local GhostTorso = WaitFor(Ghost).Torso()
+local GhostHealth = WaitFor(Ghost).Health()
+
+-----------------------------------------
+
+local creator = WaitFor(WaitFor(Ghost).GhostScript()).creator()
+while not creator.Value do wait() end
+local Player = creator.Value
+local PlayerGui = WaitFor(Player).PlayerGui()
+
+------------------------------------------
+
+--bail out if the ghost already died
+if Player.Character.Humanoid.Health &lt;= 0 or GhostHealth.Value &lt;= 0 then
+&#9;script:Destroy()
+&#9;return
+end
+
+------------------------------------------
+
+local Gui = Create&apos;BillboardGui&apos;{
+&#9;Parent = PlayerGui;
+&#9;Adornee = GhostTorso;
+&#9;Size = UDim2.new(2,0,1,0);
+&#9;--
+&#9;Create&apos;TextLabel&apos;{
+&#9;&#9;Name = &apos;HealthLabel&apos;;
+&#9;&#9;Font = &apos;ArialBold&apos;;
+&#9;&#9;TextScaled = true;
+&#9;&#9;Text = &quot;150/150&quot;;
+&#9;&#9;BackgroundTransparency = 1;
+&#9;&#9;TextColor3 = Color3.new(0, 0.8, 0);
+&#9;&#9;TextStrokeColor3 = Color3.new(0, 0.3, 0);
+&#9;&#9;TextStrokeTransparency = 0.2;
+&#9;&#9;Size = UDim2.new(1,0,1,0);
+&#9;};
+}
+
+-----------------------------------------
+
+Ghost.Changed:connect(function(pr)
+&#9;if pr == &apos;Parent&apos; and not Ghost.Parent then
+&#9;&#9;--destroy us
+&#9;&#9;Gui:Destroy()
+&#9;&#9;script:Destroy()
+&#9;end
+end)
+
+------------------------------------------
+
+GhostHealth.Changed:connect(function()
+&#9;Gui.HealthLabel.Text = &quot;&quot;..math.floor(GhostHealth.Value)..&quot;/150&quot;
+end)</ProtectedString>
+				</Properties>
+				<Item class="ObjectValue" referent="RBX4">
+					<Properties>
+						<string name="Name">Target</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalMain</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Character = nil
+local Player = nil
+local Equipped = false
+
+------------------------------------------
+local function WaitFor(parent)
+&#9;return setmetatable({}, {
+&#9;&#9;__index = function(tb, child)
+&#9;&#9;&#9;return function()
+&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
+&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;end;
+&#9;})
+end
+----------------------------------------
+
+local CurrentGhost = nil
+
+---------------------------------------
+
+Tool.Equipped:connect(function(mouse)
+&#9;--setup
+&#9;Character = Tool.Parent
+&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+&#9;Equipped = true
+
+&#9;--get the currentghost value
+&#9;if Player:FindFirstChild(&apos;CurrentGhost&apos;) then
+&#9;&#9;CurrentGhost = Player:FindFirstChild(&apos;CurrentGhost&apos;)
+&#9;else
+&#9;&#9;CurrentGhost = Instance.new(&apos;ObjectValue&apos;, Player)
+&#9;&#9;CurrentGhost.Name = &apos;CurrentGhost&apos;
+&#9;end
+
+&#9;--set mouse icon
+&#9;if not CurrentGhost.Value then
+&#9;&#9;mouse.Icon = &apos;http://www.roblox.com/asset/?id=89375832&apos;
+&#9;end
+
+&#9;--events
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;--can&apos;t use if I have a ghost
+&#9;&#9;if CurrentGhost.Value then return end
+
+&#9;&#9;--create a ghost
+&#9;&#9;local m = Instance.new(&quot;Model&quot;, Character)
+&#9;&#9;m.Name = &quot;Ghost Pet&quot;
+&#9;&#9;local sc = Tool.GhostScript:Clone()
+&#9;&#9;sc.Disabled = false
+&#9;&#9;sc.Parent = m
+&#9;&#9;sc.creator.Value = Player
+&#9;&#9;CurrentGhost.Value = m
+
+&#9;&#9;--delete this tool
+&#9;&#9;game.Debris:AddItem(Tool, 0.1)
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;--teardown
+&#9;Equipped = false
+&#9;--
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX6">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>22</X>
+					<Y>92.3000031</Y>
+					<Z>27</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0.200000003</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>2</X>
+					<Y>2</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX7">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=89391602</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.5</X>
+						<Y>0.5</Y>
+						<Z>0.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=89391636</url></Content>
+					<Vector3 name="VertexColor">
+						<X>0.800000012</X>
+						<Y>1</Y>
+						<Z>0.800000012</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX8">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>25.1761684</X>
+					<Y>92.4527817</Y>
+					<Z>23.4275246</Z>
+					<R00>-0.747343421</R00>
+					<R01>-0.0212249309</R01>
+					<R02>0.664098918</R02>
+					<R10>-0</R10>
+					<R11>0.999489665</R11>
+					<R12>0.0319441892</R12>
+					<R20>-0.66443795</R20>
+					<R21>0.0238732789</R21>
+					<R22>-0.746962011</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>22</X>
+					<Y>92.3000031</Y>
+					<Z>27</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
