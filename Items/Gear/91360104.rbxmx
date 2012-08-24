@@ -1,0 +1,849 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-0.0999999717</X>
+				<Y>-0.5</Y>
+				<Z>0.199999988</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>4.37113883e-008</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>-1.91068547e-015</R12>
+				<R20>-4.37113883e-008</R20>
+				<R21>1.91068547e-015</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">BearHugger</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90706265</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Firescript</string>
+				<ProtectedString name="Source">-- Made by Stickmasterluke
+ -- edited by fusroblox
+
+local Tool = script.Parent
+local check = true
+
+local GunDamage = 10 -- Base output damage per shot.
+local FireRate = .5 -- How often the weapon can fire.
+local Automatic = false -- hold down to continue firing
+local Range = 250 -- Max distance that the weapon can fire.
+local Spread = 1 -- The bigger the spread, the more inaccurate the shots will be.
+local ClipSize = 2 -- Shots in a clip
+local ReloadTime = 6 -- Time it takes to reload the tool.
+local StartingClips = 10 -- If you want infinit clips, remove the IntValue named &quot;Clips&quot; from the tool.
+local SegmentLength = 40 -- How long the shot segments are, or the speed of the shot.
+local FadeDelayTime = 1/30
+
+
+local BarrelPos = CFrame.new(0, 0, - 1.2) -- L, F, U
+local Rate = 1/30
+local Intangibles = {&quot;Shock&quot;, &quot;Bolt&quot;, &quot;Bullet&quot;, &quot;Plasma&quot;, &quot;Effect&quot;, &quot;Laser&quot;, &quot;Handle&quot;, &quot;Effects&quot;, &quot;Effect&quot;, &quot;Flash&quot;}
+local Colors = {BrickColor.new(&quot;Bright red&quot;), BrickColor.new(&quot;Really red&quot;), BrickColor.new(&quot;Dusty Rose&quot;), BrickColor.new(&quot;Medium red&quot;)}
+local FlashColors = {&quot;Medium red&quot;, &quot;Dusty Rose&quot;, &quot;Bright red&quot;, &quot;Really red&quot;}
+
+local Reloading = false
+local Debris = game:GetService(&quot;Debris&quot;)
+
+local Bear1=nil
+local Bear2=nil
+
+--used to identify this pair of bears from other players
+local MyIdent=math.random(100000)
+
+local Ammo = Tool:FindFirstChild(&quot;Ammo&quot;)
+if Ammo ~= nil then
+&#9;Ammo.Value = ClipSize
+end
+local Clips = Tool:FindFirstChild(&quot;Clips&quot;)
+if Clips ~= nil then
+&#9;Clips.Value = StartingClips
+end
+
+Tool.Equipped:connect(function()
+&#9;Tool.Handle.Fire:Stop()
+&#9;Tool.Handle.Reload:Stop()
+end)
+Tool.Unequipped:connect(function()
+&#9;Tool.Handle.Fire:Stop()
+&#9;Tool.Handle.Reload:Stop()
+end)
+
+function Round(number, decimal)
+&#9;decimal = decimal or 0
+&#9;local mult = 10^decimal
+&#9;return math.floor(number * mult + .5)/mult
+end
+
+function CheckIntangible(t)
+&#9;for i3, v3 in ipairs(Intangibles) do
+&#9;&#9;if string.lower(v3) == string.lower(t.Name) or t.Transparency == 1 then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function Reload()
+&#9;Reloading = true
+&#9;Tool.Reloading.Value = true
+&#9;if Clips ~= nil then
+&#9;&#9;if Clips.Value &gt; 0 then
+&#9;&#9;&#9;Clips.Value = Clips.Value - 1
+&#9;&#9;else
+&#9;&#9;&#9;Reloading = false
+&#9;&#9;&#9;Tool.Reloading.Value = false
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;end
+&#9;Tool.Handle.Reload:Play()
+&#9;for i = 1, ClipSize do
+&#9;&#9;wait(ReloadTime/ClipSize)
+&#9;&#9;Ammo.Value = i
+&#9;end
+&#9;Reloading = false
+&#9;Tool.Reloading.Value = false
+end
+
+function CastRay(startpos, vec, length, ignore, delayifhit)
+&#9;if length &gt; 999 then
+&#9;&#9;length = 999
+&#9;end
+&#9;hit, endpos2 = game.Workspace:FindPartOnRay(Ray.new(startpos, vec * length), ignore)
+&#9;if hit ~= nil then
+&#9;&#9;if CheckIntangible(hit) then
+&#9;&#9;&#9;if delayifhit then
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;hit, endpos2 = CastRay(endpos2 + (vec * .01), vec, length - ((startpos - endpos2).magnitude), ignore, delayifhit)
+&#9;&#9;end
+&#9;end
+&#9;return hit, endpos2
+end
+
+function SendBullet(boltstart, targetpos, fuzzyness, SegmentLength, ignore, clr, damage, fadedelay)
+&#9;if Ammo ~= nil then
+&#9;&#9;if Ammo.Value &gt; 0 then
+&#9;&#9;&#9;
+&#9;&#9;else
+&#9;&#9;&#9;Reload()
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;end
+&#9;Tool.Handle.Fire.Pitch = (math.random() * .5) + .75
+&#9;Tool.Handle.Fire:Play()
+&#9;Tool.DoFireAni.Value = not Tool.DoFireAni.Value
+&#9;print(Tool.Handle.Fire.Pitch)
+&#9;local boltdist = Range
+&#9;local clickdist = (boltstart - targetpos).magnitude
+&#9;local targetpos = targetpos + (Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5) * (clickdist/100) * fuzzyness)
+&#9;local boltvec = (targetpos - boltstart).unit
+&#9;local totalsegments = math.ceil(boltdist/SegmentLength)
+&#9;local lastpos = boltstart
+&#9;for i = 1, totalsegments do
+&#9;&#9;local newpos = (boltstart + (boltvec * (boltdist * (i/totalsegments))))
+&#9;&#9;local segvec = (newpos - lastpos).unit
+&#9;&#9;local boltlength = (newpos - lastpos).magnitude
+&#9;&#9;local bolthit, endpos = CastRay(lastpos, segvec, boltlength, ignore, false)
+&#9;&#9;DrawBeam(lastpos, endpos, clr, fadedelay)
+&#9;&#9;if bolthit ~= nil then
+&#9;&#9;&#9;local h = bolthit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;if h ~= nil then
+&#9;&#9;&#9;&#9;local plr = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;&#9;&#9;&#9;if plr ~= nil then
+&#9;&#9;&#9;&#9;&#9;local creator = Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;&#9;&#9;creator.Name = &quot;creator&quot;
+&#9;&#9;&#9;&#9;&#9;creator.Value = plr
+&#9;&#9;&#9;&#9;&#9;creator.Parent = h
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;--ApplyBearLiberally(h)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;Ammo.Value = Ammo.Value - 1
+&#9;&#9;&#9;&#9;delay(0, function() PlaceBear(endpos, 5) end)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;break
+&#9;&#9;end
+&#9;&#9;lastpos = endpos
+&#9;&#9;wait(Rate)
+&#9;end
+end
+
+function ApplyBearLiberally()
+&#9;local bearScript=script.Parent.BearScript:Clone()
+&#9;bearScript.Bear1.Value=Bear1
+&#9;bearScript.Bear2.Value=Bear2
+&#9;bearScript.Parent=game.Workspace
+&#9;game.Debris:AddItem(bearScript,25)
+&#9;game.Debris:AddItem(Bear1,30)
+&#9;game.Debris:AddItem(Bear2,30)
+&#9;bearScript.Disabled=false
+&#9;Bear1=nil
+&#9;Bear2=nil
+&#9;
+end
+
+function DrawBeam(beamstart, beamend, clr, fadedelay)
+&#9;local dis = (beamstart - beamend).magnitude
+&#9;local laser = Instance.new(&quot;Part&quot;)
+&#9;laser.Name = &quot;Bullet&quot;
+&#9;laser.Anchored = true
+&#9;laser.CanCollide = false
+&#9;laser.Shape = &quot;Block&quot;
+&#9;laser.formFactor = &quot;Custom&quot;
+&#9;laser.Size = Vector3.new(.2, .2, dis + .2)
+&#9;laser.Material = Enum.Material.Plastic
+&#9;laser.Locked = true
+&#9;laser.TopSurface = 0
+&#9;laser.BottomSurface = 0
+&#9;laser.BrickColor = clr
+&#9;laser.CFrame = CFrame.new(beamend, beamstart) * CFrame.new(0, 0, - dis/2)
+&#9;laser.Parent = game.Workspace
+&#9;Debris:AddItem(laser, fadedelay)
+end
+
+function SigNum(num)
+&#9;if num == 0 then return 1 end
+&#9;return math.abs(num)/num
+end
+
+function MakeSpark(pos)
+&#9;local effect = Instance.new(&quot;Part&quot;)
+&#9;effect.Name = &quot;Effect&quot;
+&#9;effect.Anchored = false
+&#9;effect.CanCollide = false
+&#9;effect.Shape = &quot;Block&quot;
+&#9;effect.formFactor = &quot;Custom&quot;
+&#9;effect.Material = Enum.Material.Plastic
+&#9;effect.Locked = true
+&#9;effect.TopSurface = 0
+&#9;effect.BottomSurface = 0
+&#9;effect.BrickColor = Colors[1]
+&#9;effect.CFrame = CFrame.new(pos)
+&#9;effect.Parent = game.Workspace
+ -- effect.velocity = Vector3.new(math.random() * 10, math.random() * 10, math.random() * 10)
+ -- effect.Size = Vector3.new(effect.velocity.x, effect.velocity.y, effect.velocity.z)
+&#9;local effectVel = Instance.new(&quot;BodyVelocity&quot;)
+&#9;effectVel.maxForce = Vector3.new(99999, 99999, 99999)
+&#9;effectVel.velocity = Vector3.new(math.random() * 15 * SigNum(math.random( - 10, 10)), &#9;&#9;math.random() * 15 * SigNum(math.random( - 10, 10)), math.random() * 15 * SigNum(math.random( - 10, 10)))
+&#9;effectVel.Parent = effect
+&#9;effect.Size = Vector3.new(math.abs(effectVel.velocity.x)/20, math.abs(effectVel.velocity.y)/20, math.abs(effectVel.velocity.z)/20)
+&#9;wait()
+&#9;effectVel:Destroy()
+&#9;local effecttime = .25
+&#9;Debris:AddItem(effect, effecttime * 2)
+&#9;local startTime = time()
+&#9;while time() - startTime &lt; effecttime do
+&#9;&#9;if effect ~= nil then
+&#9;&#9;&#9;effect.Transparency = (time() - startTime)/effecttime
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+&#9;if effect ~= nil then
+&#9;&#9;effect.Parent = nil
+&#9;end
+end
+
+function PlaceBear(pos)
+&#9;if not Bear1 or not Bear2 then
+&#9;&#9;local tbear= Instance.new(&apos;Part&apos;)
+&#9;&#9;tbear.Size=Vector3.new(5, 9, 4.5)
+&#9;&#9;tbear.CFrame= CFrame.new(Vector3.new(pos.x,pos.y+4.5,pos.z))
+&#9;&#9;local mesh= Instance.new(&apos;SpecialMesh&apos;)
+&#9;&#9;mesh.MeshId=&apos;http://www.roblox.com/asset/?id=90706629&apos;
+&#9;&#9;mesh.TextureId=&apos;http://www.roblox.com/asset/?id=90706701&apos;
+&#9;&#9;mesh.Parent=tbear
+&#9;&#9;mesh.Scale=Vector3.new(2.8,2.8,2.8)
+
+&#9;&#9;local BGyro2= Instance.new(&apos;BodyGyro&apos;)
+&#9;&#9;BGyro2.Name=&apos;bearGyro&apos;
+&#9;&#9;BGyro2.maxTorque=Vector3.new(99999999,99999999,99999999)
+&#9;&#9;--BGyro2.P=999999999
+&#9;&#9;--BGyro2.D=999999999
+&#9;&#9;BGyro2.Parent=tbear
+&#9;&#9;if not Bear1 then
+&#9;&#9;&#9;Bear1=tbear
+&#9;&#9;&#9;tbear.Name=&apos;Bear&apos;.. MyIdent
+&#9;&#9;else
+&#9;&#9;&#9;Bear2=tbear
+&#9;&#9;&#9;tbear.Name=&apos;Bear&apos;.. MyIdent+1
+&#9;&#9;end
+&#9;&#9;tbear.Parent=game.Workspace
+&#9;end
+&#9;
+&#9;if Bear1 and Bear2 then
+&#9;&#9;ApplyBearLiberally()
+&#9;end
+&#9;
+&#9;for i = 0, 10, 1 do
+&#9;&#9;local thread = coroutine.create(MakeSpark)
+&#9;&#9;coroutine.resume(thread, pos)
+&#9;end
+&#9;
+end
+
+Tool.Down.Changed:connect(function()
+&#9;while Tool.Down.Value and check and not Reloading do
+&#9;&#9;check = false
+&#9;&#9;local humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;local plr1 = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;&#9;if humanoid ~= nil and plr1 ~= nil then
+&#9;&#9;&#9;if humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;spos1 = (Tool.Handle.CFrame * BarrelPos).p
+&#9;&#9;&#9;&#9;delay(0, function() SendBullet(spos1, Tool.Aim.Value, Spread, SegmentLength, Tool.Parent, Colors[1], GunDamage, FadeDelayTime) end)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;check = true
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;else
+&#9;&#9;&#9;check = true
+&#9;&#9;&#9;break
+&#9;&#9;end
+&#9;&#9;wait(FireRate)
+&#9;&#9;check = true
+&#9;&#9;if not Automatic then
+&#9;&#9;&#9;break
+&#9;&#9;end
+&#9;end
+end)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">-- Made by Stickmasterluke
+ -- edited by fusroblox
+
+function WaitForChild(obj, name)
+&#9;while not obj:FindFirstChild(name) do
+&#9;&#9;wait()
+&#9;&#9;print(&quot;1waiting for &quot; .. name)
+&#9;end
+&#9;return obj:FindFirstChild(name)
+end
+
+local Reloading = &quot;http://www.roblox.com/asset/?id=50911776&quot;
+
+local Cursors = {
+&quot;http://www.roblox.com/asset/?id=90875398&quot;,--50912619&quot;, -- red -- change the cursors
+&quot;http://www.roblox.com/asset/?id=50912641&quot;, -- blue
+&quot;http://www.roblox.com/asset/?id=90875896&quot;, -- purple
+Reloading = &quot;http://www.roblox.com/asset/?id=90875896&quot;, }--50911776&quot;, }
+
+local ClipSize = 45
+local Equipped = false
+
+local Tool = script.Parent
+local Player = game.Players.localPlayer
+local Ammo = WaitForChild(Tool,&quot;Ammo&quot;)
+local Clips = nil
+
+
+function UpdateGui()
+&#9;
+end
+
+function OnEquipped(mouse)
+&#9;if mouse ~= nil then
+&#9;&#9;Equipped = true
+&#9;&#9;local Player = game.Players.LocalPlayer
+&#9;&#9;if Player ~= nil then
+&#9;&#9;&#9;local plrgui = WaitForChild(Player,&quot;PlayerGui&quot;)
+&#9;&#9;&#9;mouse.Button1Down:connect(function()
+&#9;&#9;&#9;&#9;if not Tool.Down.Value then
+&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
+&#9;&#9;&#9;&#9;&#9;Tool.Down.Value = true
+&#9;&#9;&#9;&#9;&#9;while Tool.Down.Value do
+&#9;&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
+&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;mouse.Button1Up:connect(function()
+&#9;&#9;&#9;&#9;Tool.Down.Value = false
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;mouse.Icon = Cursors[1]
+&#9;&#9;&#9;Tool.Reloading.Changed:connect(function(val)
+&#9;&#9;&#9;&#9;if mouse ~= nil and Equipped then
+&#9;&#9;&#9;&#9;&#9;if val then
+&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon = Cursors.Reloading
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon = Cursors[1]
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;UpdateGui()
+&#9;&#9;end
+&#9;end
+end
+
+function OnUnequipped()
+&#9;Equipped = false
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+
+
+while Tool:FindFirstChild(&quot;Reloading&quot;) == nil do
+&#9;wait(1)
+end
+Tool.Reloading.Changed:connect(function()
+&#9;UpdateGui()
+end)
+
+function PlayFireAni()
+&#9;local aniTrack = WaitForChild(Tool.Parent,&quot;Humanoid&quot;):LoadAnimation(Tool.FireAni)
+&#9;aniTrack:Play()
+end
+
+Tool.DoFireAni.Changed:connect(PlayFireAni)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">107</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.400000572</X>
+					<Y>0.599999905</Y>
+					<Z>0.100000381</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.840000033</X>
+					<Y>1.18000245</Y>
+					<Z>1.75999904</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=90706424</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2.70000005</X>
+						<Y>2.70000005</Y>
+						<Z>2.70000005</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90706324</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Fire</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=90869127</url></Content>
+					<float name="Volume">0.75</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX6">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Reload</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=90716464</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Vector3Value" referent="RBX7">
+			<Properties>
+				<string name="Name">Aim</string>
+				<Vector3 name="Value">
+					<X>-101.971649</X>
+					<Y>3.3496871</Y>
+					<Z>-140.312485</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX8">
+			<Properties>
+				<string name="Name">Ammo</string>
+				<int name="Value">2</int>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX9">
+			<Properties>
+				<string name="Name">Down</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX10">
+			<Properties>
+				<string name="Name">NoClips</string>
+				<int name="Value">0</int>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX11">
+			<Properties>
+				<string name="Name">Reloading</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX12">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=89456847</url></Content>
+				<string name="Name">FireAni</string>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX13">
+			<Properties>
+				<string name="Name">DoFireAni</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX14">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">BearScript</string>
+				<ProtectedString name="Source">local MyCharacter=script.Parent
+local LeadSound=script.BearLead
+local HitSound=script.BearHit
+local Bear1=script.Bear1
+local Bear2=script.Bear2
+local target= (Bear1.Value.CFrame.p+Bear2.Value.CFrame.p)/2.0
+local distance=(Bear1.Value.CFrame.p-Bear2.Value.CFrame.p).magnitude
+local soundLength=1.45
+local speed=distance/(soundLength*2)
+local exploding=false
+Bear1.Value.CFrame=CFrame.new(Bear1.Value.CFrame.p,Bear2.Value.CFrame.p)
+Bear1.Value.bearGyro.cframe=Bear1.Value.CFrame
+Bear2.Value.CFrame=CFrame.new(Bear2.Value.CFrame.p,Bear1.Value.CFrame.p)
+Bear2.Value.bearGyro.cframe=Bear2.Value.CFrame
+
+local BThrust1= Instance.new(&apos;BodyVelocity&apos;)
+BThrust1.maxForce=Vector3.new(50000000,50,50000000)
+BThrust1.velocity=(target-Bear1.Value.CFrame.p).unit*speed
+BThrust1.Parent=Bear1.Value
+
+local temptag=Instance.new(&apos;StringValue&apos;)
+&#9;temptag.Name=&quot;BEAR_TAG&quot;
+&#9;temptag.Value=Bear1.Value.Name
+&#9;temptag.Parent=Bear1.Value
+
+
+local BThrust2= Instance.new(&apos;BodyVelocity&apos;)
+BThrust2.maxForce=Vector3.new(50000000,50,50000000)
+BThrust2.velocity=(target-Bear2.Value.CFrame.p).unit*speed
+BThrust2.Parent=Bear2.Value
+
+temptag=Instance.new(&apos;StringValue&apos;)
+&#9;temptag.Name=&quot;BEAR_TAG&quot;
+&#9;temptag.Value=Bear2.Value.Name
+&#9;temptag.Parent=Bear2.Value
+
+local LeadSound1=script.BearLead:Clone()
+LeadSound1.Parent=Bear1.Value
+LeadSound1:Play()
+
+local LeadSound2=script.BearLead:Clone()
+LeadSound2.Parent=Bear2.Value
+LeadSound2:Play()
+
+function DoAwesomeness()
+&#9;if exploding then return end
+&#9;exploding=true
+&#9;BThrust1:Destroy()
+&#9;BThrust2:Destroy()
+&#9;Bear1.Value.Anchored=true
+&#9;Bear2.Value.Anchored=true
+&#9;local explosion= Instance.new(&apos;Explosion&apos;)
+&#9;explosion.Position=Bear1.Value.CFrame.p
+&#9;explosion.BlastPressure=50000
+&#9;explosion.BlastRadius=25
+&#9;explosion.ExplosionType=&apos;CratersAndDebris&apos;
+&#9;explosion.Parent=game.Workspace
+&#9;local explosionSound= script.BearHit:Clone()
+&#9;explosionSound.Parent=game.Workspace--Bear1.Value
+&#9;wait()
+&#9;explosionSound:Play()
+&#9;
+&#9;local startPos=Vector3.new(0, -7, -20)
+&#9;local endPos=Vector3.new(0, 50, -20)
+
+&#9;local bearGuis= {}
+&#9;local iter = 0
+&#9;for _, player in pairs(game.Players:GetPlayers()) do
+&#9;&#9;iter=iter+1 
+&#9;&#9;local billGui=script.AmericaGui:Clone()
+&#9;&#9;billGui.Name=&apos;BearMericaGui&apos;
+&#9;&#9;billGui.Adornee=Bear1.Value
+&#9;&#9;billGui.StudsOffset = startPos
+&#9;&#9;billGui.Parent=player.PlayerGui
+&#9;&#9;bearGuis[iter]=billGui
+&#9;&#9;
+&#9;end
+&#9;local startTime=time()
+&#9;local waitTime=4.5
+
+&#9;while time()-startTime&lt;waitTime do
+&#9;&#9;for i=1,iter,1 do
+&#9;&#9;&#9;bearGuis[i].StudsOffset=startPos:Lerp(endPos,(time()-startTime)/waitTime)
+&#9;&#9;end
+&#9;&#9;if math.random(5)==1 then
+&#9;&#9;&#9;local explosion2= Instance.new(&apos;Explosion&apos;)
+&#9;&#9;&#9;explosion2.Position=Bear1.Value.CFrame.p+Vector3.new(math.random(100)-50,math.random(50),math.random(5))
+&#9;&#9;&#9;explosion2.Parent=game.Workspace
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;wait()
+&#9;end
+&#9;wait(2)
+&#9;Bear1.Value:Destroy()
+&#9;Bear2.Value:Destroy()
+&#9;script:Destroy()
+&#9;for i=1,iter-1,1 do
+&#9;&#9;&#9;bearGuis[i]:Destroy()
+&#9;&#9;end
+end
+
+
+function OnTouched(origin, myPart, hit)
+&#9;if hit.Anchored then return end
+&#9;
+&#9;if hit:FindFirstChild(&quot;BEAR_TAG&quot;) and hit.BEAR_TAG.Value~=origin.Name then
+&#9;&#9;&#9;DoAwesomeness()
+&#9;&#9;return
+&#9;end
+
+&#9;if hit.Parent:FindFirstChild(&quot;BEAR_TAG&quot;) and hit.Parent.BEAR_TAG.Value~=origin.Name then
+&#9;&#9;&#9;DoAwesomeness()
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;local tweld = Instance.new(&quot;Weld&quot;)
+&#9;tweld.Part0 = hit
+&#9;tweld.Part1 = myPart
+&#9;tweld.C0 = CFrame.new()
+&#9;tweld.C1 = origin.CFrame:inverse() * hit.CFrame
+&#9;tweld.Parent = origin
+&#9;if not hit:FindFirstChild(&quot;BEAR_TAG&quot;) or hit.Parent:FindFirstChild(&quot;BEAR_TAG&quot;) then
+&#9;&#9;local tag=Instance.new(&apos;StringValue&apos;)
+&#9;&#9;tag.Name=&quot;BEAR_TAG&quot;
+&#9;&#9;tag.Value=origin.Name
+&#9;&#9;if hit.Parent:FindFirstChild(&apos;Humanoid&apos;) then
+&#9;&#9;&#9;tag.Parent=hit.Parent
+&#9;&#9;else
+&#9;&#9;&#9;tag.Parent=hit
+&#9;&#9;end
+&#9;&#9;game.Debris:AddItem(tag,15)
+&#9;end
+&#9;
+&#9;hit.Touched:connect(function(nhit) OnTouched(origin,hit,nhit) end)
+end
+
+Bear1.Value.Touched:connect(function(hit) OnTouched(Bear1.Value,Bear1.Value,hit) end)
+Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit) end)
+</ProtectedString>
+			</Properties>
+			<Item class="Sound" referent="RBX15">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">BearHit</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=90696602</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX16">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">BearLead</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=90695285</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBX17">
+				<Properties>
+					<string name="Name">Bear1</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBX18">
+				<Properties>
+					<string name="Name">Bear2</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="BillboardGui" referent="RBX19">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Ref name="Adornee">null</Ref>
+					<bool name="AlwaysOnTop">false</bool>
+					<bool name="Enabled">true</bool>
+					<Vector3 name="ExtentsOffset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<string name="Name">AmericaGui</string>
+					<Ref name="PlayerToHideFrom">null</Ref>
+					<UDim2 name="Size">
+						<XS>100</XS>
+						<XO>0</XO>
+						<YS>70</YS>
+						<YO>0</YO>
+					</UDim2>
+					<Vector2 name="SizeOffset">
+						<X>0</X>
+						<Y>0</Y>
+					</Vector2>
+					<Vector3 name="StudsOffset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+				</Properties>
+				<Item class="ImageLabel" referent="RBX20">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<Content name="Image"><url>http://www.roblox.com/Asset?ID=90698952</url></Content>
+						<string name="Name">ImageLabel</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>1</XS>
+							<XO>0</XO>
+							<YS>1</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX21">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-3.37807083</X>
+					<Y>1.68453228</Y>
+					<Z>-3.16152716</Z>
+					<R00>-0.73846817</R00>
+					<R01>0.160799533</R01>
+					<R02>-0.654834569</R02>
+					<R10>-7.45057971e-009</R10>
+					<R11>0.971149206</R11>
+					<R12>0.238472968</R12>
+					<R20>0.674288332</R20>
+					<R21>0.176104695</R21>
+					<R22>-0.717162728</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.400000572</X>
+					<Y>0.599999905</Y>
+					<Z>0.100000381</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
