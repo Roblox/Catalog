@@ -36,9 +36,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.32000005</X>
-					<Y>58.9000206</Y>
-					<Z>3.8149991</Z>
+					<X>-0.300000072</X>
+					<Y>0</Y>
+					<Z>-0.200000048</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -129,9 +129,9 @@
 					<token name="BottomSurfaceInput">0</token>
 					<int name="BrickColor">194</int>
 					<CoordinateFrame name="CFrame">
-						<X>-1.32000005</X>
-						<Y>58.9190216</Y>
-						<Z>2.83499908</Z>
+						<X>-0.300000072</X>
+						<Y>0.0189999994</Y>
+						<Z>-1.18000007</Z>
 						<R00>1</R00>
 						<R01>0</R01>
 						<R02>0</R02>
@@ -222,9 +222,9 @@
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-1.32000005</X>
-							<Y>58.9190216</Y>
-							<Z>2.73499918</Z>
+							<X>-0.300000072</X>
+							<Y>0.0189999994</Y>
+							<Z>-1.28000009</Z>
 							<R00>1</R00>
 							<R01>0</R01>
 							<R02>0</R02>
@@ -325,6 +325,7 @@ end
 local BlastRadius = 8 -- Blast radius of the explosion
 local BlastDamage = 75 -- Amount of damage done to players
 local BlastForce = 1000 -- Amount of force applied to parts
+local TimeUntilDrop = 6
 
 -- Rocket will fly through things named these
 local RocketIgnoreList = {rocket = 1, handle = 1, effect = 1, water = 1} --NOTE: Keys must be lowercase, values must evaluate to true
@@ -362,6 +363,9 @@ local function OnExplosionHit(hitPart, hitDistance, blastCenter)
 &#9;&#9;local humanoid = nil
 &#9;&#9;if hitPart.Parent and hitPart.Parent:FindFirstChild(&apos;Humanoid&apos;) then
 &#9;&#9;&#9;humanoid = hitPart.Parent.Humanoid
+
+&#9;&#9;&#9;-- Don&apos;t hurt self
+&#9;&#9;&#9;if humanoid.Parent == MyPlayer.Character then return end
 
 &#9;&#9;&#9;if not MyPlayer.Neutral then -- Ignore teammates caught in the blast
 &#9;&#9;&#9;&#9;local player = PlayersService:GetPlayerFromCharacter(hitPart.Parent)
@@ -411,13 +415,24 @@ local function OnTouched(otherPart)
 &#9;&#9;-- Connect custom logic for the explosion
 &#9;&#9;explosion.Hit:connect(function(hitPart, hitDistance) OnExplosionHit(hitPart, hitDistance, explosion.Position) end)
 
-&#9;&#9;wait(0)
 &#9;&#9;if ChildRocket:FindFirstChild(&apos;Boom&apos;) then
+&#9;&#9;&#9;print(&quot;&quot;)
 &#9;&#9;&#9;ChildRocket.Boom:Play()
 &#9;&#9;end
 
-&#9;&#9;script.Parent = explosion -- Saves the connection we just made
-&#9;&#9;ChildRocket:Destroy()
+&#9;&#9;-- Hide the rocket so it can keep running the connection but not be seen/heard
+
+&#9;&#9;if ChildRocket:FindFirstChild(&apos;Fire&apos;) then
+&#9;&#9;&#9;ChildRocket.Fire:Destroy()
+&#9;&#9;end
+
+&#9;&#9;if ChildRocket:FindFirstChild(&apos;Swoosh&apos;) then
+&#9;&#9;&#9;ChildRocket.Swoosh:Stop()
+&#9;&#9;end
+
+&#9;&#9;ChildRocket.Transparency = 1
+&#9;&#9;ChildRocket.Anchored = true
+&#9;&#9;DebrisService:AddItem(ChildRocket, 3)
 &#9;end
 end
 
@@ -426,6 +441,25 @@ end
 --------------------
 
 ChildRocket.Touched:connect(OnTouched)
+
+wait(TimeUntilDrop)
+
+if not Exploded then
+&#9;-- Out of fuel
+&#9;if ChildRocket:FindFirstChild(&apos;Fire&apos;) then
+&#9;&#9;ChildRocket.Fire:Destroy()
+&#9;end
+&#9;ChildRocket.Velocity = ChildRocket.Velocity / 2
+
+&#9;if ChildRocket:FindFirstChild(&apos;Swoosh&apos;) then
+&#9;&#9;ChildRocket.Swoosh:Stop()
+&#9;end
+
+&#9;-- Drop this empty shell
+&#9;if ChildRocket:FindFirstChild(&apos;Antigravity&apos;) then
+&#9;&#9;ChildRocket.Antigravity.force = ChildRocket.Antigravity.force / 2
+&#9;end
+end
 </ProtectedString>
 						</Properties>
 					</Item>
@@ -503,8 +537,18 @@ end
 							</Properties>
 						</Item>
 					</Item>
+					<Item class="Sound" referent="RBX10">
+						<Properties>
+							<bool name="Looped">false</bool>
+							<string name="Name">Boom</string>
+							<float name="Pitch">1</float>
+							<bool name="PlayOnRemove">false</bool>
+							<Content name="SoundId"><url>rbxasset://sounds/collide.wav</url></Content>
+							<float name="Volume">1</float>
+						</Properties>
+					</Item>
 				</Item>
-				<Item class="Sound" referent="RBX10">
+				<Item class="Sound" referent="RBX11">
 					<Properties>
 						<bool name="Looped">false</bool>
 						<string name="Name">Boom</string>
@@ -514,7 +558,7 @@ end
 						<float name="Volume">1</float>
 					</Properties>
 				</Item>
-				<Item class="Script" referent="RBX11">
+				<Item class="Script" referent="RBX12">
 					<Properties>
 						<bool name="Disabled">true</bool>
 						<Content name="LinkedSource"><null></null></Content>
@@ -537,7 +581,7 @@ end
 local BlastRadius = 8 -- Blast radius of the explosion
 local BlastDamage = 90 -- Amount of damage done to players
 local BlastForce = 1500 -- Amount of force applied to parts
-local TimeUntilSplit = 0.5
+local TimeUntilSplit = 0.75
 local RocketSpeed = 100 -- Speed of the spawned ChildRockets
 
 -- Rocket will fly through things named these
@@ -581,9 +625,12 @@ local function OnExplosionHit(hitPart, hitDistance, blastCenter)
 &#9;&#9;if hitPart.Parent and hitPart.Parent:FindFirstChild(&apos;Humanoid&apos;) then
 &#9;&#9;&#9;humanoid = hitPart.Parent.Humanoid
 
+&#9;&#9;&#9;-- Don&apos;t hurt self
+&#9;&#9;&#9;if humanoid.Parent == MyPlayer.Character then return end
+
 &#9;&#9;&#9;if not MyPlayer.Neutral then -- Ignore teammates caught in the blast
 &#9;&#9;&#9;&#9;local player = PlayersService:GetPlayerFromCharacter(hitPart.Parent)
-&#9;&#9;&#9;&#9;if player and player ~= MyPlayer and player.TeamColor == MyPlayer.TeamColor then
+&#9;&#9;&#9;&#9;if player and player.TeamColor == MyPlayer.TeamColor then
 &#9;&#9;&#9;&#9;&#9;return
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
@@ -629,13 +676,23 @@ local function OnTouched(otherPart)
 &#9;&#9;-- Connect custom logic for the explosion
 &#9;&#9;explosion.Hit:connect(function(hitPart, hitDistance) OnExplosionHit(hitPart, hitDistance, explosion.Position) end)
 
-&#9;&#9;wait(0)
 &#9;&#9;if MotherRocket:FindFirstChild(&apos;Boom&apos;) then
 &#9;&#9;&#9;MotherRocket.Boom:Play()
 &#9;&#9;end
-&#9;&#9;wait(2)
-&#9;&#9;script.Parent = explosion -- Saves the connection we just made
-&#9;&#9;MotherRocket:Destroy()
+
+&#9;&#9;-- Hide the rocket so it can keep running the connection but not be seen/heard
+
+&#9;&#9;if MotherRocket:FindFirstChild(&apos;Fire&apos;) then
+&#9;&#9;&#9;MotherRocket.Fire:Destroy()
+&#9;&#9;end
+
+&#9;&#9;if MotherRocket:FindFirstChild(&apos;Swoosh&apos;) then
+&#9;&#9;&#9;MotherRocket.Swoosh:Stop()
+&#9;&#9;end
+
+&#9;&#9;MotherRocket.Transparency = 1
+&#9;&#9;MotherRocket.Anchored = true
+&#9;&#9;DebrisService:AddItem(MotherRocket, 3)
 &#9;end
 end
 
@@ -648,12 +705,6 @@ MotherRocket.Touched:connect(OnTouched)
 wait(TimeUntilSplit)
 
 if not Exploded then
-&#9;-- Out of fuel
-&#9;if MotherRocket:FindFirstChild(&apos;Fire&apos;) then
-&#9;&#9;MotherRocket.Fire:Destroy()
-&#9;end
-&#9;MotherRocket.Velocity = MotherRocket.Velocity / 2
-
 &#9;-- Spawn ChildRockets
 &#9;for i = 1, #SpawnOffsets do
 &#9;&#9;local childClone = ChildRocket:Clone()
@@ -672,6 +723,7 @@ if not Exploded then
 
 &#9;&#9;-- Add antigravity
 &#9;&#9;local bodyForce = Instance.new(&apos;BodyForce&apos;, childClone)
+&#9;&#9;bodyForce.Name = &apos;Antigravity&apos;
 &#9;&#9;bodyForce.force = Vector3.new(0, childClone:GetMass() * 196.2, 0)
 
 &#9;&#9;childClone.Position = MotherRocket.Position + MotherRocket.CFrame:vectorToObjectSpace(SpawnOffsets[i])
@@ -692,15 +744,25 @@ if not Exploded then
 &#9;&#9;childScript.Disabled = false
 &#9;end
 
+&#9;-- Out of fuel
+&#9;if MotherRocket:FindFirstChild(&apos;Fire&apos;) then
+&#9;&#9;MotherRocket.Fire:Destroy()
+&#9;end
+&#9;MotherRocket.Velocity = MotherRocket.Velocity / 2
+
+&#9;if MotherRocket:FindFirstChild(&apos;Swoosh&apos;) then
+&#9;&#9;MotherRocket.Swoosh:Stop()
+&#9;end
+
 &#9;-- Drop this empty shell
-&#9;if MotherRocket:FindFirstChild(&apos;BodyForce&apos;) then
-&#9;&#9;MotherRocket.BodyForce:Destroy()
+&#9;if MotherRocket:FindFirstChild(&apos;Antigravity&apos;) then
+&#9;&#9;MotherRocket.Antigravity.force = MotherRocket.Antigravity.force / 2
 &#9;end
 end
 </ProtectedString>
 					</Properties>
 				</Item>
-				<Item class="Script" referent="RBX12">
+				<Item class="Script" referent="RBX13">
 					<Properties>
 						<bool name="Disabled">false</bool>
 						<Content name="LinkedSource"><null></null></Content>
@@ -738,7 +800,7 @@ if Weld and Weld:IsA(&apos;JointInstance&apos;) then
 end
 </ProtectedString>
 					</Properties>
-					<Item class="Weld" referent="RBX13">
+					<Item class="Weld" referent="RBX14">
 						<Properties>
 							<CoordinateFrame name="C0">
 								<X>0</X>
@@ -775,7 +837,7 @@ end
 					</Item>
 				</Item>
 			</Item>
-			<Item class="Sound" referent="RBX14">
+			<Item class="Sound" referent="RBX15">
 				<Properties>
 					<bool name="Looped">true</bool>
 					<string name="Name">Swoosh</string>
@@ -785,19 +847,19 @@ end
 					<float name="Volume">0.699999988</float>
 				</Properties>
 			</Item>
-			<Item class="ObjectValue" referent="RBX15">
+			<Item class="ObjectValue" referent="RBX16">
 				<Properties>
 					<string name="Name">creator</string>
 					<Ref name="Value">null</Ref>
 				</Properties>
-				<Item class="StringValue" referent="RBX16">
+				<Item class="StringValue" referent="RBX17">
 					<Properties>
 						<string name="Name">icon</string>
 						<string name="Value"></string>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Script" referent="RBX17">
+			<Item class="Script" referent="RBX18">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -820,8 +882,8 @@ end
 local BlastRadius = 10 -- Blast radius of the explosion
 local BlastDamage = 300 -- Amount of damage done to players
 local BlastForce = 2000 -- Amount of force applied to parts
-local TimeUntilSplit = 0.5
-local RocketSpeed = 60 -- Speed of the spawned MotherRockets
+local TimeUntilSplit = 0.75
+local RocketSpeed = 75 -- Speed of the spawned MotherRockets
 
 -- Rocket will fly through things named these
 local RocketIgnoreList = {rocket = 1, handle = 1, effect = 1, water = 1} --NOTE: Keys must be lowercase, values must evaluate to true
@@ -862,6 +924,9 @@ local function OnExplosionHit(hitPart, hitDistance, blastCenter)
 &#9;&#9;local humanoid = nil
 &#9;&#9;if hitPart.Parent and hitPart.Parent:FindFirstChild(&apos;Humanoid&apos;) then
 &#9;&#9;&#9;humanoid = hitPart.Parent.Humanoid
+
+&#9;&#9;&#9;-- Don&apos;t hurt self
+&#9;&#9;&#9;if humanoid.Parent == MyPlayer.Character then return end
 
 &#9;&#9;&#9;if not MyPlayer.Neutral then -- Ignore teammates caught in the blast
 &#9;&#9;&#9;&#9;local player = PlayersService:GetPlayerFromCharacter(hitPart.Parent)
@@ -911,13 +976,23 @@ local function OnTouched(otherPart)
 &#9;&#9;-- Connect custom logic for the explosion
 &#9;&#9;explosion.Hit:connect(function(hitPart, hitDistance) OnExplosionHit(hitPart, hitDistance, explosion.Position) end)
 
-&#9;&#9;wait(0)
-&#9;&#9;WaitForChild(FirstRocket,&apos;Boom&apos;)
+&#9;&#9;if FirstRocket:FindFirstChild(&apos;Boom&apos;) then
 &#9;&#9;&#9;FirstRocket.Boom:Play()
-&#9;&#9;
-&#9;&#9;wait(2)
-&#9;&#9;script.Parent = explosion -- Saves the connection we just made
-&#9;&#9;FirstRocket:Destroy()
+&#9;&#9;end
+
+&#9;&#9;-- Hide the rocket so it can keep running the connection but not be seen/heard
+
+&#9;&#9;if FirstRocket:FindFirstChild(&apos;Fire&apos;) then
+&#9;&#9;&#9;FirstRocket.Fire:Destroy()
+&#9;&#9;end
+
+&#9;&#9;if FirstRocket:FindFirstChild(&apos;Swoosh&apos;) then
+&#9;&#9;&#9;FirstRocket.Swoosh:Stop()
+&#9;&#9;end
+
+&#9;&#9;FirstRocket.Transparency = 1
+&#9;&#9;FirstRocket.Anchored = true
+&#9;&#9;DebrisService:AddItem(FirstRocket, 3)
 &#9;end
 end
 
@@ -942,13 +1017,13 @@ if not Exploded then
 &#9;&#9;motherClone.Position = FirstRocket.Position + FirstRocket.CFrame:vectorToObjectSpace(SpawnOffsets[i])
 &#9;&#9;motherClone.Parent = Workspace
 
+&#9;&#9;motherClone.Velocity = motherClone.CFrame.lookVector * RocketSpeed
+&#9;&#9;motherClone.RotVelocity = Vector3.new(0, 0, 0)
+
 &#9;&#9;wait(0)
 &#9;&#9;if motherClone:FindFirstChild(&apos;Swoosh&apos;) then
 &#9;&#9;&#9;motherClone.Swoosh:Play()
 &#9;&#9;end
-
-&#9;&#9;motherClone.Velocity = motherClone.CFrame.lookVector * RocketSpeed
-&#9;&#9;motherClone.RotVelocity = Vector3.new(0, 0, 0)
 
 &#9;&#9;local motherScript = WaitForChild(motherClone, &apos;MotherRocket&apos;)
 &#9;&#9;motherScript.Disabled = false
@@ -960,16 +1035,20 @@ if not Exploded then
 &#9;end
 &#9;FirstRocket.Velocity = FirstRocket.Velocity / 2
 
+&#9;if FirstRocket:FindFirstChild(&apos;Swoosh&apos;) then
+&#9;&#9;FirstRocket.Swoosh:Stop()
+&#9;end
+
 &#9;-- Drop this empty shell
-&#9;if FirstRocket:FindFirstChild(&apos;BodyForce&apos;) then
-&#9;&#9;FirstRocket.BodyForce:Destroy()
+&#9;if FirstRocket:FindFirstChild(&apos;Antigravity&apos;) then
+&#9;&#9;FirstRocket.Antigravity.force = FirstRocket.Antigravity.force / 2
 &#9;end
 end
 </ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX18">
+		<Item class="LocalScript" referent="RBX19">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -1004,7 +1083,7 @@ Tool.Unequipped:connect(onUnequippedLocal)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX19">
+		<Item class="Script" referent="RBX20">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -1076,6 +1155,7 @@ local function OnActivated()
 
 &#9;-- Add antigravity
 &#9;local bodyForce = Instance.new(&apos;BodyForce&apos;, rocket)
+&#9;bodyForce.Name = &apos;Antigravity&apos;
 &#9;bodyForce.force = Vector3.new(0, (MotherRocket:GetMass() + ChildRocket:GetMass()) * 196.2, 0)
 
 &#9;-- Arm the rocket with the FirstRocket script
@@ -1116,29 +1196,29 @@ Tool.Activated:connect(OnActivated)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX20">
+		<Item class="Camera" referent="RBX21">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-2.95267105</X>
-					<Y>59.0812988</Y>
-					<Z>2.2421236</Z>
-					<R00>-0.69379586</R00>
-					<R01>0.0574030653</R01>
-					<R02>-0.717880368</R02>
+					<X>-3.57794523</X>
+					<Y>-0.622431159</Y>
+					<Z>-3.16595483</Z>
+					<R00>-0.670937598</R00>
+					<R01>-0.103386849</R01>
+					<R02>-0.73427099</R02>
 					<R10>-0</R10>
-					<R11>0.996818304</R11>
-					<R12>0.0797074735</R12>
-					<R20>0.72017169</R20>
-					<R21>0.0553007163</R21>
-					<R22>-0.691588461</R22>
+					<R11>0.990232348</R11>
+					<R12>-0.139426723</R12>
+					<R20>0.741513848</R20>
+					<R21>-0.093546629</R21>
+					<R22>-0.664384127</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-1.32000005</X>
-					<Y>58.9000206</Y>
-					<Z>3.8149991</Z>
+					<X>-0.300000072</X>
+					<Y>0</Y>
+					<Z>-0.200000048</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
