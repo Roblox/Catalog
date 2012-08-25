@@ -155,9 +155,6 @@ local MyPlayer
 
 local ReadyToActivate = true
 
-local ObjectsInsideSphere = {}
-
-local ObjectsAlreadyDeflected = {}
 
 local function clamp(input, min_val, max_val)
 &#9;if input &lt; min_val then
@@ -189,43 +186,10 @@ local function Slerp(start, desired, percent)
      return ((start * math.cos(theta)) + (RelativeVec * math.sin(theta)));
 end
 
-local function ReflectVector3(Incoming, Normal)
-&#9;return 2 * ((-1 * Incoming):Dot(Normal)) * Normal + Incoming
-end
 
-local function CheckIfPlayerHasTorso(player)
-&#9;if player and player.Character and player.Character:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;return true
-&#9;end
-&#9;return false
-end
-
-local function FindPlayerInDirection(startPosition, direction)
-&#9;local players = PlayersService:GetPlayers()
-&#9;local attacker = nil
-&#9;local closestAngle = 1000000000000
-&#9;for _, player in pairs(players) do
-&#9;&#9;if CheckIfPlayerHasTorso(player) then
-&#9;&#9;&#9;local angleBetween = math.abs(math.acos((startPosition - player.Character.Torso.CFrame.p).unit:Dot(direction)))
-&#9;&#9;&#9;if angleBetween &lt; (math.pi / 4) then
-&#9;&#9;&#9;&#9;print(&apos;Found player&apos; , player)
-&#9;&#9;&#9;&#9;if (player.Character.Torso.CFrame.p - startPosition).magnitude &lt; 300 and angleBetween &lt; closestAngle then
-&#9;&#9;&#9;&#9;&#9;attacker = player
-&#9;&#9;&#9;&#9;&#9;closestAngle = angleBetween
-&#9;&#9;&#9;&#9;&#9;if player ~= MyPlayer then 
-&#9;&#9;&#9;&#9;&#9;&#9;attacker = nil
-&#9;&#9;&#9;&#9;&#9;end
-
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return attacker
-end
 
 local function AddSlowDown(sphere)
 &#9;sphere.Touched:connect(function (hit)
-&#9;&#9;--table.insert(ObjectsInsideSphere, hit, hit.Velocity)
 &#9;&#9;local origVelocity = hit.Velocity
 &#9;&#9;hit.Velocity = origVelocity / 3
 &#9;&#9;local origRotVelocity = hit.RotVelocity
@@ -239,126 +203,11 @@ local function AddSlowDown(sphere)
 &#9;end)
 end
 
--- Todo: improve to use proper tail-call recursion
--- http://weknowmemes.com/wp-content/uploads/2011/11/your-mother-is-so-fat-her-mass-causes-a-stack-overflow.jpg
-function calculateMassRecursive(rootPart)
-&#9;local sum = 0
-&#9;if rootPart:IsA(&apos;Part&apos;) or rootPart:IsA(&apos;WedgePart&apos;) then sum = sum + rootPart:GetMass() end
-&#9;for _, v in pairs(rootPart:GetChildren()) do
-&#9;&#9;sum = sum + calculateMassRecursive(v)
-&#9;end
-&#9;return sum
-end
-
-local function AddTrajectory(object, targetLocation)
-&#9;for k, v in pairs(object:GetChildren()) do
-&#9;&#9;if v:IsA(&apos;BodyForce&apos;) then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-
-&#9;local dirToTarget = targetLocation - object.CFrame.p
-&#9;local outwardDir = object.Velocity + (dirToTarget).unit * 50
-&#9;local timeToTarget = ((outwardDir * dirToTarget.unit).magnitude / dirToTarget.magnitude) / 2
-&#9;local mass = calculateMassRecursive(object)
-&#9;
-&#9;-- Using the freefall equation we can derive that F = M * V0 / -t
-&#9;local comeBackForce = mass * object.Velocity / -timeToTarget
-&#9;local floatingForce = Vector3.new(0, mass * 196.2, 0)
-&#9;--local forwardVel = lookDir * (distance / (2 * timeToTarget))
-&#9;--object.Velocity = object.Velocity + forwardVel
-&#9;object.RotVelocity = Vector3.new(math.rad(math.random(-360, 360)) * 2,
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;math.rad(math.random(-360, 360)) * 2,
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;math.rad(math.random(-360, 360)) * 2)
-&#9;--object.CFrame = CFrame.new(origin, origin + object.Velocity)
-&#9;object.Velocity = outwardDir
-&#9;local counteringForce = Instance.new(&apos;BodyForce&apos;)
-&#9;counteringForce.force = comeBackForce + floatingForce
-&#9;counteringForce.Name = &apos;CounteringForce&apos;
-&#9;counteringForce.Parent = object
-&#9;DebrisService:AddItem(counteringForce, timeToTarget)
-end
-
-local function CreateSmallBall(orientationCFrame)
-&#9;local sphere = Instance.new(&apos;Part&apos;)
-&#9;sphere.CanCollide = false
-&#9;sphere.Anchored = true
-&#9;sphere.Transparency = 0.75
-&#9;sphere.Shape = Enum.PartType.Ball
-&#9;sphere.Size = Vector3.new(3, 3, 3)
-&#9;sphere.CFrame = orientationCFrame
-&#9;sphere.TopSurface = Enum.SurfaceType.Smooth
-&#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
-&#9;sphere.Parent = Workspace
-&#9;
-&#9;local sphereMesh = Instance.new(&apos;SpecialMesh&apos;)
-&#9;sphereMesh.MeshId = sphereMeshId
-&#9;sphereMesh.TextureId = sphereTextureId
-&#9;sphereMesh.Scale = Vector3.new(0.2, 0.2, 0.2)
-&#9;sphereMesh.Parent = sphere
-&#9;DebrisService:AddItem(sphere, 3)
-&#9;-- add size wubble
-&#9;coroutine.resume(coroutine.create(function (sphereMesh)
-&#9;&#9;for j = 1, 3, 0.5 do
-&#9;&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;&#9;sphereMesh.Scale = Vector3.new(0.2 * j, 0.2 * j, 0.2 * j) 
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(0.05)
-&#9;&#9;end
-&#9;&#9;local maxScale = sphereMesh.Scale
-&#9;&#9;for j = 1, 0, -0.1 do
-&#9;&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;&#9;sphereMesh.Scale = maxScale * j
-&#9;&#9;&#9;&#9;wait(0.05)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end), sphereMesh)
-end
 
 
-local function AddReflectFeature(sphere)
-&#9;sphere.Touched:connect(function (hit)
-&#9;&#9;if hit.Parent ~= Workspace or hit.Velocity.magnitude &lt; 5 or calculateMassRecursive(hit) &gt; 160 then return end
-&#9;&#9;-- check if it was already in the sphere
-&#9;&#9;if (hit.CFrame.p - sphere.CFrame.p).magnitude &lt; 13 then return end
-&#9;&#9;if ObjectsAlreadyDeflected[hit] then return end
-&#9;&#9;ObjectsAlreadyDeflected[hit] = tick()
-&#9;&#9;CreateSmallBall(CFrame.new(hit.CFrame.p, hit.CFrame.p + ((sphere.CFrame.p - Vector3.new(0, sphere.Size.y / 3, 0)) - hit.CFrame.p).unit) * CFrame.Angles(math.rad(90), 0, 0))
-&#9;&#9;hit.Anchored = true
-&#9;&#9;local sphereMesh = sphere:FindFirstChild(&apos;Mesh&apos;)
-&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;sphereMesh.VertexColor = Vector3.new(1, 1, 0)
-&#9;&#9;end
-&#9;&#9;local attacker = FindPlayerInDirection(hit.CFrame.p, hit.Velocity.unit)
 
-&#9;&#9;if Deflect then
-&#9;&#9;&#9;Deflect:Play()
-&#9;&#9;end
 
-&#9;&#9;wait(1)
-&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;sphereMesh.VertexColor = Vector3.new(1, 1, 1)
-&#9;&#9;end
-&#9;&#9;if not hit then return end
-&#9;&#9;hit.Anchored = false
-&#9;&#9;local deflectVelocity = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;local reflectDir = ReflectVector3(hit.Velocity.unit, (hit.CFrame.p - sphere.CFrame.p).unit).unit
 
-&#9;&#9;deflectVelocity.velocity = reflectDir * hit.Velocity.magnitude
-&#9;&#9;deflectVelocity.Parent = hit
-&#9;&#9;DebrisService:AddItem(deflectVelocity, 10)
-&#9;&#9;if attacker and CheckIfPlayerHasTorso(attacker) then
-&#9;&#9;&#9;if not hit:FindFirstChild(&apos;Fire&apos;) then Instance.new(&apos;Fire&apos;, hit).Color = Color3.new(105 / 255, 222 / 255, 214/ 255) end
-&#9;&#9;&#9;deflectVelocity.velocity = (attacker.Character.Torso.CFrame.p - hit.CFrame.p).unit * hit.Velocity.magnitude * 2
-&#9;&#9;&#9;hit.Touched:connect(function (otherHit)
-&#9;&#9;&#9;&#9;if otherHit.Parent and otherHit.Parent == attacker.Character then
-&#9;&#9;&#9;&#9;&#9;attacker.Character.Humanoid:TakeDamage(50)
-&#9;&#9;&#9;&#9;&#9;hit:Destroy()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;end
-&#9;end)
-end
 
 local function AddHealFeature(sphere)
 &#9;coroutine.resume(coroutine.create(function()
@@ -389,11 +238,13 @@ local function TweenScale(sphereMesh, startSize, endSize, duration, steps)
 end
 
 local function OnActivate()
+&#9;wait(0.5)
 &#9;-- Debounce check to make sure isn&apos;t happening too often
 &#9;if not ReadyToActivate then
 &#9;&#9;return
 &#9;end
 &#9;ReadyToActivate = false
+&#9;Tool.Enabled = false
 &#9;TweenScale(Handle:FindFirstChild(&apos;Mesh&apos;), Vector3.new(.1, .1, .1), Vector3.new(4, 4, 4), 0.5, 10)
 &#9;Handle.Transparency = 1
 
@@ -401,11 +252,13 @@ local function OnActivate()
 &#9;sphere.CanCollide = false
 &#9;sphere.Anchored = true
 &#9;sphere.Transparency = 0.5
+&#9;sphere.FormFactor = Enum.FormFactor.Custom
 &#9;sphere.Shape = Enum.PartType.Ball
-&#9;sphere.Size = Vector3.new(30, 30, 30)
+&#9;sphere.Size = Vector3.new(0.2, 0.2, 0.2)
 &#9;sphere.CFrame = CFrame.new(MyTorso.CFrame.p)
 &#9;sphere.TopSurface = Enum.SurfaceType.Smooth
 &#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
+&#9;sphere.Name = &quot;ProtectionSphere&quot;
 &#9;sphere.Parent = Workspace
 &#9;
 &#9;local sphereMesh = Instance.new(&apos;SpecialMesh&apos;)
@@ -428,16 +281,15 @@ local function OnActivate()
 &#9;DebrisService:AddItem(sphere, 20)
 &#9;wait(0.5)
 &#9;--AddSlowDown(sphere)
-&#9;AddReflectFeature(sphere)
 &#9;AddHealFeature(sphere)
-&#9;wait(19)
+&#9;wait(17.5)
 &#9;Handle.Transparency = 0.25
 &#9;Handle:FindFirstChild(&apos;Mesh&apos;).Scale = Vector3.new(0.1, 0.1, 0.1)
 &#9;--TweenScale(Handle:FindFirstChild(&apos;Mesh&apos;), Vector3.new(4, 4, 4), Vector3.new(.1, .1, .1), 0.5, 10)
 &#9;if ShutDown then
 &#9;&#9;ShutDown:Play()
 &#9;end
-
+&#9;Tool.Enabled = true
 &#9;ReadyToActivate = true
 end
 
@@ -500,24 +352,24 @@ Tool.Activated:connect(OnActivate)
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-35.7807617</X>
-					<Y>57.6055107</Y>
-					<Z>6.59248114</Z>
-					<R00>-0.955326557</R00>
-					<R01>0.176217005</R01>
-					<R02>-0.237273335</R02>
-					<R10>-0</R10>
-					<R11>0.802813768</R11>
-					<R12>0.596229851</R12>
-					<R20>0.295552135</R20>
-					<R21>0.569594204</R21>
-					<R22>-0.766949356</R22>
+					<X>-31.8812466</X>
+					<Y>80.308342</Y>
+					<Z>-33.8722</Z>
+					<R00>-0.844411492</R00>
+					<R01>0.345773697</R01>
+					<R02>-0.409157306</R02>
+					<R10>1.49011594e-008</R10>
+					<R11>0.763787746</R11>
+					<R12>0.64546746</R12>
+					<R20>0.535695016</R20>
+					<R21>0.545040131</R21>
+					<R22>-0.644951224</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-35.5</X>
-					<Y>56.9000015</Y>
-					<Z>7.5</Z>
+					<X>-29.7587795</X>
+					<Y>76.9600372</Y>
+					<Z>-30.5265732</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -529,6 +381,276 @@ Tool.Activated:connect(OnActivate)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX9">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">-- Waits for the child of the specified parent
+local function WaitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+
+
+local Tool = script.Parent
+local Handle = WaitForChild(Tool, &apos;Handle&apos;)
+
+local PlayersService = game:GetService(&apos;Players&apos;)
+local DebrisService = game:GetService(&apos;Debris&apos;)
+
+----- Sounds ------
+local ShutDown = WaitForChild(Tool, &apos;ShutDown&apos;)
+local PoweringUp = WaitForChild(Tool, &apos;PoweringUp&apos;)
+local Deflect = WaitForChild(Tool, &apos;Deflect&apos;)
+local Pulse = WaitForChild(Tool, &apos;Pulse&apos;)
+
+local sphereMeshId = &apos;http://www.roblox.com/asset/?id=90782182&apos;
+local sphereTextureId = &apos;http://www.roblox.com/asset/?id=90782359&apos;
+
+local ObjectsAlreadyDeflected = {}
+
+-- Local Character Variables ----
+local MyCharacter
+local MyHumanoid
+local MyTorso
+local MyPlayer
+---------------------------------
+
+local function CleanProjectile(hit)
+&#9;local hitClone = hit:Clone()
+&#9;hitClone.Parent = Workspace
+&#9;print(&apos;Cleaning&apos;)
+&#9;for k, child in pairs(hitClone:GetChildren()) do
+&#9;&#9;if child:IsA(&apos;TouchTransmitter&apos;) or child:IsA(&apos;RocketPropulsion&apos;) or
+&#9;&#9;&#9;&#9;&#9;child:IsA(&apos;BodyVelocity&apos;) or child:IsA(&apos;BodyForce&apos;) or
+&#9;&#9;&#9;&#9;&#9;child:IsA(&apos;BodyPosition&apos;) or child:IsA(&apos;BodyThrust&apos;) or
+&#9;&#9;&#9;&#9;&#9;child:IsA(&apos;LocalScript&apos;) or child:IsA(&apos;Script&apos;) then
+&#9;&#9;&#9;child:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;hit:Destroy()
+&#9;return hitClone
+end
+
+--[[
+function OnTouched(hit, sphere)&#9;
+&#9;if hit.Parent ~= Workspace or hit.Velocity.magnitude &lt; 5 or hit:GetMass() &gt; 160 then return end
+&#9;if math.acos((hit.CFrame.p - sphere.CFrame.p).unit:Dot(hit.Velocity.unit)) &lt; (math.pi / 2) or
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;(hit.CFrame.p - sphere.CFrame.p).magnitude &lt; 13 then return end
+&#9;if ObjectsAlreadyDeflected[hit] then return end
+&#9;--if not RaySphereIntersect((sphere.CFrame.p - hit.CFrame.p), hit.Velocity, 30) then print(&apos;Not intersecting&apos;) return end
+&#9;ObjectsAlreadyDeflected[hit] = tick()
+&#9;hit = CleanProjectile(hit)
+&#9;print(&quot;Cleaning Hit&quot;)
+end
+]]
+
+-- Todo: improve to use proper tail-call recursion
+-- http://weknowmemes.com/wp-content/uploads/2011/11/your-mother-is-so-fat-her-mass-causes-a-stack-overflow.jpg
+function calculateMassRecursive(rootPart)
+&#9;local sum = 0
+&#9;if rootPart:IsA(&apos;Part&apos;) or rootPart:IsA(&apos;WedgePart&apos;) then sum = sum + rootPart:GetMass() end
+&#9;for _, v in pairs(rootPart:GetChildren()) do
+&#9;&#9;sum = sum + calculateMassRecursive(v)
+&#9;end
+&#9;return sum
+end
+
+local function AddTrajectory(object, targetLocation)
+&#9;for k, v in pairs(object:GetChildren()) do
+&#9;&#9;if v:IsA(&apos;BodyForce&apos;) then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+
+&#9;local dirToTarget = targetLocation - object.CFrame.p
+&#9;local outwardDir = object.Velocity + (dirToTarget).unit * 50
+&#9;local timeToTarget = ((outwardDir * dirToTarget.unit).magnitude / dirToTarget.magnitude) / 2
+&#9;local mass = calculateMassRecursive(object)
+&#9;
+&#9;-- Using the freefall equation we can derive that F = M * V0 / -t
+&#9;local comeBackForce = mass * object.Velocity / -timeToTarget
+&#9;local floatingForce = Vector3.new(0, mass * 196.2, 0)
+&#9;--local forwardVel = lookDir * (distance / (2 * timeToTarget))
+&#9;--object.Velocity = object.Velocity + forwardVel
+&#9;object.RotVelocity = Vector3.new(math.rad(math.random(-360, 360)) * 2,
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;math.rad(math.random(-360, 360)) * 2,
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;math.rad(math.random(-360, 360)) * 2)
+&#9;--object.CFrame = CFrame.new(origin, origin + object.Velocity)
+&#9;object.Velocity = outwardDir
+&#9;local counteringForce = Instance.new(&apos;BodyForce&apos;)
+&#9;counteringForce.force = comeBackForce + floatingForce
+&#9;counteringForce.Name = &apos;CounteringForce&apos;
+&#9;counteringForce.Parent = object
+&#9;DebrisService:AddItem(counteringForce, timeToTarget)
+end
+
+local function ReflectVector3(Incoming, Normal)
+&#9;return 2 * ((-1 * Incoming):Dot(Normal)) * Normal + Incoming
+end
+
+local function CheckIfPlayerHasTorso(player)
+&#9;if player and player.Character and player.Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;return true
+&#9;end
+&#9;return false
+end
+
+local function FindPlayerInDirection(startPosition, direction)
+&#9;local players = PlayersService:GetPlayers()
+&#9;local attacker = nil
+&#9;local closestAngle = 1000000000000
+&#9;for _, player in pairs(players) do
+&#9;&#9;if CheckIfPlayerHasTorso(player) then
+&#9;&#9;&#9;local angleBetween = math.abs(math.acos((startPosition - player.Character.Torso.CFrame.p).unit:Dot(direction)))
+&#9;&#9;&#9;if angleBetween &lt; (math.pi / 4) then
+&#9;&#9;&#9;&#9;print(&apos;Found player&apos; , player)
+&#9;&#9;&#9;&#9;if (player.Character.Torso.CFrame.p - startPosition).magnitude &lt; 300 and angleBetween &lt; closestAngle then
+&#9;&#9;&#9;&#9;&#9;attacker = player
+&#9;&#9;&#9;&#9;&#9;closestAngle = angleBetween
+&#9;&#9;&#9;&#9;&#9;if player == MyPlayer then 
+&#9;&#9;&#9;&#9;&#9;&#9;attacker = nil
+&#9;&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return attacker
+end
+
+local function CreateSmallBall(orientationCFrame)
+&#9;local sphere = Instance.new(&apos;Part&apos;)
+&#9;sphere.CanCollide = false
+&#9;sphere.Anchored = true
+&#9;sphere.Transparency = 0.75
+&#9;sphere.Shape = Enum.PartType.Ball
+&#9;sphere.Size = Vector3.new(3, 3, 3)
+&#9;sphere.CFrame = orientationCFrame
+&#9;sphere.TopSurface = Enum.SurfaceType.Smooth
+&#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
+&#9;sphere.Parent = Workspace
+&#9;
+&#9;local sphereMesh = Instance.new(&apos;SpecialMesh&apos;)
+&#9;sphereMesh.MeshId = sphereMeshId
+&#9;sphereMesh.TextureId = sphereTextureId
+&#9;sphereMesh.Scale = Vector3.new(0.2, 0.2, 0.2)
+&#9;sphereMesh.Parent = sphere
+&#9;DebrisService:AddItem(sphere, 3)
+&#9;-- add size wubble
+&#9;coroutine.resume(coroutine.create(function (sphereMesh)
+&#9;&#9;for j = 1, 3, 0.5 do
+&#9;&#9;&#9;if sphereMesh then
+&#9;&#9;&#9;&#9;sphereMesh.Scale = Vector3.new(0.2 * j, 0.2 * j, 0.2 * j) 
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(0.05)
+&#9;&#9;end
+&#9;&#9;local maxScale = sphereMesh.Scale
+&#9;&#9;for j = 1, 0, -0.1 do
+&#9;&#9;&#9;if sphereMesh then
+&#9;&#9;&#9;&#9;sphereMesh.Scale = maxScale * j
+&#9;&#9;&#9;&#9;wait(0.05)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end), sphereMesh)
+end
+
+
+local function AddReflectFeature(sphere)
+&#9;sphere.Touched:connect(function (hit)
+&#9;&#9;if hit.Parent ~= Workspace or hit.Velocity.magnitude &lt; 5 or calculateMassRecursive(hit) &gt; 160 then return end
+&#9;&#9;-- check if it is heading out of the sphere, if so we probably shot it from inside and don&apos;t want to stop it
+
+&#9;&#9;--print(math.acos((hit.CFrame.p - sphere.CFrame.p).unit:Dot(hit.Velocity.unit)))
+&#9;&#9;if math.acos((hit.CFrame.p - sphere.CFrame.p).unit:Dot(hit.Velocity.unit)) &lt; (math.pi / 2) or
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;(hit.CFrame.p - sphere.CFrame.p).magnitude &lt; 13 then return end
+&#9;&#9;if ObjectsAlreadyDeflected[hit] then return end
+&#9;&#9;ObjectsAlreadyDeflected[hit] = tick()
+&#9;&#9;hit.Position = hit.Position - hit.Velocity * 0.1
+&#9;&#9;hit = CleanProjectile(hit)
+&#9;&#9;DebrisService:AddItem(hit, 10)
+&#9;&#9;CreateSmallBall(CFrame.new(
+&#9;&#9;&#9;&#9;hit.CFrame.p,
+&#9;&#9;&#9;&#9;hit.CFrame.p + ((sphere.CFrame.p - Vector3.new(0, sphere.Size.y / 3, 0)) - hit.CFrame.p).unit) * CFrame.Angles(math.rad(90), 0, 0))
+&#9;&#9;hit.Anchored = true
+&#9;&#9;local sphereMesh = sphere:FindFirstChild(&apos;Mesh&apos;)
+&#9;&#9;if sphereMesh then
+&#9;&#9;&#9;sphereMesh.VertexColor = Vector3.new(1, 1, 0)
+&#9;&#9;end
+&#9;&#9;local attacker = FindPlayerInDirection(hit.CFrame.p, hit.Velocity.unit)
+
+&#9;&#9;if Deflect then
+&#9;&#9;&#9;Deflect:Play()
+&#9;&#9;end
+
+&#9;&#9;wait(1)
+&#9;&#9;if sphereMesh then
+&#9;&#9;&#9;sphereMesh.VertexColor = Vector3.new(1, 1, 1)
+&#9;&#9;end
+&#9;&#9;if not hit then return end
+&#9;&#9;hit.Anchored = false
+
+&#9;&#9;local deflectVelocity = Instance.new(&apos;BodyVelocity&apos;)
+&#9;&#9;local reflectDir = ReflectVector3(hit.Velocity.unit, (hit.CFrame.p - sphere.CFrame.p).unit).unit
+
+&#9;&#9;deflectVelocity.velocity = reflectDir * hit.Velocity.magnitude
+&#9;&#9;deflectVelocity.Parent = hit
+&#9;&#9;DebrisService:AddItem(deflectVelocity, 10)
+&#9;&#9;if attacker and CheckIfPlayerHasTorso(attacker) then
+&#9;&#9;&#9;if not hit:FindFirstChild(&apos;Fire&apos;) then Instance.new(&apos;Fire&apos;, hit).Color = Color3.new(105 / 255, 222 / 255, 214/ 255) end
+&#9;&#9;&#9;deflectVelocity.velocity = (attacker.Character.Torso.CFrame.p - hit.CFrame.p).unit * hit.Velocity.magnitude * 2
+
+&#9;&#9;&#9;hit.Touched:connect(function (otherHit)
+&#9;&#9;&#9;&#9;if otherHit.Parent and otherHit.Parent == attacker.Character then
+&#9;&#9;&#9;&#9;&#9;attacker.Character.Humanoid:TakeDamage(50)
+&#9;&#9;&#9;&#9;&#9;hit:Destroy()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;-- reorient it so it is facing the direction it is going
+&#9;&#9;hit.CFrame = CFrame.new(hit.CFrame.p, hit.CFrame.p + deflectVelocity.velocity.unit)
+&#9;end)
+end
+
+local function OnActivate()
+
+&#9;if Tool.Enabled then
+&#9;&#9;local sphere = Instance.new(&apos;Part&apos;)
+&#9;&#9;sphere.CanCollide = false
+&#9;&#9;sphere.Anchored = true
+&#9;&#9;sphere.Transparency = 1
+&#9;&#9;sphere.Shape = Enum.PartType.Ball
+&#9;&#9;sphere.Size = Vector3.new(35, 35, 35)
+&#9;&#9;sphere.CFrame = CFrame.new(MyTorso.CFrame.p)
+&#9;&#9;sphere.TopSurface = Enum.SurfaceType.Smooth
+&#9;&#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
+&#9;&#9;sphere.Name = &quot;ProtectionSphere&quot;
+&#9;&#9;sphere.Parent = Workspace.CurrentCamera
+&#9;
+&#9;&#9;--local conn = sphere.Touched:connect(function(hit) OnTouched(hit, sphere) end)
+
+&#9;&#9;AddReflectFeature(sphere)
+&#9;&#9;DebrisService:AddItem(sphere, 20)
+&#9;&#9;
+&#9;end
+end
+
+
+local function OnEquip()
+&#9;MyCharacter = Tool.Parent
+&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
+&#9;MyTorso = WaitForChild(MyCharacter, &apos;Torso&apos;)
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+end
+
+Tool.Equipped:connect(OnEquip)
+
+Tool.Activated:connect(OnActivate)
+</ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
