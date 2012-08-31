@@ -6,414 +6,24 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>-0.0999999717</X>
-				<Y>-0.5</Y>
-				<Z>0.199999988</Z>
+				<X>0</X>
+				<Y>-1</Y>
+				<Z>0</Z>
 				<R00>1</R00>
 				<R01>0</R01>
-				<R02>4.37113883e-008</R02>
+				<R02>0</R02>
 				<R10>0</R10>
 				<R11>1</R11>
-				<R12>-1.91068547e-015</R12>
-				<R20>-4.37113883e-008</R20>
-				<R21>1.91068547e-015</R21>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">BearHugger</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90706265</url></Content>
+			<string name="Name">Marionette</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=91420869 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Firescript</string>
-				<ProtectedString name="Source">-- Made by Stickmasterluke
- -- edited by fusroblox
-
-local Tool = script.Parent
-local check = true
-
-local GunDamage = 10 -- Base output damage per shot.
-local FireRate = .5 -- How often the weapon can fire.
-local Automatic = false -- hold down to continue firing
-local Range = 250 -- Max distance that the weapon can fire.
-local Spread = 1 -- The bigger the spread, the more inaccurate the shots will be.
-local ClipSize = 2 -- Shots in a clip
-local ReloadTime = 6 -- Time it takes to reload the tool.
-local StartingClips = 10 -- If you want infinit clips, remove the IntValue named &quot;Clips&quot; from the tool.
-local SegmentLength = 40 -- How long the shot segments are, or the speed of the shot.
-local FadeDelayTime = 1/30
-
-
-local BarrelPos = CFrame.new(0, 0, - 1.2) -- L, F, U
-local Rate = 1/30
-local Intangibles = {&quot;Shock&quot;, &quot;Bolt&quot;, &quot;Bullet&quot;, &quot;Plasma&quot;, &quot;Effect&quot;, &quot;Laser&quot;, &quot;Handle&quot;, &quot;Effects&quot;, &quot;Effect&quot;, &quot;Flash&quot;}
-local Colors = {BrickColor.new(&quot;Bright red&quot;), BrickColor.new(&quot;Really red&quot;), BrickColor.new(&quot;Dusty Rose&quot;), BrickColor.new(&quot;Medium red&quot;)}
-local FlashColors = {&quot;Medium red&quot;, &quot;Dusty Rose&quot;, &quot;Bright red&quot;, &quot;Really red&quot;}
-
-local Reloading = false
-local Debris = game:GetService(&quot;Debris&quot;)
-
-local Bear1=nil
-local Bear2=nil
-
---used to identify this pair of bears from other players
-local MyIdent=math.random(100000)
-
-local Ammo = Tool:FindFirstChild(&quot;Ammo&quot;)
-if Ammo ~= nil then
-&#9;Ammo.Value = ClipSize
-end
-local Clips = Tool:FindFirstChild(&quot;Clips&quot;)
-if Clips ~= nil then
-&#9;Clips.Value = StartingClips
-end
-
-Tool.Equipped:connect(function()
-&#9;Tool.Handle.Fire:Stop()
-&#9;Tool.Handle.Reload:Stop()
-end)
-Tool.Unequipped:connect(function()
-&#9;Tool.Handle.Fire:Stop()
-&#9;Tool.Handle.Reload:Stop()
-end)
-
-function Round(number, decimal)
-&#9;decimal = decimal or 0
-&#9;local mult = 10^decimal
-&#9;return math.floor(number * mult + .5)/mult
-end
-
-function CheckIntangible(t)
-&#9;for i3, v3 in ipairs(Intangibles) do
-&#9;&#9;if string.lower(v3) == string.lower(t.Name) or t.Transparency == 1 then
-&#9;&#9;&#9;return true
-&#9;&#9;end
-&#9;end
-&#9;return false
-end
-
-function Reload()
-&#9;Reloading = true
-&#9;Tool.Reloading.Value = true
-&#9;if Clips ~= nil then
-&#9;&#9;if Clips.Value &gt; 0 then
-&#9;&#9;&#9;Clips.Value = Clips.Value - 1
-&#9;&#9;else
-&#9;&#9;&#9;Reloading = false
-&#9;&#9;&#9;Tool.Reloading.Value = false
-&#9;&#9;&#9;return
-&#9;&#9;end
-&#9;end
-&#9;Tool.Handle.Reload:Play()
-&#9;for i = 1, ClipSize do
-&#9;&#9;wait(ReloadTime/ClipSize)
-&#9;&#9;Ammo.Value = i
-&#9;end
-&#9;Reloading = false
-&#9;Tool.Reloading.Value = false
-end
-
-function CastRay(startpos, vec, length, ignore, delayifhit)
-&#9;if length &gt; 999 then
-&#9;&#9;length = 999
-&#9;end
-&#9;hit, endpos2 = game.Workspace:FindPartOnRay(Ray.new(startpos, vec * length), ignore)
-&#9;if hit ~= nil then
-&#9;&#9;if CheckIntangible(hit) then
-&#9;&#9;&#9;if delayifhit then
-&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;hit, endpos2 = CastRay(endpos2 + (vec * .01), vec, length - ((startpos - endpos2).magnitude), ignore, delayifhit)
-&#9;&#9;end
-&#9;end
-&#9;return hit, endpos2
-end
-
-function SendBullet(boltstart, targetpos, fuzzyness, SegmentLength, ignore, clr, damage, fadedelay)
-&#9;if Ammo ~= nil then
-&#9;&#9;if Ammo.Value &gt; 0 then
-&#9;&#9;&#9;
-&#9;&#9;else
-&#9;&#9;&#9;Reload()
-&#9;&#9;&#9;return
-&#9;&#9;end
-&#9;end
-&#9;Tool.Handle.Fire.Pitch = (math.random() * .5) + .75
-&#9;Tool.Handle.Fire:Play()
-&#9;Tool.DoFireAni.Value = not Tool.DoFireAni.Value
-&#9;print(Tool.Handle.Fire.Pitch)
-&#9;local boltdist = Range
-&#9;local clickdist = (boltstart - targetpos).magnitude
-&#9;local targetpos = targetpos + (Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5) * (clickdist/100) * fuzzyness)
-&#9;local boltvec = (targetpos - boltstart).unit
-&#9;local totalsegments = math.ceil(boltdist/SegmentLength)
-&#9;local lastpos = boltstart
-&#9;for i = 1, totalsegments do
-&#9;&#9;local newpos = (boltstart + (boltvec * (boltdist * (i/totalsegments))))
-&#9;&#9;local segvec = (newpos - lastpos).unit
-&#9;&#9;local boltlength = (newpos - lastpos).magnitude
-&#9;&#9;local bolthit, endpos = CastRay(lastpos, segvec, boltlength, ignore, false)
-&#9;&#9;DrawBeam(lastpos, endpos, clr, fadedelay)
-&#9;&#9;if bolthit ~= nil then
-&#9;&#9;&#9;local h = bolthit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;if h ~= nil then
-&#9;&#9;&#9;&#9;local plr = game.Players:GetPlayerFromCharacter(Tool.Parent)
-&#9;&#9;&#9;&#9;if plr ~= nil then
-&#9;&#9;&#9;&#9;&#9;local creator = Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;&#9;&#9;creator.Name = &quot;creator&quot;
-&#9;&#9;&#9;&#9;&#9;creator.Value = plr
-&#9;&#9;&#9;&#9;&#9;creator.Parent = h
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;--ApplyBearLiberally(h)
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;Ammo.Value = Ammo.Value - 1
-&#9;&#9;&#9;&#9;delay(0, function() PlaceBear(endpos, 5) end)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;break
-&#9;&#9;end
-&#9;&#9;lastpos = endpos
-&#9;&#9;wait(Rate)
-&#9;end
-end
-
-function ApplyBearLiberally()
-&#9;local bearScript=script.Parent.BearScript:Clone()
-&#9;bearScript.Bear1.Value=Bear1
-&#9;bearScript.Bear2.Value=Bear2
-&#9;bearScript.Parent=game.Workspace
-&#9;game.Debris:AddItem(bearScript,25)
-&#9;game.Debris:AddItem(Bear1,30)
-&#9;game.Debris:AddItem(Bear2,30)
-&#9;bearScript.Disabled=false
-&#9;Bear1=nil
-&#9;Bear2=nil
-&#9;
-end
-
-function DrawBeam(beamstart, beamend, clr, fadedelay)
-&#9;local dis = (beamstart - beamend).magnitude
-&#9;local laser = Instance.new(&quot;Part&quot;)
-&#9;laser.Name = &quot;Bullet&quot;
-&#9;laser.Anchored = true
-&#9;laser.CanCollide = false
-&#9;laser.Shape = &quot;Block&quot;
-&#9;laser.formFactor = &quot;Custom&quot;
-&#9;laser.Size = Vector3.new(.2, .2, dis + .2)
-&#9;laser.Material = Enum.Material.Plastic
-&#9;laser.Locked = true
-&#9;laser.TopSurface = 0
-&#9;laser.BottomSurface = 0
-&#9;laser.BrickColor = clr
-&#9;laser.CFrame = CFrame.new(beamend, beamstart) * CFrame.new(0, 0, - dis/2)
-&#9;laser.Parent = game.Workspace
-&#9;Debris:AddItem(laser, fadedelay)
-end
-
-function SigNum(num)
-&#9;if num == 0 then return 1 end
-&#9;return math.abs(num)/num
-end
-
-function MakeSpark(pos)
-&#9;local effect = Instance.new(&quot;Part&quot;)
-&#9;effect.Name = &quot;Effect&quot;
-&#9;effect.Anchored = false
-&#9;effect.CanCollide = false
-&#9;effect.Shape = &quot;Block&quot;
-&#9;effect.formFactor = &quot;Custom&quot;
-&#9;effect.Material = Enum.Material.Plastic
-&#9;effect.Locked = true
-&#9;effect.TopSurface = 0
-&#9;effect.BottomSurface = 0
-&#9;effect.BrickColor = Colors[1]
-&#9;effect.CFrame = CFrame.new(pos)
-&#9;effect.Parent = game.Workspace
- -- effect.velocity = Vector3.new(math.random() * 10, math.random() * 10, math.random() * 10)
- -- effect.Size = Vector3.new(effect.velocity.x, effect.velocity.y, effect.velocity.z)
-&#9;local effectVel = Instance.new(&quot;BodyVelocity&quot;)
-&#9;effectVel.maxForce = Vector3.new(99999, 99999, 99999)
-&#9;effectVel.velocity = Vector3.new(math.random() * 15 * SigNum(math.random( - 10, 10)), &#9;&#9;math.random() * 15 * SigNum(math.random( - 10, 10)), math.random() * 15 * SigNum(math.random( - 10, 10)))
-&#9;effectVel.Parent = effect
-&#9;effect.Size = Vector3.new(math.abs(effectVel.velocity.x)/20, math.abs(effectVel.velocity.y)/20, math.abs(effectVel.velocity.z)/20)
-&#9;wait()
-&#9;effectVel:Destroy()
-&#9;local effecttime = .25
-&#9;Debris:AddItem(effect, effecttime * 2)
-&#9;local startTime = time()
-&#9;while time() - startTime &lt; effecttime do
-&#9;&#9;if effect ~= nil then
-&#9;&#9;&#9;effect.Transparency = (time() - startTime)/effecttime
-&#9;&#9;end
-&#9;&#9;wait()
-&#9;end
-&#9;if effect ~= nil then
-&#9;&#9;effect.Parent = nil
-&#9;end
-end
-
-function PlaceBear(pos)
-&#9;if not Bear1 or not Bear2 then
-&#9;&#9;local tbear= Instance.new(&apos;Part&apos;)
-&#9;&#9;tbear.Size=Vector3.new(5, 9, 4.5)
-&#9;&#9;tbear.CFrame= CFrame.new(Vector3.new(pos.x,pos.y+4.5,pos.z))
-&#9;&#9;local mesh= Instance.new(&apos;SpecialMesh&apos;)
-&#9;&#9;mesh.MeshId=&apos;http://www.roblox.com/asset/?id=90706629&apos;
-&#9;&#9;mesh.TextureId=&apos;http://www.roblox.com/asset/?id=90706701&apos;
-&#9;&#9;mesh.Parent=tbear
-&#9;&#9;mesh.Scale=Vector3.new(2.8,2.8,2.8)
-
-&#9;&#9;local BGyro2= Instance.new(&apos;BodyGyro&apos;)
-&#9;&#9;BGyro2.Name=&apos;bearGyro&apos;
-&#9;&#9;BGyro2.maxTorque=Vector3.new(99999999,99999999,99999999)
-&#9;&#9;--BGyro2.P=999999999
-&#9;&#9;--BGyro2.D=999999999
-&#9;&#9;BGyro2.Parent=tbear
-&#9;&#9;if not Bear1 then
-&#9;&#9;&#9;Bear1=tbear
-&#9;&#9;&#9;tbear.Name=&apos;Bear&apos;.. MyIdent
-&#9;&#9;else
-&#9;&#9;&#9;Bear2=tbear
-&#9;&#9;&#9;tbear.Name=&apos;Bear&apos;.. MyIdent+1
-&#9;&#9;end
-&#9;&#9;tbear.Parent=game.Workspace
-&#9;end
-&#9;
-&#9;if Bear1 and Bear2 then
-&#9;&#9;ApplyBearLiberally()
-&#9;end
-&#9;
-&#9;for i = 0, 10, 1 do
-&#9;&#9;local thread = coroutine.create(MakeSpark)
-&#9;&#9;coroutine.resume(thread, pos)
-&#9;end
-&#9;
-end
-
-Tool.Down.Changed:connect(function()
-&#9;while Tool.Down.Value and check and not Reloading do
-&#9;&#9;check = false
-&#9;&#9;local humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;local plr1 = game.Players:GetPlayerFromCharacter(Tool.Parent)
-&#9;&#9;if humanoid ~= nil and plr1 ~= nil then
-&#9;&#9;&#9;if humanoid.Health &gt; 0 then
-&#9;&#9;&#9;&#9;spos1 = (Tool.Handle.CFrame * BarrelPos).p
-&#9;&#9;&#9;&#9;delay(0, function() SendBullet(spos1, Tool.Aim.Value, Spread, SegmentLength, Tool.Parent, Colors[1], GunDamage, FadeDelayTime) end)
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;check = true
-&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;end
-&#9;&#9;else
-&#9;&#9;&#9;check = true
-&#9;&#9;&#9;break
-&#9;&#9;end
-&#9;&#9;wait(FireRate)
-&#9;&#9;check = true
-&#9;&#9;if not Automatic then
-&#9;&#9;&#9;break
-&#9;&#9;end
-&#9;end
-end)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX2">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">-- Made by Stickmasterluke
- -- edited by fusroblox
-
-function WaitForChild(obj, name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
-end
-
-local Reloading = &quot;http://www.roblox.com/asset/?id=50911776&quot;
-
-local Cursors = {
-&quot;http://www.roblox.com/asset/?id=90875398&quot;,--50912619&quot;, -- red -- change the cursors
-&quot;http://www.roblox.com/asset/?id=50912641&quot;, -- blue
-&quot;http://www.roblox.com/asset/?id=90875896&quot;, -- purple
-Reloading = &quot;http://www.roblox.com/asset/?id=90875896&quot;, }--50911776&quot;, }
-
-local ClipSize = 45
-local Equipped = false
-
-local Tool = script.Parent
-local Player = game.Players.localPlayer
-local Ammo = WaitForChild(Tool,&quot;Ammo&quot;)
-local Clips = nil
-
-
-function UpdateGui()
-&#9;
-end
-
-function OnEquipped(mouse)
-&#9;if mouse ~= nil then
-&#9;&#9;Equipped = true
-&#9;&#9;local Player = game.Players.LocalPlayer
-&#9;&#9;if Player ~= nil then
-&#9;&#9;&#9;local plrgui = WaitForChild(Player,&quot;PlayerGui&quot;)
-&#9;&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;&#9;if not Tool.Down.Value then
-&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;Tool.Down.Value = true
-&#9;&#9;&#9;&#9;&#9;while Tool.Down.Value do
-&#9;&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;mouse.Button1Up:connect(function()
-&#9;&#9;&#9;&#9;Tool.Down.Value = false
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;mouse.Icon = Cursors[1]
-&#9;&#9;&#9;Tool.Reloading.Changed:connect(function(val)
-&#9;&#9;&#9;&#9;if mouse ~= nil and Equipped then
-&#9;&#9;&#9;&#9;&#9;if val then
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon = Cursors.Reloading
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon = Cursors[1]
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;UpdateGui()
-&#9;&#9;end
-&#9;end
-end
-
-function OnUnequipped()
-&#9;Equipped = false
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-
-
-while Tool:FindFirstChild(&quot;Reloading&quot;) == nil do
-&#9;wait(1)
-end
-Tool.Reloading.Changed:connect(function()
-&#9;UpdateGui()
-end)
-
-function PlayFireAni()
-&#9;local aniTrack = WaitForChild(Tool.Parent,&quot;Humanoid&quot;):LoadAnimation(Tool.FireAni)
-&#9;aniTrack:Play()
-end
-
-Tool.DoFireAni.Changed:connect(PlayFireAni)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBX3">
+		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -424,11 +34,11 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">4</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">107</int>
+				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.400000572</X>
-					<Y>0.599999905</Y>
-					<Z>0.100000381</Z>
+					<X>-0.100000001</X>
+					<Y>1.5</Y>
+					<Z>-0.5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -450,7 +60,7 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">true</bool>
+				<bool name="Locked">false</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -476,16 +86,16 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.840000033</X>
-					<Y>1.18000245</Y>
-					<Z>1.75999904</Z>
+					<X>0.200000033</X>
+					<Y>2.99999976</Y>
+					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=90706424</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=91417566</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -494,11 +104,11 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>2.70000005</X>
-						<Y>2.70000005</Y>
-						<Z>2.70000005</Z>
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90706324</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=91420785 </url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -506,280 +116,415 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Fire</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=90869127</url></Content>
-					<float name="Volume">0.75</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX6">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Reload</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=90716464</url></Content>
-					<float name="Volume">0.5</float>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Vector3Value" referent="RBX7">
+		<Item class="Script" referent="RBX3">
 			<Properties>
-				<string name="Name">Aim</string>
-				<Vector3 name="Value">
-					<X>-101.971649</X>
-					<Y>3.3496871</Y>
-					<Z>-140.312485</Z>
-				</Vector3>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">print &apos;Hello world!&apos;
+</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="IntValue" referent="RBX8">
+		<Item class="LocalScript" referent="RBX4">
 			<Properties>
-				<string name="Name">Ammo</string>
-				<int name="Value">2</int>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MarionetteScript</string>
+				<ProtectedString name="Source">----------- Marionette --------------
+-- Waits for the child of the specified parent
+function WaitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+local Tool = script.Parent
+local Handle = WaitForChild(Tool, &apos;Handle&apos;)
+
+local PlayersService = Game:GetService(&apos;Players&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+local ContentService = Game:GetService(&quot;ContentProvider&quot;)
+
+local Marionette
+local MarionetteWeld
+
+local MarionetteGui
+
+
+----- Sounds ------
+--[[
+local ShutDown = WaitForChild(Tool, &apos;ShutDown&apos;)
+local PoweringUp = WaitForChild(Tool, &apos;PoweringUp&apos;)
+local Deflect = WaitForChild(Tool, &apos;Deflect&apos;)
+local Pulse = WaitForChild(Tool, &apos;Pulse&apos;)
+--]]
+
+-- Local Character Variables ----
+local MyCharacter
+local MyHumanoid
+local MyTorso
+local MyPlayer
+local MyMouse
+---------------------------------
+
+-- Todo: Make it follow welds
+function calculateMassRecursive(rootPart)
+&#9;local sum = 0
+&#9;if rootPart:IsA(&apos;Part&apos;) or rootPart:IsA(&apos;WedgePart&apos;) or rootPart:IsA(&apos;CornerWedgePart&apos;) or rootPart:IsA(&apos;TrussPart&apos;) then sum = sum + rootPart:GetMass() end
+&#9;for _, v in pairs(rootPart:GetChildren()) do
+&#9;&#9;sum = sum + calculateMassRecursive(v)
+&#9;end
+&#9;return sum
+end
+
+local function  IgnoreCloneCheck( objectToClone )
+&#9;if objectToClone:IsA(&apos;Script&apos;) or objectToClone:IsA(&apos;LocalScript&apos;) or not objectToClone.Archivable then
+&#9;&#9;return true
+&#9;end
+&#9;return false
+end
+
+local function AppearanceItem(item)
+&#9;if item:IsA(&apos;Shirt&apos;) or item:IsA(&apos;Pants&apos;) or item:IsA(&apos;SpecialMesh&apos;) or item:IsA(&apos;Hat&apos;) or item:IsA(&apos;Decal&apos;) or item:IsA(&apos;Face&apos;) or item:IsA(&apos;BodyColors&apos;) then
+&#9;&#9;return true
+&#9;end
+&#9;return false
+end
+
+local function CopyCharacterAppearanceRecursive(newParent, oldParent)
+&#9;if #oldParent:GetChildren() == 0 then
+&#9;&#9;return nil
+&#9;end
+&#9;for k, v in pairs(oldParent:GetChildren()) do
+&#9;&#9;if AppearanceItem(v) then
+&#9;&#9;&#9;if newParent:FindFirstChild(v.Name) then
+&#9;&#9;&#9;&#9;CopyCharacterAppearanceRecursive(currClone, v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+-- For now lets assume this function works
+local function CopyCharacterAppearance(character, mari)
+&#9;if not mari then return end
+&#9;mari.Name = character.Name .. &quot;&apos;s Marionette&quot;
+&#9;--CopyCharacterAppearanceRecursive(Marionette, character)
+&#9;for k, v in pairs(character:GetChildren()) do
+&#9;&#9;print(&quot;checking &quot; .. v.Name)
+&#9;&#9;if AppearanceItem(v) and v.Archivable then
+&#9;&#9;&#9;print(v.Name .. &quot; is an AppearanceItem&quot;)
+&#9;&#9;&#9;local currClone = v:Clone()
+&#9;&#9;&#9;currClone.Parent = mari
+&#9;&#9;&#9;print(&quot;Copying &quot; .. v.Name)
+&#9;&#9;end
+&#9;&#9;for kk, vv in pairs(v:GetChildren()) do
+&#9;&#9;&#9;if AppearanceItem(vv) and vv.Archivable then
+&#9;&#9;&#9;&#9;local nextClone = vv:Clone()
+&#9;&#9;&#9;&#9;nextClone.Parent = mari:FindFirstChild(v.Name)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+local function AnimateMarionette(pickedTarget)
+&#9;print(&quot;Animating Marionette&quot;)
+&#9;if Marionette and Marionette:FindFirstChild(&apos;Right Arm&apos;) and pickedTarget == Marionette:FindFirstChild(&apos;Right Arm&apos;)  then
+&#9;&#9;AnimateRightArm()
+&#9;end
+end
+
+function SlashRightArm()
+&#9;print(&quot;Right Arm Clicked&quot;)
+&#9;if Marionette and Marionette:FindFirstChild(&apos;LinkedPlayer&apos;) and Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value then
+&#9;&#9;local scriptToCopy = WaitForChild(Tool, &apos;AnimateSlashScript&apos;):Clone()
+&#9;&#9;local animationToCopy = WaitForChild(Tool, &quot;SlashAnim&quot;):Clone()
+&#9;&#9;animationToCopy.Parent = Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value
+&#9;&#9;scriptToCopy.Parent = Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value
+&#9;&#9;scriptToCopy.Disabled = false
+
+&#9;&#9;scriptToCopy = scriptToCopy:Clone()
+&#9;&#9;animationToCopy = animationToCopy:Clone()
+&#9;&#9;animationToCopy.Parent = Marionette
+&#9;&#9;scriptToCopy.Parent = Marionette
+&#9;&#9;scriptToCopy.Disabled = false
+&#9;end
+end
+
+function AnimateRightArm()
+&#9;print(&quot;Right Arm Clicked&quot;)
+&#9;if Marionette and Marionette:FindFirstChild(&apos;LinkedPlayer&apos;) and Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value then
+&#9;&#9;local scriptToCopy = WaitForChild(Tool, &apos;AnimateArmScript&apos;):Clone()
+&#9;&#9;local animationToCopy = WaitForChild(Tool, &quot;Recoil&quot;):Clone()
+&#9;&#9;animationToCopy.Parent = Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value
+&#9;&#9;scriptToCopy.Parent = Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value
+&#9;&#9;scriptToCopy.Disabled = false
+
+&#9;&#9;scriptToCopy = scriptToCopy:Clone()
+&#9;&#9;animationToCopy = animationToCopy:Clone()
+&#9;&#9;animationToCopy.Parent = Marionette
+&#9;&#9;scriptToCopy.Parent = Marionette
+&#9;&#9;scriptToCopy.Disabled = false
+&#9;&#9;--[[
+&#9;&#9;local hum = WaitForChild(Marionette, &apos;Humanoid&apos;)
+&#9;&#9;local recoilAnim = WaitForChild(Tool, &apos;Recoil&apos;)
+&#9;&#9;local RecoilTrack
+&#9;&#9;local linkedPlayerTrack 
+&#9;&#9;if recoilAnim then
+&#9;&#9;&#9;RecoilTrack = hum:LoadAnimation(recoilAnim)
+&#9;&#9;&#9;linkedPlayerTrack = Marionette:FindFirstChild(&apos;LinkedPlayer&apos;).Value.Humanoid:LoadAnimation(recoilAnim)
+&#9;&#9;end
+&#9;&#9;if RecoilTrack then
+&#9;&#9;&#9;for i = 1, 3 do
+&#9;&#9;&#9;&#9;RecoilTrack:Play()
+&#9;&#9;&#9;&#9;linkedPlayerTrack:Play()
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+&#9;&#9;RecoilTrack:Stop()
+&#9;end
+&#9;--]]
+&#9;end
+end
+
+local function CopyCharacterSimple(character)
+&#9;local newChar = Game:GetService(&quot;InsertService&quot;):LoadAsset(88117081):GetChildren()[1]
+&#9;for k, parts in pairs(newChar:GetChildren()) do
+&#9;&#9;for j, child in pairs(parts:GetChildren()) do
+&#9;&#9;&#9;if child:IsA(&apos;SpecialMesh&apos;) or child:IsA(&apos;Sound&apos;) then child:Destroy() end
+&#9;&#9;end
+&#9;end
+&#9;newChar.Humanoid.Health = newChar.Humanoid.MaxHealth
+&#9;CopyCharacterAppearance(character, newChar)
+&#9;return newChar
+end
+
+local function FindCharacterAtMouse()
+&#9;if MyMouse then
+&#9;&#9;local target = MyMouse.Target
+&#9;&#9;if target and target.Parent then
+&#9;&#9;&#9;if PlayersService:GetPlayerFromCharacter(target.Parent) then
+&#9;&#9;&#9;&#9;return target.Parent
+&#9;&#9;&#9;end 
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+local function DestroyMarionette()
+&#9;if Marionette then
+&#9;&#9;Marionette:Destroy()
+&#9;&#9;MarionetteWeld:Destroy()
+&#9;&#9;Marionette = nil
+&#9;&#9;MarionetteWeld = nil
+&#9;end
+end 
+
+local function AddFloatingForce(object, mass)
+&#9;local floatingForce = Instance.new(&apos;BodyForce&apos;)
+&#9;floatingForce.force = Vector3.new(0, 196.2 * mass, 0)
+&#9;floatingForce.Parent = object
+&#9;return floatingForce
+end
+
+local function ActivatePlayerControls()
+&#9;if MarionetteGui then
+&#9;&#9;local marionetteFrame = MarionetteGui:FindFirstChild(&apos;Frame&apos;)
+&#9;&#9;if marionetteFrame then
+&#9;&#9;&#9;marionetteFrame.Instructions.Visible = false
+&#9;&#9;&#9;marionetteFrame.SpinArms.Visible = true
+&#9;&#9;&#9;marionetteFrame.SpinArms.Active = true
+&#9;&#9;&#9;marionetteFrame.Slash.Visible = true
+&#9;&#9;&#9;marionetteFrame.Slash.Active = true
+&#9;&#9;end
+&#9;end
+end
+
+local function OnActivate()
+&#9;--TODO: Debounce check this stuff yo~
+&#9;print(&quot;Activated&quot;)
+&#9;local pickedTarget = FindCharacterAtMouse()
+&#9;if pickedTarget then
+&#9;&#9;print(&quot;picked&quot;)
+
+&#9;&#9;DestroyMarionette()
+&#9;&#9;Marionette = CopyCharacterSimple(pickedTarget)
+&#9;&#9;local otherChar = Instance.new(&apos;ObjectValue&apos;)
+&#9;&#9;otherChar.Value = pickedTarget
+&#9;&#9;otherChar.Name = &quot;LinkedPlayer&quot;
+&#9;&#9;otherChar.Parent = Marionette
+&#9;&#9;if Marionette then
+&#9;&#9;&#9;ActivatePlayerControls()
+&#9;&#9;&#9;--clonedCopy:MoveTo(Handle.CFrame.p + Handle.CFrame.lookVector)
+&#9;&#9;&#9;MarionetteWeld = Instance.new(&apos;Weld&apos;)
+&#9;&#9;&#9;MarionetteWeld.Part0 = Marionette.Torso
+&#9;&#9;&#9;MarionetteWeld.Part1 = Handle
+&#9;&#9;&#9;MarionetteWeld.C0 = CFrame.new(0, 1.3, 0.4)
+&#9;&#9;&#9;MarionetteWeld.Parent = Handle
+&#9;&#9;&#9;Marionette.Parent = Tool
+&#9;&#9;&#9;local mass = calculateMassRecursive(Marionette)
+&#9;&#9;end
+&#9;end
+end
+
+local function AddGui()
+&#9;local theGui = Tool:FindFirstChild(&apos;MarionetteGui&apos;)
+&#9;MarionetteGui = theGui:Clone()
+&#9;MarionetteGui.Parent = MyPlayer.PlayerGui
+&#9;local marionetteFrame = MarionetteGui.Frame
+&#9;-- Add more buttons here
+&#9;marionetteFrame.SpinArms.Visible = false
+&#9;marionetteFrame.SpinArms.Active = false
+&#9;marionetteFrame.SpinArms.MouseButton1Click:connect(AnimateRightArm)
+&#9;marionetteFrame.Slash.Visible = false
+&#9;marionetteFrame.Slash.Active = false
+&#9;marionetteFrame.Slash.MouseButton1Click:connect(SlashRightArm)
+end
+
+local function OnEquip(mouse)
+&#9;MyCharacter = Tool.Parent
+&#9;print(MyCharacter.Name)
+&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
+&#9;MyTorso = WaitForChild(MyCharacter, &apos;Torso&apos;)
+&#9;if mouse then
+&#9;&#9;MyMouse = mouse
+&#9;end
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+&#9;AddGui()
+end
+
+local function OnUnequip()
+&#9;-- Get rid of this stuff when you unequip otherwise will do painful things when requipped
+&#9;DestroyMarionette()
+&#9;if MarionetteGui then
+&#9;&#9;MarionetteGui:Destroy()
+&#9;&#9;MarionetteGui = nil
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquip)
+Tool.Unequipped:connect(OnUnequip)
+Tool.Activated:connect(OnActivate)
+</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX9">
-			<Properties>
-				<string name="Name">Down</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="IntValue" referent="RBX10">
-			<Properties>
-				<string name="Name">NoClips</string>
-				<int name="Value">0</int>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX11">
-			<Properties>
-				<string name="Name">Reloading</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX12">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=89456847</url></Content>
-				<string name="Name">FireAni</string>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX13">
-			<Properties>
-				<string name="Name">DoFireAni</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX14">
+		<Item class="LocalScript" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">BearScript</string>
-				<ProtectedString name="Source">local MyCharacter=script.Parent
-local LeadSound=script.BearLead
-local HitSound=script.BearHit
-local Bear1=script.Bear1
-local Bear2=script.Bear2
-local target= (Bear1.Value.CFrame.p+Bear2.Value.CFrame.p)/2.0
-local distance=(Bear1.Value.CFrame.p-Bear2.Value.CFrame.p).magnitude
-local soundLength=1.45
-local speed=distance/(soundLength*2)
-local exploding=false
-Bear1.Value.CFrame=CFrame.new(Bear1.Value.CFrame.p,Bear2.Value.CFrame.p)
-Bear1.Value.bearGyro.cframe=Bear1.Value.CFrame
-Bear2.Value.CFrame=CFrame.new(Bear2.Value.CFrame.p,Bear1.Value.CFrame.p)
-Bear2.Value.bearGyro.cframe=Bear2.Value.CFrame
-
-local BThrust1= Instance.new(&apos;BodyVelocity&apos;)
-BThrust1.maxForce=Vector3.new(50000000,50,50000000)
-BThrust1.velocity=(target-Bear1.Value.CFrame.p).unit*speed
-BThrust1.Parent=Bear1.Value
-
-local temptag=Instance.new(&apos;StringValue&apos;)
-&#9;temptag.Name=&quot;BEAR_TAG&quot;
-&#9;temptag.Value=Bear1.Value.Name
-&#9;temptag.Parent=Bear1.Value
-
-
-local BThrust2= Instance.new(&apos;BodyVelocity&apos;)
-BThrust2.maxForce=Vector3.new(50000000,50,50000000)
-BThrust2.velocity=(target-Bear2.Value.CFrame.p).unit*speed
-BThrust2.Parent=Bear2.Value
-
-temptag=Instance.new(&apos;StringValue&apos;)
-&#9;temptag.Name=&quot;BEAR_TAG&quot;
-&#9;temptag.Value=Bear2.Value.Name
-&#9;temptag.Parent=Bear2.Value
-
-local LeadSound1=script.BearLead:Clone()
-LeadSound1.Parent=Bear1.Value
-LeadSound1:Play()
-
-local LeadSound2=script.BearLead:Clone()
-LeadSound2.Parent=Bear2.Value
-LeadSound2:Play()
-
-function DoAwesomeness()
-&#9;if exploding then return end
-&#9;exploding=true
-&#9;BThrust1:Destroy()
-&#9;BThrust2:Destroy()
-&#9;Bear1.Value.Anchored=true
-&#9;Bear2.Value.Anchored=true
-&#9;local explosion= Instance.new(&apos;Explosion&apos;)
-&#9;explosion.Position=Bear1.Value.CFrame.p
-&#9;explosion.BlastPressure=50000
-&#9;explosion.BlastRadius=25
-&#9;explosion.ExplosionType=&apos;CratersAndDebris&apos;
-&#9;explosion.Parent=game.Workspace
-&#9;local explosionSound= script.BearHit:Clone()
-&#9;explosionSound.Parent=game.Workspace--Bear1.Value
-&#9;wait()
-&#9;explosionSound:Play()
-&#9;
-&#9;local startPos=Vector3.new(0, -7, -20)
-&#9;local endPos=Vector3.new(0, 50, -20)
-
-&#9;local bearGuis= {}
-&#9;local iter = 0
-&#9;for _, player in pairs(game.Players:GetPlayers()) do
-&#9;&#9;iter=iter+1 
-&#9;&#9;local billGui=script.AmericaGui:Clone()
-&#9;&#9;billGui.Name=&apos;BearMericaGui&apos;
-&#9;&#9;billGui.Adornee=Bear1.Value
-&#9;&#9;billGui.StudsOffset = startPos
-&#9;&#9;billGui.Parent=player.PlayerGui
-&#9;&#9;bearGuis[iter]=billGui
-&#9;&#9;
-&#9;end
-&#9;local startTime=time()
-&#9;local waitTime=4.5
-
-&#9;while time()-startTime&lt;waitTime do
-&#9;&#9;for i=1,iter,1 do
-&#9;&#9;&#9;bearGuis[i].StudsOffset=startPos:Lerp(endPos,(time()-startTime)/waitTime)
-&#9;&#9;end
-&#9;&#9;if math.random(5)==1 then
-&#9;&#9;&#9;local explosion2= Instance.new(&apos;Explosion&apos;)
-&#9;&#9;&#9;explosion2.Position=Bear1.Value.CFrame.p+Vector3.new(math.random(100)-50,math.random(50),math.random(5))
-&#9;&#9;&#9;explosion2.Parent=game.Workspace
-&#9;&#9;end
-&#9;&#9;
-&#9;&#9;wait()
-&#9;end
-&#9;wait(2)
-&#9;Bear1.Value:Destroy()
-&#9;Bear2.Value:Destroy()
-&#9;script:Destroy()
-&#9;for i=1,iter-1,1 do
-&#9;&#9;&#9;bearGuis[i]:Destroy()
-&#9;&#9;end
+				<string name="Name">AnimateArmScript</string>
+				<ProtectedString name="Source">-- Waits for the child of the specified parent
+local function WaitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
 end
 
+print(&apos;Starting doll&apos;)
 
-function OnTouched(origin, myPart, hit)
-&#9;if hit.Anchored then return end
-&#9;
-&#9;if hit:FindFirstChild(&quot;BEAR_TAG&quot;) and hit.BEAR_TAG.Value~=origin.Name then
-&#9;&#9;&#9;DoAwesomeness()
-&#9;&#9;return
-&#9;end
 
-&#9;if hit.Parent:FindFirstChild(&quot;BEAR_TAG&quot;) and hit.Parent.BEAR_TAG.Value~=origin.Name then
-&#9;&#9;&#9;DoAwesomeness()
-&#9;&#9;return
-&#9;end
-&#9;
-&#9;local tweld = Instance.new(&quot;Weld&quot;)
-&#9;tweld.Part0 = hit
-&#9;tweld.Part1 = myPart
-&#9;tweld.C0 = CFrame.new()
-&#9;tweld.C1 = origin.CFrame:inverse() * hit.CFrame
-&#9;tweld.Parent = origin
-&#9;if not hit:FindFirstChild(&quot;BEAR_TAG&quot;) or hit.Parent:FindFirstChild(&quot;BEAR_TAG&quot;) then
-&#9;&#9;local tag=Instance.new(&apos;StringValue&apos;)
-&#9;&#9;tag.Name=&quot;BEAR_TAG&quot;
-&#9;&#9;tag.Value=origin.Name
-&#9;&#9;if hit.Parent:FindFirstChild(&apos;Humanoid&apos;) then
-&#9;&#9;&#9;tag.Parent=hit.Parent
-&#9;&#9;else
-&#9;&#9;&#9;tag.Parent=hit
-&#9;&#9;end
-&#9;&#9;game.Debris:AddItem(tag,15)
-&#9;end
-&#9;
-&#9;hit.Touched:connect(function(nhit) OnTouched(origin,hit,nhit) end)
+local MyHumanoid = WaitForChild(script.Parent, &apos;Humanoid&apos;)
+
+local RecoilAnim = WaitForChild(script.Parent, &apos;Recoil&apos;)
+local RecoilTrack
+
+print(&apos;Ending doll&apos;)
+
+if RecoilAnim then
+&#9;RecoilTrack = MyHumanoid:LoadAnimation(RecoilAnim)
 end
 
-Bear1.Value.Touched:connect(function(hit) OnTouched(Bear1.Value,Bear1.Value,hit) end)
-Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit) end)
+for i = 1, 3 do
+&#9;RecoilTrack:Play()
+&#9;wait(1)
+end
+
+RecoilTrack:Stop()
+
+RecoilAnim:Destroy()
+script:Destroy()
 </ProtectedString>
 			</Properties>
-			<Item class="Sound" referent="RBX15">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">BearHit</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=90696602</url></Content>
-					<float name="Volume">0.5</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX16">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">BearLead</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=90695285</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-			<Item class="ObjectValue" referent="RBX17">
-				<Properties>
-					<string name="Name">Bear1</string>
-					<Ref name="Value">null</Ref>
-				</Properties>
-			</Item>
-			<Item class="ObjectValue" referent="RBX18">
-				<Properties>
-					<string name="Name">Bear2</string>
-					<Ref name="Value">null</Ref>
-				</Properties>
-			</Item>
-			<Item class="BillboardGui" referent="RBX19">
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=87684948</url></Content>
+				<string name="Name">Recoil</string>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX7">
+			<Properties>
+				<string name="Name">MarionetteGui</string>
+			</Properties>
+			<Item class="Frame" referent="RBX8">
 				<Properties>
 					<bool name="Active">false</bool>
-					<Ref name="Adornee">null</Ref>
-					<bool name="AlwaysOnTop">false</bool>
-					<bool name="Enabled">true</bool>
-					<Vector3 name="ExtentsOffset">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-					</Vector3>
-					<string name="Name">AmericaGui</string>
-					<Ref name="PlayerToHideFrom">null</Ref>
-					<UDim2 name="Size">
-						<XS>100</XS>
-						<XO>0</XO>
-						<YS>70</YS>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<string name="Name">Frame</string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>-200</XO>
+						<YS>0.800000012</YS>
 						<YO>0</YO>
 					</UDim2>
-					<Vector2 name="SizeOffset">
-						<X>0</X>
-						<Y>0</Y>
-					</Vector2>
-					<Vector3 name="StudsOffset">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-					</Vector3>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>400</XO>
+						<YS>0</YS>
+						<YO>80</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">3</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
 				</Properties>
-				<Item class="ImageLabel" referent="RBX20">
+				<Item class="TextButton" referent="RBX9">
+					<Properties>
+						<bool name="Active">true</bool>
+						<bool name="AutoButtonColor">true</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">2</token>
+						<token name="FontSize">4</token>
+						<bool name="Modal">false</bool>
+						<string name="Name">SpinArms</string>
+						<UDim2 name="Position">
+							<XS>0.25</XS>
+							<XO>-33</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<bool name="Selected">false</bool>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>65</XO>
+							<YS>0</YS>
+							<YO>65</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">2</token>
+						<string name="Text">Talk on Phone</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">true</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">6</int>
+					</Properties>
+				</Item>
+				<Item class="TextLabel" referent="RBX10">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Color3 name="BackgroundColor3">4288914085</Color3>
@@ -788,50 +533,146 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 						<int name="BorderSizePixel">1</int>
 						<bool name="ClipsDescendants">false</bool>
 						<bool name="Draggable">false</bool>
-						<Content name="Image"><url>http://www.roblox.com/Asset?ID=90698952</url></Content>
-						<string name="Name">ImageLabel</string>
+						<token name="Font">0</token>
+						<token name="FontSize">6</token>
+						<string name="Name">Instructions</string>
 						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>0</XO>
+							<YS>0.5</YS>
+							<YO>0</YO>
+						</UDim2>
+						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>0</XO>
 							<YS>0</YS>
 							<YO>0</YO>
 						</UDim2>
-						<UDim2 name="Size">
-							<XS>1</XS>
-							<XO>0</XO>
-							<YS>1</YS>
+						<token name="SizeConstraint">0</token>
+						<string name="Text">Click on a player to assume control.</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">8</int>
+					</Properties>
+				</Item>
+				<Item class="TextButton" referent="RBX11">
+					<Properties>
+						<bool name="Active">true</bool>
+						<bool name="AutoButtonColor">true</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">2</token>
+						<token name="FontSize">4</token>
+						<bool name="Modal">false</bool>
+						<string name="Name">Slash</string>
+						<UDim2 name="Position">
+							<XS>0.75</XS>
+							<XO>-33</XO>
+							<YS>0</YS>
 							<YO>0</YO>
 						</UDim2>
+						<bool name="Selected">false</bool>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>65</XO>
+							<YS>0</YS>
+							<YO>65</YO>
+						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">2</token>
+						<string name="Text">Play Drums!</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">true</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
 						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
+						<int name="ZIndex">6</int>
 					</Properties>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX21">
+		<Item class="Animation" referent="RBX12">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=68484538</url></Content>
+				<string name="Name">SlashAnim</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX13">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">AnimateSlashScript</string>
+				<ProtectedString name="Source">-- Waits for the child of the specified parent
+local function WaitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+print(&apos;Starting doll&apos;)
+
+
+local MyHumanoid = WaitForChild(script.Parent, &apos;Humanoid&apos;)
+
+local RecoilAnim = WaitForChild(script.Parent, &apos;SlashAnim&apos;)
+local RecoilTrack
+
+print(&apos;Ending doll&apos;)
+
+if RecoilAnim then
+&#9;RecoilTrack = MyHumanoid:LoadAnimation(RecoilAnim)
+end
+if RecoilTrack then
+&#9;RecoilTrack:Play()
+&#9;wait(6)
+&#9;RecoilTrack:Stop()
+end
+
+if RecoilAnim then
+&#9;RecoilAnim:Destroy()
+end
+
+script:Destroy()
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX14">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-3.37807083</X>
-					<Y>1.68453228</Y>
-					<Z>-3.16152716</Z>
-					<R00>-0.73846817</R00>
-					<R01>0.160799533</R01>
-					<R02>-0.654834569</R02>
-					<R10>-7.45057971e-009</R10>
-					<R11>0.971149206</R11>
-					<R12>0.238472968</R12>
-					<R20>0.674288332</R20>
-					<R21>0.176104695</R21>
-					<R22>-0.717162728</R22>
+					<X>1.54603875</X>
+					<Y>1.61410344</Y>
+					<Z>-2.66856575</Z>
+					<R00>-0.796528578</R00>
+					<R01>-0.0253171735</R01>
+					<R02>0.604070663</R02>
+					<R10>-0</R10>
+					<R11>0.999122977</R11>
+					<R12>0.0418741889</R12>
+					<R20>-0.604600906</R20>
+					<R21>0.0333539881</R21>
+					<R22>-0.795829952</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.400000572</X>
-					<Y>0.599999905</Y>
-					<Z>0.100000381</Z>
+					<X>-0.100000001</X>
+					<Y>1.5</Y>
+					<Z>-0.5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
