@@ -6,8 +6,8 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>-0.0291035213</X>
-				<Y>0</Y>
+				<X>-0.0291000009</X>
+				<Y>-0.600000024</Y>
 				<Z>-0.100000001</Z>
 				<R00>1</R00>
 				<R01>0</R01>
@@ -20,7 +20,7 @@
 				<R22>1</R22>
 			</CoordinateFrame>
 			<string name="Name">Artemis Bow</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90708378</url></Content>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=92189305</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="LocalScript" referent="RBX1">
@@ -84,13 +84,22 @@ function waitfor(parent,name)
 end
 
 local storeWeld=waitfor(sp,&quot;Motor&quot;)
+local playsound=waitfor(sp,&quot;PlaySound&quot;)
+local soundname=waitfor(playsound,&quot;SoundName&quot;)
 local anim=waitfor(sp,&quot;FlyAnimation&quot;)
 local gui=waitfor(sp,&quot;ArtemisGui&quot;)
 local ButtonHolder=waitfor(gui,&quot;ButtonHolder&quot;)
 local button1=waitfor(ButtonHolder,&quot;Button1&quot;)
 local button2=waitfor(ButtonHolder,&quot;Button2&quot;)
 
-
+function checkintangible(hit)
+&#9;if hit and hit~=nil then
+&#9;&#9;if hit:IsDescendantOf(sp.Parent) or hit.Transparency&gt;.8 or hit.Name==&quot;Handle&quot; or hit.Name==&quot;Effect&quot; or hit.Name==&quot;Bullet&quot; or hit.Name==&quot;Laser&quot; or string.lower(hit.Name)==&quot;water&quot; or hit.Name==&quot;Rail&quot; or hit.Name==&quot;Arrow&quot; then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
 
 function changemode(newmode)
 &#9;charge=0
@@ -102,27 +111,6 @@ function changemode(newmode)
 &#9;elseif mode==2 then
 &#9;&#9;button2.Image=&quot;http://www.roblox.com/asset/?id=90879149&quot;
 &#9;end
-end
-
-function PlaySound(soundname)
-&#9;local SoundScript=sp:FindFirstChild(&quot;SoundScript&quot;)
-&#9;if SoundScript then
-&#9;&#9;local inbox=SoundScript:FindFirstChild(&quot;Inbox&quot;)
-&#9;&#9;if inbox then
-&#9;&#9;&#9;local soundtag=Instance.new(&quot;StringValue&quot;)
-&#9;&#9;&#9;soundtag.Value=soundname
-&#9;&#9;&#9;soundtag.Parent=inbox
-&#9;&#9;end
-&#9;end
-end
-
-function checkintangible(hit)
-&#9;if hit and hit~=nil then
-&#9;&#9;if hit:IsDescendantOf(sp.Parent) or hit.Transparency&gt;.8 or hit.Name==&quot;Handle&quot; or hit.Name==&quot;Effect&quot; or hit.Name==&quot;Bullet&quot; or hit.Name==&quot;Laser&quot; or string.lower(hit.Name)==&quot;water&quot; or hit.Name==&quot;Rail&quot; or hit.Name==&quot;Arrow&quot; then
-&#9;&#9;&#9;return true
-&#9;&#9;end
-&#9;end
-&#9;return false
 end
 
 function castray(startpos,vec,length,ignore,delayifhit)
@@ -212,7 +200,7 @@ function fire(targetpos,startpos,damage,fadedelay)
 &#9;local hit,endpos=castray(startpos,vec,range,sp.Parent,false)
 &#9;local fakevec=(endpos-fakestartpos).unit
 &#9;if hit~=nil then
-&#9;&#9;local newcf=CFrame.new(endpos,endpos+fakevec)*CFrame.new(0,0,1.3)
+&#9;&#9;local newcf=CFrame.new(endpos,endpos+fakevec)*CFrame.new(0,0,.9+(math.random(0,1)*.4))
 &#9;&#9;p.CFrame=newcf
 &#9;&#9;local w=Instance.new(&quot;Weld&quot;)
 &#9;&#9;w.Part0=hit
@@ -233,7 +221,8 @@ function fire(targetpos,startpos,damage,fadedelay)
 &#9;&#9;drawbeam(fakestartpos,endpos,BrickColor.new(&quot;Institutional white&quot;),fadedelay)
 &#9;end)
 
-&#9;PlaySound(&quot;FireSound&quot;)
+&#9;soundname.Value=&quot;FireSound&quot;
+&#9;playsound.Value=not playsound.Value
 
 &#9;if sp:FindFirstChild(&quot;Handle2&quot;) then
 &#9;&#9;sp.Handle2.Transparency=1
@@ -365,7 +354,8 @@ function fly()&#9;&#9;--(de)activate fly mode
 &#9;&#9;&#9;&#9;if gravitydelta&gt;.45 and tick()&gt;lastflap then
 &#9;&#9;&#9;&#9;&#9;lastflap=tick()+.5
 &#9;&#9;&#9;&#9;&#9;delay(0,function()
-&#9;&#9;&#9;&#9;&#9;&#9;PlaySound(&quot;WingSound&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;soundname.Value=&quot;WingSound&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;playsound.Value=not playsound.Value
 
 &#9;&#9;&#9;&#9;&#9;&#9;LeftWeld.DesiredAngle=-.5
 &#9;&#9;&#9;&#9;&#9;&#9;RightWeld.DesiredAngle=.5
@@ -392,6 +382,7 @@ end
 function onEquipped(mouse)
 &#9;equipped=true
 &#9;if mouse~=nil then
+&#9;&#9;storeWeld.C0=CFrame.new(-.05,0,-.5)*CFrame.Angles(0,math.pi/2,0)
 &#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
 &#9;&#9;mouse.Button1Down:connect(function()
 &#9;&#9;&#9;if not down then
@@ -406,12 +397,12 @@ function onEquipped(mouse)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;if check and hu and hu.Health&gt;0 and t and he then
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;check=false
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sp.Handle.Mesh.Scale=Vector3.new(2,2,2.5)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,.5,0)*CFrame.Angles(0,math.pi/2,0)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,0,0)*CFrame.Angles(0,math.pi/2,0)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(.1)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sp.Handle.Mesh.Scale=Vector3.new(2,2,2)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;fire(mouse.Hit.p,he.Position,rapidfiredamage,.25)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(.15)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,.5,-.5)*CFrame.Angles(0,math.pi/2,0)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,0,-.5)*CFrame.Angles(0,math.pi/2,0)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if sp:FindFirstChild(&quot;Handle2&quot;) then
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sp.Handle2.Transparency=0
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
@@ -426,7 +417,7 @@ function onEquipped(mouse)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;charge=charge+1
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local percent=(charge/100)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sp.Handle.Mesh.Scale=Vector3.new(2,2,2+(2*percent))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,.5,-.5+percent)*CFrame.Angles(0,math.pi/2,0)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,0,-.5+percent)*CFrame.Angles(0,math.pi/2,0)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(.05)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;waited=true
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;end
@@ -449,7 +440,7 @@ function onEquipped(mouse)
 &#9;&#9;&#9;&#9;&#9;fire(mouse.Hit.p,he.Position,charge+10,.25+(charge/50))
 &#9;&#9;&#9;&#9;&#9;charge=0
 &#9;&#9;&#9;&#9;&#9;sp.Handle.Mesh.Scale=Vector3.new(2,2,2)
-&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,.5,-.5)*CFrame.Angles(0,math.pi/2,0)
+&#9;&#9;&#9;&#9;&#9;storeWeld.C0=CFrame.new(-.05,0,-.5)*CFrame.Angles(0,math.pi/2,0)
 &#9;&#9;&#9;&#9;&#9;wait(.75)
 &#9;&#9;&#9;&#9;&#9;if sp:FindFirstChild(&quot;Handle2&quot;) then
 &#9;&#9;&#9;&#9;&#9;&#9;sp.Handle2.Transparency=0
@@ -508,7 +499,7 @@ end
 
 function onUnequipped()
 &#9;equipped=false
-&#9;storeWeld.C0=CFrame.new(-.05,.5,-.5)*CFrame.Angles(0,math.pi/2,0)
+&#9;storeWeld.C0=CFrame.new(-.05,0,-.5)*CFrame.Angles(0,math.pi/2,0)
 &#9;gui.Parent=sp
 end
 
@@ -599,15 +590,15 @@ end
 					<X>-120.155914</X>
 					<Y>23.8420238</Y>
 					<Z>33.6608086</Z>
-					<R00>-0.205756307</R00>
-					<R01>-0.135677695</R01>
-					<R02>0.969152749</R02>
-					<R10>-0.0115573183</R10>
-					<R11>0.990610242</R11>
-					<R12>0.136228874</R12>
-					<R20>-0.978535056</R20>
-					<R21>0.0168289244</R21>
-					<R22>-0.205392703</R22>
+					<R00>-0.205756173</R00>
+					<R01>-0.135676727</R01>
+					<R02>0.969154239</R02>
+					<R10>-0.0115573108</R10>
+					<R11>0.990610778</R11>
+					<R12>0.136230171</R12>
+					<R20>-0.978535295</R20>
+					<R21>0.0168287288</R21>
+					<R22>-0.20539321</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -655,7 +646,7 @@ end
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=90708652</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=92189450</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -668,7 +659,7 @@ end
 						<Y>2</Y>
 						<Z>2</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90708422</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=92189351</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -713,15 +704,15 @@ end
 					<X>-120.698044</X>
 					<Y>24.2697926</Y>
 					<Z>33.8208466</Z>
-					<R00>-0.205756351</R00>
-					<R01>-0.13567771</R01>
-					<R02>0.969152749</R02>
-					<R10>-0.0115573676</R10>
-					<R11>0.990610242</R11>
-					<R12>0.136228874</R12>
-					<R20>-0.978535056</R20>
-					<R21>0.0168288816</R21>
-					<R22>-0.205392748</R22>
+					<R00>-0.205756217</R00>
+					<R01>-0.135676742</R01>
+					<R02>0.969154239</R02>
+					<R10>-0.0115573602</R10>
+					<R11>0.990610778</R11>
+					<R12>0.136230171</R12>
+					<R20>-0.978535295</R20>
+					<R21>0.016828686</R21>
+					<R22>-0.205393255</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
@@ -769,7 +760,7 @@ end
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=90708690</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=92189547</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -782,7 +773,7 @@ end
 						<Y>1</Y>
 						<Z>1.5</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90708422</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=92189351</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -809,81 +800,32 @@ function waitfor(parent,name)
 &#9;return parent:FindFirstChild(name)
 end
 
-inbox=waitfor(script,&quot;Inbox&quot;)
+playsound=waitfor(sp,&quot;PlaySound&quot;)
+soundname=waitfor(playsound,&quot;SoundName&quot;)
 handle=waitfor(sp,&quot;Handle&quot;)
 
-inbox.ChildAdded:connect(function(item)
-&#9;if item then
-&#9;&#9;if item.className==&quot;StringValue&quot; then
-&#9;&#9;&#9;local sound=handle:FindFirstChild(item.Value)
-&#9;&#9;&#9;if sound~=nil then
-&#9;&#9;&#9;&#9;sound:Play()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;item:remove()
+playsound.Changed:connect(function()
+&#9;local sound=handle:FindFirstChild(soundname.Value)
+&#9;if sound~=nil then
+&#9;&#9;sound:Play()
 &#9;end
 end)
 
 
 </ProtectedString>
 			</Properties>
-			<Item class="Model" referent="RBX10">
+		</Item>
+		<Item class="BoolValue" referent="RBX10">
+			<Properties>
+				<string name="Name">PlaySound</string>
+				<bool name="Value">true</bool>
+			</Properties>
+			<Item class="StringValue" referent="RBX11">
 				<Properties>
-					<CoordinateFrame name="ModelInPrimary">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-						<R00>1</R00>
-						<R01>0</R01>
-						<R02>0</R02>
-						<R10>0</R10>
-						<R11>1</R11>
-						<R12>0</R12>
-						<R20>0</R20>
-						<R21>0</R21>
-						<R22>1</R22>
-					</CoordinateFrame>
-					<string name="Name">Inbox</string>
-					<Ref name="PrimaryPart">null</Ref>
+					<string name="Name">SoundName</string>
+					<string name="Value">WingSound</string>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Motor" referent="RBX11">
-			<Properties>
-				<CoordinateFrame name="C0">
-					<X>-0.0500000007</X>
-					<Y>0.5</Y>
-					<Z>-0.5</Z>
-					<R00>-4.37113883e-008</R00>
-					<R01>0</R01>
-					<R02>1</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>-1</R20>
-					<R21>0</R21>
-					<R22>-4.37113883e-008</R22>
-				</CoordinateFrame>
-				<CoordinateFrame name="C1">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
-					<R00>1.91068547e-015</R00>
-					<R01>-4.37113883e-008</R01>
-					<R02>1</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>4.37113883e-008</R12>
-					<R20>-1</R20>
-					<R21>0</R21>
-					<R22>1.91068547e-015</R22>
-				</CoordinateFrame>
-				<float name="DesiredAngle">0</float>
-				<float name="MaxVelocity">0</float>
-				<string name="Name">Motor</string>
-				<Ref name="Part0">RBX3</Ref>
-				<Ref name="Part1">RBX7</Ref>
-			</Properties>
 		</Item>
 		<Item class="Animation" referent="RBX12">
 			<Properties>
@@ -905,17 +847,17 @@ end)
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
 					<X>-119.072044</X>
-					<Y>24.5858707</Y>
+					<Y>24.5858727</Y>
 					<Z>32.1471214</Z>
-					<R00>-0.421828151</R00>
-					<R01>-0.257665515</R01>
-					<R02>0.869292796</R02>
-					<R10>-0.0723860413</R10>
-					<R11>0.965279102</R11>
-					<R12>0.250991493</R12>
-					<R20>-0.903781652</R20>
-					<R21>0.0429505371</R21>
-					<R22>-0.425833404</R22>
+					<R00>-0.421828479</R00>
+					<R01>-0.257664502</R01>
+					<R02>0.86929518</R02>
+					<R10>-0.0723864287</R10>
+					<R11>0.965279639</R11>
+					<R12>0.250993341</R12>
+					<R20>-0.903781772</R20>
+					<R21>0.0429503284</R21>
+					<R22>-0.425834239</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
@@ -976,7 +918,7 @@ end)
 						<Y>2.5</Y>
 						<Z>2.5</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90708422</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=92189351</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -1078,7 +1020,7 @@ end)
 						<Y>2.5</Y>
 						<Z>2.5</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90708422</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=92189351</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -1095,12 +1037,126 @@ end)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Weld" referent="RBX19">
+		<Item class="ScreenGui" referent="RBX19">
 			<Properties>
-				<CoordinateFrame name="C0">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
+				<string name="Name">ArtemisGui</string>
+			</Properties>
+			<Item class="Frame" referent="RBX20">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">1</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<string name="Name">ButtonHolder</string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>-65</XO>
+						<YS>1</YS>
+						<YO>-150</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>130</XO>
+						<YS>0</YS>
+						<YO>70</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">0</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+				<Item class="ImageButton" referent="RBX21">
+					<Properties>
+						<bool name="Active">true</bool>
+						<bool name="AutoButtonColor">false</bool>
+						<Color3 name="BackgroundColor3">4294967295</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<Content name="Image"><url>http://www.roblox.com/asset/?id=90879220</url></Content>
+						<bool name="Modal">false</bool>
+						<string name="Name">Button1</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>10</XO>
+							<YS>0</YS>
+							<YO>10</YO>
+						</UDim2>
+						<bool name="Selected">false</bool>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>50</XO>
+							<YS>1</YS>
+							<YO>-20</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+				<Item class="ImageButton" referent="RBX22">
+					<Properties>
+						<bool name="Active">true</bool>
+						<bool name="AutoButtonColor">false</bool>
+						<Color3 name="BackgroundColor3">4294967295</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<Content name="Image"><url>http://www.roblox.com/asset/?id=90879178</url></Content>
+						<bool name="Modal">false</bool>
+						<string name="Name">Button2</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>70</XO>
+							<YS>0</YS>
+							<YO>10</YO>
+						</UDim2>
+						<bool name="Selected">false</bool>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>50</XO>
+							<YS>1</YS>
+							<YO>-20</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX23">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-128.444626</X>
+					<Y>24.7248573</Y>
+					<Z>28.9550915</Z>
+					<R00>-0.556737363</R00>
+					<R01>0.0679932907</R01>
+					<R02>-0.827901244</R02>
+					<R10>3.72529074e-009</R10>
+					<R11>0.996644557</R11>
+					<R12>0.0818517134</R12>
+					<R20>0.830688655</R20>
+					<R21>0.0455699041</R21>
+					<R22>-0.554869175</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-119.515076</X>
+					<Y>23.8420238</Y>
+					<Z>34.9397812</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -1111,26 +1167,10 @@ end)
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
-				<CoordinateFrame name="C1">
-					<X>-0.856990814</X>
-					<Y>-0.373729706</Y>
-					<Z>-1.77347565</Z>
-					<R00>0.972012401</R00>
-					<R01>-0.0296832807</R01>
-					<R02>-0.23304677</R02>
-					<R10>-0.000168336555</R10>
-					<R11>0.991897583</R11>
-					<R12>-0.127040371</R12>
-					<R20>0.234929502</R20>
-					<R21>0.123524398</R21>
-					<R22>0.96413213</R22>
-				</CoordinateFrame>
-				<string name="Name">RightWingWeld</string>
-				<Ref name="Part0">RBX3</Ref>
-				<Ref name="Part1">RBX13</Ref>
+				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
-		<Item class="Weld" referent="RBX20">
+		<Item class="Weld" referent="RBX24">
 			<Properties>
 				<CoordinateFrame name="C0">
 					<X>0</X>
@@ -1165,102 +1205,77 @@ end)
 				<Ref name="Part1">RBX16</Ref>
 			</Properties>
 		</Item>
-		<Item class="ScreenGui" referent="RBX21">
+		<Item class="Weld" referent="RBX25">
 			<Properties>
-				<string name="Name">ArtemisGui</string>
+				<CoordinateFrame name="C0">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="C1">
+					<X>-0.856990814</X>
+					<Y>-0.373729706</Y>
+					<Z>-1.77347565</Z>
+					<R00>0.972012401</R00>
+					<R01>-0.0296832807</R01>
+					<R02>-0.23304677</R02>
+					<R10>-0.000168336555</R10>
+					<R11>0.991897583</R11>
+					<R12>-0.127040371</R12>
+					<R20>0.234929502</R20>
+					<R21>0.123524398</R21>
+					<R22>0.96413213</R22>
+				</CoordinateFrame>
+				<string name="Name">RightWingWeld</string>
+				<Ref name="Part0">RBX3</Ref>
+				<Ref name="Part1">RBX13</Ref>
 			</Properties>
-			<Item class="Frame" referent="RBX22">
-				<Properties>
-					<bool name="Active">false</bool>
-					<Color3 name="BackgroundColor3">4288914085</Color3>
-					<float name="BackgroundTransparency">1</float>
-					<Color3 name="BorderColor3">4279970357</Color3>
-					<int name="BorderSizePixel">1</int>
-					<bool name="ClipsDescendants">false</bool>
-					<bool name="Draggable">false</bool>
-					<string name="Name">ButtonHolder</string>
-					<UDim2 name="Position">
-						<XS>0.5</XS>
-						<XO>-65</XO>
-						<YS>1</YS>
-						<YO>-150</YO>
-					</UDim2>
-					<UDim2 name="Size">
-						<XS>0</XS>
-						<XO>130</XO>
-						<YS>0</YS>
-						<YO>70</YO>
-					</UDim2>
-					<token name="SizeConstraint">0</token>
-					<token name="Style">0</token>
-					<bool name="Visible">true</bool>
-					<int name="ZIndex">1</int>
-				</Properties>
-				<Item class="ImageButton" referent="RBX23">
-					<Properties>
-						<bool name="Active">true</bool>
-						<bool name="AutoButtonColor">false</bool>
-						<Color3 name="BackgroundColor3">4294967295</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">0</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<Content name="Image"><url>http://www.roblox.com/asset/?id=90879220</url></Content>
-						<bool name="Modal">false</bool>
-						<string name="Name">Button1</string>
-						<UDim2 name="Position">
-							<XS>0</XS>
-							<XO>10</XO>
-							<YS>0</YS>
-							<YO>10</YO>
-						</UDim2>
-						<bool name="Selected">false</bool>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>50</XO>
-							<YS>1</YS>
-							<YO>-20</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<token name="Style">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-				</Item>
-				<Item class="ImageButton" referent="RBX24">
-					<Properties>
-						<bool name="Active">true</bool>
-						<bool name="AutoButtonColor">false</bool>
-						<Color3 name="BackgroundColor3">4294967295</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">0</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<Content name="Image"><url>http://www.roblox.com/asset/?id=90879178</url></Content>
-						<bool name="Modal">false</bool>
-						<string name="Name">Button2</string>
-						<UDim2 name="Position">
-							<XS>0</XS>
-							<XO>70</XO>
-							<YS>0</YS>
-							<YO>10</YO>
-						</UDim2>
-						<bool name="Selected">false</bool>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>50</XO>
-							<YS>1</YS>
-							<YO>-20</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<token name="Style">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-				</Item>
-			</Item>
+		</Item>
+		<Item class="Motor" referent="RBX26">
+			<Properties>
+				<CoordinateFrame name="C0">
+					<X>-0.0500000007</X>
+					<Y>0.5</Y>
+					<Z>-0.5</Z>
+					<R00>-4.37113883e-008</R00>
+					<R01>0</R01>
+					<R02>1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>-1</R20>
+					<R21>0</R21>
+					<R22>-4.37113883e-008</R22>
+				</CoordinateFrame>
+				<CoordinateFrame name="C1">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1.91068547e-015</R00>
+					<R01>-4.37113883e-008</R01>
+					<R02>1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>4.37113883e-008</R12>
+					<R20>-1</R20>
+					<R21>0</R21>
+					<R22>1.91068547e-015</R22>
+				</CoordinateFrame>
+				<float name="DesiredAngle">0</float>
+				<float name="MaxVelocity">0</float>
+				<string name="Name">Motor</string>
+				<Ref name="Part0">RBX3</Ref>
+				<Ref name="Part1">RBX7</Ref>
+			</Properties>
 		</Item>
 	</Item>
 </roblox>
