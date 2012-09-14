@@ -36,9 +36,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.299999237</X>
+					<X>-0.300000012</X>
 					<Y>0.399999917</Y>
-					<Z>0.400000095</Z>
+					<Z>0.400000006</Z>
 					<R00>-0</R00>
 					<R01>-0</R01>
 					<R02>1</R02>
@@ -137,45 +137,61 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="Animation" referent="RBX5">
 			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool = script.Parent 
-
-local stillEquipped = true
-
-function onEquippedLocal(mouse)
-&#9;stillEquipped = true
-&#9;if mouse == nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return
-&#9;end
-&#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;while Tool.Enabled and stillEquipped do
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;while not Tool.Enabled and stillEquipped do
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end&#9;&#9;
-&#9;end
-end
-
-function onUnequippedLocal()
-&#9;stillEquipped = false
-end
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)
-</ProtectedString>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=49763871</url></Content>
+				<string name="Name">ShieldWalk</string>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX6">
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=60816404</url></Content>
+				<string name="Name">SpinAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=63234156</url></Content>
+				<string name="Name">ShieldBash</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX8">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-0.62609005</X>
+					<Y>3.71232796</Y>
+					<Z>0.810966849</Z>
+					<R00>0.78335762</R00>
+					<R01>0.613918662</R01>
+					<R02>-0.0972353294</R02>
+					<R10>-7.4505806e-009</R10>
+					<R11>0.15643473</R11>
+					<R12>0.987688303</R12>
+					<R20>0.621571243</R20>
+					<R21>-0.773713171</R21>
+					<R22>0.122544341</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.300000012</X>
+					<Y>0.399999917</Y>
+					<Z>0.400000095</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -261,7 +277,80 @@ Tool.Activated:connect(onActivated)
 Sword.Touched:connect(blow)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX7">
+		<Item class="Script" referent="RBX10">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">TrailScript</string>
+				<ProtectedString name="Source">local Handle=script.Parent.Handle
+local trailPart=Instance.new(&apos;Part&apos;)
+trailPart.BrickColor=BrickColor.new(&apos;Cyan&apos;)
+trailPart.CanCollide=false
+trailPart.Anchored=true
+trailPart.CFrame=CFrame.new(Vector3.new(99999999,999999999,99999999))
+trailPart.FormFactor=&apos;Custom&apos;
+trailPart.Parent=script.Parent
+trailPart.Size= Vector3.new(1,1,1)
+trailPart.Transparency=.7
+trailPart.TopSurface=0
+trailPart.BottomSurface=0
+local trailLength=20
+local currentHead=1
+local newHeadLength=2 --how long  to stretch before a new head is spawned
+local initHeadCenter
+
+local trailPartPool = {}
+
+function onTouch(self,hit)
+&#9;if self.Transparency==1 or not hit.Parent:FindFirstChild(&apos;Humanoid&apos;) or hit.Parent == script.Parent.Parent then
+&#9;&#9;return
+&#9;end
+&#9;&#9;hit.Parent:FindFirstChild(&apos;Humanoid&apos;):TakeDamage(1)
+end
+
+function lerpTransparency(part, itrans, ftrans, length)
+&#9;local initTime=time()
+&#9;while time()-initTime&lt;length do
+&#9;&#9;part.Transparency=itrans+((ftrans-itrans)*((time()-initTime)/length))
+&#9;&#9;wait()
+&#9;end
+&#9;part.Transparency=ftrans
+end
+
+for i=1,trailLength,1 do
+&#9;trailPartPool[i]=trailPart:Clone()
+&#9;trailPartPool[i].Parent=script.Parent
+&#9;trailPartPool[i].Touched:connect(function(hit) onTouch(trailPartPool[i],hit) end)
+&#9;wait()
+end
+
+local lastNewHeadTime= time()
+
+trailPartPool[1].CFrame=CFrame.new(Handle.CFrame.p,Handle.CFrame.p)
+initHeadCenter=Handle.CFrame.p
+
+while true do
+&#9;--for i=1,trailLength,1 do
+&#9;&#9;
+&#9;--end
+&#9;local headPos=trailPartPool[currentHead].CFrame
+&#9;local nlength=(Handle.CFrame.p-initHeadCenter).magnitude
+&#9;trailPartPool[currentHead].Size=Vector3.new(1,2,nlength)
+&#9;trailPartPool[currentHead].CFrame=CFrame.new((initHeadCenter+Handle.CFrame.p)/2,Handle.CFrame.p)
+&#9;
+&#9;if nlength&gt;newHeadLength then
+&#9;&#9;currentHead=((currentHead+1)%trailLength)+1
+&#9;&#9;trailPartPool[currentHead].CFrame=CFrame.new(Handle.CFrame.p,Handle.CFrame.p)
+&#9;&#9;initHeadCenter=Handle.CFrame.p
+&#9;&#9;Spawn(function() lerpTransparency(trailPartPool[currentHead], .1, 1, 2) end)
+&#9;end
+&#9;
+&#9;wait()
+end
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX11">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -434,98 +523,45 @@ Tool.Unequipped:connect(onUnequippedLocal)
 Tool.Activated:connect(onActivatedLocal)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX8">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=49763871</url></Content>
-				<string name="Name">ShieldWalk</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX9">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=60816404</url></Content>
-				<string name="Name">SpinAnim</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX10">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=63234156</url></Content>
-				<string name="Name">ShieldBash</string>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX11">
+		<Item class="LocalScript" referent="RBX12">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">TrailScript</string>
-				<ProtectedString name="Source">local Handle=script.Parent.Handle
-local trailPart=Instance.new(&apos;Part&apos;)
-trailPart.BrickColor=BrickColor.new(&apos;Cyan&apos;)
-trailPart.CanCollide=false
-trailPart.Anchored=true
-trailPart.CFrame=CFrame.new(Vector3.new(99999999,999999999,99999999))
-trailPart.FormFactor=&apos;Custom&apos;
-trailPart.Parent=script.Parent
-trailPart.Size= Vector3.new(1,1,1)
-trailPart.Transparency=.7
-trailPart.TopSurface=0
-trailPart.BottomSurface=0
-local trailLength=20
-local currentHead=1
-local newHeadLength=2 --how long  to stretch before a new head is spawned
-local initHeadCenter
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent 
 
-local trailPartPool = {}
+local stillEquipped = true
 
-function onTouch(self,hit)
-&#9;if self.Transparency==1 or not hit.Parent:FindFirstChild(&apos;Humanoid&apos;) or hit.Parent == script.Parent.Parent then
+function onEquippedLocal(mouse)
+&#9;stillEquipped = true
+&#9;if mouse == nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
 &#9;&#9;return
 &#9;end
-&#9;&#9;hit.Parent:FindFirstChild(&apos;Humanoid&apos;):TakeDamage(1)
-end
-
-function lerpTransparency(part, itrans, ftrans, length)
-&#9;local initTime=time()
-&#9;while time()-initTime&lt;length do
-&#9;&#9;part.Transparency=itrans+((ftrans-itrans)*((time()-initTime)/length))
-&#9;&#9;wait()
+&#9;while stillEquipped do 
+&#9;&#9;print(&quot;Setting Mouse to go&quot;)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;while Tool.Enabled and stillEquipped do
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;while not Tool.Enabled and stillEquipped do
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end&#9;&#9;
 &#9;end
-&#9;part.Transparency=ftrans
 end
 
-for i=1,trailLength,1 do
-&#9;trailPartPool[i]=trailPart:Clone()
-&#9;trailPartPool[i].Parent=script.Parent
-&#9;trailPartPool[i].Touched:connect(function(hit) onTouch(trailPartPool[i],hit) end)
-&#9;wait()
+function onUnequippedLocal()
+&#9;stillEquipped = false
 end
 
-local lastNewHeadTime= time()
-
-trailPartPool[1].CFrame=CFrame.new(Handle.CFrame.p,Handle.CFrame.p)
-initHeadCenter=Handle.CFrame.p
-
-while true do
-&#9;--for i=1,trailLength,1 do
-&#9;&#9;
-&#9;--end
-&#9;local headPos=trailPartPool[currentHead].CFrame
-&#9;local nlength=(Handle.CFrame.p-initHeadCenter).magnitude
-&#9;trailPartPool[currentHead].Size=Vector3.new(1,2,nlength)
-&#9;trailPartPool[currentHead].CFrame=CFrame.new((initHeadCenter+Handle.CFrame.p)/2,Handle.CFrame.p)
-&#9;
-&#9;if nlength&gt;newHeadLength then
-&#9;&#9;currentHead=((currentHead+1)%trailLength)+1
-&#9;&#9;trailPartPool[currentHead].CFrame=CFrame.new(Handle.CFrame.p,Handle.CFrame.p)
-&#9;&#9;initHeadCenter=Handle.CFrame.p
-&#9;&#9;Spawn(function() lerpTransparency(trailPartPool[currentHead], .1, 1, 2) end)
-&#9;end
-&#9;
-&#9;wait()
-end
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX12">
+		<Item class="LocalScript" referent="RBX13">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -567,6 +603,7 @@ function rezIn()
 &#9;for i=1,Resolution, 1 do
 &#9;&#9;rezParts[i]=Instance.new(&apos;Part&apos;)
 &#9;&#9;rezParts[i].Anchored=true
+&#9;&#9;rezParts[i].Parent=game.Lighting
 &#9;&#9;rezParts[i].Size=Vector3.new(Hsize.x/2,(Hsize.y*2)/Resolution,Hsize.z/2)
 &#9;&#9;--Spawn(function() updatePosition(rezParts[i],Handle,Vector3.new(0,0,Resolution)*i, 5) end)
 &#9;&#9;Spawn(function() updatePosition(rezParts[i],Handle,Vector3.new(0,(((Hsize.y*2)/Resolution)*i)-4.5,0), 10) end)
@@ -591,61 +628,25 @@ function rezIn()
 &#9;--while true do wait() end
 &#9;inrez=false
 end
-
+while not script:FindFirstChild(&apos;RezIn&apos;) do wait() end
 script.RezIn.Changed:connect(rezIn)
 
 function rezOut()
 
 end</ProtectedString>
 			</Properties>
-			<Item class="BoolValue" referent="RBX13">
+			<Item class="BoolValue" referent="RBX14">
 				<Properties>
 					<string name="Name">RezIn</string>
 					<bool name="Value">true</bool>
 				</Properties>
 			</Item>
-			<Item class="BoolValue" referent="RBX14">
+			<Item class="BoolValue" referent="RBX15">
 				<Properties>
 					<string name="Name">RezOut</string>
 					<bool name="Value">false</bool>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Camera" referent="RBX15">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>29.2790661</X>
-					<Y>80.2727356</Y>
-					<Z>7.90183926</Z>
-					<R00>0.766163528</R00>
-					<R01>0.633646607</R01>
-					<R02>-0.107169837</R02>
-					<R10>7.4505806e-009</R10>
-					<R11>0.166763484</R11>
-					<R12>0.985996902</R12>
-					<R20>0.642645657</R20>
-					<R21>-0.755434871</R21>
-					<R22>0.127768099</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>29.7000008</X>
-					<Y>76.4000015</Y>
-					<Z>7.4000001</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
