@@ -6,24 +6,370 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
-				<Y>0</Y>
-				<Z>-2</Z>
+				<X>-0.150000006</X>
+				<Y>-0.900000036</Y>
+				<Z>0</Z>
 				<R00>0</R00>
 				<R01>0</R01>
-				<R02>1</R02>
-				<R10>1</R10>
-				<R11>0</R11>
+				<R02>-1</R02>
+				<R10>0</R10>
+				<R11>1</R11>
 				<R12>0</R12>
-				<R20>0</R20>
-				<R21>1</R21>
+				<R20>1</R20>
+				<R21>0</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
-			<string name="Name">LightningPeriastron</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=93194689</url></Content>
-			<string name="ToolTip"></string>
+			<string name="Name">Zombie Axe</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=93665785</url></Content>
+			<string name="ToolTip">Zombie Axe</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">--Stickmasterluke
+
+
+sp=script.Parent
+
+
+r=game:service(&quot;RunService&quot;)
+debris=game:GetService(&quot;Debris&quot;)
+
+anims={&quot;RightSlash&quot;,&quot;LeftSlash&quot;,&quot;OverHeadSwing&quot;,&quot;LeftSwingFast&quot;,&quot;RightSwingFast&quot;}
+
+basedamage=5
+slashdamage=10
+swingdamage=15
+damage=basedamage
+
+sword=sp.Handle
+sp.Taunting.Value=false
+
+local SlashSound=Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId=&quot;rbxasset://sounds\\swordslash.wav&quot;
+SlashSound.Parent=sword
+SlashSound.Volume=.7
+
+local UnsheathSound=Instance.new(&quot;Sound&quot;)
+UnsheathSound.SoundId=&quot;rbxasset://sounds\\unsheath.wav&quot;
+UnsheathSound.Parent=sword
+UnsheathSound.Volume=.5
+
+function waitfor(parent,name)
+&#9;while true do
+&#9;&#9;local child=parent:FindFirstChild(name)
+&#9;&#9;if child~=nil then
+&#9;&#9;&#9;return child
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+end
+waitfor(sp,&quot;Taunting&quot;)
+waitfor(sp,&quot;Summon&quot;)
+waitfor(sp,&quot;RunAnim&quot;)
+sparkles=waitfor(sword,&quot;Sparkles&quot;)
+
+function blow(hit)
+&#9;if hit.Parent~=nil then
+&#9;&#9;local humanoid=hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;local vCharacter=sp.Parent
+&#9;&#9;if vCharacter~=nil then
+&#9;&#9;&#9;local vPlayer=game.Players:playerFromCharacter(vCharacter)
+&#9;&#9;&#9;if vPlayer~=nil then
+&#9;&#9;&#9;&#9;local hum=vCharacter:findFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;if humanoid~=nil then
+&#9;&#9;&#9;&#9;&#9;if hum~=nil and humanoid~=hum and hum.Health&gt;0 then
+&#9;&#9;&#9;&#9;&#9;&#9;local right_arm=vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;if right_arm~=nil then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local joint=right_arm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if joint~=nil and (joint.Part0==sword or joint.Part1==sword) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sparkles.Enabled=true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;tagHumanoid(humanoid,vPlayer)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(.3)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sparkles.Enabled=false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if hit.Name==&quot;Handle&quot; then
+&#9;&#9;&#9;sparkles.Enabled=true
+&#9;&#9;&#9;wait(.3)
+&#9;&#9;&#9;sparkles.Enabled=false
+&#9;&#9;end
+&#9;end
+end
+
+
+function tagHumanoid(humanoid,player)
+&#9;for i,v in ipairs(humanoid:GetChildren()) do
+&#9;&#9;if v.Name==&quot;creator&quot; then
+&#9;&#9;&#9;v:remove()
+&#9;&#9;end
+&#9;end
+&#9;local creator_tag=Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value=player
+&#9;creator_tag.Name=&quot;creator&quot;
+&#9;creator_tag.Parent=humanoid
+&#9;debris:AddItem(creator_tag,1)
+end
+
+function createzombie(plr,pos)
+&#9;local zombie=game:GetService(&quot;InsertService&quot;):LoadAsset(93601062):GetChildren()[1]
+&#9;--local zombie=game.Lighting.Zombie:clone()
+
+&#9;local creator=Instance.new(&quot;ObjectValue&quot;)
+&#9;creator.Value=plr
+&#9;creator.Name=&quot;creator&quot;
+&#9;creator.Parent=zombie
+
+&#9;local p=Instance.new(&quot;Part&quot;)
+&#9;p.Name=&quot;Effect&quot;
+&#9;p.Transparency=1
+&#9;p.FormFactor=&quot;Custom&quot;
+&#9;p.Size=Vector3.new(.2,.2,.2)
+&#9;p.Anchored=true
+&#9;p.CFrame=CFrame.new(pos)+Vector3.new(0,-4,0)
+--[[&#9;local smoke=Instance.new(&quot;Smoke&quot;)
+&#9;smoke.Color=Color3.new(0,.1,0)
+&#9;smoke.RiseVelocity=10
+&#9;smoke.Parent=p]]
+&#9;local smoke=Instance.new(&quot;Fire&quot;)
+&#9;smoke.Color=Color3.new(0,0,0)
+&#9;smoke.SecondaryColor=Color3.new(0,1,0)
+&#9;smoke.Size=10
+&#9;smoke.Heat=100
+&#9;smoke.Parent=p
+&#9;debris:AddItem(p,2)
+&#9;p.Parent=game.Workspace
+&#9;delay(1,function()
+&#9;&#9;if smoke and smoke~=nil then
+&#9;&#9;&#9;smoke.Enabled=false
+&#9;&#9;end
+&#9;end)
+
+&#9;debris:AddItem(zombie,30)
+&#9;zombie.Parent=game.Workspace
+&#9;zombie:MoveTo(pos)
+end
+
+sp.Summon.Changed:connect(function()
+&#9;local chr=sp.Parent
+&#9;if chr then
+&#9;&#9;local torso=chr:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;local plr=game.Players:GetPlayerFromCharacter(chr)
+&#9;&#9;if plr and plr~=nil and torso and torso~=nil then
+&#9;&#9;&#9;createzombie(plr,(torso.CFrame*CFrame.new(5,0,-5)).p)
+&#9;&#9;&#9;createzombie(plr,(torso.CFrame*CFrame.new(-5,0,-5)).p)
+&#9;&#9;end
+&#9;end
+end)
+
+sp.Enabled=true
+function onActivated()
+&#9;if sp.Enabled and not sp.Taunting.Value then
+&#9;&#9;sp.Enabled=false
+&#9;&#9;local character=sp.Parent
+&#9;&#9;local humanoid=character.Humanoid
+&#9;&#9;if humanoid==nil then
+&#9;&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;&#9;return 
+&#9;&#9;end
+&#9;&#9;SlashSound:play()
+&#9;&#9;newanim=anims[math.random(1,#anims)]
+&#9;&#9;while newanim==sp.RunAnim.Value do
+&#9;&#9;&#9;newanim=anims[math.random(1,#anims)]
+&#9;&#9;end
+&#9;&#9;sp.RunAnim.Value=newanim
+&#9;&#9;if newanim==&quot;OverHeadSwing&quot; then
+&#9;&#9;&#9;damage=swingdamage
+&#9;&#9;else
+&#9;&#9;&#9;damage=slashdamage
+&#9;&#9;end
+&#9;&#9;wait(.75)
+&#9;&#9;damage=basedamage
+&#9;&#9;sp.Enabled=true
+&#9;end
+end
+
+function onEquipped()
+&#9;UnsheathSound:play()
+&#9;sparkles.Enabled=false
+end
+
+sp.Activated:connect(onActivated)
+sp.Equipped:connect(onEquipped)
+
+connection=sword.Touched:connect(blow)
+
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Stickmasterluke
+
+
+local sp=script.Parent
+
+
+tauntcooldown=10
+
+originalgrip=CFrame.new(-.15, -.9, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+currentgrip=originalgrip
+
+debris=game:GetService(&quot;Debris&quot;)
+enabled=true
+taunting=false
+lasttaunt=0
+
+function waitfor(parent,name)
+&#9;while true do
+&#9;&#9;local child=parent:FindFirstChild(name)
+&#9;&#9;if child~=nil then
+&#9;&#9;&#9;return child
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+end
+
+waitfor(sp,&quot;Handle&quot;)
+
+function onButton1Down(mouse)
+&#9;if not enabled then
+&#9;&#9;return
+&#9;end
+&#9;enabled=false
+&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;wait(.75)
+&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;enabled=true
+end
+
+function swordUp()
+&#9;currentgrip=originalgrip
+end
+
+function swordOut()
+&#9;currentgrip=originalgrip*CFrame.Angles(math.pi/4,.4,0)
+end
+
+function spinsword(spintime)
+&#9;delay(0,function()
+&#9;&#9;local startspin=tick()
+&#9;&#9;local endspin=startspin+spintime
+&#9;&#9;while tick()&lt;endspin do
+&#9;&#9;&#9;sp.Grip=currentgrip*CFrame.Angles(math.pi*2*((tick()-startspin)/spintime),0,0)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;sp.Grip=currentgrip
+&#9;end)
+end
+
+sp.Equipped:connect(function(mouse)
+&#9;equipped=true
+&#9;local currentlast=lastequipped
+&#9;if mouse==nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
+&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;onButton1Down(mouse)
+&#9;end)
+&#9;waitfor(sp,&quot;Taunting&quot;)
+&#9;waitfor(sp,&quot;Taunt&quot;)
+&#9;waitfor(sp,&quot;Summon&quot;)
+&#9;mouse.KeyDown:connect(function(key)
+&#9;&#9;key=string.lower(key)
+&#9;&#9;if key==&quot;l&quot; or key==&quot;t&quot; or key==&quot;g&quot; or key==&quot;e&quot; then
+&#9;&#9;&#9;local h=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;if h~=nil and (not sp.Taunting.Value) and lasttaunt+tauntcooldown&lt;tick() then
+&#9;&#9;&#9;&#9;lasttaunt=tick()
+&#9;&#9;&#9;&#9;sp.Taunting.Value=true
+&#9;&#9;&#9;&#9;h.WalkSpeed=0
+&#9;&#9;&#9;&#9;tauntanim=h:LoadAnimation(sp.Taunt)
+&#9;&#9;&#9;&#9;tauntanim:Play()
+&#9;&#9;&#9;&#9;wait(4)
+&#9;&#9;&#9;&#9;sp.Summon.Value=not sp.Summon.Value
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;h.WalkSpeed=16
+&#9;&#9;&#9;&#9;sp.Taunting.Value=false
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+end)
+
+sp.Unequipped:connect(function()
+&#9;equipped=false
+end)
+
+waitfor(sp,&quot;RunAnim&quot;)
+sp.RunAnim.Changed:connect(function()
+&#9;local h=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;local anim=sp:FindFirstChild(sp.RunAnim.Value)
+&#9;if anim and t and h then
+&#9;&#9;theanim=h:LoadAnimation(anim)
+&#9;&#9;if theanim and h.Health&gt;0 then
+&#9;&#9;&#9;theanim:Play()
+&#9;&#9;&#9;if sp.RunAnim.Value==&quot;RightSlash&quot; or sp.RunAnim.Value==&quot;LeftSlash&quot; or sp.RunAnim.Value==&quot;OverHeadSwing&quot; then
+&#9;&#9;&#9;&#9;spinsword(.5)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if sp.RunAnim.Value==&quot;OverHeadSwing&quot; then
+&#9;&#9;&#9;&#9;wait(.25)
+&#9;&#9;&#9;&#9;swordOut()
+&#9;&#9;&#9;&#9;wait(.5)
+&#9;&#9;&#9;&#9;swordUp()
+&#9;&#9;&#9;&#9;sp.Grip=currentgrip
+&#9;&#9;&#9;elseif sp.RunAnim.Value==&quot;OverHeadSwingFast&quot; then
+&#9;&#9;&#9;&#9;wait(.125)
+&#9;&#9;&#9;&#9;swordOut()
+&#9;&#9;&#9;&#9;wait(.25)
+&#9;&#9;&#9;&#9;swordUp()
+&#9;&#9;&#9;&#9;sp.Grip=currentgrip
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+function tagHumanoid(humanoid,player)
+&#9;for i,v in ipairs(humanoid:GetChildren()) do
+&#9;&#9;if v.Name==&quot;creator&quot; then
+&#9;&#9;&#9;v:remove()
+&#9;&#9;end
+&#9;end
+&#9;local creator_tag=Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value=player
+&#9;creator_tag.Name=&quot;creator&quot;
+&#9;creator_tag.Parent=humanoid
+&#9;debris:AddItem(creator_tag,1)
+end
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="StringValue" referent="RBX3">
+			<Properties>
+				<string name="Name">RunAnim</string>
+				<string name="Value"></string>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX4">
+			<Properties>
+				<string name="Name">Taunting</string>
+				<bool name="Value">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX5">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -34,20 +380,20 @@
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">199</int>
+				<int name="BrickColor">26</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.5</X>
-					<Y>2.60000014</Y>
-					<Z>-0.300000012</Z>
-					<R00>1</R00>
-					<R01>-0</R01>
+					<X>0</X>
+					<Y>5</Y>
+					<Z>0</Z>
+					<R00>0.919350684</R00>
+					<R01>0.393439531</R01>
 					<R02>0</R02>
-					<R10>0</R10>
-					<R11>-0</R11>
-					<R12>1</R12>
+					<R10>-0.393439531</R10>
+					<R11>0.919350684</R11>
+					<R12>0</R12>
 					<R20>0</R20>
-					<R21>-1</R21>
-					<R22>0</R22>
+					<R21>0</R21>
+					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -60,10 +406,10 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
-				<float name="Reflectance">0.400000006</float>
+				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
 				<float name="RightParamB">0.5</float>
 				<token name="RightSurface">0</token>
@@ -86,16 +432,23 @@
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>1</X>
-					<Y>0.600000024</Y>
-					<Z>5.19999886</Z>
+					<X>1.60000002</X>
+					<Y>2.5999999</Y>
+					<Z>0.200000003</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="Sparkles" referent="RBX6">
+				<Properties>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Sparkles</string>
+					<Color3 name="SparkleColor">4278203136</Color3>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX7">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=80557857</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=93666769</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -104,11 +457,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>1.29999995</X>
+						<Y>1.29999995</Y>
+						<Z>1.29999995</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=93115151</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=93665740</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -116,442 +469,92 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sparkles" referent="RBX3">
+			<Item class="Smoke" referent="RBX8">
 				<Properties>
-					<bool name="Enabled">true</bool>
-					<string name="Name">Sparkles</string>
-					<Color3 name="SparkleColor">4293198019</Color3>
+					<Color3 name="Color">4278190080</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Smoke2</string>
+					<float name="opacity_xml">0.100000001</float>
+					<float name="riseVelocity_xml">0</float>
+					<float name="size_xml">25</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Smoke" referent="RBX9">
 				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">lightning1</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=93186995</url></Content>
-					<float name="Volume">0.5</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX5">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">lightning2</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=93187046</url></Content>
-					<float name="Volume">0.5</float>
+					<Color3 name="Color">4278255360</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Smoke</string>
+					<float name="opacity_xml">0.100000001</float>
+					<float name="riseVelocity_xml">0</float>
+					<float name="size_xml">25</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
+		<Item class="Animation" referent="RBX10">
 			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalSwordScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent;
-local MyMouse
-local Enabled = true
-
-function OnButton1Down(mouse)
-&#9;if not Enabled then
-&#9;&#9;return
-&#9;end
-
-&#9;Enabled = false
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-
-&#9;wait(.5)
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;Enabled = true
-
-end
-
-function OnKeyDown( key )
-end
-
-function OnEquipped(mouse)
-&#9;if mouse == nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return 
-&#9;end
-&#9;MyMouse = mouse
-&#9;MyMouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;MyMouse.Button1Down:connect(function() OnButton1Down(MyMouse) end)
-&#9;MyMouse.KeyDown:connect(OnKeyDown)
-end
-
-function OnUnequipped()
-
-end
-
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-</ProtectedString>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74894663</url></Content>
+				<string name="Name">LeftSlash</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX7">
+		<Item class="Animation" referent="RBX11">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=80395075</url></Content>
-				<string name="Name">Lunge</string>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86313418</url></Content>
+				<string name="Name">LeftSwingFast</string>
 			</Properties>
 		</Item>
-		<Item class="Decal" referent="RBX8">
+		<Item class="Animation" referent="RBX12">
 			<Properties>
-				<token name="Face">1</token>
-				<string name="Name">LightningDecal</string>
-				<float name="Shiny">20</float>
-				<float name="Specular">0</float>
-				<Content name="Texture"><url>http://www.roblox.com/asset/?id=24043814</url></Content>
-				<float name="Transparency">0</float>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74897796</url></Content>
+				<string name="Name">OverHeadSwing</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX9">
+		<Item class="Animation" referent="RBX13">
 			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">PlayAttack</string>
-				<ProtectedString name="Source">-- Waits for the child of the specified parent
-local function WaitForChild(parent, childName)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
-end
-
-local Tool = script.Parent
-local MyHumanoid = Tool.Parent:FindFirstChild(&apos;Humanoid&apos;)
-local AttackAnim
-local AttackTrack = nil
-
-if Tool and MyHumanoid then
-&#9;AttackAnim = WaitForChild(Tool, &apos;Lunge&apos;)
-&#9;if AttackAnim then
-&#9;&#9;AttackTrack = MyHumanoid:LoadAnimation(AttackAnim)
-&#9;end
-&#9;AttackTrack:Play()
-&#9;wait(0.4)
-&#9;if AttackTrack then
-&#9;&#9;AttackTrack:Stop()
-&#9;end
-end
-script.Disabled = true
-</ProtectedString>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74813494</url></Content>
+				<string name="Name">RightSlash</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX10">
+		<Item class="Animation" referent="RBX14">
 			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">--by SolarCrane
-
--- Waits for the child of the specified parent
-local function WaitForChild(parent, childName)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
-end
-
-local LIGHTNING_DURATION = 10
-local MAX_JUMP_DISTANCE = 100
-local MAX_JUMPS = 5
-
-
-local RADIUS = 15
-local theShield
-
-local Tool = script.Parent
-local Handle = WaitForChild(Tool, &apos;Handle&apos;)
-
--- Player specific convenience variables
-local MyPlayer = nil
-local MyCharacter = nil
-local MyHumanoid = nil
-local MyTorso = nil
-local MyMouse = nil
-
-local PlayersService = Game:GetService(&apos;Players&apos;)
-local DebrisService = game:GetService(&apos;Debris&apos;)
-
-local FireSound
-local LightningSound1
-local LightningSound2
-local LightningDecal
-
-local HitCharacters = {}
-
-local bodyGyro
-local bodyRotation
-
-local function NearestCharacter(origin, ignoreList)
-&#9;local players = PlayersService:GetPlayers()
-&#9;local closestDistance = MAX_JUMP_DISTANCE
-&#9;local closestCharacter = nil
-&#9;for k, player in pairs(players) do
-&#9;&#9;local character = player.Character
-&#9;&#9;if character and character:FindFirstChild(&apos;Torso&apos;) and not ignoreList[character] then
-&#9;&#9;&#9;local torso = character.Torso
-&#9;&#9;&#9;local distance = (torso.CFrame.p - origin).magnitude
-&#9;&#9;&#9;if distance &lt; closestDistance then
-&#9;&#9;&#9;&#9;closestCharacter = character
-&#9;&#9;&#9;&#9;closestDistance = distance
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return closestCharacter, closestDistance
-end
-
-local function TagHumanoid(humanoid, player)
-&#9;-- Add more tags here to customize what tags are available.
-&#9;while humanoid:FindFirstChild(&apos;creator&apos;) do
-&#9;&#9;humanoid:FindFirstChild(&apos;creator&apos;):Destroy()
-&#9;end 
-&#9;local creatorTag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creatorTag.Value = player
-&#9;creatorTag.Name = &quot;creator&quot;
-&#9;creatorTag.Parent = humanoid
-&#9;DebrisService:AddItem(creatorTag, 1.5)
-end
-
-
---[[
-&#9;if MyMouse and MyMouse.Hit then
-&#9;&#9;local X, Y, Z = Handle.CFrame:toEulerAnglesXYZ()
-&#9;&#9;-- Offset the lightning to start at the tip of the sword
-&#9;&#9;CreateLightning(Handle.CFrame.p + Handle.CFrame:vectorToWorldSpace(Vector3.new(0, 0, Handle.Size.Z / 2)),
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;MyMouse.Hit.p,
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;(Handle.CFrame - Handle.CFrame.p):toWorldSpace(CFrame.Angles(X, 0, 0)))
-&#9;&#9;local lastHitPosition = MyMouse.Hit.p
-&#9;end
---]]
-
-
-function CreateLightning(startPoint, endPoint, orientation, duration)
-&#9;if not LightningDecal then return end
-
-&#9;-- Limit the distance of the lightning to the max jump distance
-&#9;if (endPoint - startPoint).magnitude &gt; MAX_JUMP_DISTANCE then
-&#9;&#9;endPoint = startPoint + (endPoint - startPoint).unit * MAX_JUMP_DISTANCE
-&#9;end
-&#9;local lightningPart = Instance.new(&apos;Part&apos;)
-&#9;DebrisService:AddItem(lightningPart, duration)
-&#9;lightningPart.CanCollide = false
-&#9;lightningPart.FormFactor = Enum.FormFactor.Custom
-&#9;lightningPart.Size = Vector3.new(5, 0.1, (endPoint - startPoint).magnitude)
-&#9;lightningPart.Transparency = 1
-&#9;lightningPart.CFrame = CFrame.new((startPoint + endPoint) / 2, endPoint) * orientation -- * CFrame.Angles(0, math.rad(-90), 0)
-&#9;lightningPart.Anchored = true
-&#9;lightningPart.Touched:connect(OnShieldTouch)
-&#9;lightningPart.Parent = Workspace
-
-&#9;local lightningDecal = LightningDecal:Clone()
-&#9;lightningDecal.Parent = lightningPart
-&#9;lightningDecal = LightningDecal:Clone()
-&#9;lightningDecal.Face = Enum.NormalId.Bottom
-&#9;lightningDecal.Parent = lightningPart
-&#9;return lightningPart
-end
-
-local inTouch = false
-
-function OnShieldTouch(hit)
-&#9;if inTouch then return end
-&#9;inTouch = true
-&#9;if hit and hit.Parent:FindFirstChild(&apos;Humanoid&apos;) then
-&#9;&#9;if not HitCharacters[hit.Parent] then
-&#9;&#9;&#9;local knockback = hit.Parent.Torso:FindFirstChild(&apos;BodyVelocity&apos;)
-&#9;&#9;&#9;if not knockback then
-&#9;&#9;&#9;&#9;knockback = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;&#9;&#9;DebrisService:AddItem(knockback, 1)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;knockback.maxForce = Vector3.new(100000, 100000, 100000)
-&#9;&#9;&#9;knockback.velocity = (hit.Parent.Torso.CFrame.p - MyTorso.CFrame.p).unit * 50
-&#9;&#9;&#9;knockback.Parent = hit.Parent.Torso
-&#9;&#9;end
-&#9;&#9;local lastHitPosition = MyTorso.CFrame.p
-&#9;&#9;for i = 1, MAX_JUMPS do
-&#9;&#9;&#9;local nearChar, dist = NearestCharacter(lastHitPosition, HitCharacters)
-&#9;&#9;&#9;if nearChar and nearChar:FindFirstChild(&apos;Torso&apos;) and not HitCharacters[nearChar] then
-&#9;&#9;&#9;&#9;if math.random(1,2) == 1 then
-&#9;&#9;&#9;&#9;&#9;LightningSound1:Play()
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;LightningSound2:Play()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait(0.5)
-&#9;&#9;&#9;&#9;--print(&quot;Zapping&quot; , nearChar.Name)
-&#9;&#9;&#9;&#9;HitCharacters[nearChar] = true
-&#9;&#9;&#9;&#9;CreateLightning(lastHitPosition, nearChar.Torso.CFrame.p, CFrame.new(0, math.rad(-90), 0), 0.5)
-&#9;&#9;&#9;&#9;-- Deal Damage
-&#9;&#9;&#9;&#9;nearChar.Humanoid:TakeDamage(35)
-&#9;&#9;&#9;&#9;lastHitPosition = nearChar.Torso.CFrame.p
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;HitCharacters[hit.Parent] = true
-&#9;&#9;wait(1.5)
-&#9;&#9;if theShield then
-&#9;&#9;&#9;theShield:Destroy()
-&#9;&#9;&#9;theShield = nil
-&#9;&#9;&#9;MyHumanoid.WalkSpeed = 16
-&#9;&#9;end
-&#9;&#9;if bodyGyro then
-&#9;&#9;&#9;bodyGyro:Destroy()
-&#9;&#9;&#9;bodyGyro = nil
-&#9;&#9;end
-&#9;&#9;if bodyRotation then
-&#9;&#9;&#9;bodyRotation:Destroy()
-&#9;&#9;&#9;bodyRotation = nil
-&#9;&#9;end
-&#9;end
-&#9;inTouch = false
-end
-
-
-
-
-
-local function CreateLightningShield(origin)
-&#9;MyHumanoid.WalkSpeed = 25
-&#9;HitCharacters = {}
-&#9;HitCharacters[MyCharacter] = true
-&#9;theShield = Instance.new(&apos;Model&apos;)
-&#9;DebrisService:AddItem(theShield, 10)
-&#9;theShield.Parent = MyTorso
-&#9;for i = 1, 15 do
-&#9;&#9;local X = origin.X + RADIUS * math.cos(math.rad(i * 24))
-&#9;&#9;local Z = origin.Z + RADIUS * math.sin(math.rad(i * 24))
-&#9;&#9;local lightning = CreateLightning(origin + Vector3.new(0, 5, 0), Vector3.new(X, origin.Y, Z), CFrame.Angles(math.rad(-40), math.rad(-65), 0), LIGHTNING_DURATION)
-&#9;&#9;lightning.Anchored = false
-&#9;&#9;lightning.Parent = theShield
-&#9;&#9;local newWeld = Instance.new(&quot;ManualWeld&quot;)
-&#9;&#9;newWeld.Part0 = MyTorso
-&#9;&#9;newWeld.Part1 = lightning
-&#9;&#9;newWeld.C0 = CFrame.new()
-&#9;&#9;newWeld.C1 = newWeld.Part1.CFrame:inverse() * newWeld.Part0.CFrame
-&#9;&#9;newWeld.Parent = lightning
-&#9;end
-&#9;bodyGyro = Instance.new(&apos;BodyGyro&apos;)
-&#9;DebrisService:AddItem(bodyGyro, 10)
-&#9;bodyGyro.maxTorque = Vector3.new(1000000, 0, 100000)
-&#9;--bodyGyro.Parent = MyTorso
-&#9;bodyRotation = Instance.new(&apos;BodyAngularVelocity&apos;)
-&#9;bodyRotation.angularvelocity = Vector3.new(0, 60, 0)
-&#9;bodyRotation.maxTorque = Vector3.new(0, 10000000, 0)
-&#9;DebrisService:AddItem(bodyRotation, 10)
-&#9;bodyRotation.Parent = MyTorso
-&#9;wait(10)
-&#9;if theShield then
-&#9;&#9;theShield:Destroy()
-&#9;&#9;theShield = nil
-&#9;&#9;MyHumanoid.WalkSpeed = 16
-&#9;end
-&#9;if bodyGyro then
-&#9;&#9;bodyGyro:Destroy()
-&#9;&#9;bodyGyro = nil
-&#9;end
-&#9;if bodyRotation then
-&#9;&#9;bodyRotation:Destroy()
-&#9;&#9;bodyRotation = nil
-&#9;end
-end
-
-local attacking = false
-local timeOfLastShield = 0
-
-local SwingHits = {}
-
-function blow(hit)
-&#9;if attacking and hit and hit.Parent and hit.Parent:FindFirstChild(&apos;Humanoid&apos;) and hit.Parent ~= MyCharacter then
-&#9;&#9;if MyHumanoid and MyHumanoid.Health &gt; 0 then
-&#9;&#9;&#9;if not theShield and tick() - timeOfLastShield &gt; 3 then
-&#9;&#9;&#9;&#9;CreateLightningShield(MyTorso.CFrame.p)
-&#9;&#9;&#9;&#9;timeOfLastShield = tick()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not SwingHits[hit.Parent] then
-&#9;&#9;&#9;&#9;hit.Parent.Humanoid:TakeDamage(10)
-&#9;&#9;&#9;&#9;SwingHits[hit.Parent] = true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function OnActivated()
-&#9;if attacking then return end
-&#9;attacking = true
-&#9;if MyHumanoid and MyHumanoid.Health &gt; 0 then
-&#9;&#9;SwingHits = {}
-&#9;&#9;Tool.PlayAttack.Disabled = false
-&#9;end
-&#9;wait(2)
-&#9;attacking = false
-end
-
-function OnKeyDown(key)
-&#9;if string.lower(key) == &apos;q&apos; then
-&#9;&#9;--print(&apos;checking shield&apos;)
-&#9;&#9;if not theShield and tick() - timeOfLastShield &gt; 10 then
-&#9;&#9;&#9;--print(&apos;Making shield&apos;)
-&#9;&#9;&#9;CreateLightningShield(MyTorso.CFrame.p)
-&#9;&#9;&#9;timeOfLastShield = tick()
-&#9;&#9;end
-&#9;end
-end
-
-function OnEquipped(mouse)
-&#9;LightningDecal = WaitForChild(Tool, &apos;LightningDecal&apos;)
-
-&#9;MyCharacter = Tool.Parent
-&#9;MyPlayer = game:GetService(&apos;Players&apos;):GetPlayerFromCharacter(MyCharacter)
-&#9;MyHumanoid = MyCharacter:FindFirstChild(&apos;Humanoid&apos;)
-&#9;MyTorso = MyCharacter:FindFirstChild(&apos;Torso&apos;)
-&#9;MyMouse = mouse
-&#9;LightningSound1 = WaitForChild(Handle, &apos;lightning1&apos;)
-&#9;LightningSound2 = WaitForChild(Handle, &apos;lightning2&apos;)
-&#9;Handle.Touched:connect(blow)
-&#9;if MyMouse then
-&#9;&#9;print(&apos;registering keydown&apos;)
-&#9;&#9;MyMouse.KeyDown:connect(OnKeyDown)
-&#9;end
-end
-
--- Unequip logic here
-function OnUnequipped()
-&#9;MyCharacter = nil
-&#9;MyHumanoid = nil
-&#9;MyTorso = nil
-&#9;MyPlayer = nil
-
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-Tool.Activated:connect(OnActivated)
-</ProtectedString>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86313260</url></Content>
+				<string name="Name">RightSwingFast</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX11">
+		<Item class="Animation" referent="RBX15">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=93693205</url></Content>
+				<string name="Name">Taunt</string>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX16">
+			<Properties>
+				<string name="Name">Summon</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX17">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.468229055</X>
-					<Y>3.17491055</Y>
-					<Z>4.25080204</Z>
-					<R00>0.999975681</R00>
-					<R01>0.000874976628</R01>
-					<R02>-0.00692617567</R02>
-					<R10>-0</R10>
-					<R11>0.992114782</R11>
-					<R12>0.125332817</R12>
-					<R20>0.00698122522</R20>
-					<R21>-0.125329763</R21>
-					<R22>0.992090583</R22>
+					<X>0.543425441</X>
+					<Y>5.08604288</Y>
+					<Z>-2.43787384</Z>
+					<R00>-0.976044834</R00>
+					<R01>-0.00749056181</R01>
+					<R02>0.217440754</R02>
+					<R10>4.65661287e-010</R10>
+					<R11>0.999407232</R11>
+					<R12>0.0344283283</R12>
+					<R20>-0.217569739</R20>
+					<R21>0.0336035937</R21>
+					<R22>-0.975466192</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0.5</X>
-					<Y>2.59999847</Y>
-					<Z>-0.299999952</Z>
+					<X>0</X>
+					<Y>5</Y>
+					<Z>0</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
