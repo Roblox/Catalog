@@ -36,8 +36,8 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.300000012</X>
-					<Y>1.29999995</Y>
+					<X>-0.5</X>
+					<Y>0.900000036</Y>
 					<Z>0.100000001</Z>
 					<R00>1</R00>
 					<R01>0</R01>
@@ -176,6 +176,7 @@ local Tool = script.Parent
 local Handle = WaitForChild(Tool, &quot;Handle&quot;)
 
 local MyHumanoid
+local MyCharacter 
 
 local PlayersService = Game:GetService(&apos;Players&apos;)
 
@@ -188,7 +189,7 @@ local SwooshSound
 
 local Hammer
 
-
+local HammerC = Game:GetService(&apos;InsertService&apos;):LoadAsset(93652837):GetChildren()[1]
 
 local function DeleteExistingMeshes(part)
 &#9;for _, v in pairs(part:GetChildren()) do
@@ -347,7 +348,7 @@ local HitCharacters = {}
 
 function Blow(hit)
 &#9;if not attacking then return end
-&#9;if hit and hit.Parent and hit.Parent:FindFirstChild(&apos;Humanoid&apos;) then
+&#9;if hit and hit.Parent and hit.Parent:FindFirstChild(&apos;Humanoid&apos;) and hit.Parent ~= MyCharacter then
 &#9;&#9;if HitCharacters[hit.Parent] then return end
 &#9;&#9;HitCharacters[hit.Parent] = true
 &#9;&#9;hit.Parent.Humanoid:TakeDamage(INJECT_DAMAGE)
@@ -366,13 +367,14 @@ function Blow(hit)
 &#9;&#9;&#9;wait(0.1)
 &#9;&#9;else
 &#9;&#9;&#9;DressCharacter(character)
-&#9;&#9;&#9;for i = 1, 10 do
-&#9;&#9;&#9;&#9;resizeImplementation(character, 1.03)
+&#9;&#9;&#9;--for i = 1, 10 do
+&#9;&#9;&#9;&#9;resizeImplementation(character, 1.42)
 &#9;&#9;&#9;&#9;wait(0.03)
-&#9;&#9;&#9;end
+&#9;&#9;&#9;--&#9;end
 &#9;&#9;end
 &#9;&#9;if not character:FindFirstChild(&apos;Hammer&apos;) and not PlayersService:GetPlayerFromCharacter(character).Backpack:FindFirstChild(&apos;Hammer&apos;) then
-&#9;&#9;&#9;Game:GetService(&apos;InsertService&apos;):LoadAsset(93652837):GetChildren()[1].Parent = character
+&#9;&#9;&#9;MyHumanoid:UnequipTools() 
+&#9;&#9;&#9;HammerC:Clone().Parent = character
 &#9;&#9;end
 &#9;end
 end
@@ -398,6 +400,7 @@ local Equipping = false
 function OnEquipped( mouse )
 &#9;if Equipping then return end
 &#9;Equipping = true
+&#9;MyCharacter = Tool.Parent
 &#9;MyHumanoid = WaitForChild(Tool.Parent, &apos;Humanoid&apos;)
 &#9;InjectTrack = MyHumanoid:LoadAnimation(WaitForChild(Tool, &apos;Inject&apos;))
 &#9;EnrageTrack = MyHumanoid:LoadAnimation(WaitForChild(Tool, &apos;Enrage&apos;))
@@ -430,27 +433,66 @@ Tool.Activated:connect(OnActivate)
 				<string name="Name">Enrage</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX9">
+		<Item class="LocalScript" referent="RBX9">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent 
+
+local stillEquipped = false 
+
+function onEquippedLocal(mouse) 
+     stillEquipped = true 
+     if mouse == nil then 
+          print(&quot;Mouse not found&quot;) 
+          return 
+     end 
+     while stillEquipped do 
+          print(&quot;Setting Mouse to go&quot;) 
+          mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot; 
+          while Tool.Enabled and stillEquipped do 
+               wait(0.01) 
+          end 
+          print(&quot;Setting Mouse to wait&quot;) 
+          mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot; 
+          while not Tool.Enabled and stillEquipped do 
+               wait(0.01) 
+          end      
+     end 
+end 
+
+
+function onUnequippedLocal() 
+     stillEquipped = false 
+end 
+
+Tool.Equipped:connect(onEquippedLocal) 
+Tool.Unequipped:connect(onUnequippedLocal)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-2.40312982</X>
-					<Y>2.28393888</Y>
-					<Z>-1.24144232</Z>
-					<R00>-0.419454187</R00>
-					<R01>0.360524148</R01>
-					<R02>-0.833115041</R02>
+					<X>-2.51263428</X>
+					<Y>1.86427712</Y>
+					<Z>-2.97561646</Z>
+					<R00>-0.836763442</R00>
+					<R01>0.138948679</R01>
+					<R02>-0.529641628</R02>
 					<R10>-0</R10>
-					<R11>0.917753518</R11>
-					<R12>0.397150755</R12>
-					<R20>0.907776594</R20>
-					<R21>0.166586548</R21>
-					<R22>-0.384955496</R22>
+					<R11>0.967267871</R11>
+					<R12>0.253757596</R12>
+					<R20>0.547564626</R20>
+					<R21>0.21233508</R21>
+					<R22>-0.809374332</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0.5</X>
+					<X>-0.5</X>
 					<Y>0.900000095</Y>
 					<Z>0.100000024</Z>
 					<R00>1</R00>
