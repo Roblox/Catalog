@@ -34,13 +34,13 @@
 
 local NPC_ID = 93601062 -- Asset ID of the NPC to be launched
 
-local COOLDOWN = 0.5 -- Seconds until tool can be used again
+local COOLDOWN = 6 -- Seconds until tool can be used again
 local TIME_TO_LIVE = 60 -- Seconds until NPC is cleaned up
 
 local LAUNCH_SPEED_MIN = 60 -- Minimum speed NPC will be launched
 local LAUNCH_SPEED_MAX = 300 -- Maximum speed NPC will be launched
 
-local LAUNCH_TIME_MIN = 0 -- Seconds until launch speed starts increasing past min
+local LAUNCH_TIME_MIN = 0 -- Seconds until launch speed starts increasing beyond min
 local LAUNCH_TIME_MAX = 3 -- Seconds to reach max launch speed
 
 local CHANCE_TO_EXPLODE = 10 -- There is a 1 in X chance that the NPC will explode
@@ -75,15 +75,52 @@ local NpcClone = Npc:Clone()
 local Mouse = nil
 local ClickTime = 0
 
+local SoundTable = {}
+local Holding = false
+
 -----------------
 --| Functions |--
 -----------------
 
+local function StartInfiniteChargeSound()
+&#9;local chargeSound = ToolHandle:FindFirstChild(&apos;Charge&apos;)
+&#9;local lastPlayTime = 0
+&#9;repeat -- Start a new charge sound every second
+&#9;&#9;if chargeSound and time() - lastPlayTime &gt;= 1 then
+&#9;&#9;&#9;local chargeSoundClone = chargeSound:Clone()
+&#9;&#9;&#9;chargeSoundClone.Parent = ToolHandle
+&#9;&#9;&#9;chargeSoundClone:Play()
+&#9;&#9;&#9;lastPlayTime = time()
+&#9;&#9;&#9;table.insert(SoundTable, chargeSoundClone)
+&#9;&#9;end
+&#9;&#9;wait(1/30)
+&#9;until not Holding
+
+&#9;-- Play fire sound
+&#9;local fireSound = ToolHandle:FindFirstChild(&apos;Fire&apos;)
+&#9;if fireSound then
+&#9;&#9;fireSound:Play()
+&#9;end
+
+&#9;-- Stop all charge sounds
+&#9;for _, sound in pairs(SoundTable) do
+&#9;&#9;sound:Stop()
+&#9;&#9;sound:Destroy()
+&#9;end
+&#9;SoundTable = {}
+end
+
 local function OnButton1Down()
-&#9;ClickTime = time()
+&#9;local myModel = MyPlayer.Character
+&#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
+&#9;&#9;ClickTime = time()
+&#9;&#9;Holding = true
+&#9;&#9;StartInfiniteChargeSound()
+&#9;end
 end
 
 local function OnButton1Up()
+&#9;Holding = false
 &#9;local myModel = MyPlayer.Character
 &#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
 &#9;&#9;Tool.Enabled = false
@@ -93,14 +130,12 @@ local function OnButton1Up()
 &#9;&#9;local launchSpeed = LAUNCH_SPEED_MIN
 &#9;&#9;do
 &#9;&#9;&#9;local timeHeldDown = time() - ClickTime
-&#9;&#9;&#9;print(&quot;button held for:&quot;, timeHeldDown, &quot;seconds&quot;)
 &#9;&#9;&#9;if timeHeldDown &gt; LAUNCH_TIME_MIN then
 &#9;&#9;&#9;&#9;local speedRange = LAUNCH_SPEED_MAX - LAUNCH_SPEED_MIN
 &#9;&#9;&#9;&#9;local timeRatio = timeHeldDown / (LAUNCH_TIME_MAX - LAUNCH_TIME_MIN)
 &#9;&#9;&#9;&#9;launchSpeed = launchSpeed + (speedRange * math.min(timeRatio, 1))
 &#9;&#9;&#9;end
 &#9;&#9;end
-&#9;&#9;print(&quot;launchSpeed:&quot;, launchSpeed)
 
 &#9;&#9;-- Give all the NPC&apos;s BaseParts a velocity, and make any Humanoids sit
 &#9;&#9;local velocity = (Mouse.Hit.p - ToolHandle.CFrame.p).unit * launchSpeed
@@ -160,9 +195,7 @@ Tool.Equipped:connect(OnEquipped)
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">Explode</string>
-					<ProtectedString name="Source">--NOTE: Bad code
-
-local Model = script.Parent
+					<ProtectedString name="Source">local Model = script.Parent
 
 local BodyColors = Model:FindFirstChild(&apos;Body Colors&apos;)
 if BodyColors then -- Make BodyColors red
@@ -319,6 +352,62 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBX6">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Charge</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset?id=93724183</url></Content>
+					<float name="Volume">0.200000003</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX7">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Fire</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset?id=93725061</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX8">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-2.58155179</X>
+					<Y>0.249869227</Y>
+					<Z>-2.8003037</Z>
+					<R00>-0.735240877</R00>
+					<R01>-0.114049628</R01>
+					<R02>-0.668141842</R02>
+					<R10>-0</R10>
+					<R11>0.985742152</R11>
+					<R12>-0.168262959</R12>
+					<R20>0.677805901</R20>
+					<R21>-0.123713806</R21>
+					<R22>-0.72475791</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0</X>
+					<Y>0.899999976</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
 		</Item>
 	</Item>
 </roblox>
