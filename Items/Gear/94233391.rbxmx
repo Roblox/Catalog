@@ -37,7 +37,7 @@
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
 					<X>-0.5</X>
-					<Y>0.600000024</Y>
+					<Y>9</Y>
 					<Z>-0.5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
@@ -91,17 +91,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBX2">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Summon</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><null></null></Content>
-					<float name="Volume">0.5</float>
-				</Properties>
-			</Item>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -127,7 +117,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="LocalScript" referent="RBX3">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -165,8 +155,6 @@ local ToolHandle = Tool.Handle
 local AiScript = WaitForChild(script, AI_SCRIPT_NAME)
 local CreatorTag = WaitForChild(AiScript, &apos;creator&apos;)
 
-local SummonSound = WaitForChild(ToolHandle, &apos;Summon&apos;)
-
 local Pet = nil
 local MyHumanoid = nil
 
@@ -182,11 +170,11 @@ local function OnEquipped()
 end
 
 local function OnActivated()
-&#9;if Tool.Enabled and MyHumanoid and MyHumanoid.Health &gt; 0 then
+&#9;if not Pet then -- LoadAsset failed, try again
+&#9;&#9;Pet = InsertService:LoadAsset(PET_ID):GetChildren()[1]
+&#9;end
+&#9;if Pet and Tool.Enabled and MyHumanoid and MyHumanoid.Health &gt; 0 then
 &#9;&#9;Tool.Enabled = false
-
-&#9;&#9;-- Play the summoning sound
-&#9;&#9;if SummonSound then SummonSound:Play() end
 
 &#9;&#9;-- Place the Pet
 &#9;&#9;Pet.Parent = Workspace
@@ -210,7 +198,7 @@ Tool.Equipped:connect(OnEquipped)
 Tool.Activated:connect(OnActivated)
 </ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX5">
+			<Item class="Script" referent="RBX4">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -245,6 +233,7 @@ end
 -----------------
 
 local DebrisService = Game:GetService(&apos;Debris&apos;)
+local PlayersService = Game:GetService(&apos;Players&apos;)
 
 local Pet = script.Parent
 local PetBody = WaitForChild(Pet, &apos;Body&apos;)
@@ -256,6 +245,7 @@ local PetHead = WaitForChild(Pet, &apos;Head&apos;)
 local CreatorTag = WaitForChild(script, &apos;creator&apos;)
 local Fire = WaitForChild(script, &apos;Fire&apos;)
 local FireBallScript = WaitForChild(script, &apos;FireBall&apos;)
+local SummonSound = WaitForChild(script, &apos;Summon&apos;)
 
 local MyPlayer = CreatorTag.Value
 
@@ -287,6 +277,10 @@ end
 
 local function Initialize()
 &#9;CreatorTag.Parent = nil
+
+&#9;-- Play fiery roar
+&#9;SummonSound.Parent = PetHead
+&#9;SummonSound:Play()
 
 &#9;-- Create the initial FireBall to clone from
 &#9;FireBall = Instance.new(&apos;Part&apos;)
@@ -355,6 +349,7 @@ end
 
 local function BreatheFire(hack)
 &#9;Spawn(function()
+&#9;&#9;SummonSound:Play()
 &#9;&#9;NeckJoint.DesiredAngle = 0.3
 &#9;&#9;wait(0.5)
 &#9;&#9;for i = 1, FIREBALL_NUMBER do
@@ -379,9 +374,21 @@ Spawn(function()
 &#9;end
 end)
 
+
 local myHead = MyPlayer.Character.Head
 local myHumanoid = MyPlayer.Character.Humanoid
-while PetBody and PetHead and TargetPoint and myHead do
+
+myHumanoid.Died:connect(function()
+&#9;myHumanoid = nil
+end)
+
+PlayersService.PlayerRemoving:connect(function(player)
+&#9;if player == MyPlayer then
+&#9;&#9;myHumanoid = nil
+&#9;end
+end)
+
+while PetBody and PetHead and TargetPoint and myHead and myHumanoid do
 &#9;if (TargetPoint - PetBody.Position).magnitude &gt; 5 then -- Incrementally fly toward TargetPoint
 &#9;&#9;--FireBeam(PetBody.Position, TargetPoint) --Debug
 &#9;&#9;local newPosition = PetBody.Position + MoveAmount
@@ -454,7 +461,7 @@ end
 DebrisService:AddItem(Pet, 0)
 </ProtectedString>
 				</Properties>
-				<Item class="Fire" referent="RBX6">
+				<Item class="Fire" referent="RBX5">
 					<Properties>
 						<Color3 name="Color">4289396735</Color3>
 						<bool name="Enabled">true</bool>
@@ -464,13 +471,13 @@ DebrisService:AddItem(Pet, 0)
 						<float name="size_xml">5</float>
 					</Properties>
 				</Item>
-				<Item class="ObjectValue" referent="RBX7">
+				<Item class="ObjectValue" referent="RBX6">
 					<Properties>
 						<string name="Name">creator</string>
 						<Ref name="Value">null</Ref>
 					</Properties>
 				</Item>
-				<Item class="Script" referent="RBX8">
+				<Item class="Script" referent="RBX7">
 					<Properties>
 						<bool name="Disabled">true</bool>
 						<Content name="LinkedSource"><null></null></Content>
@@ -578,6 +585,16 @@ end
 
 Ball.Touched:connect(OnTouched)
 </ProtectedString>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBX8">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Summon</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=86939835</url></Content>
+						<float name="Volume">1</float>
 					</Properties>
 				</Item>
 			</Item>
