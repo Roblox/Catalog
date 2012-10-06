@@ -391,7 +391,9 @@ local GunObj ={
 }
 
 local ChestWeld
+Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 local initialized=false
+
 function GunObj:Initialize()
 &#9;if initialized then return end
 &#9;initialized=true
@@ -401,7 +403,7 @@ function GunObj:Initialize()
 &#9;print(&apos;got to connections!!!!! &apos;)
 &#9;Tool.Reloading.Changed:connect(function() self:UpdateGui() end)
 &#9;Tool.Unequipped:connect(function() self:OnUnequipped() end)
-&#9;Tool.Equipped:connect(function(mouse) self:OnEquipped(mouse) end)
+&#9;
 &#9;Tool.DoFireAni.Changed:connect(PlayFireAni)
 &#9;self.NumberImages[&apos;0&apos;]=94128401
 &#9;self.NumberImages[&apos;1&apos;]=94128421
@@ -490,6 +492,7 @@ end
 
 
 function GunObj:OnEquipped(mouse)
+&#9;self:Initialize()
 &#9;if mouse ~= nil then
 &#9;&#9;self.Equipped = true
 &#9;&#9;local Player = game.Players.LocalPlayer
@@ -541,8 +544,11 @@ function GunObj:OnEquipped(mouse)
 end
 
 function GunObj:OnUnequipped()
-&#9;self.IdleAni:Stop()
-&#9;self.IdleAni:Destroy()
+&#9;if self.IdleAni then
+&#9;&#9;self.IdleAni:Stop()
+&#9;&#9;self.IdleAni:Destroy()
+&#9;&#9;self.IdleAni=nil
+&#9;end
 &#9;self.Gui.Parent = Tool
 &#9;self.Equipped = false
 &#9;print(&apos;in unequipp&apos;)
@@ -594,8 +600,6 @@ function PlayReloadAni()
 end
 
 Tool.Reloading.Changed:connect(function() if Tool.Reloading.Value then PlayReloadAni() end end)
-
-GunObj:Initialize()
 </ProtectedString>
 			</Properties>
 		</Item>
