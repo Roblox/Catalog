@@ -211,9 +211,9 @@ local FPS = 30 -- FramesPerSecond
 local TURN_RATE = 0.1 -- Can range from 0 to 1
 local FIREBALL_SPEED = 70 -- Speed of the projectile
 local FIREBALL_NAME = &apos;FireBall&apos; -- Name of the projectile
-local FIREBALL_LENGTH = 10 --TODO: 2 -- Seconds until the projectile is removed
+local FIREBALL_LENGTH = 2 -- Seconds until the projectile is removed
 local FIREBALL_TIME_BETWEEN = 0.1 -- Seconds between each projectile launch
-local FIREBALL_NUMBER = 10 -- Number of projectiles to launch when breathing fire
+local FIREBALL_NUMBER = 11 -- Number of projectiles to launch when breathing fire
 local PET_FLIGHT_SPEED = 50 -- Speed of the pet
 local PET_ATTACK_SPEED = 60 -- Speed of the pet when attacking
 
@@ -257,58 +257,9 @@ local LastWingAngle = 0
 
 local FireBall = nil
 
-local DiveBomb = false
-
------------------
---| Functions |--
------------------
-
-local function OnPetPartTouched(otherPart)
-&#9;if otherPart and otherPart.Name ~= FIREBALL_NAME and not otherPart:IsDescendantOf(MyPlayer.Character) then
-&#9;&#9;print(&quot;Valid Touch:&quot;, otherPart)
-&#9;&#9;
-&#9;end
-end
-
-local function SetFlyTarget(position, duration)
-&#9;TargetPoint = position
-&#9;MoveAmount = (position - PetBody.Position) / (duration * FPS)
-end
-
-local function Initialize()
-&#9;CreatorTag.Parent = nil
-
-&#9;-- Play fiery roar
-&#9;SummonSound.Parent = PetHead
-&#9;SummonSound:Play()
-
-&#9;-- Create the initial FireBall to clone from
-&#9;FireBall = Instance.new(&apos;Part&apos;)
-&#9;FireBall.Name = FIREBALL_NAME
-&#9;FireBall.Transparency = 1
-&#9;FireBall.CanCollide = false
-&#9;FireBall.TopSurface = Enum.SurfaceType.Smooth
-&#9;FireBall.BottomSurface = Enum.SurfaceType.Smooth
-&#9;FireBall.Size = Vector3.new(4, 4, 4)
-&#9;Instance.new(&quot;BodyForce&quot;, FireBall).force = Vector3.new(0, FireBall:GetMass() * 196.2, 0) -- Antigravity
-&#9;Fire:Clone().Parent = FireBall -- Fire it up
-&#9;CreatorTag:Clone().Parent = FireBall -- Attach creator tag
-&#9;local ballScriptClone = FireBallScript:Clone()
-&#9;ballScriptClone.Parent = FireBall
-&#9;ballScriptClone.Disabled = false
-
-&#9;-- Connect to all pet parts
-&#9;for _, child in pairs(Pet:GetChildren()) do
-&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
-&#9;&#9;&#9;child.Touched:connect(OnPetPartTouched)
-&#9;&#9;end
-&#9;end
-
-&#9;-- Start flying upwards
-&#9;local upLookVector = (Vector3.new(0, 1, 0) + PetBody.CFrame.lookVector).unit
-&#9;SetFlyTarget(PetBody.Position + (upLookVector * 100), 4)
-&#9;Flapping = true
-end
+-------------------------
+--| Utility Functions |--
+-------------------------
 
 -- Returns the closest living Humanoid to position who isn&apos;t in excludeList
 local function FindClosestHumanoid(position, excludeList) -- (Vector3, table)
@@ -339,26 +290,95 @@ local function IsClose(a, b, epsilon)
 &#9;return (a &lt;= b + epsilon and a &gt;= b - epsilon)
 end
 
-local function LaunchFireBall(hack)
+-----------------------
+--| Other Functions |--
+-----------------------
+
+local function OnPetPartTouched(otherPart)
+&#9;if otherPart and otherPart.Name ~= FIREBALL_NAME and not otherPart:IsDescendantOf(MyPlayer.Character) then
+&#9;&#9;--print(&quot;Valid Touch:&quot;, otherPart)
+
+&#9;end
+end
+
+local function SetFlyTarget(position, duration)
+&#9;TargetPoint = position
+&#9;MoveAmount = (position - PetBody.Position) / (duration * FPS)
+end
+
+local function LaunchFireBall()
 &#9;local fireBallClone = FireBall:Clone()
 &#9;DebrisService:AddItem(fireBallClone, FIREBALL_LENGTH)
 &#9;fireBallClone.Parent = Workspace
-&#9;fireBallClone.CFrame = CFrame.new(PetBody.Position, hack.Position) --TODO: PetHead.CFrame
+&#9;fireBallClone.CFrame = PetHead.CFrame
 &#9;fireBallClone.Velocity = fireBallClone.CFrame.lookVector * FIREBALL_SPEED
 end
 
-local function BreatheFire(hack)
+local function BreatheFire()
 &#9;Spawn(function()
 &#9;&#9;SummonSound:Play()
 &#9;&#9;NeckJoint.DesiredAngle = 0.3
 &#9;&#9;wait(0.5)
 &#9;&#9;for i = 1, FIREBALL_NUMBER do
-&#9;&#9;&#9;LaunchFireBall(hack)
+&#9;&#9;&#9;LaunchFireBall()
 &#9;&#9;&#9;wait(FIREBALL_TIME_BETWEEN)
 &#9;&#9;end
 &#9;&#9;NeckJoint.DesiredAngle = 0
 &#9;&#9;wait(0.5)
 &#9;end)
+end
+
+local function Initialize()
+&#9;CreatorTag.Parent = nil
+&#9;SummonSound.Parent = PetHead
+
+&#9;BreatheFire()
+
+&#9;-- Create the initial FireBall to clone from
+&#9;FireBall = Instance.new(&apos;Part&apos;)
+&#9;FireBall.Name = FIREBALL_NAME
+&#9;FireBall.Transparency = 1
+&#9;FireBall.CanCollide = false
+&#9;FireBall.TopSurface = Enum.SurfaceType.Smooth
+&#9;FireBall.BottomSurface = Enum.SurfaceType.Smooth
+&#9;FireBall.Size = Vector3.new(4, 4, 4)
+&#9;Instance.new(&quot;BodyForce&quot;, FireBall).force = Vector3.new(0, FireBall:GetMass() * 196.2, 0) -- Antigravity
+&#9;Fire:Clone().Parent = FireBall -- Fire it up
+&#9;CreatorTag:Clone().Parent = FireBall -- Attach creator tag
+&#9;local ballScriptClone = FireBallScript:Clone()
+&#9;ballScriptClone.Parent = FireBall
+&#9;ballScriptClone.Disabled = false
+
+&#9;-- Connect to all pet parts
+&#9;for _, child in pairs(Pet:GetChildren()) do
+&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;child.Touched:connect(OnPetPartTouched)
+&#9;&#9;end
+&#9;end
+
+&#9;-- Start flying upwards
+&#9;local upLookVector = (Vector3.new(0, 1, 0) + PetBody.CFrame.lookVector).unit
+&#9;SetFlyTarget(PetBody.Position + (upLookVector * 100), 4)
+&#9;Flapping = true
+end
+
+local function DiveBomb()
+&#9;local humanoid = FindClosestHumanoid(PetBody.Position, {MyPlayer.Character.Humanoid})
+&#9;if humanoid then
+&#9;&#9;local target = humanoid.Parent.Torso.Position
+&#9;&#9;local direction = (target - PetBody.Position).unit
+&#9;&#9;local verticalOffset = Vector3.new(0, 1, 0) * 10
+&#9;&#9;local horizontalOffset = Vector3.new(direction.x, 0, direction.z) * 50
+&#9;&#9;local beforePoint = target - horizontalOffset + verticalOffset
+&#9;&#9;local timeToDestination = (beforePoint - PetBody.Position).magnitude / PET_ATTACK_SPEED
+&#9;&#9;SetFlyTarget(beforePoint, timeToDestination)
+&#9;&#9;wait(timeToDestination * 0.8)
+&#9;&#9;BreatheFire()
+&#9;&#9;wait(timeToDestination * 0.2)
+&#9;&#9;local afterPoint = target + horizontalOffset + verticalOffset
+&#9;&#9;timeToDestination = (afterPoint - PetBody.Position).magnitude / PET_ATTACK_SPEED
+&#9;&#9;SetFlyTarget(afterPoint, timeToDestination)
+&#9;end
 end
 
 --------------------
@@ -369,11 +389,10 @@ Initialize()
 
 Spawn(function()
 &#9;while true do
-&#9;&#9;DiveBomb = true
 &#9;&#9;wait(math.random(5, 15))
+&#9;&#9;DiveBomb()
 &#9;end
 end)
-
 
 local myHead = MyPlayer.Character.Head
 local myHumanoid = MyPlayer.Character.Humanoid
@@ -390,52 +409,21 @@ end)
 
 while PetBody and PetHead and TargetPoint and myHead and myHumanoid do
 &#9;if (TargetPoint - PetBody.Position).magnitude &gt; 5 then -- Incrementally fly toward TargetPoint
-&#9;&#9;--FireBeam(PetBody.Position, TargetPoint) --Debug
 &#9;&#9;local newPosition = PetBody.Position + MoveAmount
 &#9;&#9;local direction = (TargetPoint - PetBody.Position).unit
 &#9;&#9;local newLookVector = PetBody.CFrame.lookVector:Lerp(direction, TURN_RATE)
 &#9;&#9;PetBody.CFrame = CFrame.new(newPosition, newPosition + newLookVector)
-&#9;elseif DiveBomb then
-&#9;&#9;local humanoid = FindClosestHumanoid(PetBody.Position, {myHumanoid})
-&#9;&#9;if humanoid and humanoid.Torso then 
-&#9;&#9;&#9;PetBody.CFrame = CFrame.new(PetBody.Position, humanoid.Torso.Position) -- Face target
-&#9;&#9;&#9;BreatheFire(humanoid.Torso)
-&#9;&#9;&#9;DiveBomb = false
-&#9;&#9;else
-&#9;&#9;&#9;Delay(1, function() DiveBomb = false end)
-&#9;&#9;end
-&#9;&#9;--[[
-&#9;&#9;print(&quot;Dive Bomb!&quot;)
-&#9;&#9;local humanoid = FindClosestHumanoid(PetBody.Position, {myHumanoid})
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;local target = humanoid.Parent.Torso.Position
-&#9;&#9;&#9;local direction = (target - PetBody.Position).unit
-&#9;&#9;&#9;local horizontalDirection = Vector3.new(direction.x, 0, direction.z)
-&#9;&#9;&#9;local offset = horizontalDirection --Vector3.new(direction.x * 20, 20, direction.z * 20)
-&#9;&#9;&#9;local beforePoint = target - offset
-&#9;&#9;&#9;local distance = (beforePoint - PetBody.Position).magnitude
-&#9;&#9;&#9;local timeToDestination = distance / PET_ATTACK_SPEED
-&#9;&#9;&#9;SetFlyTarget(beforePoint, timeToDestination)
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;wait(timeToDestination)
-&#9;&#9;&#9;&#9;BreatheFire()
-&#9;&#9;&#9;&#9;local afterPoint = target + offset
-&#9;&#9;&#9;&#9;distance = (beforePoint - PetBody.Position).magnitude
-&#9;&#9;&#9;&#9;timeToDestination = distance / PET_ATTACK_SPEED
-&#9;&#9;&#9;&#9;SetFlyTarget(beforePoint, timeToDestination)
-&#9;&#9;&#9;end)
-&#9;&#9;end
-&#9;&#9;DiveBomb = false
-&#9;&#9;--]]
 &#9;else -- Made it to TargetPoint, pick a new target
+&#9;&#9;print(&quot;Made it to target, picking a new random one&quot;)
 &#9;&#9;local newTarget = nil
 &#9;&#9;local distance = 0
 &#9;&#9;while distance &lt; 80 do
-&#9;&#9;&#9;local x = math.random(-200, 200)
-&#9;&#9;&#9;local y = math.random(100, 150)
-&#9;&#9;&#9;local z = math.random(-150, 150)
-&#9;&#9;&#9;newTarget = myHead.Position + Vector3.new(x, y, z)
-&#9;&#9;&#9;distance = (newTarget - PetBody.Position).magnitude
+&#9;&#9;&#9;local angle = 2 * math.pi * math.random()
+&#9;&#9;&#9;local radius = math.random(50, 150)
+&#9;&#9;&#9;local height = math.random(100, 150)
+&#9;&#9;&#9;local x, z = radius * math.cos(angle), radius * math.sin(angle)
+&#9;&#9;&#9;newTarget = myHead.Position + Vector3.new(x, height, z)
+&#9;&#9;&#9;distance = (newTarget - TargetPoint).magnitude
 &#9;&#9;end
 &#9;&#9;SetFlyTarget(newTarget, distance / PET_FLIGHT_SPEED)
 &#9;end
@@ -558,17 +546,20 @@ end
 local function Ignite(character, fire)
 &#9;fire = fire or Instance.new(&apos;Fire&apos;)
 &#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;fire:Clone().Parent = child
+&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;fire:Clone().Parent = child
+&#9;&#9;end
 &#9;end
 end
 
 -- When the ball touches an enemy, turn them into a dead skeleton
 local function OnTouched(otherPart)
-&#9;if otherPart then
+&#9;if otherPart and otherPart.Name ~= Ball.Name then
 &#9;&#9;local character, humanoid = FindCharacterAncestor(otherPart.Parent)
 &#9;&#9;if character and humanoid and humanoid.Health &gt; 0 then
 &#9;&#9;&#9;local myPlayer = CreatorTag.Value
-&#9;&#9;&#9;if character ~= myPlayer.Character then
+&#9;&#9;&#9;if character ~= myPlayer.Character and not (character:FindFirstChild(&apos;creator&apos;) and character.creator.Value ~= myPlayer) then
+&#9;&#9;&#9;&#9;-- (Only do the following if the character isn&apos;t myPlayer and they haven&apos;t already been converted)
 &#9;&#9;&#9;&#9;ApplyTags(humanoid)
 &#9;&#9;&#9;&#9;Skeletonify(character)
 &#9;&#9;&#9;&#9;Ignite(character, Fire)
