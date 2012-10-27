@@ -126,8 +126,18 @@
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Gong</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=96098241</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -141,7 +151,7 @@ local LIMB_DEBRIS_TIME = 4 --NOTE: Should be less than respawn time
 
 local SLASH_COOLDOWN = 0.7
 
-local IGNORE_LIST = {handle = 1, effect = 1, water = 1} --NOTE: Keys must be lowercase, values must evaluate to true
+local IGNORE_LIST = {torso = 1, handle = 1, effect = 1, water = 1} --NOTE: Keys must be lowercase, values must evaluate to true
 
 --------------------
 --| WaitForChild |--
@@ -208,11 +218,9 @@ end
 -----------------------
 
 local function OnTouched(otherPart)
-&#9;print(&quot;Touched:&quot;, otherPart)
 &#9;if otherPart and not IGNORE_LIST[string.lower(otherPart.Name)] then
 &#9;&#9;local character, humanoid = FindCharacterAncestor(otherPart)
 &#9;&#9;if character and humanoid and character ~= MyModel then
-&#9;&#9;&#9;print(&quot;Valid hit!&quot;)
 &#9;&#9;&#9;ApplyTags(humanoid)
 &#9;&#9;&#9;humanoid:TakeDamage(HIT_DAMAGE)
 &#9;&#9;&#9;if humanoid.Health &gt; 0 and humanoid.Torso then -- Cut limbs
@@ -229,16 +237,21 @@ local function OnTouched(otherPart)
 &#9;end
 end
 
-
 local function OnEquipped()
 &#9;MyModel = Tool.Parent
 &#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyModel)
-&#9;ToolHandle.Touched:connect(OnTouched)
 end
 
 local function OnActivated()
 &#9;if Tool.Enabled and MyModel:FindFirstChild(&apos;Humanoid&apos;) and MyModel.Humanoid.Health &gt; 0 then
-&#9;&#9;Tool.Enabled = false
+&#9;&#9;Tool.Enabled = false --NOTE: Starts the animation
+
+&#9;&#9;local connection = ToolHandle.Touched:connect(OnTouched)
+&#9;&#9;Delay(0.4, function() --NOTE: Hardcoded length of animation :[
+&#9;&#9;&#9;if connection then
+&#9;&#9;&#9;&#9;connection:disconnect()
+&#9;&#9;&#9;end
+&#9;&#9;end)
 
 &#9;&#9;local slashSound = ToolHandle:FindFirstChild(&apos;SwordSlash&apos;)
 &#9;&#9;if slashSound then
@@ -251,21 +264,16 @@ local function OnActivated()
 &#9;end
 end
 
-local function OnUnequipped()
-&#9;
-end
-
 --------------------
 --| Script Logic |--
 --------------------
 
 Tool.Equipped:connect(OnEquipped)
 Tool.Activated:connect(OnActivated)
-Tool.Unequipped:connect(OnUnequipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBX6">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -335,36 +343,45 @@ Tool.Changed:connect(OnChanged)
 Tool.Unequipped:connect(OnUnequipped)
 </ProtectedString>
 			</Properties>
-			<Item class="Animation" referent="RBX6">
+			<Item class="Animation" referent="RBX7">
 				<Properties>
 					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=96064636</url></Content>
 					<string name="Name">ScytheEquip2</string>
 				</Properties>
 			</Item>
-			<Item class="Animation" referent="RBX7">
+			<Item class="Animation" referent="RBX8">
 				<Properties>
 					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=96065457</url></Content>
 					<string name="Name">ScytheIdle2</string>
 				</Properties>
 			</Item>
-			<Item class="Animation" referent="RBX8">
+			<Item class="Animation" referent="RBX9">
 				<Properties>
 					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=96071496</url></Content>
 					<string name="Name">ScytheSlash</string>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX9">
+		<Item class="LocalScript" referent="RBX10">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">RaiseSkeletons</string>
-				<ProtectedString name="Source">local SPAWN_RADIUS = 8 -- Studs
+				<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local SPAWN_RADIUS = 8 -- Studs
 
 local SUMMON_COOLDOWN = 8
 
 local SKELETON_ASSET_ID = 53604463
 
+local SKELETON_DURATION = 30
+
+--------------------
+--| WaitForChild |--
+--------------------
 
 -- Waits for parent.child to exist, then returns it
 local function WaitForChild(parent, childName)
@@ -373,22 +390,33 @@ local function WaitForChild(parent, childName)
 &#9;return parent[childName]
 end
 
+-----------------
+--| Variables |--
+-----------------
 
 local InsertService = Game:GetService(&apos;InsertService&apos;)
 local DebrisService = Game:GetService(&apos;Debris&apos;)
 local PlayersService = Game:GetService(&apos;Players&apos;)
 
 local Tool = script.Parent
+local ToolHandle = Tool.Handle
+
 local MyPlayer = PlayersService.LocalPlayer
 
 local SkeletonScript = WaitForChild(script, &apos;SkeletonScript&apos;)
 local Fire = WaitForChild(script, &apos;Fire&apos;)
 local SummonAnimation = WaitForChild(script, &apos;Summon&apos;)
 
+local GongSound = WaitForChild(ToolHandle, &apos;Gong&apos;)
+
 local MyModel = nil
 local Skeleton = nil
 local LastSummonTime = 0
 local SummonTrack = nil
+
+-----------------
+--| Functions |--
+-----------------
 
 local function MakeSkeleton()
 &#9;Skeleton = InsertService:LoadAsset(SKELETON_ASSET_ID):GetChildren()[1]
@@ -435,6 +463,7 @@ local function SpawnSkeleton(spawnPosition)
 
 &#9;&#9;-- Spawn
 &#9;&#9;local skeletonClone = Skeleton:Clone()
+&#9;&#9;DebrisService:AddItem(skeletonClone, SKELETON_DURATION)
 &#9;&#9;skeletonClone.Parent = Workspace
 &#9;&#9;skeletonClone:MoveTo(spawnPosition) --NOTE: Model must be in Workspace
 
@@ -459,6 +488,7 @@ local function RaiseSkeletons()
 &#9;end
 end
 
+--NOTE: Ugly!
 local function OnKeyDown(key)
 &#9;key = string.lower(key)
 &#9;if key == &apos;e&apos; then
@@ -469,9 +499,15 @@ local function OnKeyDown(key)
 &#9;&#9;&#9;if humanoid then
 &#9;&#9;&#9;&#9;humanoid.WalkSpeed = 0
 &#9;&#9;&#9;end
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;for i = 1, 3 do
+&#9;&#9;&#9;&#9;&#9;if GongSound then GongSound:Play() end
+&#9;&#9;&#9;&#9;&#9;wait(1.5)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
 &#9;&#9;&#9;if SummonTrack then
 &#9;&#9;&#9;&#9;SummonTrack:Play()
-&#9;&#9;&#9;&#9;wait(3)
+&#9;&#9;&#9;&#9;wait(3.125)
 &#9;&#9;&#9;end
 &#9;&#9;&#9;RaiseSkeletons()
 &#9;&#9;&#9;wait(1)
@@ -496,12 +532,16 @@ local function OnUnequipped()
 &#9;if SummonTrack then SummonTrack:Stop() end
 end
 
+--------------------
+--| Script Logic |--
+--------------------
+
 MakeSkeleton()
 Tool.Equipped:connect(OnEquipped)
 Tool.Unequipped:connect(OnUnequipped)
 </ProtectedString>
 			</Properties>
-			<Item class="Fire" referent="RBX10">
+			<Item class="Fire" referent="RBX11">
 				<Properties>
 					<Color3 name="Color">4294901760</Color3>
 					<bool name="Enabled">true</bool>
@@ -511,13 +551,13 @@ Tool.Unequipped:connect(OnUnequipped)
 					<float name="size_xml">10</float>
 				</Properties>
 			</Item>
-			<Item class="Animation" referent="RBX11">
+			<Item class="Animation" referent="RBX12">
 				<Properties>
 					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=93693205</url></Content>
 					<string name="Name">Summon</string>
 				</Properties>
 			</Item>
-			<Item class="Script" referent="RBX12">
+			<Item class="Script" referent="RBX13">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -841,7 +881,7 @@ sp:remove() --Rest In Pizza
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX13">
+		<Item class="Camera" referent="RBX14">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
