@@ -56,7 +56,7 @@ SlashSound.Volume=.7
 local UnsheathSound=Instance.new(&quot;Sound&quot;)
 UnsheathSound.SoundId=&quot;rbxasset://sounds\\unsheath.wav&quot;
 UnsheathSound.Parent=sword
-UnsheathSound.Volume=1
+UnsheathSound.Volume=.5
 
 function waitfor(parent,name)
 &#9;while true do
@@ -74,6 +74,19 @@ function rndm()
 &#9;return (math.random()-.5)*2
 end
 
+function tagHumanoid(humanoid,player)
+&#9;for i,v in ipairs(humanoid:GetChildren()) do
+&#9;&#9;if v.Name==&quot;creator&quot; then
+&#9;&#9;&#9;v:remove()
+&#9;&#9;end
+&#9;end
+&#9;local creator_tag=Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value=player
+&#9;creator_tag.Name=&quot;creator&quot;
+&#9;creator_tag.Parent=humanoid
+&#9;debris:AddItem(creator_tag,1)
+end
+
 function blow(hit)
 &#9;if hit.Parent~=nil then
 &#9;&#9;local humanoid=hit.Parent:findFirstChild(&quot;Humanoid&quot;)
@@ -83,7 +96,7 @@ function blow(hit)
 &#9;&#9;&#9;if vPlayer~=nil then
 &#9;&#9;&#9;&#9;local hum=vCharacter:findFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;&#9;&#9;if humanoid~=nil then
-&#9;&#9;&#9;&#9;&#9;if hum~=nil and humanoid~=hum then
+&#9;&#9;&#9;&#9;&#9;if hum~=nil and humanoid~=hum and hum.Health&gt;0 then
 &#9;&#9;&#9;&#9;&#9;&#9;local right_arm=vCharacter:FindFirstChild(&quot;Right Arm&quot;)
 &#9;&#9;&#9;&#9;&#9;&#9;if right_arm~=nil then
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;local joint=right_arm:FindFirstChild(&quot;RightGrip&quot;)
@@ -129,20 +142,6 @@ function blow(hit)
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
-end
-
-
-function tagHumanoid(humanoid,player)
-&#9;for i,v in ipairs(humanoid:GetChildren()) do
-&#9;&#9;if v.Name==&quot;creator&quot; then
-&#9;&#9;&#9;v:remove()
-&#9;&#9;end
-&#9;end
-&#9;local creator_tag=Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value=player
-&#9;creator_tag.Name=&quot;creator&quot;
-&#9;creator_tag.Parent=humanoid
-&#9;debris:AddItem(creator_tag,1)
 end
 
 sp.Enabled=true
@@ -201,6 +200,7 @@ debris=game:GetService(&quot;Debris&quot;)
 
 enabled=true
 taunting=false
+check=true
 
 function waitfor(parent,name)
 &#9;while true do
@@ -264,9 +264,10 @@ function onEquippedLocal(mouse)
 &#9;&#9;&#9;local h=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;&#9;local la=sp.Parent:FindFirstChild(&quot;Left Arm&quot;)
 &#9;&#9;&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;if h~=nil and h.Health&gt;0 and la~=nil and t~=nil then
+&#9;&#9;&#9;if h~=nil and h.Health&gt;0 and la~=nil and t~=nil and check then
+&#9;&#9;&#9;&#9;check=false
 &#9;&#9;&#9;&#9;sp.Taunting.Value=true
-&#9;&#9;&#9;&#9;h.WalkSpeed=0
+&#9;&#9;&#9;&#9;h.WalkSpeed=.1
 &#9;&#9;&#9;&#9;tauntanim=h:LoadAnimation(sp.TonightsForcast)
 &#9;&#9;&#9;&#9;tauntanim:Play()
 &#9;&#9;&#9;&#9;swordUp()
@@ -298,6 +299,7 @@ function onEquippedLocal(mouse)
 &#9;&#9;&#9;&#9;for i=1,8 do
 &#9;&#9;&#9;&#9;&#9;if p and p.Parent~=nil then
 &#9;&#9;&#9;&#9;&#9;&#9;local p2=Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;p2.Name=&quot;Effect&quot;
 &#9;&#9;&#9;&#9;&#9;&#9;p2.Transparency=1
 &#9;&#9;&#9;&#9;&#9;&#9;p2.BrickColor=BrickColor.new(&quot;Bright red&quot;)
 &#9;&#9;&#9;&#9;&#9;&#9;p2.CanCollide=false
@@ -331,6 +333,7 @@ function onEquippedLocal(mouse)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;h.WalkSpeed=16
 &#9;&#9;&#9;&#9;sp.Taunting.Value=false
+&#9;&#9;&#9;&#9;check=true
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end)
@@ -383,48 +386,50 @@ sp=script.Parent
 debris=game:GetService(&quot;Debris&quot;)
 
 sp.Touched:connect(function(hit)
-&#9;local c=sp:FindFirstChild(&quot;creator&quot;)
-&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;local t=hit.Parent:FindFirstChild(&quot;Torso&quot;)
-&#9;if c~=nil and h~=nil and t~=nil then
-&#9;&#9;if c.Value and c.Value~=nil and t:FindFirstChild(&quot;IceWeld&quot;)==nil then
-&#9;&#9;&#9;local plr=game.Players:GetPlayerFromCharacter(hit.Parent)
-&#9;&#9;&#9;if plr then
-&#9;&#9;&#9;&#9;if plr==c.Value then
-&#9;&#9;&#9;&#9;&#9;return
+&#9;if hit and hit~=nil and hit.Parent~=nil then
+&#9;&#9;local c=sp:FindFirstChild(&quot;creator&quot;)
+&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;local t=hit.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;if c~=nil and h~=nil and t~=nil then
+&#9;&#9;&#9;if c.Value and c.Value~=nil and t:FindFirstChild(&quot;IceWeld&quot;)==nil then
+&#9;&#9;&#9;&#9;local plr=game.Players:GetPlayerFromCharacter(hit.Parent)
+&#9;&#9;&#9;&#9;if plr then
+&#9;&#9;&#9;&#9;&#9;if plr==c.Value then
+&#9;&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local p=Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;&#9;p.Name=&quot;Effect&quot;
+&#9;&#9;&#9;&#9;p.BrickColor=BrickColor.new(&quot;Pastel light blue&quot;)
+&#9;&#9;&#9;&#9;p.FormFactor=&quot;Custom&quot;
+&#9;&#9;&#9;&#9;p.Size=Vector3.new(5,8,5)
+&#9;&#9;&#9;&#9;p.Transparency=.3
+&#9;&#9;&#9;&#9;p.Reflectance=.3
+&#9;&#9;&#9;&#9;p.CanCollide=false
+&#9;&#9;&#9;&#9;p.TopSurface=&quot;Smooth&quot;
+&#9;&#9;&#9;&#9;p.BottomSurface=&quot;Smooth&quot;
+&#9;&#9;&#9;&#9;local cf=CFrame.Angles(0,math.pi*2*math.random(),.5*math.random())
+&#9;&#9;&#9;&#9;p.CFrame=t.CFrame*cf
+&#9;&#9;&#9;&#9;local w=Instance.new(&quot;Motor&quot;)
+&#9;&#9;&#9;&#9;w.Name=&quot;IceWeld&quot;
+&#9;&#9;&#9;&#9;w.Part0=t
+&#9;&#9;&#9;&#9;w.Part1=p
+&#9;&#9;&#9;&#9;w.C0=CFrame.Angles(0,math.pi*2*math.random(),.5*math.random())
+&#9;&#9;&#9;&#9;w.Parent=t
+&#9;&#9;&#9;&#9;debris:AddItem(p,8)
+&#9;&#9;&#9;&#9;p.Parent=game.Workspace
+&#9;&#9;&#9;&#9;h.WalkSpeed=0
+&#9;&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;&#9;wait(10+math.random())
+&#9;&#9;&#9;&#9;&#9;if h and h~=nil then
+&#9;&#9;&#9;&#9;&#9;&#9;h.WalkSpeed=16
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;if p and p~=nil then
+&#9;&#9;&#9;&#9;&#9;&#9;p:remove()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;sp:remove()
 &#9;&#9;&#9;end
-&#9;&#9;&#9;local p=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;p.Name=&quot;Effect&quot;
-&#9;&#9;&#9;p.BrickColor=BrickColor.new(&quot;Pastel light blue&quot;)
-&#9;&#9;&#9;p.FormFactor=&quot;Custom&quot;
-&#9;&#9;&#9;p.Size=Vector3.new(5,8,5)
-&#9;&#9;&#9;p.Transparency=.3
-&#9;&#9;&#9;p.Reflectance=.3
-&#9;&#9;&#9;p.CanCollide=false
-&#9;&#9;&#9;p.TopSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;p.BottomSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;local cf=CFrame.Angles(0,math.pi*2*math.random(),.5*math.random())
-&#9;&#9;&#9;p.CFrame=t.CFrame*cf
-&#9;&#9;&#9;local w=Instance.new(&quot;Motor&quot;)
-&#9;&#9;&#9;w.Name=&quot;IceWeld&quot;
-&#9;&#9;&#9;w.Part0=t
-&#9;&#9;&#9;w.Part1=p
-&#9;&#9;&#9;w.C0=CFrame.Angles(0,math.pi*2*math.random(),.5*math.random())
-&#9;&#9;&#9;w.Parent=t
-&#9;&#9;&#9;debris:AddItem(p,8)
-&#9;&#9;&#9;p.Parent=game.Workspace
-&#9;&#9;&#9;h.WalkSpeed=0
-&#9;&#9;&#9;delay(0,function()
-&#9;&#9;&#9;&#9;wait(10+math.random())
-&#9;&#9;&#9;&#9;if h and h~=nil then
-&#9;&#9;&#9;&#9;&#9;h.WalkSpeed=16
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if p and p~=nil then
-&#9;&#9;&#9;&#9;&#9;p:remove()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;sp:remove()
 &#9;&#9;end
 &#9;end
 end)
@@ -469,20 +474,20 @@ sp:remove()
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">199</int>
+				<int name="BrickColor">102</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.60000002</X>
-					<Y>-0.100000009</Y>
-					<Z>1.49011612e-008</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<X>0.0058631897</X>
+					<Y>3.49269199</Y>
+					<Z>-0.00212359428</Z>
+					<R00>0.997641623</R00>
+					<R01>-0.0686356351</R01>
+					<R02>-0.000663581246</R02>
+					<R10>0.068636328</R10>
+					<R11>0.997641325</R11>
+					<R12>0.000446213526</R12>
+					<R20>0.000631390489</R20>
+					<R21>-0.000490706821</R21>
+					<R22>0.999999583</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -521,8 +526,8 @@ sp:remove()
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>1.20000005</X>
-					<Y>5.5</Y>
+					<X>1.5</X>
+					<Y>4.5</Y>
 					<Z>0.300000012</Z>
 				</Vector3>
 			</Properties>
@@ -589,24 +594,24 @@ sp:remove()
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.65909111</X>
-					<Y>-0.144320801</Y>
-					<Z>4.23177624</Z>
-					<R00>0.999902546</R00>
-					<R01>-0.000146210165</R01>
-					<R02>-0.0139615629</R02>
-					<R10>1.45519152e-011</R10>
-					<R11>0.999945164</R11>
-					<R12>-0.0104717603</R12>
-					<R20>0.0139623284</R20>
-					<R21>0.0104707396</R21>
-					<R22>0.99984771</R22>
+					<X>-0.271034837</X>
+					<Y>4.17653799</Y>
+					<Z>4.53070164</Z>
+					<R00>0.998139322</R00>
+					<R01>0.00907932408</R01>
+					<R02>-0.0602938607</R02>
+					<R10>9.31322464e-010</R10>
+					<R11>0.988851368</R11>
+					<R12>0.148905769</R12>
+					<R20>0.0609736256</R20>
+					<R21>-0.148628697</R21>
+					<R22>0.987011552</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-1.5999999</X>
-					<Y>-0.0999999046</Y>
-					<Z>0</Z>
+					<X>0.0058631897</X>
+					<Y>3.49269199</Y>
+					<Z>-0.00212359428</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
