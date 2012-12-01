@@ -10,240 +10,20 @@
 				<Y>0</Y>
 				<Z>-2</Z>
 				<R00>0</R00>
-				<R01>-1</R01>
-				<R02>-0</R02>
-				<R10>-1</R10>
+				<R01>0</R01>
+				<R02>1</R02>
+				<R10>1</R10>
 				<R11>0</R11>
-				<R12>-0</R12>
+				<R12>0</R12>
 				<R20>0</R20>
-				<R21>0</R21>
-				<R22>-1</R22>
+				<R21>1</R21>
+				<R22>0</R22>
 			</CoordinateFrame>
-			<string name="Name">EnergySword</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=98435678</url></Content>
+			<string name="Name">RedPeriastron</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=99065961</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">local r = game:service(&quot;RunService&quot;)
-
-local damage = 13
-local slash_damage = 20
-local lunge_damage = 28
-
-sword = script.Parent.Handle
-Tool = script.Parent
-
-local SlashSound = Instance.new(&quot;Sound&quot;)
-SlashSound.SoundId = &quot;http://www.roblox.com/asset/?id=11998777&quot;
-SlashSound.Pitch = .7
-SlashSound.Parent = sword
-
-
-local LungeSound = Instance.new(&quot;Sound&quot;)
-LungeSound.SoundId = &quot;http://www.roblox.com/asset/?id=11998796&quot;
-LungeSound.Pitch = .7
-LungeSound.Parent = sword
-
-
-local UnsheathSound = Instance.new(&quot;Sound&quot;)
-UnsheathSound.SoundId = &quot;http://www.roblox.com/asset/?id=11998770&quot;
-LungeSound.Pitch = .7
-UnsheathSound.Parent = sword
-
-
-function blow(hit)
-&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;local vCharacter = Tool.Parent
-&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
-&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
-&#9;if humanoid~=nil and humanoid ~= hum and hum ~= nil then
-&#9;&#9;-- final check, make sure sword is in-hand
-&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;&#9;if (right_arm ~= nil) then
-&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
-&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
-&#9;&#9;&#9;&#9;tagHumanoid(humanoid, vPlayer)
-&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
-&#9;&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;&#9;untagHumanoid(humanoid)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function tagHumanoid(humanoid, player)
-&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value = player
-&#9;creator_tag.Name = &quot;creator&quot;
-&#9;creator_tag.Parent = humanoid
-end
-
-function untagHumanoid(humanoid)
-&#9;if humanoid ~= nil then
-&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
-&#9;&#9;if tag ~= nil then
-&#9;&#9;&#9;tag.Parent = nil
-&#9;&#9;end
-&#9;end
-end
-
-
-function attack()
-&#9;damage = slash_damage
-&#9;SlashSound:play()
-&#9;Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 0.7
-&#9;Tool.Parent.Torso[&quot;Right Shoulder&quot;].DesiredAngle = 3.6
-&#9;wait(.1)
-&#9;Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 1
-
-end
-
-function lunge()
-&#9;damage = lunge_damage
-
-&#9;LungeSound:play()
-
-&#9;local anim = Instance.new(&quot;StringValue&quot;)
-&#9;anim.Name = &quot;toolanim&quot;
-&#9;anim.Value = &quot;Lunge&quot;
-&#9;anim.Parent = Tool
-&#9;
-&#9;
-&#9;local force = Instance.new(&quot;BodyVelocity&quot;)
-&#9;force.velocity =  Vector3.new(0,80,0) 
-&#9;force.Parent = Tool.Parent.Torso
-&#9;wait(.25)
-&#9;force.velocity =  (Tool.Parent.Torso.CFrame.lookVector * 120)  + Vector3.new(0, 60,0)
-&#9;--swordOut()
-&#9;wait(.5)
-&#9;force.Parent = nil
-&#9;wait(.5)
-&#9;--swordUp()
-
-&#9;damage = slash_damage
-end
-
-function swordUp()
-&#9;Tool.GripForward = Vector3.new(-1,0,0)
-&#9;Tool.GripRight = Vector3.new(0,1,0)
-&#9;Tool.GripUp = Vector3.new(0,0,1)
-end
-
-function swordOut()
-&#9;Tool.GripForward = Vector3.new(0,0,1)
-&#9;Tool.GripRight = Vector3.new(0,-1,0)
-&#9;Tool.GripUp = Vector3.new(-1,0,0)
-end
-
-function swordAcross()
-&#9;-- parry
-end
-
-
-Tool.Enabled = true
-local last_attack = 0
-function onActivated()
-
-&#9;if not Tool.Enabled then
-&#9;&#9;return
-&#9;end
-
-&#9;Tool.Enabled = false
-
-&#9;local character = Tool.Parent;
-&#9;local humanoid = character.Humanoid
-&#9;if humanoid == nil then
-&#9;&#9;print(&quot;Humanoid not found&quot;)
-&#9;&#9;return 
-&#9;end
-
-&#9;t = r.Stepped:wait()
-
-&#9;if (t - last_attack &lt; .2) then
-&#9;&#9;lunge()
-&#9;else
-&#9;&#9;attack()
-&#9;end
-
-&#9;last_attack = t
-
-&#9;--wait(.5)
-
-&#9;Tool.Enabled = true
-end
-
-
-function onEquipped()
-&#9;UnsheathSound:play()
-&#9;vCharacter = Tool.Parent 
-&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if myHumanoid then 
-&#9;&#9;myHumanoid.WalkSpeed = 20.0
-&#9;end 
-end
-
-function onUnequipped()
-&#9;if myHumanoid then
-&#9;&#9;myHumanoid.WalkSpeed = 16.0 
-&#9;end 
-end
-
-
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
-script.Parent.Unequipped:connect(onUnequipped)
-
-
-connection = sword.Touched:connect(blow)
-
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX2">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool = script.Parent
-
-local stillEquipped = false
-
-function onEquippedLocal(mouse)
-&#9;stillEquipped = true
-&#9;if mouse == nil then 
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return
-&#9;end
-&#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;while Tool.Enabled and stillEquipped do 
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;while not Tool.Enabled and stillEquipped do 
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end&#9;
-&#9;end
-end
-
-
-function onUnequippedLocal()
-&#9;stillEquipped = false
-end
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBX3">
+		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -254,19 +34,19 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1003</int>
+				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>1.60000002</X>
-					<Y>3</Y>
-					<Z>-1.5</Z>
-					<R00>0</R00>
-					<R01>-1</R01>
+					<X>46.5</X>
+					<Y>3.19999933</Y>
+					<Z>17.7000008</Z>
+					<R00>1</R00>
+					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
 					<R11>0</R11>
-					<R12>-1</R12>
-					<R20>1</R20>
-					<R21>0</R21>
+					<R12>1</R12>
+					<R20>0</R20>
+					<R21>-1</R21>
 					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
@@ -280,10 +60,10 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">true</bool>
+				<bool name="Locked">false</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
-				<float name="Reflectance">0</float>
+				<float name="Reflectance">0.400000006</float>
 				<float name="RightParamA">-0.5</float>
 				<float name="RightParamB">0.5</float>
 				<token name="RightSurface">0</token>
@@ -303,19 +83,19 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<token name="formFactorRaw">2</token>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1</X>
-					<Y>0.800000012</Y>
-					<Z>4</Z>
+					<Y>0.600000024</Y>
+					<Z>5.19999886</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=11996935</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=80557857</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -324,11 +104,11 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1.39999998</X>
-						<Y>1.39999998</Y>
-						<Z>1.39999998</Z>
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=98402340</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=99058823</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -336,37 +116,332 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBX3">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">lightning1</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=93186995</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">lightning2</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=93187046</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
 			<Item class="Sparkles" referent="RBX5">
 				<Properties>
 					<bool name="Enabled">true</bool>
 					<string name="Name">Sparkles</string>
-					<Color3 name="SparkleColor">4278190080</Color3>
+					<Color3 name="SparkleColor">4294901760</Color3>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX6">
+		<Item class="LocalScript" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalSwordScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local MyMouse = nil
+
+function OnEquipped(mouse)
+&#9;if mouse == nil then return end
+&#9;MyMouse = mouse
+end
+
+function OnUnequipped()
+&#9;MyMouse = nil
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+
+while true do
+&#9;if MyMouse then MyMouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot; end
+&#9;while not Tool.Enabled do wait() end
+&#9;
+&#9;if MyMouse then MyMouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;&#9;end
+&#9;while Tool.Enabled do wait() end
+end
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=80395075</url></Content>
+				<string name="Name">Lunge</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX8">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">-- HotThoth
+local LIGHTNING_STRIKE_DURATION = 5
+local LIGHTNING_STRIKE_COOLDOWN = 10
+local LIGHTNING_STRIKE_HEIGHT = 500
+local LIGHTNING_STRIKE_LAST_TIME = 2
+local LIGHTNING_TICK_DAMAGE = 40
+local SWORD_HIT_DAMAGE = 35
+
+function WaitForChild(parent, child)
+&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
+&#9;return parent[child]
+end
+
+local Tool = script.Parent
+local Character = nil
+local Humanoid = nil
+local Mouse = nil
+local SwingAnimationObject = WaitForChild(Tool, &quot;Lunge&quot;)
+local LightningDecal = WaitForChild(Tool, &quot;LightningDecal&quot;)
+
+local SwingAnimation = nil
+local KeyDownConn = nil
+local KeyUpConn = nil
+
+local BLOCK_FACES = {&quot;Left&quot;, &quot;Front&quot;, &quot;Right&quot;, &quot;Back&quot;}
+
+local enabled = false
+Tool.Enabled = false
+
+local Handle = WaitForChild(Tool, &quot;Handle&quot;)
+local sound1 = WaitForChild(Handle, &quot;lightning1&quot;)
+local sound2 = WaitForChild(Handle, &quot;lightning2&quot;)
+
+local slashHits = {}
+local playedHitSound = false
+function onHit(hitPart)
+&#9;if not hitPart or not enabled then return end
+&#9;local char = hitPart.Parent
+&#9;if not char then return end
+&#9;local hum = char:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if (not hum) and char.Parent then char = char.Parent end
+&#9;hum = char:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not hum or slashHits[hum] then return end
+&#9;slashHits[hum] = true
+&#9;hum:TakeDamage(SWORD_HIT_DAMAGE)
+&#9;if not playedHitSound then
+&#9;&#9;playedHitSound = true
+&#9;&#9;sound2:Play()
+&#9;end
+end
+
+function onActivated()
+&#9;print(&quot;activated&quot;)
+&#9;if not enabled and SwingAnimation then
+&#9;&#9;enabled = true
+&#9;&#9;playedHitSound = false
+&#9;&#9;slashHits = {}
+&#9;&#9;SwingAnimation:Play()
+&#9;&#9;wait(0.4)
+&#9;&#9;SwingAnimation:Stop()
+&#9;&#9;enabled = false
+&#9;end
+end
+
+function checkLightningHit(newLightning, lightningStart, lightningEnd)
+&#9;newLightning.Transparency = .2
+&#9;newLightning.BrickColor = BrickColor.new(&quot;Hot pink&quot;)
+
+&#9;local hitParts = workspace:FindPartsInRegion3(Region3.new(lightningEnd - Vector3.new(2, 0, 2), lightningStart + Vector3.new(2, 0, 2)))
+
+&#9;--local hitPart = workspace:FindPartOnRay(lightningRay, newLightning)
+&#9;local hitHums = {}
+&#9;for _, hitPart in pairs(hitParts) do
+&#9;&#9;if hitPart then
+&#9;&#9;&#9;local char = hitPart.Parent
+&#9;&#9;&#9;if char and char.Parent then
+&#9;&#9;&#9;&#9;if not char:FindFirstChild(&quot;Humanoid&quot;) then char = char.Parent end
+&#9;&#9;&#9;&#9;local hum = char:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;if hum and not hitHums[hum] then
+&#9;&#9;&#9;&#9;&#9;if hum.Health &gt; 0 then 
+&#9;&#9;&#9;&#9;&#9;&#9;local newLightningSound = sound1:Clone()
+&#9;&#9;&#9;&#9;&#9;&#9;newLightningSound.Parent = hitPart
+&#9;&#9;&#9;&#9;&#9;&#9;newLightningSound:Play()
+&#9;&#9;&#9;&#9;&#9;&#9;game:GetService(&quot;Debris&quot;):AddItem(newLightningSound, 1)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;hitHums[hum] = true
+&#9;&#9;&#9;&#9;&#9;hum:TakeDamage(LIGHTNING_TICK_DAMAGE)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;wait(.1)
+&#9;newLightning:Remove()
+end
+
+function MakeLightningAt(targetPoint)
+&#9;print(&quot;make lightning at&quot;)
+&#9;local lightningStart = targetPoint + Vector3.new(0, LIGHTNING_STRIKE_HEIGHT, 0)
+&#9;local lightningRay = Ray.new(lightningStart, Vector3.new(0, -LIGHTNING_STRIKE_HEIGHT - 50, 0))
+&#9;local lightningHitPart, lightningEnd = workspace:FindPartOnRay(lightningRay)
+
+&#9;local ignoreTable = {}
+&#9;while (lightningHitPart and lightningHitPart.Parent and lightningHitPart.Parent:FindFirstChild(&quot;Humanoid&quot;)) or (lightningHitPart and lightningHitPart.Parent and lightningHitPart.Parent.Parent and lightningHitPart.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)) do
+&#9;&#9;table.insert(ignoreTable, lightningHitPart)
+&#9;&#9;lightningHitPart, lightningEnd = workspace:FindPartOnRayWithIgnoreList(lightningRay, ignoreTable)
+&#9;end
+
+&#9;if lightningHitPart then
+&#9;&#9;print(&quot;actually making some lightning&quot;)
+&#9;&#9;-- make the lightning from lightningStart to lightningEnd, electrocutin&apos; lightningHitPart
+&#9;&#9;local newLightning = Instance.new(&quot;Part&quot;)
+&#9;&#9;newLightning.formFactor = &quot;Custom&quot;
+&#9;&#9;newLightning.Size = Vector3.new(1, 1, 1)
+&#9;&#9;--newLightning.Size = Vector3.new(2, lightningStart.Y - lightningEnd.Y, 2)
+&#9;&#9;newLightning.Transparency = .5  --.8
+&#9;&#9;newLightning.Anchored = false
+&#9;&#9;newLightning.BrickColor = BrickColor.new(&quot;Really red&quot;)  -- Toothpaste
+
+&#9;&#9;local newCylinderMesh = Instance.new(&quot;CylinderMesh&quot;)
+&#9;&#9;newCylinderMesh.Scale = Vector3.new(3, lightningStart.Y - lightningEnd.Y, 3)
+&#9;&#9;newCylinderMesh.Parent = newLightning
+
+&#9;&#9;local newLightningFloatForce = Instance.new(&quot;BodyForce&quot;)
+&#9;&#9;newLightningFloatForce.force = Vector3.new(0, newLightning:GetMass()*196.2, 0)
+&#9;&#9;newLightningFloatForce.Parent = newLightning&#9;&#9;
+
+&#9;&#9;local newBAV = Instance.new(&quot;BodyAngularVelocity&quot;)
+&#9;&#9;newBAV.angularvelocity = Vector3.new(0, 10, 0)
+&#9;&#9;newBAV.P = 1000
+&#9;&#9;newBAV.maxTorque = Vector3.new(0, newBAV.P, 0)
+&#9;&#9;newBAV.Parent = newLightning
+
+&#9;&#9;newLightning.CanCollide = false
+&#9;&#9;newLightning.CFrame = CFrame.new((lightningStart + lightningEnd) / 2)
+
+&#9;&#9;for _, blockFace in pairs(BLOCK_FACES) do
+&#9;&#9;&#9;local newLightningDecal = LightningDecal:Clone()
+&#9;&#9;&#9;newLightningDecal.Face = blockFace
+&#9;&#9;&#9;newLightningDecal.Parent = newLightning
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;newLightning.Parent = workspace
+&#9;&#9;game:GetService(&quot;Debris&quot;):AddItem(newLightning, LIGHTNING_STRIKE_LAST_TIME+.2)
+--&#9;&#9;delay(LIGHTNING_STRIKE_LAST_TIME, function() checkLightningHit(newLightning, lightningRay) end)
+&#9;&#9;delay(LIGHTNING_STRIKE_LAST_TIME, function() checkLightningHit(newLightning, lightningStart, lightningEnd) end)
+
+--&#9;&#9;for i = 0, 4 do
+--&#9;&#9;&#9;delay(i*LIGHTNING_STRIKE_LAST_TIME/4, function() checkLightningHit(newLightning, lightningRay) end)
+--&#9;&#9;end
+&#9;&#9;return true
+&#9;else
+&#9;&#9;return false
+&#9;end
+end
+
+local lightningStrikeCoroutine = nil
+local lightningButtonDown = false
+function LightningStrike()
+&#9;print(&quot;lightningStrike&quot;)
+
+&#9;local startTime = tick()
+&#9;while tick() - startTime &lt; LIGHTNING_STRIKE_DURATION do
+&#9;&#9;if Mouse and lightningButtonDown then
+&#9;&#9;&#9;local mouseHit = Mouse.Hit
+&#9;&#9;&#9;if mouseHit and MakeLightningAt(mouseHit.p) then wait(.05) end
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+&#9;Tool.Enabled = true
+&#9;wait(LIGHTNING_STRIKE_COOLDOWN)
+&#9;Tool.Enabled = false
+&#9;lightningStrikeCoroutine = nil
+end
+
+function OnKeyDown(key)
+&#9;if (key == &quot;q&quot; or key == &quot;Q&quot;) then
+&#9;&#9;if not lightningStrikeCoroutine then
+&#9;&#9;&#9;lightningStrikeCoroutine = coroutine.create(LightningStrike)
+&#9;&#9;&#9;coroutine.resume(lightningStrikeCoroutine)
+&#9;&#9;end
+&#9;&#9;lightningButtonDown = true
+&#9;end
+end
+
+function OnKeyUp(key)
+&#9;if (key == &quot;q&quot; or key == &quot;Q&quot;) then
+&#9;&#9;lightningButtonDown = false
+&#9;end
+end
+
+function onEquipped(mouse)
+&#9;print(&quot;onEquipped&quot;)
+
+&#9;Mouse = mouse
+&#9;if not Mouse then return end
+
+&#9;if KeyDownConn then KeyDownConn:disconnect() KeyDownConn = nil end
+&#9;if KeyUpConn then KeyUpConn:disconnect() KeyUpConn = nil end
+
+&#9;KeyDownConn = Mouse.KeyDown:connect(OnKeyDown)
+&#9;KeyUpConn = Mouse.KeyUp:connect(OnKeyUp)
+
+&#9;Character = Tool.Parent
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if Humanoid and Torso then
+&#9;&#9;SwingAnimation = Humanoid:LoadAnimation(SwingAnimationObject)
+&#9;end
+end
+
+function onUnequipped()
+&#9;print(&quot;onUnequipped&quot;)
+
+&#9;if KeyDownConn then KeyDownConn:disconnect() KeyDownConn = nil end
+&#9;if KeyUpConn then KeyUpConn:disconnect() KeyUpConn = nil end
+
+&#9;SwingAnimation = nil
+&#9;Torso = nil
+&#9;Humanoid = nil
+&#9;Character = nil
+&#9;Mouse = nil
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+Tool.Activated:connect(onActivated)
+WaitForChild(Tool, &quot;Handle&quot;).Touched:connect(onHit)
+
+print(&quot;loaded script&quot;)
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX9">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.76760542</X>
-					<Y>3.92744184</Y>
-					<Z>0.449117303</Z>
-					<R00>0.500930607</R00>
-					<R01>0.200672507</R01>
-					<R02>-0.841902077</R02>
+					<X>0.468229055</X>
+					<Y>3.17491055</Y>
+					<Z>4.25080204</Z>
+					<R00>0.999975681</R00>
+					<R01>0.000874976628</R01>
+					<R02>-0.00692617567</R02>
 					<R10>-0</R10>
-					<R11>0.972749114</R11>
-					<R12>0.231860653</R12>
-					<R20>0.865487516</R20>
-					<R21>-0.116146095</R21>
-					<R22>0.487279743</R22>
+					<R11>0.992114782</R11>
+					<R12>0.125332817</R12>
+					<R20>0.00698122522</R20>
+					<R21>-0.125329763</R21>
+					<R22>0.992090583</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>1.60000002</X>
-					<Y>3</Y>
-					<Z>-1.5</Z>
+					<X>0.5</X>
+					<Y>2.59999847</Y>
+					<Z>-0.299999952</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -378,6 +453,18 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Texture" referent="RBX10">
+			<Properties>
+				<token name="Face">5</token>
+				<string name="Name">LightningDecal</string>
+				<float name="Shiny">20</float>
+				<float name="Specular">0</float>
+				<float name="StudsPerTileU">2.5</float>
+				<float name="StudsPerTileV">16</float>
+				<Content name="Texture"><url>http://www.roblox.com/asset/?id=24043814</url></Content>
+				<float name="Transparency">0</float>
 			</Properties>
 		</Item>
 	</Item>
