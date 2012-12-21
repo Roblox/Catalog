@@ -6,9 +6,9 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
-				<Y>-0.200000003</Y>
-				<Z>0</Z>
+				<X>0.100000001</X>
+				<Y>-0.300000012</Y>
+				<Z>1</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -19,9 +19,9 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">Pen Bomb</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=100452152</url></Content>
-			<string name="ToolTip">Mightier than the sword.</string>
+			<string name="Name">Xmas Minigun</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=101086451</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="LocalScript" referent="RBX1">
 			<Properties>
@@ -34,103 +34,204 @@
 sp=script.Parent
 
 
-cooldown=5
-power=60
+firerate=1/10
+range=300
+power=300
 rate=1/30
+spinuptime=2
+barreloffset=Vector3.new(0,0,-1.5)
+windvec=Vector3.new(2,-1,1).unit
+firetime=0
 
-local debris=game:GetService(&quot;Debris&quot;)
+debris=game:GetService(&quot;Debris&quot;)
 equipped=false
 check=true
 
-function waitfor(a,b)
-&#9;while a:FindFirstChild(b)==nil do
+function waitfor(parent,name)
+&#9;while parent:FindFirstChild(name)==nil do
 &#9;&#9;wait()
 &#9;end
-&#9;return a:FindFirstChild(b)
+&#9;return parent:FindFirstChild(name)
 end
-lastuse=waitfor(sp,&quot;LastUse&quot;)
+
+function checkintangible(hit)
+&#9;if hit and hit~=nil then
+&#9;&#9;if hit:IsDescendantOf(sp.Parent) or hit.Transparency&gt;.8 or hit.Name==&quot;Handle&quot; or hit.Name==&quot;Effect&quot; or hit.Name==&quot;Bullet&quot; or hit.Name==&quot;Laser&quot; or string.lower(hit.Name)==&quot;water&quot; or hit.Name==&quot;Rail&quot; or hit.Name==&quot;Arrow&quot; then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function castray(startpos,vec,length,ignore,delayifhit)
+&#9;local hit,endpos2=game.Workspace:FindPartOnRay(Ray.new(startpos,vec*length),ignore)
+&#9;if hit~=nil then
+&#9;&#9;if checkintangible(hit) then
+&#9;&#9;&#9;if delayifhit then
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;hit,endpos2=castray(endpos2+(vec*.01),vec,length-((startpos-endpos2).magnitude),ignore,delayifhit)
+&#9;&#9;end
+&#9;end
+&#9;return hit,endpos2
+end
+
+function drawbeam(beamstart,beamend,clr,fadedelay)
+&#9;local dist=(beamstart-beamend).magnitude
+&#9;local laser=Instance.new(&quot;Part&quot;)
+&#9;laser.Name=&quot;Effect&quot;
+&#9;laser.Anchored=true
+&#9;laser.CanCollide=false
+&#9;laser.Shape=&quot;Block&quot;
+&#9;laser.formFactor=&quot;Custom&quot;
+&#9;laser.Size=Vector3.new(.2,.2,.2)
+&#9;laser.Transparency=5
+&#9;laser.Material=Enum.Material.Plastic
+&#9;laser.Locked=true
+&#9;laser.TopSurface=0
+&#9;laser.BottomSurface=0
+&#9;laser.BrickColor=clr
+&#9;laser.CFrame=CFrame.new(beamend,beamstart)*CFrame.new(0,0,-dist/2)*CFrame.Angles(math.pi/2,0,0)
+&#9;local m=Instance.new(&quot;SpecialMesh&quot;)
+&#9;m.Scale=Vector3.new(1,dist*5,1)
+&#9;m.Parent=laser
+&#9;debris:AddItem(laser,fadedelay*3)
+&#9;laser.Parent=game.Workspace
+
+&#9;local frames=math.floor(fadedelay/rate)
+&#9;for frame=1,frames do
+&#9;&#9;wait(rate)
+&#9;&#9;local percent=frame/frames
+&#9;&#9;laser.CFrame=laser.CFrame+windvec*rate
+&#9;&#9;laser.Transparency=.5+(percent*.5)
+&#9;end
+&#9;wait(1)
+&#9;laser:remove()
+end
+
+function fire()
+&#9;local hu=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;local he=sp.Parent:FindFirstChild(&quot;Head&quot;)
+&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;if hu and hu.Health&gt;0 and t and he and themouse~=nil and equipped then
+
+&#9;&#9;local startpos=he.Position
+&#9;&#9;local fakestartpos=(sp.Handle.CFrame*CFrame.new(barreloffset)).p
+&#9;&#9;local vec=(themouse.Hit.p-startpos).unit
+
+&#9;&#9;local p=Instance.new(&quot;Part&quot;)
+&#9;&#9;p.Name=&quot;Effect&quot;
+&#9;&#9;p.BrickColor=BrickColor.new(&quot;Black&quot;)
+&#9;&#9;p.CanCollide=false
+&#9;&#9;p.TopSurface=&quot;Smooth&quot;
+&#9;&#9;p.BottomSurface=&quot;Smooth&quot;
+&#9;&#9;p.formFactor=&quot;Custom&quot;
+&#9;&#9;p.Size=Vector3.new(.25,2,.25)
+&#9;&#9;p.BrickColor=BrickColor.new(&quot;Bright red&quot;)
+&#9;&#9;local m=Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;m.Parent=p
+&#9;&#9;local decal=Instance.new(&quot;Decal&quot;)
+&#9;&#9;decal.Texture=&quot;http://www.roblox.com/asset/?id=4516761&quot;
+&#9;&#9;decal.Face=&quot;Front&quot;
+&#9;&#9;decal.Parent=p
+&#9;&#9;local decal=Instance.new(&quot;Decal&quot;)
+&#9;&#9;decal.Texture=&quot;http://www.roblox.com/asset/?id=4516761&quot;
+&#9;&#9;decal.Face=&quot;Back&quot;
+&#9;&#9;decal.Parent=p
+&#9;&#9;local decal=Instance.new(&quot;Decal&quot;)
+&#9;&#9;decal.Texture=&quot;http://www.roblox.com/asset/?id=4516761&quot;
+&#9;&#9;decal.Face=&quot;Left&quot;
+&#9;&#9;decal.Parent=p
+&#9;&#9;local decal=Instance.new(&quot;Decal&quot;)
+&#9;&#9;decal.Texture=&quot;http://www.roblox.com/asset/?id=4516761&quot;
+&#9;&#9;decal.Face=&quot;Right&quot;
+&#9;&#9;decal.Parent=p
+
+&#9;&#9;local hit,endpos=castray(startpos,vec,range,sp.Parent,false)
+&#9;&#9;local fakevec=(endpos-fakestartpos).unit
+&#9;&#9;if hit~=nil then
+&#9;&#9;&#9;local newcf=CFrame.new(endpos,endpos+fakevec)*CFrame.Angles(math.pi/2,0,0)*CFrame.new(0,0,0)
+&#9;&#9;&#9;p.CFrame=newcf
+&#9;&#9;&#9;local w=Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;w.Part0=hit
+&#9;&#9;&#9;w.Part1=p
+&#9;&#9;&#9;w.C0=hit.CFrame:inverse()*newcf
+&#9;&#9;&#9;w.C1=newcf:inverse()*newcf
+&#9;&#9;&#9;w.Parent=p
+
+&#9;&#9;&#9;local c=Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;c.Name=&quot;creator&quot;
+&#9;&#9;&#9;c.Value=game.Players.LocalPlayer
+&#9;&#9;&#9;c.Parent=p
+
+&#9;&#9;&#9;local s=script.Script:clone()
+&#9;&#9;&#9;s.Parent=p
+&#9;&#9;&#9;s.Disabled=false
+&#9;&#9;else
+&#9;&#9;&#9;p.CFrame=CFrame.new(endpos,endpos+fakevec)
+&#9;&#9;&#9;p.Velocity=fakevec*power
+&#9;&#9;&#9;p.Parent=game.Workspace
+&#9;&#9;end
+
+&#9;&#9;debris:AddItem(p,2.5+math.random())
+&#9;&#9;p.Parent=game.Workspace
+
+&#9;&#9;delay(0,function()
+&#9;&#9;&#9;drawbeam(fakestartpos,endpos,BrickColor.new(&quot;Institutional white&quot;),.1)
+&#9;&#9;end)
+
+&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;Sound&quot;)
+&#9;&#9;if sound~=nil then
+&#9;&#9;&#9;--sound:Stop()
+&#9;&#9;&#9;sound:Play()
+&#9;&#9;end
+
+&#9;&#9;local shoulder=t:FindFirstChild(&quot;Right Shoulder&quot;)
+&#9;&#9;if shoulder~=nil then
+&#9;&#9;&#9;shoulder.CurrentAngle=(math.pi/2)+.1
+&#9;&#9;end
+&#9;end
+end
 
 function onEquipped(mouse)
 &#9;equipped=true
 &#9;if mouse~=nil then
-&#9;&#9;sp.Handle.Transparency=1
-&#9;&#9;if tick()-cooldown&lt;lastuse.Value then
-&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;&#9;wait(lastuse.Value-(tick()-cooldown))
-&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;else
-&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;end
-&#9;&#9;sp.Handle.Transparency=0
+&#9;&#9;themouse=mouse
+&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
 &#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;local h=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;if check and h and h.Health&gt;0 and t then
-&#9;&#9;&#9;&#9;check=false
-&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;&#9;&#9;local animobject=sp:FindFirstChild(&quot;ButtonPress&quot;)
-&#9;&#9;&#9;&#9;if animobject then
-&#9;&#9;&#9;&#9;&#9;anim=h:LoadAnimation(animobject)
-&#9;&#9;&#9;&#9;&#9;anim:Play(nil,nil,2)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait(.8)
-&#9;&#9;&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;PenSound&quot;)
-&#9;&#9;&#9;&#9;if sound~=nil then
-&#9;&#9;&#9;&#9;&#9;sound:Play()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait(1.2)
-&#9;&#9;&#9;&#9;local h=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;if equipped and h and h.Health&gt;0 and t then
-&#9;&#9;&#9;&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;ThrowSound&quot;)
-&#9;&#9;&#9;&#9;&#9;if sound~=nil then
-&#9;&#9;&#9;&#9;&#9;&#9;sound:Play()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;local shoulder=t:FindFirstChild(&quot;Right Shoulder&quot;)
-&#9;&#9;&#9;&#9;&#9;if shoulder~=nil then
-&#9;&#9;&#9;&#9;&#9;&#9;shoulder.CurrentAngle=math.pi
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;local p=sp.Handle:clone()
-&#9;&#9;&#9;&#9;&#9;p.Name=&quot;Grenade&quot;
-&#9;&#9;&#9;&#9;&#9;p.CanCollide=true
-&#9;&#9;&#9;&#9;&#9;p.Transparency=0
-
-&#9;&#9;&#9;&#9;&#9;local vec=(mouse.Hit.p-t.Position).unit
-&#9;&#9;&#9;&#9;&#9;p.CFrame=CFrame.new(t.Position,t.Position+vec)*CFrame.new(0,0,-5)
-&#9;&#9;&#9;&#9;&#9;p.Velocity=(vec*power)+Vector3.new(0,20,0)
-&#9;&#9;&#9;&#9;&#9;p.RotVelocity=((Vector3.new(1,1,1)*math.random())-Vector3.new(.5,.5,.5))*20
-
-&#9;&#9;&#9;&#9;&#9;local c=Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;&#9;&#9;c.Name=&quot;creator&quot;
-&#9;&#9;&#9;&#9;&#9;c.Value=game.Players.LocalPlayer
-&#9;&#9;&#9;&#9;&#9;c.Parent=p
-
-&#9;&#9;&#9;&#9;&#9;local s=script.Script:clone()
-&#9;&#9;&#9;&#9;&#9;s.Parent=p
-&#9;&#9;&#9;&#9;&#9;s.Disabled=false
-&#9;&#9;&#9;&#9;&#9;debris:AddItem(p,10)
-&#9;&#9;&#9;&#9;&#9;p.Parent=game.Workspace
-
-&#9;&#9;&#9;&#9;&#9;sp.Handle.Transparency=1
-&#9;&#9;&#9;&#9;&#9;lastuse.Value=tick()
-&#9;&#9;&#9;&#9;&#9;wait(cooldown)
-&#9;&#9;&#9;&#9;&#9;sp.Handle.Transparency=0
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if mouse~=nil then
-&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;check=true
-&#9;&#9;&#9;end
+&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;&#9;firetime=tick()+spinuptime
+&#9;&#9;&#9;down=true
+&#9;&#9;end)
+&#9;&#9;mouse.Button1Up:connect(function()
+&#9;&#9;&#9;down=false
+&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
 &#9;&#9;end)
 &#9;end
 end
 
 function onUnequipped()
 &#9;equipped=false
+&#9;themouse=nil
 end
 
 sp.Equipped:connect(onEquipped)
 sp.Unequipped:connect(onUnequipped)
+
+while true do
+&#9;if tick()&gt;firetime then
+&#9;&#9;if down and equipped then
+&#9;&#9;&#9;fire()
+&#9;&#9;end
+&#9;&#9;wait(firerate)
+&#9;else
+&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;Sound&quot;)
+&#9;&#9;if sound~=nil then
+&#9;&#9;&#9;sound:Play()
+&#9;&#9;end
+&#9;&#9;wait(firerate+((firetime-tick())*.4))
+&#9;end
+end
 
 
 
@@ -148,51 +249,39 @@ sp.Unequipped:connect(onUnequipped)
 
 sp=script.Parent
 
-wait(2.5)
+damage=5
 
-local creator=sp:FindFirstChild(&quot;creator&quot;)
-local debris=game:GetService(&quot;Debris&quot;)
+wait(.05)
 
-
-local fire=Instance.new(&quot;Fire&quot;)
-fire.Heat=0
-fire.Size=100
-fire.Color=Color3.new(1,1,153/255)
-fire.SecondaryColor=Color3.new(153/255,51/255,0)
-fire.Parent=sp
-
-local explodesound=sp:FindFirstChild(&quot;ExplodeSound&quot;)
-if explodesound then
-&#9;explodesound:Play()
-end
-sp.Anchored=true
-sp.Transparency=1
-
-local e=Instance.new(&quot;Explosion&quot;)
-e.BlastRadius=12
-e.BlastPressure=1.5*10^6
-e.Position=sp.Position
-e.ExplosionType=0
-e.Hit:connect(function(hit)
-&#9;if hit~=nil and hit.Parent~=nil and (hit.Name==&quot;Head&quot; or hit.Name==&quot;Torso&quot;) then
-&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+local weld=sp:FindFirstChild(&quot;Weld&quot;)
+if weld~=nil then
+&#9;if weld.Part0~=nil then
+&#9;&#9;hit=weld.Part0
+&#9;&#9;local sound=sp:FindFirstChild(&quot;Sound&quot;)
+&#9;&#9;if sound~=nil then
+&#9;&#9;&#9;sound:Play()
+&#9;&#9;end
 &#9;&#9;local ct=sp:FindFirstChild(&quot;creator&quot;)
-&#9;&#9;if h~=nil and ct~=nil then
-&#9;&#9;&#9;for _,v in pairs(h:GetChildren()) do
-&#9;&#9;&#9;&#9;if v~=nil then
-&#9;&#9;&#9;&#9;&#9;v:remove()
+&#9;&#9;if ct.Value~=nil and ct.Value.Character~=nil then
+&#9;&#9;&#9;if hit.Parent~=ct.Value.Character and hit.Name~=&quot;Handle&quot; and hit.Name~=&quot;Effect&quot; then
+&#9;&#9;&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;local t=hit.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;if h~=nil and t~=nil and h.Health&gt;0 then
+&#9;&#9;&#9;&#9;&#9;for i,v in ipairs(h:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Name==&quot;creator&quot; then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:remove()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;ct:clone().Parent=h
+&#9;&#9;&#9;&#9;&#9;h:TakeDamage(damage)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
-&#9;&#9;&#9;ct:clone().Parent=h
 &#9;&#9;end
 &#9;end
-end)
-e.Parent=game.Workspace
+end
 
-wait(.3)
-fire.Enabled=false
-wait(1)
-sp:remove()
+
+
 </ProtectedString>
 				</Properties>
 			</Item>
@@ -208,24 +297,24 @@ sp:remove()
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1002</int>
+				<int name="BrickColor">21</int>
 				<CoordinateFrame name="CFrame">
-					<X>0</X>
-					<Y>5</Y>
-					<Z>0</Z>
-					<R00>0.987257898</R00>
-					<R01>0.159128726</R01>
+					<X>-45.25</X>
+					<Y>4.99999952</Y>
+					<Z>-42.25</Z>
+					<R00>-1</R00>
+					<R01>0</R01>
 					<R02>0</R02>
-					<R10>-0.159128726</R10>
-					<R11>0.987257898</R11>
-					<R12>0</R12>
+					<R10>0</R10>
+					<R11>0.961839974</R11>
+					<R12>-0.27361086</R12>
 					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<R21>-0.27361086</R21>
+					<R22>-0.961839974</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<float name="Elasticity">0</float>
-				<float name="Friction">1</float>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
 				<token name="FrontSurface">0</token>
@@ -235,7 +324,7 @@ sp:remove()
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
 				<bool name="Locked">true</bool>
-				<token name="Material">1056</token>
+				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
@@ -260,16 +349,16 @@ sp:remove()
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.400000006</X>
-					<Y>1.29999995</Y>
-					<Z>0.400000006</Z>
+					<X>1.39999998</X>
+					<Y>1.39999998</Y>
+					<Z>3.5</Z>
 				</Vector3>
 			</Properties>
 			<Item class="SpecialMesh" referent="RBX4">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=100454579</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=101086719</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -278,11 +367,11 @@ sp:remove()
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>2</X>
-						<Y>1.5</Y>
-						<Z>2</Z>
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=100453180</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=101086650</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -293,69 +382,37 @@ sp:remove()
 			<Item class="Sound" referent="RBX5">
 				<Properties>
 					<bool name="Looped">false</bool>
-					<string name="Name">ThrowSound</string>
+					<string name="Name">Sound</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=93043504</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX6">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">ExplodeSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=84318179</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX7">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">PenSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=100391463</url></Content>
-					<float name="Volume">1</float>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=101093314</url></Content>
+					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="NumberValue" referent="RBX8">
-			<Properties>
-				<string name="Name">LastUse</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX9">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=75322014</url></Content>
-				<string name="Name">ButtonPress</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="Camera" referent="RBX6">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.7922948</X>
-					<Y>5.36014605</Y>
-					<Z>1.02820563</Z>
-					<R00>0.792114675</R00>
-					<R01>0.163184136</R01>
-					<R02>-0.588154197</R02>
+					<X>-42.565567</X>
+					<Y>6.71884632</Y>
+					<Z>-40.2756462</Z>
+					<R00>0.592489004</R00>
+					<R01>-0.369294405</R01>
+					<R02>0.715945899</R02>
 					<R10>-0</R10>
-					<R11>0.963599026</R11>
-					<R12>0.267351747</R12>
-					<R20>0.610372424</R20>
-					<R21>-0.211773247</R21>
-					<R22>0.763280809</R22>
+					<R11>0.888735116</R11>
+					<R12>0.45842132</R12>
+					<R20>-0.805578589</R20>
+					<R21>-0.271609604</R21>
+					<R22>0.526565731</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0</X>
-					<Y>5</Y>
-					<Z>0</Z>
+					<X>-45.25</X>
+					<Y>4.99999952</Y>
+					<Z>-42.25</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
