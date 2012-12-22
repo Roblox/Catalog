@@ -40,13 +40,13 @@
 					<Y>6.13000011</Y>
 					<Z>1.76499975</Z>
 					<R00>-0.707106709</R00>
-					<R01>-0.707106709</R01>
-					<R02>6.99947051e-008</R02>
-					<R10>0.707106709</R10>
+					<R01>0.707106709</R01>
+					<R02>6.67885161e-008</R02>
+					<R10>-0.707106709</R10>
 					<R11>-0.707106709</R11>
-					<R12>-1.58473867e-007</R12>
-					<R20>1.61551682e-007</R20>
-					<R21>-6.25642258e-008</R21>
+					<R12>-8.28150704e-008</R12>
+					<R20>-1.13325012e-008</R20>
+					<R21>-1.05785723e-007</R21>
 					<R22>0.999999881</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
@@ -207,9 +207,9 @@ local ChargingThrust = false
 local function ChargeThrust()
 &#9;ChargingThrust = true
 &#9;local aniSpeed = 5
-&#9;Spawn(function() while ChargingThrust do wait(1/30) end SonicBoomSound:Play() end)
+&#9;Spawn(function() while ChargingThrust and MouseDownObject.Value do wait(1/30) end SonicBoomSound:Play() end)
 &#9;ChargeArmAniTrack:Play(0,1,.5)
-&#9;while ChargingThrust and aniSpeed&lt;MaxChargeSpeed do
+&#9;while ChargingThrust and MouseDownObject.Value and aniSpeed&lt;MaxChargeSpeed do
 &#9;&#9;ChargeAniTrack:Play(0,1,aniSpeed)
 &#9;&#9;ChargeUpSound:Play()
 &#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
@@ -221,12 +221,12 @@ local function ChargeThrust()
 &#9;local tfire1 = BaseFire:Clone()
 &#9;local tfire2 = BaseFire:Clone()
 
-&#9;if ChargingThrust then 
+&#9;if ChargingThrust and MouseDownObject.Value then 
 &#9;&#9;tfire2.Parent = Tool.Parent:FindFirstChild(&apos;Right Leg&apos;)
 &#9;&#9;tfire1.Parent = Tool.Parent:FindFirstChild(&apos;Left Leg&apos;)
 &#9;end
 
-&#9;while ChargingThrust do
+&#9;while ChargingThrust and MouseDownObject.Value do
 &#9;&#9;ChargeAniTrack:Play(0,1,aniSpeed)
 &#9;&#9;ChargeUpSound:Play()
 &#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
@@ -268,17 +268,16 @@ local function OnEquipped(mouse)
 &#9;mouse.TargetFilter=WaitForChild(Tool,&apos;Handle&apos;)
 &#9;mouse.Button1Down:connect(function() 
 &#9;&#9;if Tool.Enabled and not MouseDownObject.Value then
-&#9;&#9;&#9;OnMouseDown()
 &#9;&#9;&#9;MouseDownObject.Value = true 
+&#9;&#9;&#9;OnMouseDown()
 &#9;&#9;end
 &#9;end)
 &#9;mouse.Button1Up:connect(function()
 &#9;&#9;if MouseDownObject.Value then
 &#9;&#9;&#9;wait(0.01) --NOTE: Wait added to fix immediate down-up issue on iPad
 &#9;&#9;&#9;TargetPosition.Value=mouse.Hit.p --set this early to prevent lag problems
-&#9;&#9;&#9;OnMouseUp()
-&#9;&#9;&#9;wait(.1)
 &#9;&#9;&#9;MouseDownObject.Value = false
+&#9;&#9;&#9;OnMouseUp()
 &#9;&#9;end
 &#9;end)
 end
@@ -604,13 +603,18 @@ local function OnMouseDownChanged(down, targetOverride)
 &#9;&#9;MyModel.Humanoid.WalkSpeed = 0
 &#9;&#9;wait(0)
 &#9;&#9;MouseDown= true 
-&#9;&#9;Spawn(function() 
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;local bgyro = Instance.new(&apos;BodyGyro&apos;) 
+&#9;&#9;&#9;bgyro.maxTorque= Vector3.new(9999999,9999999,9999999)
+&#9;&#9;&#9;bgyro.Parent= myTorso
 &#9;&#9;&#9;while MouseDown do
 &#9;&#9;&#9;&#9;ThrustDirection =(myHead.CFrame.p-cameraPos.Value.p)
 &#9;&#9;&#9;&#9;ThrustDirection = Vector3.new(ThrustDirection.X,0,ThrustDirection.Z).unit
-&#9;&#9;&#9;&#9;myTorso.CFrame = CFrame.new(myTorso.CFrame.p,myTorso.CFrame.p+ThrustDirection)
+&#9;&#9;&#9;&#9;--myTorso.CFrame = CFrame.new(myTorso.CFrame.p,myTorso.CFrame.p+ThrustDirection)
+&#9;&#9;&#9;&#9;bgyro.cframe = CFrame.new(Vector3.new(0,0,0),ThrustDirection)
 &#9;&#9;&#9;&#9;wait(1/30)
 &#9;&#9;&#9;end
+&#9;&#9;&#9;bgyro:Destroy()
 &#9;&#9;end)
 &#9;&#9;--ThrustDirection = ((targetOverride or TargetPosition.Value) - MyModel.Torso.CFrame.p).unit
 &#9;else -- Player just released click
@@ -706,23 +710,23 @@ end</ProtectedString>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
 					<X>1.93089318</X>
-					<Y>5.95214462</Y>
-					<Z>-2.20321274</Z>
+					<Y>5.95214415</Y>
+					<Z>-2.20321321</Z>
 					<R00>-1</R00>
-					<R01>-2.74756871e-007</R01>
-					<R02>-6.55651411e-006</R02>
-					<R10>-2.84217128e-014</R10>
-					<R11>0.999123096</R11>
-					<R12>-0.0418691821</R12>
-					<R20>6.56226894e-006</R20>
-					<R21>-0.0418691821</R21>
-					<R22>-0.999123096</R22>
+					<R01>-2.74756616e-007</R01>
+					<R02>-6.55651183e-006</R02>
+					<R10>-0</R10>
+					<R11>0.999123156</R11>
+					<R12>-0.0418691672</R12>
+					<R20>6.56226575e-006</R20>
+					<R21>-0.0418691672</R21>
+					<R22>-0.999123156</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
 					<X>1.9309063</X>
-					<Y>6.03588295</Y>
-					<Z>-0.204967499</Z>
+					<Y>6.03588247</Y>
+					<Z>-0.204967141</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -733,7 +737,7 @@ end</ProtectedString>
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<string name="Name">Camera</string>
 			</Properties>
 		</Item>
 	</Item>
