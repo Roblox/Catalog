@@ -283,9 +283,10 @@ end
 
 local isequipped = false
 
-function OnEquipped(mouse)
+function OnEquipped(nmouse)
 &#9;if not isequipped then
 &#9;&#9;isequipped = true
+&#9;&#9;local mouse = Player:GetMouse()
 &#9;&#9;mouse.Button1Down:connect(function() ClickDown(mouse) end)
 &#9;&#9;mouse.Button1Up:connect(function() ClickUp(mouse) end)
 &#9;&#9;--mouse.Icon = 
@@ -297,15 +298,18 @@ function OnEquipped(mouse)
 end
 
 function OnUnequipped()
-&#9;isequipped = false
-&#9;print(&apos;unequipped called&apos;)
-&#9;MouseDown.Value = true
-&#9;Tool.Enabled = true
-&#9;UpdateAimLines = false
-&#9;for _,i in pairs(AimLines) do
-&#9;&#9;i:Destroy()
+&#9;if isequipped then
+&#9;&#9;isequipped = false
+&#9;&#9;CanFire = true
+&#9;&#9;print(&apos;unequipped called&apos;)
+&#9;&#9;MouseDown.Value = false
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;UpdateAimLines = false
+&#9;&#9;for _,i in pairs(AimLines) do
+&#9;&#9;&#9;i:Destroy()
+&#9;&#9;end
+&#9;&#9;AimLines = {}
 &#9;end
-&#9;AimLines = {}
 end
 
 script.Parent.Equipped:connect(OnEquipped)
@@ -390,8 +394,27 @@ function RegisterModel(nchar)
 &#9;&#9;&#9;&#9;&#9;wait(1/15)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end )
+&#9;&#9;elseif i:IsA(&apos;Hat&apos;) then
+&#9;&#9;&#9;local t_hat = i 
+&#9;&#9;&#9;Delay(5*.75, function() t_hat:Destroy() end)
 &#9;&#9;end
 &#9;end
+&#9;
+&#9;Delay(5*.75, function() 
+&#9;
+&#9;&#9;local nhat = Instance.new(&apos;Hat&apos;)
+&#9;&#9;nhat.AttachmentPos= Vector3.new(0,-.15,0)
+&#9;&#9;local nhandle = Instance.new(&apos;Part&apos;)
+&#9;&#9;nhandle.Name = &apos;Handle&apos;
+&#9;&#9;nhandle.FormFactor = &apos;Custom&apos;
+&#9;&#9;nhandle.Size = Vector3.new(1.45, 0.38, 2)
+&#9;&#9;local nmesh = Instance.new(&apos;SpecialMesh&apos;)
+&#9;&#9;nmesh.MeshId = &apos;http://www.roblox.com/asset/?id=102706424&apos;
+&#9;&#9;nmesh.TextureId = &apos;http://www.roblox.com/asset/?id=102706523&apos;
+&#9;&#9;nmesh.Parent = nhandle
+&#9;&#9;nhandle.Parent = nhat
+&#9;&#9;nhat.Parent= nchar
+  end)
 
 &#9;for _, i in pairs(nchar:GetChildren()) do
 &#9;&#9;if i:IsA(&apos;Part&apos;) and not RegisteredParts[i] then
@@ -446,7 +469,7 @@ function burnPart(part, length, breakJoints)
 &#9;table.insert(TouchConnections,tconnect)
 &#9;--change color/texture of any meshes
 &#9;for _,i in pairs(part:GetChildren()) do
-&#9;&#9;if i:IsA(&apos;SpecialMesh&apos;) then
+&#9;&#9;if i:IsA(&apos;SpecialMesh&apos;) and i.MeshType == &apos;FileMesh&apos; then
 &#9;&#9;&#9;Spawn(function()
 &#9;&#9;&#9;&#9;local startTime = tick()
 &#9;&#9;&#9;&#9;while tick()-startTime&lt;stage2Delay do
