@@ -1,0 +1,419 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">false</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-1.5</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>4.37113883e-008</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>-4.37113883e-008</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">TornadoSummoner</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=102604215</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="SpecialMesh" referent="RBX1">
+			<Properties>
+				<token name="LODX">2</token>
+				<token name="LODY">2</token>
+				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=102638417</url></Content>
+				<token name="MeshType">5</token>
+				<string name="Name">TornadoMesh</string>
+				<Vector3 name="Offset">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<Vector3 name="Scale">
+					<X>5</X>
+					<Y>7</Y>
+					<Z>5</Z>
+				</Vector3>
+				<Content name="TextureId"><url>http://www.roblox.com/asset/?id=102638520</url></Content>
+				<Vector3 name="VertexColor">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">function WaitForChild(parent, child)
+&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
+&#9;return parent[child]
+end
+
+local NUM_TORNADOS = 5
+local TORNADO_SPEED = 20
+local TORNADO_DURATION = 6
+local TORNADO_WOBBLE_ANGLE = .5 --1.5
+local TORNADO_SPIN_SPEED = 10
+local TORNADO_SIZE = Vector3.new(6, 10, 6)
+local TORNADO_DAMAGE = 20
+
+local Tool = script.Parent
+local Handle = WaitForChild(Tool, &quot;Handle&quot;)
+local TornadoMesh = WaitForChild(Tool, &quot;TornadoMesh&quot;)
+
+-- now that we&apos;re in game, split staff into two parts, with top part floatin&apos; around:
+-- partial staff meshes:
+-- top: 102605108
+-- bottom: 102605081
+local StaffMesh = WaitForChild(Handle, &quot;Mesh&quot;)
+StaffMesh.MeshId = &quot;http://www.roblox.com/asset/?id=102605081&quot;
+
+local FloatyBall = Instance.new(&quot;Part&quot;)
+FloatyBall.formFactor = &quot;Custom&quot;
+FloatyBall.Size = Vector3.new(.2, .2, .2)
+FloatyBall.CanCollide = false
+
+local FloatyBallMesh = StaffMesh:Clone()
+FloatyBallMesh.MeshId = &quot;http://www.roblox.com/asset/?id=102605108&quot;
+FloatyBallMesh.Parent = FloatyBall
+
+local FloatyBallWeld = Instance.new(&quot;ManualWeld&quot;)
+FloatyBallWeld.Part0 = Handle
+FloatyBallWeld.Part1 = FloatyBall
+FloatyBallWeld.C0 = CFrame.new()
+FloatyBallWeld.C1 = CFrame.new() + Vector3.new(0, 1, 0)
+FloatyBallWeld.Parent = FloatyBall
+
+function AnimateFloatyBall()
+&#9;local timeParam1 = 0
+&#9;local timeParam2 = 0
+&#9;local timeIncrement
+&#9;local rotatedCF
+&#9;while true do
+&#9;&#9;rotatedCF = CFrame.Angles(0, 0, timeParam2)
+&#9;&#9;FloatyBallWeld.C1 = rotatedCF + rotatedCF:vectorToWorldSpace(Vector3.new(0, -3 + .5 * math.sin(timeParam1), 0))
+&#9;&#9;timeIncrement = wait(.01)
+&#9;&#9;if not Tool.Enabled then
+&#9;&#9;&#9;timeParam2 = timeParam2 + 8 * timeIncrement
+&#9;&#9;else
+&#9;&#9;&#9;timeParam2 = timeParam2 + timeIncrement
+&#9;&#9;end
+&#9;&#9;timeParam1 = timeParam1 + timeIncrement
+&#9;&#9;if timeParam2 &gt; math.pi*12 then
+&#9;&#9;&#9;timeParam2 = timeParam2 - math.pi*12
+&#9;&#9;end
+&#9;&#9;if timeParam1 &gt; math.pi*12 then
+&#9;&#9;&#9;timeParam1 = timeParam1 - math.pi*12
+&#9;&#9;end
+&#9;end
+end
+
+
+-- animate floaty ball all the timez
+coroutine.resume(coroutine.create(AnimateFloatyBall))
+
+-- make tornado part
+local TornadoPrototype = Instance.new(&quot;Part&quot;)
+TornadoPrototype.formFactor = &quot;Custom&quot;
+TornadoPrototype.Size = Vector3.new(.2, .2, .2)
+TornadoPrototype.TopSurface = &quot;Smooth&quot;
+TornadoPrototype.BottomSurface = &quot;Smooth&quot;
+TornadoPrototype.CanCollide = false
+
+-- give it mesh
+TornadoMesh:Clone().Parent = TornadoPrototype
+
+-- float it
+local TornadoFloatForce = Instance.new(&quot;BodyForce&quot;)
+TornadoFloatForce.force = Vector3.new(0, TornadoPrototype:GetMass()*196.2, 0)
+TornadoFloatForce.Parent = TornadoPrototype
+
+-- rotate it
+local TornadoRotate = Instance.new(&quot;BodyAngularVelocity&quot;)
+TornadoRotate.P = 20
+TornadoRotate.maxTorque = TornadoRotate.P * Vector3.new(0, 1, 0)
+TornadoRotate.angularvelocity = Vector3.new(0, 0, 0)
+TornadoRotate.Parent = TornadoPrototype
+
+-- make it move (but not in the y-axis)
+local TornadoVelocity = Instance.new(&quot;BodyVelocity&quot;)
+TornadoVelocity.P = 20
+TornadoVelocity.maxForce = TornadoVelocity.P * Vector3.new(1, 0, 1)
+TornadoVelocity.velocity = Vector3.new(0, 0, 0)
+TornadoVelocity.Parent = TornadoPrototype
+
+-- noisy stormz
+local StormSound = Instance.new(&quot;Sound&quot;)
+StormSound.Name = &quot;StormSound&quot;
+StormSound.SoundId = &quot;http://www.roblox.com/asset/?id=101173442&quot;
+StormSound.Parent = TornadoPrototype
+StormSound.Volume = 1
+
+function tagHumanoid(humanoid, player)
+&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value = player
+&#9;creator_tag.Name = &quot;creator&quot;
+&#9;creator_tag.Parent = humanoid
+&#9;game.Debris:AddItem(creator_tag, 1)
+end
+
+
+function applyUpwardsForce(part, tornadoVelocity, upwardsForces)
+&#9;if upwardsForces[part] then return end
+&#9;upwardsForces[part] = true
+
+&#9;local newFloatForce = Instance.new(&quot;BodyForce&quot;)
+&#9;newFloatForce.force = Vector3.new(0, 300*part:GetMass(), 0) + tornadoVelocity * part:GetMass() * Vector3.new(10, 0, 10)
+&#9;newFloatForce.Parent = part
+
+&#9;game:GetService(&quot;Debris&quot;):AddItem(newFloatForce, .25)
+end
+
+function damageChar(part, humanoidsDamaged, playerDamaging)
+&#9;local char = part.Parent
+&#9;if not char then return end&#9;
+&#9;local hum = char:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not hum then 
+&#9;&#9;char = char.Parent
+&#9;&#9;hum = char:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if not hum then return end
+&#9;end
+&#9;if humanoidsDamaged[hum] then return end
+&#9;humanoidsDamaged[hum] = true
+&#9;if hum.Health &gt; 0 then
+&#9;&#9;hum:TakeDamage(TORNADO_DAMAGE)
+&#9;&#9;tagHumanoid(hum, playerDamaging)
+&#9;end
+end
+
+function checkPartsHit(position, character, tornadoVelocity)
+&#9;local partsHit = workspace:FindPartsInRegion3(Region3.new(position - TORNADO_SIZE/2, position + TORNADO_SIZE/2), character)
+&#9;local humanoidsDamaged = {}
+&#9;local upwardsForces = {}
+&#9;local playerDamaging = game.Players:GetPlayerFromCharacter(character)
+&#9;for i = 1, #partsHit do
+&#9;&#9;if not partsHit[i].Anchored and partsHit[i].CanCollide then
+&#9;&#9;&#9;-- apply upwards force?
+&#9;&#9;&#9;applyUpwardsForce(partsHit[i], tornadoVelocity, upwardsForces)
+&#9;&#9;&#9;damageChar(partsHit[i], humanoidsDamaged, playerDamaging)
+&#9;&#9;end
+&#9;end
+end
+
+function handleTornado(tornado, character)
+&#9;local tornadoForce = tornado.BodyVelocity
+&#9;local randomAngle, rotateCF, newVelocity
+
+&#9;-- play storm sound
+&#9;tornado[&quot;StormSound&quot;]:Play()
+
+&#9;for i = 0, TORNADO_DURATION, .25 do
+&#9;&#9;-- handle motion per tick
+&#9;&#9;randomAngle = (math.random()-.5) * TORNADO_WOBBLE_ANGLE
+&#9;&#9;rotateCF = CFrame.Angles(0, randomAngle, 0)
+&#9;&#9;newVelocity = rotateCF:vectorToWorldSpace(tornadoForce.velocity)
+&#9;&#9;tornadoForce.velocity = newVelocity
+
+&#9;&#9;-- handle interactions per tick
+&#9;&#9;checkPartsHit(tornado.CFrame.p, character, newVelocity)
+
+&#9;&#9;wait(.25)
+&#9;end
+&#9;tornado:Remove()
+end
+
+function makeTornado(startPoint, targetPoint, character)
+&#9;local newTornado = TornadoPrototype:Clone()
+&#9;newTornado.CFrame = CFrame.new(startPoint, targetPoint)
+&#9;newTornado.BodyVelocity.velocity = (targetPoint - startPoint).unit * TORNADO_SPEED
+&#9;newTornado.BodyAngularVelocity.angularvelocity = Vector3.new(0, TORNADO_SPIN_SPEED, 0)
+&#9;newTornado.Parent = workspace
+
+&#9;coroutine.resume(coroutine.create(handleTornado), newTornado, character)
+end
+
+
+Tool.Enabled = true
+function onActivated()
+
+&#9;local Character = Tool.Parent
+&#9;if not Character then return end
+
+&#9;local Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;local Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if (not Torso) or (not Humanoid) then return end
+
+&#9;if not Tool.Enabled then return end
+&#9;Tool.Enabled = false
+
+&#9;wait()
+
+&#9;local torsoPoint = Torso.CFrame.p + Vector3.new(0, 2, 0) -- little above torso
+&#9;local targetPoint = Humanoid.TargetPoint * Vector3.new(1, 0, 1) +  torsoPoint * Vector3.new(0, 1, 0)
+
+&#9;for i = 1, NUM_TORNADOS do
+&#9;&#9;makeTornado(torsoPoint, targetPoint, Character)
+&#9;end
+
+&#9;wait(3.5)
+
+&#9;Tool.Enabled = true
+end
+
+function onEquipped()
+&#9;FloatyBallWeld.Parent = FloatyBall
+&#9;FloatyBall.Parent = Tool.Parent
+end
+
+function onUnequipped()
+&#9;FloatyBallWeld.Parent = FloatyBall
+&#9;FloatyBall.Parent = Handle.Parent
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-11.1279984</X>
+					<Y>15.4849854</Y>
+					<Z>9.53706074</Z>
+					<R00>0.737470388</R00>
+					<R01>0.675379276</R01>
+					<R02>0</R02>
+					<R10>-0.675379276</R10>
+					<R11>0.737470388</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.02999997</X>
+					<Y>5.16999626</Y>
+					<Z>0.400000006</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=102604853</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2.20000005</X>
+						<Y>2.20000005</Y>
+						<Z>2.20000005</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=102604283</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX5">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-10.9547148</X>
+					<Y>16.6278229</Y>
+					<Z>5.17939997</Z>
+					<R00>-0.999210358</R00>
+					<R01>-0.0100722564</R01>
+					<R02>0.0384360515</R02>
+					<R10>9.31322686e-010</R10>
+					<R11>0.967337251</R11>
+					<R12>0.253492951</R12>
+					<R20>-0.0397338755</R20>
+					<R21>0.253292769</R21>
+					<R22>-0.966573298</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-11.1279984</X>
+					<Y>15.4849854</Y>
+					<Z>9.53706074</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
