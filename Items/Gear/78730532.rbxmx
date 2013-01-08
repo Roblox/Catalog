@@ -36,14 +36,14 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">107</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.78813934e-007</X>
-					<Y>0.299999803</Y>
-					<Z>8.94069672e-008</Z>
+					<X>-0.300000012</X>
+					<Y>0</Y>
+					<Z>-0.400000006</Z>
 					<R00>1</R00>
-					<R01>0</R01>
+					<R01>-0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
-					<R11>0</R11>
+					<R11>-0</R11>
 					<R12>1</R12>
 					<R20>0</R20>
 					<R21>-1</R21>
@@ -268,7 +268,6 @@ local function onActivated()
 
 &#9;local target = Mouse.Target
 &#9;if target and target.Parent then &#9;
-&#9;&#9;print(target)
 &#9;&#9;local humanoid = target.Parent:FindFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;if target.Parent:IsA(&quot;Hat&quot;) and target.Parent.Parent then 
 &#9;&#9;&#9;humanoid = target.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
@@ -280,14 +279,19 @@ local function onActivated()
 &#9;&#9;end 
 
 &#9;&#9;if OtherPlayer and OtherHumanoid and OtherTorso then &#9;
-&#9;&#9;&#9;local cf1 = vTorso.CFrame
-&#9;&#9;&#9;local cf2 = OtherTorso.CFrame
-&#9;&#9;&#9;print(cf1.p, cf2.p)
 &#9;&#9;&#9;OtherCharacter = OtherHumanoid.Parent
 &#9;&#9;&#9;SwapAnim = vHumanoid:LoadAnimation(Tool.SwapAnim)
 &#9;&#9;&#9;if SwapAnim then SwapAnim:Play() end 
 &#9;&#9;&#9;OtherSwapAnim = OtherHumanoid:LoadAnimation(Tool.SwapAnim)
 &#9;&#9;&#9;if OtherSwapAnim then OtherSwapAnim:Play() end 
+
+&#9;&#9;&#9;if Tool:FindFirstChild(&apos;OtherPlayer&apos;) then 
+&#9;&#9;&#9;&#9;Tool.OtherPlayer.Value = OtherPlayer 
+&#9;&#9;&#9;end 
+
+&#9;&#9;&#9;--[[local cf1 = vTorso.CFrame
+&#9;&#9;&#9;local cf2 = OtherTorso.CFrame
+&#9;&#9;&#9;
 &#9;&#9;&#9;vHumanoid.WalkSpeed = 0.0
 &#9;&#9;&#9;OtherHumanoid.WalkSpeed = 0.0
 &#9;&#9;&#9;wait(2.0)
@@ -305,7 +309,7 @@ local function onActivated()
 &#9;&#9;&#9;vPlayer.Character.Parent = game.Workspace
 &#9;&#9;&#9;vPlayer.Character.Torso.CFrame = cf2
 &#9;&#9;&#9;OtherPlayer.Character.Parent = game.Workspace
-&#9;&#9;&#9;OtherPlayer.Character.Torso.CFrame = cf1
+&#9;&#9;&#9;OtherPlayer.Character.Torso.CFrame = cf1]]
 &#9;&#9;end 
 &#9;end 
 end 
@@ -394,29 +398,185 @@ Tool.Unequipped:connect(onUnequipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="Script" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ServerSwapScript</string>
+				<ProtectedString name="Source">local function WaitForChild(parent, childName)
+&#9;while parent:FindFirstChild(childName) == nil do 
+&#9;&#9;wait()
+&#9;end 
+&#9;return parent[childName]
+end 
+
+
+local Tool = script.Parent 
+local Potion = Tool.Handle
+
+local Player 
+local Character 
+local Humanoid 
+local Torso 
+
+local Swap 
+local OtherPlayer 
+local OtherHumanoid 
+local OtherTorso 
+local OtherPlayerValue
+
+local cloneId = 68452456
+local Clone0 = game:GetService(&quot;InsertService&quot;):LoadAsset(cloneId):GetChildren()[1] 
+local cChildren = Clone0:GetChildren()
+for i = 1, #cChildren do 
+&#9;if cChildren[i]:IsA(&quot;Script&quot;) then 
+&#9;&#9;cChildren[i]:Destroy()
+&#9;end 
+end 
+local Clone2 = Clone0:Clone()
+
+local function spawnClone(character, torso, clone0)
+&#9;if character and torso and clone0 then
+&#9;&#9;local thisClone = clone0:Clone()
+
+&#9;&#9;thisClone.Name = character.Name 
+
+&#9;&#9;local target = thisClone:FindFirstChild(&quot;Target&quot;)
+&#9;&#9;if target then
+&#9;&#9;&#9;target.Value = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;else
+&#9;&#9;&#9;target = Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;target.Name = &quot;Target&quot;
+&#9;&#9;&#9;target.Parent = thisClone
+&#9;&#9;&#9;target.Value = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;end      &#9;&#9;
+&#9;&#9;
+&#9;&#9;thisClone:MoveTo(torso.Position + Vector3.new(5, 0, 5))&#9;&#9;
+
+&#9;&#9;return thisClone 
+&#9;end
+end 
+
+local function dressClone(character, clone0)
+&#9;print(clone0, &apos; ... .. .... . .. . &apos;)
+&#9;if character then
+&#9;&#9;local children = character:GetChildren()
+&#9;&#9;for i = 1, #children do
+&#9;&#9;&#9;if children[i] then
+&#9;&#9;&#9;&#9;if children[i].ClassName == &quot;Hat&quot; then
+&#9;&#9;&#9;&#9;&#9;-- Special
+&#9;&#9;&#9;&#9;&#9;local hat = Instance.new(&quot;Hat&quot;)
+&#9;&#9;&#9;&#9;&#9;local Hpart = children[i].Handle:Clone()
+&#9;&#9;&#9;&#9;&#9;Hpart.Parent = hat
+&#9;&#9;&#9;&#9;&#9;Hpart.Position = clone0.Head.Position
+&#9;&#9;&#9;&#9;&#9;hat.Name = children[i].Name
+&#9;&#9;&#9;&#9;&#9;hat.Parent = clone0
+&#9;&#9;&#9;&#9;&#9;hat.AttachmentPos = children[i].AttachmentPos
+&#9;&#9;&#9;&#9;&#9;hat.AttachmentRight = children[i].AttachmentRight
+&#9;&#9;&#9;&#9;&#9;hat.AttachmentUp = children[i].AttachmentUp
+&#9;&#9;&#9;&#9;&#9;hat.AttachmentForward = children[i].AttachmentForward
+&#9;&#9;&#9;&#9;elseif children[i]:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;&#9;&#9;if clone0:FindFirstChild(children[i].Name) and clone0[children[i].Name]:IsA(&quot;BasePart&quot;) then 
+&#9;&#9;&#9;&#9;&#9;&#9;clone0[children[i].Name].BrickColor = children[i].BrickColor 
+&#9;&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;&#9;elseif children[i].ClassName == &quot;ForceField&quot; or children[i]:IsA(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;&#9;-- Ignore it
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;children[i]:Clone().Parent = clone0&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return clone0
+&#9;end
+end 
+
+local function OnEquipped()
+&#9;Character = Tool.Parent 
+&#9;Player = Game.Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = WaitForChild(Character, &apos;Humanoid&apos;)
+&#9;Torso = WaitForChild(Character, &apos;Torso&apos;) 
+end 
+
+Tool.Equipped:connect(OnEquipped) 
+
+OtherPlayerValue = WaitForChild(Tool, &apos;OtherPlayer&apos;)
+
+OtherPlayerValue.Changed:connect(function()
+&#9;if OtherPlayerValue.Value and OtherPlayerValue.Value:IsA(&apos;Player&apos;) then 
+&#9;&#9;OtherPlayer = OtherPlayerValue.Value 
+&#9;&#9;OtherCharacter = OtherPlayer.Character 
+&#9;&#9;if OtherCharacter then 
+&#9;&#9;&#9;OtherHumanoid = WaitForChild(OtherCharacter, &apos;Humanoid&apos;)
+&#9;&#9;&#9;OtherTorso = WaitForChild(OtherCharacter, &apos;Torso&apos;)
+&#9;&#9;end  
+
+&#9;&#9;OtherPlayerValue.Value = nil 
+&#9;
+&#9;&#9;if OtherPlayer and OtherHumanoid and OtherTorso then &#9;
+&#9;&#9;&#9;local cf1 = Torso.CFrame
+&#9;&#9;&#9;local cf2 = OtherTorso.CFrame
+&#9;&#9;&#9;OtherCharacter = OtherHumanoid.Parent
+&#9;&#9;&#9;
+&#9;&#9;&#9;Humanoid.WalkSpeed = 0.0
+&#9;&#9;&#9;OtherHumanoid.WalkSpeed = 0.0
+&#9;&#9;&#9;wait(2.0)
+&#9;&#9;&#9;SwapSound = Tool:FindFirstChild(&quot;SwapSound&quot;)
+&#9;&#9;&#9;if SwapSound then SwapSound:Play() end 
+&#9;&#9;&#9;Humanoid.WalkSpeed = 16.0 
+&#9;&#9;&#9;OtherHumanoid.WalkSpeed = 16.0 
+
+&#9;&#9;&#9;print(Clone0) 
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;local char0 = spawnClone(Character, Torso, Clone0) 
+&#9;&#9;&#9;local char2 = spawnClone(OtherCharacter, OtherTorso, Clone0)
+&#9;&#9;&#9;char2 = dressClone(Character, char2)
+&#9;&#9;&#9;char0 = dressClone(OtherCharacter, char0)&#9;&#9;&#9;
+&#9;&#9;&#9;Player.Character = char0
+&#9;&#9;&#9;OtherPlayer.Character = char2
+&#9;&#9;&#9;Player.Character.Parent = game.Workspace
+&#9;&#9;&#9;Player.Character.Torso.CFrame = cf2
+&#9;&#9;&#9;OtherPlayer.Character.Parent = game.Workspace
+&#9;&#9;&#9;OtherPlayer.Character.Torso.CFrame = cf1
+&#9;&#9;end 
+&#9;end 
+end) </ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX8">
+			<Properties>
+				<string name="Name">Swap</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="ObjectValue" referent="RBX9">
+			<Properties>
+				<string name="Name">OtherPlayer</string>
+				<Ref name="Value">null</Ref>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.0515371189</X>
-					<Y>0.454823375</Y>
-					<Z>2.46032286</Z>
-					<R00>0.999780715</R00>
-					<R01>0.00131499197</R01>
-					<R02>-0.0209013075</R02>
+					<X>-0.224577904</X>
+					<Y>0.324066937</Y>
+					<Z>1.3994987</Z>
+					<R00>0.999122798</R00>
+					<R01>-0.00741565321</R01>
+					<R02>0.0412142463</R02>
 					<R10>-0</R10>
-					<R11>0.998026788</R11>
-					<R12>0.0627901927</R12>
-					<R20>0.020942634</R20>
-					<R21>-0.062776424</R21>
-					<R22>0.99780786</R22>
+					<R11>0.984195411</R11>
+					<R12>0.177085668</R12>
+					<R20>-0.0418760777</R20>
+					<R21>-0.176930323</R21>
+					<R22>0.983332098</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-1.78813934e-007</X>
-					<Y>0.299999833</Y>
-					<Z>8.94069672e-008</Z>
+					<X>-0.300000012</X>
+					<Y>0</Y>
+					<Z>-0.400000006</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
