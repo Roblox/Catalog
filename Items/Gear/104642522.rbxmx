@@ -36,9 +36,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.0866661072</X>
-					<Y>2.64940143</Y>
-					<Z>0.226833344</Z>
+					<X>15.0866661</X>
+					<Y>75.3494034</Y>
+					<Z>-20.7731667</Z>
 					<R00>0</R00>
 					<R01>0.0412302278</R01>
 					<R02>0.999149919</R02>
@@ -118,16 +118,22 @@
 			</Item>
 			<Item class="Sound" referent="RBX3">
 				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Fire</string>
+					<bool name="Looped">true</bool>
+					<string name="Name">Running</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds//paintball.wav</url></Content>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=104606900</url></Content>
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="Animation" referent="RBX4">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=104506550</url></Content>
+				<string name="Name">holdAni</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -138,6 +144,9 @@
 end
 
 local handle = WaitForChild(script.Parent,&apos;Handle&apos;)
+
+local EngineSound = WaitForChild(handle,&apos;Running&apos;)
+
 local HoldAni = WaitForChild(script.Parent,&apos;holdAni&apos;)
 
 
@@ -171,7 +180,7 @@ ExhaustSmoke.Color = Color3.new(.5,.5,.5)
 
 local acceleration = 10
 local deceleration = 10
-local turnAlpha = 1
+local turnAlpha = .5
 local alphaDampening = .2
 
 local Equipped = false
@@ -187,6 +196,8 @@ function ThrustUpdater()
 &#9;&#9;local direction = Character:FindFirstChild(&quot;Torso&quot;).CFrame.lookVector
 &#9;&#9;direction = Vector3.new(direction.x,0,direction.z).unit
 &#9;&#9;thrustForce.velocity = direction*(CurrentSpeed)
+&#9;&#9;EngineSound.Pitch =&#9;1+(math.abs(CurrentSpeed/50)*1)
+&#9;&#9;
 &#9;&#9;RotationForce.angularvelocity = Vector3.new(0, turnSpeed, 0)
 &#9;&#9;if math.abs(turnSpeed)&gt;alphaDampening&#9; then
 &#9;&#9;&#9;turnSpeed= turnSpeed-((alphaDampening)*(math.abs(turnSpeed)/turnSpeed))
@@ -216,76 +227,83 @@ end
 
 function onEquipped(nmouse)
 &#9;print(&apos;got to equipped&apos;)
-&#9;if Equipped then
-&#9;&#9;onUnequipped()
-&#9;end
-&#9;--
-&#9;&#9;print(&apos;got in if&apos;)
-&#9;&#9;mouse=nmouse
-&#9;&#9;Equipped = true
-&#9;&#9;Character=script.Parent.Parent
-&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
-&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = true
-&#9;&#9;
-&#9;&#9;if RotationForce then RotationForce:Destroy() end
-&#9;&#9;RotationForce = Instance.new(&apos;BodyAngularVelocity&apos;)
-&#9;&#9;RotationForce.maxTorque = Vector3.new(0, math.huge, 0)
-&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, 0, 0)
-&#9;&#9;RotationForce.Parent = myTorso
-&#9;&#9;
-&#9;&#9;if thrustForce then thrustForce:Destroy() end
-&#9;&#9;thrustForce = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;thrustForce.maxForce = Vector3.new(math.huge,0,math.huge)
-&#9;&#9;thrustForce.velocity = Vector3.new(0,0,0)
-&#9;&#9;thrustForce.Parent = handle--myTorso
-&#9;&#9;
-&#9;&#9;if TurnGyro then TurnGyro:Destroy() end
-&#9;&#9;TurnGyro = Instance.new(&apos;BodyGyro&apos;)
-&#9;&#9;TurnGyro.maxTorque = Vector3.new(math.huge,0,math.huge)
-&#9;&#9;TurnGyro.Parent = myTorso
-&#9;&#9;
-&#9;&#9;Spawn(ThrustUpdater)
-&#9;&#9;HoldAniTrack = WaitForChild(Character,&apos;Humanoid&apos;):LoadAnimation(HoldAni)
-&#9;&#9;HoldAniTrack:Play()
-&#9;&#9;Spawn(function()
-&#9;&#9;&#9;
-&#9;&#9;&#9;
-&#9;&#9;&#9;myTorso.Anchored = true
-&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
-&#9;&#9;&#9;
-&#9;&#9;&#9;if torsoWeld then torsoWeld:Destroy() end
-&#9;&#9;&#9;torsoWeld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;torsoWeld.C0 = CFrame.new(0, -1.49999988, -0.200000003, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-&#9;&#9;&#9;torsoWeld.Part0 = myTorso
-&#9;&#9;&#9;torsoWeld.Part1 = handle
-&#9;&#9;&#9;torsoWeld.Parent = myTorso 
-&#9;&#9;&#9;handle.CanCollide = true
-&#9;&#9;&#9;
-&#9;&#9;&#9;wait(.1)
-&#9;&#9;&#9;myTorso.Anchored = false
-&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
-&#9;&#9;&#9;WaitForChild(WaitForChild(Character,&apos;Right Arm&apos;),&apos;RightGrip&apos;):Destroy()
-&#9;&#9;end)
-&#9;&#9;
-&#9;&#9;if key_down_connect then
-&#9;&#9;&#9;key_down_connect:disconnect()
-&#9;&#9;&#9;key_up_connect:disconnect()
+&#9;Spawn(function()
+&#9;&#9;if Equipped then
+&#9;&#9;&#9;onUnequipped()
 &#9;&#9;end
-&#9;&#9;key_down_connect=mouse.KeyDown:connect(keyDownFunc)
-&#9;&#9;key_up_connect=mouse.KeyUp:connect(keyUpFunc)
-&#9;
-&#9;&#9;SmokePart.Parent = handle
-&#9;&#9;if not SmokePart:FindFirstChild(&apos;Weld&apos;) then
+&#9;&#9;--
+&#9;&#9;&#9;CurrentSpeed=0
+&#9;&#9;&#9;turnSpeed=0
+&#9;&#9;&#9;print(&apos;got in if&apos;)
+&#9;&#9;&#9;mouse=nmouse
+&#9;&#9;&#9;Equipped = true
+&#9;&#9;&#9;Character=script.Parent.Parent
+&#9;&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
+&#9;&#9;&#9;handle.CFrame = myTorso.CFrame
+&#9;&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = true
 &#9;&#9;&#9;
-&#9;&#9;&#9;local tweld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;tweld.C0 = CFrame.new(0.600000024, 1.10000014, -2.20000005, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-&#9;&#9;&#9;tweld.Part0 = SmokePart
-&#9;&#9;&#9;tweld.Part1 = handle
-&#9;&#9;&#9;tweld.Parent = SmokePart
-&#9;&#9;end
+&#9;&#9;&#9;if RotationForce then RotationForce:Destroy() end
+&#9;&#9;&#9;RotationForce = Instance.new(&apos;BodyAngularVelocity&apos;)
+&#9;&#9;&#9;RotationForce.maxTorque = Vector3.new(0, math.huge, 0)
+&#9;&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;RotationForce.Parent = myTorso
+&#9;&#9;&#9;
+&#9;&#9;&#9;if thrustForce then thrustForce:Destroy() end
+&#9;&#9;&#9;thrustForce = Instance.new(&apos;BodyVelocity&apos;)
+&#9;&#9;&#9;thrustForce.maxForce = Vector3.new(math.huge,0,math.huge)
+&#9;&#9;&#9;thrustForce.velocity = Vector3.new(0,0,0)
+&#9;&#9;&#9;thrustForce.Parent = handle--myTorso
+&#9;&#9;&#9;
+&#9;&#9;&#9;if TurnGyro then TurnGyro:Destroy() end
+&#9;&#9;&#9;TurnGyro = Instance.new(&apos;BodyGyro&apos;)
+&#9;&#9;&#9;TurnGyro.maxTorque = Vector3.new(math.huge,0,math.huge)
+&#9;&#9;&#9;TurnGyro.Parent = myTorso
+&#9;&#9;&#9;
+&#9;&#9;&#9;Spawn(ThrustUpdater)
+&#9;&#9;&#9;if HoldAniTrack then HoldAniTrack:Stop() end
+&#9;&#9;&#9;HoldAniTrack = WaitForChild(Character,&apos;Humanoid&apos;):LoadAnimation(HoldAni)
+&#9;&#9;&#9;HoldAniTrack:Play()
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;myTorso.Anchored = true
+&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if torsoWeld then torsoWeld:Destroy() end
+&#9;&#9;&#9;&#9;torsoWeld=Instance.new(&apos;Weld&apos;)
+&#9;&#9;&#9;&#9;torsoWeld.C0 = CFrame.new(0, -1.49999988, -0.200000003, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+&#9;&#9;&#9;&#9;torsoWeld.Part0 = myTorso
+&#9;&#9;&#9;&#9;torsoWeld.Part1 = handle
+&#9;&#9;&#9;&#9;torsoWeld.Parent = myTorso 
+&#9;&#9;&#9;&#9;handle.CanCollide = true
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;wait(.1)
+&#9;&#9;&#9;&#9;handle.CanCollide = true
+&#9;&#9;&#9;&#9;myTorso.Anchored = false
+&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
+&#9;&#9;&#9;&#9;WaitForChild(WaitForChild(Character,&apos;Right Arm&apos;),&apos;RightGrip&apos;):Destroy()
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;
+&#9;&#9;&#9;if key_down_connect then
+&#9;&#9;&#9;&#9;key_down_connect:disconnect()
+&#9;&#9;&#9;&#9;key_up_connect:disconnect()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;key_down_connect=mouse.KeyDown:connect(keyDownFunc)
+&#9;&#9;&#9;key_up_connect=mouse.KeyUp:connect(keyUpFunc)
 &#9;&#9;
-&#9;&#9;Character.Humanoid.WalkSpeed = 0
-&#9;--end
+&#9;&#9;&#9;SmokePart.Parent = handle
+&#9;&#9;&#9;if not SmokePart:FindFirstChild(&apos;Weld&apos;) then
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local tweld=Instance.new(&apos;Weld&apos;)
+&#9;&#9;&#9;&#9;tweld.C0 = CFrame.new(0.600000024, 1.10000014, -2.20000005, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+&#9;&#9;&#9;&#9;tweld.Part0 = SmokePart
+&#9;&#9;&#9;&#9;tweld.Part1 = handle
+&#9;&#9;&#9;&#9;tweld.Parent = SmokePart
+&#9;&#9;&#9;end
+&#9;&#9;&#9;EngineSound:Play()
+&#9;&#9;&#9;Character.Humanoid.WalkSpeed = 0
+&#9;&#9;--end
+&#9;end)
 end
 
 
@@ -309,6 +327,7 @@ function onUnequipped()
 &#9;key_up_connect:disconnect()
 &#9;key_up_connect=nil
 &#9;torsoWeld=nil
+&#9;EngineSound:Stop()
 &#9;Character.Humanoid.WalkSpeed = 16
 &#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = false
 &#9;print(&quot;I unequipped!&quot;)
@@ -370,35 +389,29 @@ script.Parent.Equipped:connect(onEquipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX5">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=104506550</url></Content>
-				<string name="Name">holdAni</string>
-			</Properties>
-		</Item>
 		<Item class="Camera" referent="RBX6">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-4.57844591</X>
-					<Y>4.54518318</Y>
-					<Z>2.8080554</Z>
-					<R00>0.560921788</R00>
-					<R01>0.305367142</R01>
-					<R02>-0.769491792</R02>
+					<X>10.8930674</X>
+					<Y>75.905426</Y>
+					<Z>-16.8448677</Z>
+					<R00>0.719343066</R00>
+					<R01>0.0581070781</R01>
+					<R02>-0.692220509</R02>
 					<R10>-0</R10>
-					<R11>0.929485202</R11>
-					<R12>0.368859321</R12>
-					<R20>0.827868879</R20>
-					<R21>-0.206901222</R21>
-					<R22>0.521368504</R22>
+					<R11>0.996495426</R11>
+					<R12>0.0836488307</R12>
+					<R20>0.694655001</R20>
+					<R21>-0.0601722077</R21>
+					<R22>0.716822028</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-3.03946257</X>
-					<Y>3.8074646</Y>
-					<Z>1.76531851</Z>
+					<X>12.2775059</X>
+					<Y>75.7381287</Y>
+					<Z>-18.2785091</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
