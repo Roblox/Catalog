@@ -1,0 +1,987 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-0.5</X>
+				<Y>2.18556941e-008</Y>
+				<Z>0.150000006</Z>
+				<R00>-4.37113883e-008</R00>
+				<R01>1</R01>
+				<R02>0</R02>
+				<R10>-1</R10>
+				<R11>-4.37113883e-008</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">FlameStaff</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=105178832</url></Content>
+			<string name="ToolTip">Pyrox Weapon</string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">FlameStaffScript</string>
+				<ProtectedString name="Source">--------------------
+--| WaitForChild |--
+--------------------
+
+-- Waits for parent.child to exist, then returns it
+local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+--------------------------------
+
+local ROTATION_SPIN_SPEED = math.pi / 5
+local BLOCK_RESET_TIME = 0.5
+local BLOCK_COOLDOWN = 2
+local BUTTON_CLICK_TIME = 0.1
+local ATTACK_DURATION = 0.46
+local ATTACK_COOLDOWN = 1
+local LARGE_NUMBER = 2 ^ 20
+local BASE_CLAW_DAMAGE = 35
+local BLOCK_VALUE_NAME = &apos;Blocking&apos;
+
+local PlayersService = Game:GetService(&apos;Players&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+
+local Tool = script.Parent
+local Handle
+local SpinMotor
+local RotatingPart
+local FlameHolder
+local ShieldFire
+
+local MyMouse
+local MyCharacter
+local MyHumanoid
+
+local Blocking = false
+local Attacking = false
+local BlockStartTick = 0
+local BlockStopTick = 0
+local LastAttackTick = 0
+local RightButtonDownTick = 0
+local LastBlockTick = 0
+
+local HitsWithoutMissing = 0
+
+local HitHumanoids = {}
+
+local ClawAnim
+local ClawTrack
+
+local EnrageAnim
+local EnrageTrack
+
+local Claw
+local ClawWeld
+local BlockValue
+
+local CreatorTag
+
+function CreateSound(name, soundId, volume)
+&#9;local newSound = Instance.new(&apos;Sound&apos;)
+&#9;newSound.SoundId = soundId
+&#9;newSound.Name = name
+&#9;newSound.Volume = volume
+&#9;return newSound
+end
+
+
+local Sounds = {Hit = CreateSound(&apos;HitSound&apos;, &apos;http://www.roblox.com/Asset?ID=92597264&apos;, 0.5),
+&#9;&#9;&#9;&#9;&#9;&#9;Swing1 = CreateSound(&apos;SwingSound&apos;, &apos;http://www.roblox.com/Asset?ID=92597296&apos;, 0.4),
+&#9;&#9;&#9;&#9;&#9;&#9;Swing2 = CreateSound(&apos;SwingSound2&apos;, &apos;http://www.roblox.com/Asset?ID=92628581&apos;, 1)
+&#9;&#9;&#9; }
+
+local ShieldPart = nil
+
+local ShieldPartPrefab = Instance.new(&apos;Part&apos;)
+ShieldPartPrefab.TopSurface = &apos;Smooth&apos;
+ShieldPartPrefab.BottomSurface = &apos;Smooth&apos;
+ShieldPartPrefab.FormFactor = &apos;Custom&apos;
+ShieldPartPrefab.Size = Vector3.new(0.2,0.2,0.2)
+ShieldPartPrefab.CanCollide = false
+ShieldPartPrefab.Transparency = 0.6
+local ShieldMeshPrefab = Instance.new(&apos;SpecialMesh&apos;)
+ShieldMeshPrefab.MeshId = &apos;http://www.roblox.com/asset/?id=94736101&apos;
+ShieldMeshPrefab.TextureId = &apos;http://www.roblox.com/asset/?id=94735715&apos;
+ShieldMeshPrefab.VertexColor = Vector3.new(0,1,0.1)
+ShieldMeshPrefab.Scale = Vector3.new(3.5,3.5,3.5)
+ShieldMeshPrefab.Parent = ShieldPartPrefab
+
+
+
+function FindCharacter(part)
+&#9;if part.Parent == nil or part == Workspace then return nil end
+&#9;if part:FindFirstChild(&apos;Humanoid&apos;) then return part end
+&#9;return FindCharacter(part.Parent)
+end
+
+-- This function checks in char1 is behind char2
+function IsBehindCharacter(char1, char2)
+&#9;local char1Torso = char1:FindFirstChild(&apos;Torso&apos;)
+&#9;local char2Torso = char2:FindFirstChild(&apos;Torso&apos;)
+&#9;if char1Torso and char2Torso then
+&#9;&#9;local attackVector = (char1Torso.CFrame.p - char2Torso.CFrame.p).unit
+&#9;&#9;return attackVector:Dot(char2Torso.CFrame.lookVector) &lt; 0
+&#9;end
+&#9;return false -- return nil to signify fail?
+end
+
+function IsCharacterBlocking(character)
+&#9;-- Stubbing this out for now
+&#9;return character and character:FindFirstChild(BLOCK_VALUE_NAME) and character[BLOCK_VALUE_NAME].Value
+end
+
+function IsTool()
+&#9;return script.Parent:IsA(&apos;Tool&apos;)
+end
+
+function IsLegoBody(character)
+&#9;-- Not sure if there is a less hacky way of doing this
+&#9;-- But I figure any body with a Left Hand must be a lego guy
+&#9;return (character and character:FindFirstChild(&apos;Left Hand&apos;) ~= nil)
+end
+
+function ApplyTag(target)
+&#9;while target:FindFirstChild(&apos;creator&apos;) do
+&#9;&#9;target.creator:Destroy()
+&#9;end
+&#9;CreatorTag:Clone().Parent = target
+end
+
+function CreateClaw()
+&#9;DestroyClaw()
+&#9;Claw = Instance.new(&apos;Part&apos;)
+&#9;Claw.TopSurface = &apos;Smooth&apos;
+&#9;Claw.BottomSurface = &apos;Smooth&apos;
+&#9;Claw.FormFactor = &apos;Custom&apos;
+&#9;Claw.Locked = true
+&#9;Claw.CanCollide = false
+&#9;Claw.Name = &apos;Claw&apos;
+&#9;Claw.Size = Vector3.new(2, 2, 1)
+&#9;
+&#9;local clawMesh = Instance.new(&apos;SpecialMesh&apos;)
+&#9;clawMesh.MeshId = &apos;http://www.roblox.com/asset/?id=103743122&apos;
+&#9;clawMesh.Scale = Vector3.new(0.75, 0.75, 0.75)
+&#9;clawMesh.TextureId = &apos;http://www.roblox.com/asset/?id=103743176&apos;
+&#9;clawMesh.Parent = Claw&#9;
+&#9;
+&#9;local clawWeldPart = MyCharacter:FindFirstChild(&apos;Left Arm&apos;)
+&#9;if IsLegoBody(MyCharacter) then
+&#9;&#9;clawWeldPart = MyCharacter:FindFirstChild(&apos;Left Hand&apos;)
+&#9;end
+&#9;if clawWeldPart then
+&#9;&#9;ClawWeld = Instance.new(&apos;ManualWeld&apos;)
+&#9;&#9;ClawWeld.Name = &apos;ClawWeld&apos;
+&#9;&#9;ClawWeld.C0 = CFrame.Angles(0, math.pi/2, 0) * CFrame.Angles(-math.pi/2, 0,0) + Vector3.new(0,-2,0)
+&#9;&#9;ClawWeld.Part0 = clawWeldPart
+&#9;&#9;ClawWeld.Part1 = Claw
+&#9;&#9;ClawWeld.Parent = clawWeldPart
+&#9;end
+&#9;Claw.Parent = Tool
+end
+
+function DestroyClaw()
+&#9;if Claw then
+&#9;&#9;Claw:Destroy()
+&#9;&#9;Claw = nil
+&#9;end
+&#9;if ClawWeld then
+&#9;&#9;ClawWeld:Destroy()
+&#9;&#9;ClawWeld = nil
+&#9;end
+end
+
+local InBlowback = false
+function SufferBlowback(otherTorso)
+&#9;if InBlowback then return end
+&#9;InBlowback = true
+&#9;local MyTorso = MyCharacter:FindFirstChild(&apos;Torso&apos;)
+&#9;if MyTorso then
+&#9;&#9;local bodyForce = MyTorso:FindFirstChild(&apos;BodyForce&apos;)
+&#9;&#9;if bodyForce and bodyForce.force.magnitude &lt; 30000 then
+&#9;&#9;&#9;local blowBackForce = (MyTorso.CFrame.p - otherTorso.CFrame.p).unit * 32000 
+&#9;&#9;&#9;bodyForce.force = bodyForce.force + blowBackForce
+&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;bodyForce.force = bodyForce.force - blowBackForce
+&#9;&#9;end
+&#9;end
+&#9;InBlowback = false
+end
+
+function TweenMesh(mesh, start, final, duration)
+&#9;local startTime = tick()
+&#9;while&#9; tick() - startTime &lt; duration do
+&#9;&#9;mesh.Scale = start:Lerp(final, (tick() - startTime) / duration)
+&#9;&#9;wait()
+&#9;end
+end
+
+
+function ToggleBlock()
+&#9;if tick() - LastAttackTick &lt; ATTACK_COOLDOWN then
+&#9;&#9;return
+&#9;end
+&#9;if tick() - LastBlockTick &lt; BLOCK_COOLDOWN then
+&#9;&#9;print(&quot;wait to block again&quot;)
+&#9;&#9;return
+&#9;end
+&#9;if not Blocking then
+&#9;&#9;LastBlockTick = tick()
+&#9;&#9;Blocking = true
+&#9;&#9;BlockValue.Value = Blocking&#9;&#9;
+&#9;&#9;StartBlock()
+&#9;&#9;wait(BLOCK_RESET_TIME)
+&#9;&#9;EndBlock()
+&#9;&#9;Blocking = false&#9;&#9;
+&#9;&#9;BlockValue.Value = Blocking
+&#9;&#9;&#9;--[[
+&#9;&#9;&#9;if tick() - BlockStopTick &lt; BLOCK_RESET_TIME then
+&#9;&#9;&#9;&#9;return false
+&#9;&#9;&#9;end
+&#9;&#9;&#9;StartBlock()
+&#9;&#9;else
+&#9;&#9;&#9;if tick() - BlockStartTick &lt; BLOCK_RESET_TIME then
+&#9;&#9;&#9;&#9;return false
+&#9;&#9;&#9;end
+&#9;&#9;&#9;EndBlock()
+&#9;&#9;end
+&#9;&#9;--]]
+&#9;end
+&#9;return true
+end
+
+function StartBlock()
+&#9;BlockStartTick = tick()
+&#9;ShieldPart = ShieldPartPrefab:Clone()
+&#9;local MyTorso = MyCharacter:FindFirstChild(&apos;Torso&apos;)
+&#9;if MyTorso then
+&#9;&#9;coroutine.wrap(TweenMesh)(ShieldPart.Mesh, Vector3.new(), ShieldPart.Mesh.Scale, BLOCK_RESET_TIME / 1.4)
+&#9;&#9;ShieldPart.Parent = MyTorso
+&#9;&#9;local weld = Instance.new(&apos;ManualWeld&apos;)
+&#9;&#9;weld.Part0 = MyTorso
+&#9;&#9;weld.Part1 = ShieldPart
+&#9;&#9;weld.Parent = ShieldPart
+&#9;end
+&#9;if SpinMotor then
+&#9;&#9;SpinMotor.MaxVelocity = ROTATION_SPIN_SPEED
+&#9;&#9;SpinMotor.CurrentAngle = 0
+&#9;&#9;SpinMotor.DesiredAngle = LARGE_NUMBER
+&#9;end
+&#9;if ShieldFire then
+&#9;&#9;ShieldFire.Enabled = true
+&#9;end
+end
+
+
+function EndBlock()
+&#9;BlockStopTick = tick()
+&#9;if ShieldPart then
+&#9;&#9;ShieldPart:Destroy()
+&#9;&#9;ShieldPart = nil
+&#9;end
+&#9;if SpinMotor then
+&#9;&#9;SpinMotor.CurrentAngle = 0
+&#9;&#9;SpinMotor.DesiredAngle = 0
+&#9;end
+&#9;if ShieldFire then
+&#9;&#9;ShieldFire.Enabled = false
+&#9;end
+end
+
+
+function OnRightButtonDown()
+&#9;print(&quot;Button DOWN&quot;)
+&#9;RightButtonDownTick = tick()
+end
+
+function OnRightButtonUp()
+&#9;print(&quot;Button UP&quot;)
+&#9;print(tick() - RightButtonDownTick)
+&#9;if tick() - RightButtonDownTick &lt; BUTTON_CLICK_TIME then
+&#9;&#9;ToggleBlock()
+&#9;end
+end
+
+
+function OnKeyDown(key)
+&#9;key = string.byte(key)
+&#9;--print(key)
+&#9;-- 0 is ctrl (among some other special keys) and 48 is shift
+&#9;if key == string.byte(&apos;r&apos;) or key == 0 or key == 48 then
+&#9;&#9;ToggleBlock()&#9;
+&#9;end
+end
+
+
+function OnEquipped(mouse)
+&#9;print(&quot;Entering Equip&quot;)
+&#9;-- Get the childrens
+&#9;MyMouse = mouse
+&#9;
+&#9;ClawAnim = WaitForChild(script, &apos;ClawAttack&apos;)
+&#9;-- Got the childrens
+&#9;if IsTool() then
+&#9;&#9;MyCharacter = Tool.Parent
+&#9;&#9;Handle = WaitForChild(Tool, &apos;Handle&apos;)
+&#9;&#9;SpinMotor = WaitForChild(Handle, &apos;Motor6D&apos;)
+&#9;&#9;RotatingPart = WaitForChild(Tool, &apos;RotatingPart&apos;)
+&#9;&#9;FlameHolder = WaitForChild(Tool, &apos;FlameHolder&apos;)
+&#9;&#9;ShieldFire = WaitForChild(FlameHolder, &apos;Flame&apos;)
+&#9;&#9;wait()
+&#9;&#9;--CreateClaw()
+&#9;&#9;-- Use zombie syringe inject if your a normal person
+&#9;&#9;ClawAnim.AnimationId = &apos;http://www.roblox.com/Asset?ID=93642075&apos;
+&#9;else
+&#9;&#9;MyCharacter = script.Parent.Parent
+&#9;&#9;MyMouse = MyPlayer:GetMouse()
+&#9;&#9;Claw = WaitForChild(MyCharacter, &apos;Claw&apos;)
+&#9;&#9;Handle = WaitForChild(MyCharacter, &apos;Staff&apos;)
+&#9;&#9;SpinMotor = WaitForChild(Handle, &apos;BladeGrip&apos;)
+&#9;&#9;RotatingPart = WaitForChild(MyCharacter, &apos;StaffBlade&apos;)
+&#9;end
+&#9;
+&#9;
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
+&#9;ClawTrack = MyHumanoid:LoadAnimation(ClawAnim)
+&#9;CreatorTag = Instance.new(&apos;ObjectValue&apos;)
+&#9;CreatorTag.Name = &apos;creator&apos; --NOTE: Must be called &apos;creator&apos; for website stats
+&#9;CreatorTag.Value = MyPlayer&#9;
+&#9;if IsTool() then
+&#9;&#9;EnrageAnim = WaitForChild(script, &apos;Enrage&apos;)
+&#9;&#9;EnrageTrack = MyHumanoid:LoadAnimation(EnrageAnim)
+&#9;end
+&#9;--Claw.Touched:connect(OnHit)
+&#9;for _, sound in pairs(Sounds) do
+&#9;&#9;sound.Parent = Handle&#9;&#9;
+&#9;end
+&#9;if SpinMotor then
+&#9;&#9;SpinMotor.MaxVelocity = ROTATION_SPIN_SPEED
+&#9;end&#9;
+
+&#9;-- Wait is needed here because creating more objects will trigger equip again, and exceed re-entry depth.
+&#9;wait()
+
+&#9;-- might need to clean-up old block values before-hand if they exist?
+&#9;BlockValue = Instance.new(&apos;BoolValue&apos;)
+&#9;BlockValue.Value = false
+&#9;BlockValue.Name = BLOCK_VALUE_NAME
+&#9;BlockValue.Parent = MyCharacter
+&#9;-- activate shielding
+&#9;--[[
+&#9;MyMouse.Button2Down:connect(OnRightButtonDown)
+&#9;MyMouse.Button2Up:connect(OnRightButtonUp)
+&#9;MyMouse.KeyDown:connect(OnKeyDown)
+&#9;--]]
+&#9;print(&quot;Exiting Equip&quot;)
+end
+
+function OnUnequipped()
+&#9;print(&quot;Entering Unequip&quot;)
+&#9;if Blocking then
+&#9;&#9;EndBlock()
+&#9;end
+&#9;--DestroyClaw()
+&#9;BlockValue:Destroy()
+&#9;-- stop all sounds
+&#9;-- stop all weapon anims
+&#9;print(&quot;Exiting Unequip&quot;)
+end
+
+function OnHit(hitPart)
+&#9;if Attacking then
+&#9;&#9;-- Do hit processing logic
+&#9;&#9;local myHumanoid = MyCharacter:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;local hitCharacter = FindCharacter(hitPart)
+&#9;&#9;local hitHumanoid = hitCharacter and hitCharacter:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;local hitPlayer = hitCharacter and PlayersService:GetPlayerFromCharacter(hitCharacter)
+&#9;&#9;if myHumanoid and myHumanoid.Health &gt; 0 and hitCharacter and
+&#9;&#9;&#9;hitHumanoid and hitHumanoid.Health &gt; 0 and not HitHumanoids[hitHumanoid] then
+&#9;&#9;&#9;if hitPlayer and MyPlayer and (hitPlayer.TeamColor ~= MyPlayer.TeamColor or IsTool()) then
+&#9;&#9;&#9;&#9;-- Determine if hit character is blocking
+&#9;&#9;&#9;&#9;if IsCharacterBlocking(hitCharacter) and not IsBehindCharacter(MyCharacter, hitCharacter) then
+&#9;&#9;&#9;&#9;&#9;&#9;-- get staggered
+&#9;&#9;&#9;&#9;&#9;&#9;SufferBlowback(hitCharacter:FindFirstChild(&apos;Torso&apos;))
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;-- deal dmg
+&#9;&#9;&#9;&#9;&#9;print(&quot;dmg&quot;)
+&#9;&#9;&#9;&#9;&#9;Sounds[&apos;Hit&apos;]:Play()
+&#9;&#9;&#9;&#9;&#9;if hitHumanoid.Health &lt;= BASE_CLAW_DAMAGE and EnrageTrack then
+&#9;&#9;&#9;&#9;&#9;&#9;EnrageTrack:Play()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;hitHumanoid:TakeDamage(BASE_CLAW_DAMAGE)
+&#9;&#9;&#9;&#9;&#9;HitsWithoutMissing = HitsWithoutMissing + 1
+&#9;&#9;&#9;&#9;&#9;if HitsWithoutMissing == 3 and Workspace:FindFirstChild(&apos;MainGameScript&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;local threeHits = Instance.new(&apos;ObjectValue&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;threeHits.Value = MyPlayer
+&#9;&#9;&#9;&#9;&#9;&#9;threeHits.Name = &apos;HitStreak&apos;
+&#9;&#9;&#9;&#9;&#9;&#9;threeHits.Parent = Workspace:FindFirstChild(&apos;MainGameScript&apos;)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;CreateHitEffect(hitPart.CFrame.p)
+&#9;&#9;&#9;&#9;&#9;ApplyTag(hitHumanoid)
+
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;HitHumanoids[hitHumanoid] = true
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function OnActivated()
+&#9;if tick() - LastAttackTick &lt; ATTACK_COOLDOWN then
+&#9;&#9;print(&quot;wait to attack again&quot;)
+&#9;&#9;return
+&#9;end
+&#9;if tick() - LastBlockTick &lt; BLOCK_RESET_TIME * 2 then
+&#9;&#9;print(&quot;wait to attack after block&quot;)
+&#9;return
+&#9;end
+&#9;if Blocking then
+&#9;&#9;print(&quot;Can&apos;t attack while blocking&quot;)
+&#9;&#9;return&#9;
+&#9;end
+&#9;Sounds[&apos;Swing2&apos;]:Play()
+&#9;LastAttackTick = tick()
+&#9;Attacking = true
+&#9;HitHumanoids = {}
+
+&#9;--ClawTrack:AdjustSpeed(1)
+&#9;-- play attack with left claw weapon animation
+&#9;if IsTool() then
+&#9;&#9;ClawTrack:Play(0.1, 1, 1.5)
+&#9;&#9;if SpinMotor then
+&#9;&#9;&#9;SpinMotor.DesiredAngle = LARGE_NUMBER
+&#9;&#9;end
+&#9;&#9;if ShieldFire then
+&#9;&#9;&#9;ShieldFire.Enabled = true
+&#9;&#9;end
+&#9;else
+&#9;&#9;ClawTrack:Play(0.25, 1, 2.35)
+&#9;end
+&#9;
+&#9;--ClawTrack:AdjustSpeed(3)
+
+&#9;wait(0.1) -- Wait for Claw not to be back
+&#9;
+&#9;--ClawTrack:AdjustSpeed(1/3)
+&#9;if Claw then
+&#9;&#9;if Claw:FindFirstChild(&apos;Mesh&apos;) then
+&#9;&#9;&#9;Claw.Mesh.VertexColor = Vector3.new(1,0,0)&#9;&#9;
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;local connections = {}
+&#9;if Claw then
+&#9;&#9;table.insert(connections, Claw.Touched:connect(OnHit))
+&#9;end
+&#9;if IsTool() then
+&#9;&#9;if Handle then
+&#9;&#9;&#9;table.insert(connections, Handle.Touched:connect(OnHit))
+&#9;&#9;end
+&#9;&#9;if RotatingPart then
+&#9;&#9;&#9;table.insert(connections, RotatingPart.Touched:connect(OnHit))
+&#9;&#9;end
+&#9;&#9;if FlameHolder then
+&#9;&#9;&#9;table.insert(connections, FlameHolder.Touched:connect(OnHit))
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;
+&#9;--[[
+&#9;while wait() do
+&#9;for i = -1, 1, 1 do
+     local ray = Ray.new(myTorso.CFrame * Vector3.new(i, -i, 0), myTorso.CFrame.lookVector * 4)
+     --DebugShowRay(ray)
+     local hitPart, hitPos = Workspace:FindPartOnRayWithIgnoreList(ray, {MyCharacter})
+     if hit then
+&#9;&#9;&#9;OnHit(hit)
+     end
+&#9;end&#9;
+&#9;--]]
+&#9;
+&#9;-- Temp testing code while we have no anims
+&#9;--[[
+&#9;local myTorso = MyCharacter:FindFirstChild(&apos;Torso&apos;)
+&#9;if myTorso then
+&#9;&#9;-- do a triple raycast check
+&#9;&#9;for i = -1, 1 do
+&#9;&#9;&#9;local rightVector = Vector3.new(0,1,0):Cross(myTorso.CFrame.lookVector)
+&#9;&#9;&#9;local offset = i * rightVector
+&#9;&#9;&#9;local hitPart, hitPos = Workspace:FindPartOnRayWithIgnoreList(Ray.new(myTorso.CFrame.p + offset, myTorso.CFrame.lookVector * 4), {MyCharacter})
+&#9;&#9;&#9;if hitPart then
+&#9;&#9;&#9;&#9;OnHit(hitPart)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;--]]
+&#9;wait(ATTACK_DURATION)
+&#9;if Claw and Claw:FindFirstChild(&apos;Mesh&apos;) then
+&#9;&#9;Claw.Mesh.VertexColor = Vector3.new(1,1,1)&#9;&#9;
+&#9;end
+&#9;if IsTool() then
+&#9;&#9;if SpinMotor then
+&#9;&#9;&#9;SpinMotor.CurrentAngle = 0
+&#9;&#9;&#9;SpinMotor.DesiredAngle = 0
+&#9;&#9;end
+&#9;&#9;if ShieldFire then
+&#9;&#9;&#9;ShieldFire.Enabled = false
+&#9;&#9;end
+&#9;end
+&#9;for _, connection in pairs(connections) do
+&#9;&#9;connection:disconnect()
+&#9;end
+&#9;
+&#9;local hitSomething = false
+&#9;for humanoid, _ in pairs(HitHumanoids) do
+&#9;&#9;hitSomething = true
+&#9;&#9;break&#9;&#9;
+&#9;end
+&#9;if not hitSomething then
+&#9;&#9;HitsWithoutMissing = 0
+&#9;end
+&#9;
+&#9;
+&#9;Attacking = false
+end
+
+
+if IsTool() then
+&#9;Tool.Equipped:connect(OnEquipped)
+&#9;Tool.Unequipped:connect(OnUnequipped)
+&#9;Tool.Activated:connect(OnActivated)
+else
+&#9;MyCharacter = script.Parent.Parent
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+&#9;MyMouse = MyPlayer:GetMouse()
+&#9;OnEquipped()
+&#9;MyMouse.Button1Down:connect(OnActivated)
+end
+
+function CreateHitEffect(hitPos)
+&#9;local effect = Instance.new(&apos;Part&apos;)
+&#9;effect.Name = &apos;effect&apos;
+&#9;effect.TopSurface = &apos;Smooth&apos;
+&#9;effect.BottomSurface = &apos;Smooth&apos;
+&#9;effect.Transparency = 1
+&#9;effect.Anchored = true
+&#9;effect.CanCollide = false
+&#9;effect.FormFactor = &apos;Custom&apos;
+&#9;effect.Size = Vector3.new(0.2,0.2,0.2)
+&#9;effect.CFrame = CFrame.new(hitPos)
+&#9;local sparkles = Instance.new(&apos;Sparkles&apos;)
+&#9;sparkles.SparkleColor = Color3.new(1, 0.1, 0)
+&#9;sparkles.Parent = effect
+&#9;effect.Parent = Workspace
+&#9;
+&#9;DebrisService:AddItem(effect, 0.39)
+end
+
+-- Tool Creation code, may be used later?
+--local tool = Game.Selection:Get()[1]; local fh = tool.RotatingPart:Clone(); fh.Name = &apos;FlameHolder&apos;; local weld = Instance.new(&apos;ManualWeld&apos;); weld.Parent = tool.RotatingPart; weld.Part0 = tool.RotatingPart; weld.Part1 = fh;
+--local weld = Game.Selection:Get()[1]; weld.C0 = CFrame.new(0, 0, -1) ; weld.C1 = CFrame.Angles(math.pi/2, 0, 0)
+</ProtectedString>
+			</Properties>
+			<Item class="Animation" referent="RBX2">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/asset?id=103808695</url></Content>
+					<string name="Name">ClawAttack</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX3">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com//Asset?ID=93648331</url></Content>
+					<string name="Name">Enrage</string>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX4">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>-2</Y>
+					<Z>-8.74227766e-008</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>-4.37113883e-008</R11>
+					<R12>-1</R12>
+					<R20>0</R20>
+					<R21>1</R21>
+					<R22>-4.37113883e-008</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Motor6D" referent="RBX5">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>-1</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<float name="DesiredAngle">0</float>
+					<float name="MaxVelocity">0</float>
+					<string name="Name">Motor6D</string>
+					<Ref name="Part0">RBX4</Ref>
+					<Ref name="Part1">RBX6</Ref>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX7">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=103745744</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1.14999998</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=103745781</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX6">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>-1</Y>
+					<Z>-4.37113883e-008</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>-4.37113883e-008</R11>
+					<R12>-1</R12>
+					<R20>0</R20>
+					<R21>1</R21>
+					<R22>-4.37113883e-008</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">RotatingPart</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="ManualWeld" referent="RBX8">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>-1</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>-4.37113883e-008</R11>
+						<R12>-1</R12>
+						<R20>0</R20>
+						<R21>1</R21>
+						<R22>-4.37113883e-008</R22>
+					</CoordinateFrame>
+					<string name="Name">ManualWeld</string>
+					<Ref name="Part0">RBX6</Ref>
+					<Ref name="Part1">RBX9</Ref>
+					<int name="Surface0">-1</int>
+					<int name="Surface1">-1</int>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX10">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=103745973</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=103745781</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX9">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">37</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">FlameHolder</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">1</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Fire" referent="RBX11">
+				<Properties>
+					<Color3 name="Color">4294934528</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Flame</string>
+					<Color3 name="SecondaryColor">4294901760</Color3>
+					<float name="heat_xml">25</float>
+					<float name="size_xml">2</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX12">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>1.07058132</X>
+					<Y>1.38404799</Y>
+					<Z>-2.25914145</Z>
+					<R00>-0.876308024</R00>
+					<R01>-0.277008414</R01>
+					<R02>0.394145429</R02>
+					<R10>1.49011612e-008</R10>
+					<R11>0.818151355</R11>
+					<R12>0.575002968</R12>
+					<R20>-0.481751263</R20>
+					<R21>0.503879726</R21>
+					<R22>-0.716952562</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0.282290637</X>
+					<Y>0.234042287</Y>
+					<Z>-0.825236678</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
