@@ -91,17 +91,7 @@
 					<Z>2.60000038</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBX2">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Swing</string>
-					<float name="Pitch">1.39999998</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=92628581</url></Content>
-					<float name="Volume">0.899999976</float>
-				</Properties>
-			</Item>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -126,28 +116,28 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Sound" referent="RBX3">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Hit</string>
 					<float name="Pitch">1.04999995</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=91154446</url></Content>
-					<float name="Volume">0.819999993</float>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=106017333</url></Content>
+					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBX4">
 				<Properties>
 					<bool name="Looped">false</bool>
-					<string name="Name">Rage</string>
+					<string name="Name">Shoot</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=105374058</url></Content>
-					<float name="Volume">0.360000014</float>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=106018135</url></Content>
+					<float name="Volume">1</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
+		<Item class="LocalScript" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -183,11 +173,10 @@ local MyPlayer
 local MyCharacter
 
 local HitSound
-local SwingSound
-local EnrageSound
+local ShootSound
 
-local SWORD_DAMAGE_MIN = 35
-local SWORD_DAMAGE_MAX = 65
+local SHOOT_DAMAGE_MIN = 25
+local SHOOT_DAMAGE_MAX = 45
 local SWING_TIME = 1.3
 local LASER_TIME = 0.12
 local MAX_SHOOT_DISTANCE = 120
@@ -216,8 +205,7 @@ AmmoMesh.Scale = Vector3.new(1.5,1.5,1.2)
 AmmoMesh.VertexColor = Vector3.new(1,1,1)
 AmmoMesh.Parent = AmmoPrefab
 
-local SCALE_TO_STUD = 5.3
---local SCALE_TO_STUD = 2.5
+local SCALE_TO_STUD = 5.3 / 2
 
 local CreatorTag
 
@@ -233,6 +221,31 @@ function FindCharacter(part)
 &#9;if part:FindFirstChild(&apos;Humanoid&apos;) then return part end
 &#9;return FindCharacter(part.Parent)
 end
+
+function RayIgnoreCheck(hit, pos)
+&#9;if hit then
+&#9;&#9;if hit.Transparency &gt;= 1 or string.lower(hit.Name) == &quot;water&quot; or
+&#9;&#9;&#9;&#9;hit.Name == &quot;Effect&quot; or hit.Name == &quot;Rocket&quot; or hit.Name == &quot;Bullet&quot; or
+&#9;&#9;&#9;&#9;hit.Name == &quot;Handle&quot; or hit:IsDescendantOf(MyCharacter) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+-- @preconditions: vec should be a unit vector, and 0 &lt; rayLength &lt;= 1000
+function RayCast(startPos, vec, rayLength)
+&#9;local hitObject, hitPos = game.Workspace:FindPartOnRay(Ray.new(startPos + (vec * .01), vec * rayLength), Handle)
+&#9;if hitObject and hitPos then
+&#9;&#9;local distance = rayLength - (hitPos - startPos).magnitude
+&#9;&#9;if RayIgnoreCheck(hitObject, hitPos) and distance &gt; 0 then
+&#9;&#9;&#9;-- there is a chance here for potential infinite recursion
+&#9;&#9;&#9;return RayCast(hitPos, vec, distance)
+&#9;&#9;end
+&#9;end
+&#9;return hitObject, hitPos
+end
+
 
 function StartGuiRecharge()
 &#9;if PlayerGui and PlayerGui:FindFirstChild(&apos;Bar&apos;) and
@@ -301,16 +314,18 @@ function OnHit(hitPart)
 &#9;&#9;&#9;ApplyTag(humanoid)
 &#9;&#9;&#9;HitHumanoids[humanoid] = true
 &#9;&#9;&#9;-- maybe we display this above head
-&#9;&#9;&#9;local swingDamage = SWORD_DAMAGE_MIN + math.random(SWORD_DAMAGE_MAX - SWORD_DAMAGE_MIN)
-&#9;&#9;&#9;if humanoid.Health &lt;= swingDamage then
-&#9;&#9;&#9;&#9;StartAnim:Invoke(&apos;Enrage&apos;)
-&#9;&#9;&#9;&#9;EnrageSound:Play()&#9;&#9;
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
+&#9;&#9;&#9;local swingDamage = SHOOT_DAMAGE_MIN + math.random(SHOOT_DAMAGE_MAX - SHOOT_DAMAGE_MIN)
+
 &#9;&#9;&#9;billboard(hitPart.Position,&quot;-&quot;..tostring(swingDamage))
 &#9;&#9;&#9;humanoid:TakeDamage(swingDamage)
+&#9;&#9;&#9;wait(0.1)
 &#9;&#9;&#9;if HitSound then
-&#9;&#9;&#9;&#9;HitSound:Play()
+&#9;&#9;&#9;&#9;HitSound:Play()&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if HeartScript and char:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;local newHeart = HeartScript:Clone()
+&#9;&#9;&#9;&#9;newHeart.Parent = char.Torso
+&#9;&#9;&#9;&#9;newHeart.Disabled = false
 &#9;&#9;&#9;end
 &#9;&#9;end&#9;&#9;
 &#9;end&#9;
@@ -320,16 +335,15 @@ local Attacking = false
 function OnActivated()
 &#9;if (Attacking or MyHumanoid.Health &lt;= 0) or not MyCharacter:FindFirstChild(&apos;Right Arm&apos;) or not MyMouse then return end
 &#9;Attacking = true
-&#9;Delay(0.2, function()
-&#9;&#9;if SwingSound then
-&#9;&#9;&#9;SwingSound:Play()
-&#9;&#9;end
-&#9;end)
+&#9;if ShootSound then
+&#9;&#9;ShootSound:Play()
+&#9;end
 &#9;HitHumanoids = {}
 &#9;--StartAnim:Invoke(&apos;AttackAnim&apos;)
-&#9;local target = MyMouse.Target
+&#9;local target, hitPos = RayCast(Handle.CFrame.p, (MyMouse.Hit.p - Handle.CFrame.p).unit, 250)
+&#9;--local target = MyMouse.Target
 &#9;local shootDistance =  MAX_SHOOT_DISTANCE
-&#9;local hitPos = MyMouse.Hit.p
+&#9;--local hitPos = MyMouse.Hit.p
 &#9;if target and (target.CFrame.p - Handle.CFrame.p).magnitude &lt; MAX_SHOOT_DISTANCE then
 &#9;&#9;OnHit(target)&#9;&#9;
 &#9;end
@@ -361,27 +375,22 @@ function OnActivated()
 &#9;heartClone.Parent = Workspace
 &#9;DebrisService:AddItem(heartClone, 10)
 &#9;Spawn(function()
-&#9;&#9;local lastTime = tick()
-&#9;&#9;local studsPerSec = MAX_SHOOT_DISTANCE / LASER_TIME
-&#9;&#9;for i = 1, 10 do
+&#9;&#9;for i = 1, 20 do
 &#9;&#9;&#9;wait()
 &#9;&#9;&#9;if heartClone and heartClone:FindFirstChild(&apos;Mesh&apos;) then
 &#9;&#9;&#9;&#9;heartClone:FindFirstChild(&apos;Mesh&apos;).Scale =
 &#9;&#9;&#9;&#9;&#9;heartClone:FindFirstChild(&apos;Mesh&apos;).Scale + Vector3.new(0, 0, MAX_SHOOT_DISTANCE * SCALE_TO_STUD / 10)
-&#9;&#9;&#9;&#9;lastTime = tick()
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;&#9;wait(0.1)
 &#9;&#9;heartClone.CFrame = heartClone.CFrame * CFrame.Angles(0, math.pi, 0) +
-&#9;&#9;&#9;heartClone.CFrame:vectorToWorldSpace(Vector3.new(0,0,MAX_SHOOT_DISTANCE * SCALE_TO_STUD/4))
-&#9;&#9;&#9;&#9;
-&#9;&#9;
-&#9;&#9;for i = 1, 10 do
+&#9;&#9;&#9;heartClone.CFrame:vectorToWorldSpace(Vector3.new(0,0,245 / 2))
+&#9;&#9;&#9;--heartClone.CFrame:vectorToWorldSpace(Vector3.new(0,0,MAX_SHOOT_DISTANCE * SCALE_TO_STUD/2))
+&#9;&#9;for i = 1, 20 do
 &#9;&#9;&#9;wait()
 &#9;&#9;&#9;if heartClone and heartClone:FindFirstChild(&apos;Mesh&apos;) then
 &#9;&#9;&#9;&#9;heartClone:FindFirstChild(&apos;Mesh&apos;).Scale =
 &#9;&#9;&#9;&#9;&#9;heartClone:FindFirstChild(&apos;Mesh&apos;).Scale - Vector3.new(0, 0, MAX_SHOOT_DISTANCE * SCALE_TO_STUD/ 10)
-&#9;&#9;&#9;&#9;lastTime = tick()
 &#9;&#9;&#9;end
 &#9;&#9;end&#9;
 &#9;&#9;heartClone:Destroy()
@@ -412,7 +421,6 @@ function OnEquipped(mouse)
 &#9;MyCharacter = Tool.Parent
 &#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
 &#9;MyTorso = MyCharacter:FindFirstChild(&apos;Torso&apos;)
-&#9;print(&quot;Get Mouse&quot;)
 &#9;MyMouse = mouse
 &#9;MyHumanoid = MyCharacter:FindFirstChild(&apos;Humanoid&apos;)
 
@@ -424,9 +432,8 @@ function OnEquipped(mouse)
 &#9;StartAnim = WaitForChild(AnimationScript, &apos;Start&apos;)
 &#9;StopAnim = WaitForChild(AnimationScript, &apos;Stop&apos;)
 &#9;
-&#9;SwingSound = WaitForChild(Handle, &apos;Swing&apos;)
+&#9;ShootSound = WaitForChild(Handle, &apos;Shoot&apos;)
 &#9;HitSound = WaitForChild(Handle, &apos;Hit&apos;)
-&#9;EnrageSound = WaitForChild(Handle, &apos;Rage&apos;)
 &#9;
 &#9;HeartScript = WaitForChild(script, &apos;HeartScript&apos;)
 &#9;
@@ -452,61 +459,117 @@ Tool.Unequipped:connect(OnUnequipped)
 Tool.Activated:connect(OnActivated)
 </ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX7">
+			<Item class="Script" referent="RBX6">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">HeartScript</string>
-					<ProtectedString name="Source">local debris = game:service(&quot;Debris&quot;)
-local pellet = script.Parent
-local startingDamage = 25
-local damage = startingDamage
-local HitHumanoids = {}
-local PlayersService = Game:GetService(&apos;Players&apos;)
-
-debris:AddItem(pellet, 6)
-
-function WaitForChild(parent, child)
-&#9;while not parent:FindFirstChild(child) do
-&#9;&#9;parent.ChildAdded:wait()
-&#9;end
-&#9;return parent:FindFirstChild(child)
+					<ProtectedString name="Source">local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
 end
 
-local CreatorTag = WaitForChild(pellet, &apos;creator&apos;)
 
-function tagHumanoid(humanoid)
-&#9;if CreatorTag ~= nil then
-&#9;&#9;-- kill all other tags
-&#9;&#9;while(humanoid:findFirstChild(&quot;creator&quot;) ~= nil) do
-&#9;&#9;&#9;humanoid:findFirstChild(&quot;creator&quot;).Parent = nil
-&#9;&#9;end
+local contentProvider = game:GetService(&quot;ContentProvider&quot;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
 
-&#9;&#9;local new_tag = CreatorTag:clone()
-&#9;&#9;new_tag.Parent = humanoid
-&#9;&#9;-- Server script so this is ok
-&#9;&#9;debris:AddItem(new_tag, 1)
-&#9;end
+local BASE_URL = contentProvider.BaseUrl
+local AmmoTXId = BASE_URL .. &apos;asset/?id=105977933&apos;
+local AmmoMeshId = BASE_URL .. &apos;asset/?id=105992239&apos;
+
+local AmmoPrefab = Instance.new(&apos;Part&apos;)
+AmmoPrefab.FormFactor = &apos;Custom&apos;
+AmmoPrefab.Size = Vector3.new(1, 1, 0.2)
+AmmoPrefab.Locked = true
+AmmoPrefab.TopSurface = &apos;Smooth&apos;
+AmmoPrefab.BottomSurface = &apos;Smooth&apos;
+AmmoPrefab.CanCollide = false
+AmmoPrefab.Transparency = 0
+AmmoPrefab.Name = &apos;HeartMesh&apos;
+
+
+local AmmoMesh = Instance.new(&apos;SpecialMesh&apos;)
+AmmoMesh.TextureId = AmmoTXId
+AmmoMesh.MeshId = AmmoMeshId
+AmmoMesh.Scale = Vector3.new(2,2,1)
+-- Lets run randomize this from the range of (1,1,1) to (1,0,0) to add a little variation
+AmmoMesh.VertexColor = Vector3.new(1,0.3,0.3)
+AmmoMesh.Parent = AmmoPrefab
+
+local Torso = script.Parent
+
+-- Wait because of set parent while setting parent bug
+wait()
+
+local HeartBeatScript = WaitForChild(script, &apos;SoundScript&apos;)
+DebrisService:AddItem(HeartBeatScript, 5)
+HeartBeatScript.Parent = Torso
+HeartBeatScript.Disabled = false
+
+local newAmmo = AmmoPrefab:Clone()
+DebrisService:AddItem(newAmmo, 5)
+newAmmo.Parent = Workspace
+
+--wait()
+
+local Weld = Instance.new(&apos;ManualWeld&apos;)
+Weld.Part0 = Torso
+Weld.Part1 = newAmmo
+Weld.C0 = CFrame.Angles(0, math.pi, 0) * CFrame.new(0.3,0.42, 0.4)
+Weld.Name = &quot;weld&quot;
+Weld.Parent = newAmmo
+
+while newAmmo and newAmmo:FindFirstChild(&apos;Mesh&apos;) do
+&#9;newAmmo:FindFirstChild(&apos;Mesh&apos;).Scale = Vector3.new(2,2,3.3 * (math.sin(tick() * 20) + 1.5))
+&#9;
+&#9;wait()
 end
 
-function onTouched(hit)
-&#9;if not (hit and hit.Name ~= &apos;Handle&apos; and hit.Parent) then return end
-&#9;humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;if humanoid and not HitHumanoids[humanoid] then
-&#9;&#9;if startingDamage == damage and PlayersService:GetPlayerFromCharacter(hit.Parent) == CreatorTag.Value then 
-&#9;&#9;&#9;return 
-&#9;&#9;end
-&#9;&#9;HitHumanoids[humanoid] = true
-&#9;&#9;tagHumanoid(humanoid)
-&#9;end
-end
+script:Destroy()
 
-connection = pellet.Touched:connect(onTouched)
 </ProtectedString>
 				</Properties>
+				<Item class="LocalScript" referent="RBX7">
+					<Properties>
+						<bool name="Disabled">true</bool>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">SoundScript</string>
+						<ProtectedString name="Source">local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+wait()
+
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+local Torso = script.Parent
+
+
+if Torso and not Torso:FindFirstChild(&apos;Heartbeat&apos;) then
+&#9;local HeartBeat = WaitForChild(script, &apos;Heartbeat&apos;):Clone()
+&#9;DebrisService:AddItem(HeartBeat, 5)
+&#9;HeartBeat.Parent = Torso
+&#9;wait()
+&#9;HeartBeat:Play()
+end
+</ProtectedString>
+					</Properties>
+					<Item class="Sound" referent="RBX8">
+						<Properties>
+							<bool name="Looped">false</bool>
+							<string name="Name">Heartbeat</string>
+							<float name="Pitch">1</float>
+							<bool name="PlayOnRemove">false</bool>
+							<Content name="SoundId"><url>http://www.roblox.com/asset/?id=106066965</url></Content>
+							<float name="Volume">1</float>
+						</Properties>
+					</Item>
+				</Item>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX8">
+		<Item class="LocalScript" referent="RBX9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -586,33 +649,63 @@ Tool.Unequipped:connect(OnUnequipped)
 
 </ProtectedString>
 			</Properties>
-			<Item class="BindableFunction" referent="RBX9">
+			<Item class="BindableFunction" referent="RBX10">
 				<Properties>
 					<string name="Name">Start</string>
 				</Properties>
 			</Item>
-			<Item class="BindableFunction" referent="RBX10">
+			<Item class="BindableFunction" referent="RBX11">
 				<Properties>
 					<string name="Name">Stop</string>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX11">
+		<Item class="Animation" referent="RBX12">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371735</url></Content>
 				<string name="Name">IdleAnim</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX12">
+		<Item class="Animation" referent="RBX13">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371766</url></Content>
 				<string name="Name">AttackAnim</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX13">
+		<Item class="Camera" referent="RBX14">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com//Asset?ID=93648331</url></Content>
-				<string name="Name">Enrage</string>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-16.4103107</X>
+					<Y>17.175293</Y>
+					<Z>6.93402433</Z>
+					<R00>-0.0279227588</R00>
+					<R01>0.0732117295</R01>
+					<R02>-0.996925473</R02>
+					<R10>-0</R10>
+					<R11>0.997314334</R11>
+					<R12>0.0732402876</R12>
+					<R20>0.999610066</R20>
+					<R21>0.00204507099</R21>
+					<R22>-0.0278477706</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-14.41646</X>
+					<Y>17.0288124</Y>
+					<Z>6.98971987</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
