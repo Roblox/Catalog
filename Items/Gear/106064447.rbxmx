@@ -21,7 +21,7 @@
 			</CoordinateFrame>
 			<string name="Name">LoveRaygun</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=105977217</url></Content>
-			<string name="ToolTip">Love Raygun</string>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -138,6 +138,179 @@
 			</Item>
 		</Item>
 		<Item class="LocalScript" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">AnimationScript</string>
+				<ProtectedString name="Source">-- Waits for the child of the specified parent
+local function WaitForChild(parent, childName)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+local Tool = script.Parent
+
+local Animations = {}
+local MyHumanoid
+local MyCharacter
+
+
+
+local StartAnim = WaitForChild(script, &apos;Start&apos;)
+local StopAnim = WaitForChild(script, &apos;Stop&apos;)
+
+
+function PlayAnimation(animationName, speed)
+&#9;speed = speed or 1
+&#9;if Animations[animationName] then
+&#9;&#9;Animations[animationName]:Play(0.1, 1, speed)
+&#9;else
+&#9;&#9;print(&quot;Can&apos;t find animation:&quot; , animationName)
+&#9;end
+end
+
+function StopAnimation(animationName)
+&#9;if Animations[animationName] then
+&#9;&#9;Animations[animationName]:Stop()
+&#9;end
+end
+
+function ConnectAnimationToValueChange(valueName, animationName)
+&#9;return WaitForChild(Tool, valueName).Changed:connect(
+&#9;&#9;function (value)
+&#9;&#9;&#9;&#9;PlayAnimation(animationName)
+&#9;&#9;end)
+end
+
+function LoadAnimation(animationObject)
+&#9;if MyHumanoid then
+&#9;&#9;Animations[animationObject.Name] = MyHumanoid:LoadAnimation(animationObject)
+&#9;else
+&#9;&#9;print(&quot;Tried to load an anim without a humanoid&quot;)
+&#9;end
+end
+
+
+function OnEquipped(mouse)
+&#9;MyCharacter = Tool.Parent
+&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
+&#9;
+&#9;Tool.ChildAdded:connect(function (child) if child:IsA(&apos;Animation&apos;) then LoadAnimation(animationObject) end end)
+&#9;for _, child in pairs(Tool:GetChildren()) do
+&#9;&#9;if child:IsA(&apos;Animation&apos;) then
+&#9;&#9;&#9;LoadAnimation(child)
+&#9;&#9;end
+&#9;end
+end
+
+function OnUnequipped()
+&#9;for name, animTrack in pairs(Animations) do
+&#9;&#9;StopAnimation(name);
+&#9;end
+end
+
+StartAnim.OnInvoke = PlayAnimation
+StopAnim.OnInvoke = StopAnimation
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+
+</ProtectedString>
+			</Properties>
+			<Item class="BindableFunction" referent="RBX6">
+				<Properties>
+					<string name="Name">Start</string>
+				</Properties>
+			</Item>
+			<Item class="BindableFunction" referent="RBX7">
+				<Properties>
+					<string name="Name">Stop</string>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371735</url></Content>
+				<string name="Name">IdleAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371766</url></Content>
+				<string name="Name">AttackAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-15.1152058</X>
+					<Y>16.7787457</Y>
+					<Z>4.98241854</Z>
+					<R00>-0.750110209</R00>
+					<R01>-0.0450076461</R01>
+					<R02>-0.659779549</R02>
+					<R10>-0</R10>
+					<R11>0.997681379</R11>
+					<R12>-0.0680580139</R12>
+					<R20>0.661312938</R20>
+					<R21>-0.0510510094</R21>
+					<R22>-0.748370886</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-13.7956467</X>
+					<Y>16.9148617</Y>
+					<Z>6.47916031</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX11">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
+local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+
+local Tool = script.Parent
+
+local Mouse = nil
+
+local function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+&#9;end
+end
+
+local function OnEquipped(mouse)
+&#9;Mouse = mouse
+&#9;UpdateIcon()
+end
+
+local function OnChanged(property)
+&#9;if property == &apos;Enabled&apos; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX12">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -335,6 +508,7 @@ local Attacking = false
 function OnActivated()
 &#9;if (Attacking or MyHumanoid.Health &lt;= 0) or not MyCharacter:FindFirstChild(&apos;Right Arm&apos;) or not MyMouse then return end
 &#9;Attacking = true
+&#9;Tool.Enabled = false
 &#9;if ShootSound then
 &#9;&#9;ShootSound:Play()
 &#9;end
@@ -410,6 +584,8 @@ function OnActivated()
 &#9;end
 &#9;--]]
 &#9;wait(SWING_TIME - 0.33 - 0.3)
+&#9;
+&#9;Tool.Enabled = true
 &#9;Attacking = false
 end
 
@@ -459,7 +635,7 @@ Tool.Unequipped:connect(OnUnequipped)
 Tool.Activated:connect(OnActivated)
 </ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX6">
+			<Item class="Script" referent="RBX13">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -530,7 +706,7 @@ script:Destroy()
 
 </ProtectedString>
 				</Properties>
-				<Item class="LocalScript" referent="RBX7">
+				<Item class="LocalScript" referent="RBX14">
 					<Properties>
 						<bool name="Disabled">true</bool>
 						<Content name="LinkedSource"><null></null></Content>
@@ -556,7 +732,7 @@ if Torso and not Torso:FindFirstChild(&apos;Heartbeat&apos;) then
 end
 </ProtectedString>
 					</Properties>
-					<Item class="Sound" referent="RBX8">
+					<Item class="Sound" referent="RBX15">
 						<Properties>
 							<bool name="Looped">false</bool>
 							<string name="Name">Heartbeat</string>
@@ -568,145 +744,6 @@ end
 					</Item>
 				</Item>
 			</Item>
-		</Item>
-		<Item class="LocalScript" referent="RBX9">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">AnimationScript</string>
-				<ProtectedString name="Source">-- Waits for the child of the specified parent
-local function WaitForChild(parent, childName)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
-end
-
-local Tool = script.Parent
-
-local Animations = {}
-local MyHumanoid
-local MyCharacter
-
-
-
-local StartAnim = WaitForChild(script, &apos;Start&apos;)
-local StopAnim = WaitForChild(script, &apos;Stop&apos;)
-
-
-function PlayAnimation(animationName, speed)
-&#9;speed = speed or 1
-&#9;if Animations[animationName] then
-&#9;&#9;Animations[animationName]:Play(0.1, 1, speed)
-&#9;else
-&#9;&#9;print(&quot;Can&apos;t find animation:&quot; , animationName)
-&#9;end
-end
-
-function StopAnimation(animationName)
-&#9;if Animations[animationName] then
-&#9;&#9;Animations[animationName]:Stop()
-&#9;end
-end
-
-function ConnectAnimationToValueChange(valueName, animationName)
-&#9;return WaitForChild(Tool, valueName).Changed:connect(
-&#9;&#9;function (value)
-&#9;&#9;&#9;&#9;PlayAnimation(animationName)
-&#9;&#9;end)
-end
-
-function LoadAnimation(animationObject)
-&#9;if MyHumanoid then
-&#9;&#9;Animations[animationObject.Name] = MyHumanoid:LoadAnimation(animationObject)
-&#9;else
-&#9;&#9;print(&quot;Tried to load an anim without a humanoid&quot;)
-&#9;end
-end
-
-
-function OnEquipped(mouse)
-&#9;MyCharacter = Tool.Parent
-&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
-&#9;
-&#9;Tool.ChildAdded:connect(function (child) if child:IsA(&apos;Animation&apos;) then LoadAnimation(animationObject) end end)
-&#9;for _, child in pairs(Tool:GetChildren()) do
-&#9;&#9;if child:IsA(&apos;Animation&apos;) then
-&#9;&#9;&#9;LoadAnimation(child)
-&#9;&#9;end
-&#9;end
-end
-
-function OnUnequipped()
-&#9;for name, animTrack in pairs(Animations) do
-&#9;&#9;StopAnimation(name);
-&#9;end
-end
-
-StartAnim.OnInvoke = PlayAnimation
-StopAnim.OnInvoke = StopAnimation
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-
-</ProtectedString>
-			</Properties>
-			<Item class="BindableFunction" referent="RBX10">
-				<Properties>
-					<string name="Name">Start</string>
-				</Properties>
-			</Item>
-			<Item class="BindableFunction" referent="RBX11">
-				<Properties>
-					<string name="Name">Stop</string>
-				</Properties>
-			</Item>
-		</Item>
-		<Item class="Animation" referent="RBX12">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371735</url></Content>
-				<string name="Name">IdleAnim</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX13">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371766</url></Content>
-				<string name="Name">AttackAnim</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX14">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-14.8368845</X>
-					<Y>17.5245609</Y>
-					<Z>4.90749264</Z>
-					<R00>-0.862516642</R00>
-					<R01>0.125846058</R01>
-					<R02>-0.490130484</R02>
-					<R10>-0</R10>
-					<R11>0.968582332</R11>
-					<R12>0.248693496</R12>
-					<R20>0.506028771</R20>
-					<R21>0.214502275</R21>
-					<R22>-0.835418344</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-13.8566236</X>
-					<Y>17.027174</Y>
-					<Z>6.57832909</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
