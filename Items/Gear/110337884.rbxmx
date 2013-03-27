@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">true</bool>
+			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.66316998</X>
-					<Y>3.04906845</Y>
-					<Z>-0.343367308</Z>
-					<R00>-0.294132501</R00>
-					<R01>0.0420443006</R01>
-					<R02>-0.95483923</R02>
-					<R10>0.0143943699</R10>
-					<R11>0.999112308</R11>
-					<R12>0.0395601466</R12>
-					<R20>0.955655932</R20>
-					<R21>-0.0021088405</R21>
-					<R22>-0.294476032</R22>
+					<X>0.160000011</X>
+					<Y>0.650000036</Y>
+					<Z>-5.26000023</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>-1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>-0</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>-0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -160,51 +160,25 @@
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">CompassScript</string>
+				<string name="Name">LauncherScript</string>
 				<ProtectedString name="Source">local Tool = script.Parent 
-local Compass = Tool.Handle 
+local Launcher = Tool.Handle
 
 local Character
 local Player 
-
-local Torso 
 local Humanoid 
+local Torso 
 
-local Eggs_Model = Game.Workspace:WaitForChild(&apos;Eggs&apos;)
-local EggMetaData_Model = Game.Lighting:WaitForChild(&apos;Eggs&apos;)
+local EggsToClone = {
+&#9;&apos;ChocolateEgg&apos;, 
+&#9;&apos;CannonicalEgg&apos;, 
+&#9;&apos;EggoEgg&apos;,
+&#9;&apos;MoonEgg&apos;,
+&#9;&apos;SuperSonicEgg&apos; 
+} 
 
-local Compass_Type = Tool:WaitForChild(&apos;CompassType&apos;)
-local RarityRange = {40, 100}
-local EggType_List = {} 
-
-local Arrow = Instance.new(&apos;Part&apos;)
-Arrow.FormFactor = 3
-Arrow.Size = Vector3.new(1, 1, 4)
-Arrow.Anchored = true 
-Arrow.CanCollide = false 
-Arrow.Name = &apos;Arrow&apos;
-
-local ArrowMesh = Instance.new(&apos;SpecialMesh&apos;)
-ArrowMesh.Parent = Arrow 
-ArrowMesh.Scale = Vector3.new(8, 8, 8)
-ArrowMesh.MeshId = &apos;http://www.roblox.com/asset/?id=110309063&apos;
-ArrowMesh.TextureId = &apos;http://www.roblox.com/asset/?id=110324377&apos;
-ArrowMesh.VertexColor = Vector3.new(1, 1, 0)
-
-if Compass_Type.Value == &apos;Rare&apos; then 
-&#9;RarityValue = {20 , 39}&#9;
-end 
-
-local Equipped = false 
-
-local function CacheEggTypes()
-&#9;local eChildren = EggMetaData_Model:GetChildren()
-&#9;for _, eggMD in pairs(eChildren) do 
-&#9;&#9;if eggMD:FindFirstChild(&apos;Rarity&apos;) and eggMD[&apos;Rarity&apos;].Value &gt;= RarityRange[1] and eggMD[&apos;Rarity&apos;].Value &lt; RarityRange[2] then 
-&#9;&#9;&#9;EggType_List[eggMD.Name] = true 
-&#9;&#9;end 
-&#9;end 
-end 
+local Eggs_Model = Game.Lighting:WaitForChild(&apos;Eggs&apos;) 
+local WorkspaceEggs_Model = Game.Workspace:FindFirstChild(&apos;Eggs&apos;) 
 
 local function FindPartInModel(model)
 &#9;local mChildren = model:GetChildren()&#9;
@@ -220,63 +194,137 @@ local function FindPartInModel(model)
 &#9;end 
 end 
 
-local function FindNearestEgg()
-&#9;local minDistance = math.huge 
-&#9;local egg
-&#9;local eggLocation 
-&#9;for eggName, _ in pairs(EggType_List) do
-&#9;&#9;print(&apos;Found a bunch of eggs&apos;)
-&#9;&#9;if Eggs_Model:FindFirstChild(eggName) then 
-&#9;&#9;&#9;local eggPart = FindPartInModel(Eggs_Model[eggName])
-&#9;&#9;&#9;local distance = (eggPart.Position - Torso.Position).magnitude 
-&#9;&#9;&#9;if distance &lt; minDistance then 
-&#9;&#9;&#9;&#9;egg = Eggs_Model[eggName]
-&#9;&#9;&#9;&#9;eggLocation = eggPart.Position 
-&#9;&#9;&#9;end 
+local function CleanModel(model)
+&#9;local mChildren = model:GetChildren() 
+&#9;for i = 1, #mChildren do 
+&#9;&#9;if mChildren[i]:IsA(&apos;StringValue&apos;) or mChildren[i]:IsA(&apos;IntValue&apos;) or mChildren[i]:IsA(&apos;NumberValue&apos;) then 
+&#9;&#9;&#9;mChildren[i]:Destroy()
 &#9;&#9;end 
 &#9;end 
-&#9;return egg, eggLocation 
+&#9;local part = FindPartInModel(model)
+&#9;return model, part 
+end 
+
+local function MakeFake(egg)
+&#9;local eChildren = egg:GetChildren()
+&#9;for _, child in pairs(eChildren) do 
+&#9;&#9;if child:IsA(&apos;Script&apos;) or child:IsA(&apos;LocalScript&apos;) then 
+&#9;&#9;&#9;child:Destroy() 
+&#9;&#9;else 
+&#9;&#9;&#9;MakeFake(child) 
+&#9;&#9;end&#9;&#9;&#9;&#9;
+&#9;end 
+&#9;return egg 
+end 
+
+Tool.Enabled = true  
+local function OnActivated()
+&#9;if not Humanoid or not Torso then 
+&#9;&#9;return 
+&#9;end 
+&#9;
+&#9;if not Tool.Enabled then 
+&#9;&#9;return 
+&#9;end 
+&#9;
+&#9;print(&apos;Tool is enabled&apos;) 
+&#9;
+&#9;Tool.Enabled = false 
+&#9;
+&#9;local target = Humanoid.TargetPoint 
+&#9;local egg = Eggs_Model:FindFirstChild(EggsToClone[math.random(1, #EggsToClone)]):Clone() 
+&#9;print(&apos;Found egg &apos;, egg) 
+&#9;local eggPart
+&#9;egg, eggPart =&#9;CleanModel(egg) 
+
+&#9;if math.random() &gt; 0.1 then 
+&#9;&#9;egg = MakeFake(egg) 
+&#9;&#9;local eConnection = eggPart.Touched:connect(function(hitPart)
+&#9;&#9;&#9;if hitPart and hitPart.Parent and Game.Players:GetPlayerFromCharacter(hitPart.Parent) then 
+&#9;&#9;&#9;&#9;local gui = Instance.new(&apos;ScreenGui&apos;) 
+&#9;&#9;&#9;&#9;gui.Parent = Game.Players:GetPlayerFromCharacter(hitPart.Parent):WaitForChild(&apos;PlayerGui&apos;) 
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local tLabel = Instance.new(&apos;TextLabel&apos;) 
+&#9;&#9;&#9;&#9;tLabel.Text = &quot;IT IS A FAKE. BETTER LUCK NEXT TIME&quot; 
+&#9;&#9;&#9;&#9;tLabel.TextColor3 = Color3.new(1, 0, 0)
+&#9;&#9;&#9;&#9;tLabel.Size = UDim2.new(0, 300, 0, 50)
+&#9;&#9;&#9;&#9;tLabel.BackgroundTransparency = 1.0
+&#9;&#9;&#9;&#9;tLabel.Position = UDim2.new(0.5, -150, 0.5, -25) 
+&#9;&#9;&#9;&#9;tLabel.Parent = gui 
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;Game:GetService(&apos;Debris&apos;):AddItem(gui, 2.0)
+&#9;&#9;&#9;&#9;if eConnection then 
+&#9;&#9;&#9;&#9;&#9;eConnection:disconnect() 
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;end 
+&#9;&#9;end)
+&#9;&#9;Game:GetService(&apos;Debris&apos;):AddItem(egg, 4.5) 
+&#9;else 
+&#9;&#9;Game:GetService(&apos;Debris&apos;):AddItem(egg, 55)
+&#9;end 
+&#9;egg.Parent = WorkspaceEggs_Model 
+&#9;eggPart.CFrame = Torso.CFrame + Torso.CFrame.lookVector * 5.0 
+&#9;eggPart.Velocity = (target - Torso.Position).unit * 30.0
+&#9;print(&apos;Fire in the hole&apos;) 
+&#9;wait(5.5)
+&#9;Tool.Enabled = true 
+&#9;
 end 
 
 local function OnEquipped()
-&#9;Equipped = true 
 &#9;Character = Tool.Parent 
-&#9;Player = Game.Players:GetPlayerFromCharacter(Character) 
-&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)&#9;
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Arrow.Parent = Character
-&#9;Spawn(function()&#9;&#9;
-&#9;&#9;local lastEggTime 
-&#9;&#9;local egg, eggLocation
-&#9;&#9;while Equipped do &#9;&#9;&#9;
-&#9;&#9;&#9;if not lastEggTime or tick() - lastEggTime &gt; 5.0 then 
-&#9;&#9;&#9;&#9;lastEggTime = tick() 
-&#9;&#9;&#9;&#9;egg, eggLocation = FindNearestEgg() 
-&#9;&#9;&#9;end &#9;&#9;&#9;
-&#9;&#9;&#9;if egg and eggLocation then &#9;
-&#9;&#9;&#9;&#9;-- Come back and optimize 
-&#9;&#9;&#9;&#9;-- This is running at 30HZ or more &#9;&#9;&#9;
-&#9;&#9;&#9;&#9;Arrow.CFrame = CFrame.new(Torso.Position + Vector3.new(0, 4, 0), Vector3.new(eggLocation.X, Torso.Position.Y + 4, eggLocation.Z)) 
-&#9;&#9;&#9;end 
-&#9;&#9;&#9;wait(0.015)
-&#9;&#9;end
-&#9;end)
-end
+&#9;Player = Game.Players:GetPlayerFromCharacter(Character)
+&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
+&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;) 
+end 
 
 local function OnUnequipped()
-&#9;Arrow.Parent = nil 
-&#9;Equipped = false 
-end
+end 
 
-CacheEggTypes() 
 Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)</ProtectedString>
+Tool.Unequipped:connect(OnUnequipped)
+Tool.Activated:connect(OnActivated) 
+
+
+</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="StringValue" referent="RBX5">
+		<Item class="LocalScript" referent="RBX5">
 			<Properties>
-				<string name="Name">CompassType</string>
-				<string name="Value"></string>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent
+
+local stillEquipped = false
+
+function onEquippedLocal(mouse)
+&#9;stillEquipped = true
+&#9;if mouse == nil then 
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return
+&#9;end
+&#9;while stillEquipped do 
+&#9;&#9;print(&quot;Setting Mouse to go&quot;)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;while Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
+&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;&#9;while not Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end&#9;
+&#9;end
+end
+
+
+function onUnequippedLocal()
+&#9;stillEquipped = false
+end
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Camera" referent="RBX6">
@@ -284,24 +332,24 @@ Tool.Unequipped:connect(OnUnequipped)</ProtectedString>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>2.3288455</X>
-					<Y>3.43533969</Y>
-					<Z>-1.45590687</Z>
-					<R00>-0.348522246</R00>
-					<R01>-0.112597756</R01>
-					<R02>0.930512726</R02>
-					<R10>-0</R10>
-					<R11>0.992758214</R11>
-					<R12>0.120129831</R12>
-					<R20>-0.937300563</R20>
-					<R21>0.0418679193</R21>
-					<R22>-0.345998287</R22>
+					<X>2.58945847</X>
+					<Y>0.740898967</Y>
+					<Z>-6.94850159</Z>
+					<R00>-0.570709825</R00>
+					<R01>-0.0252168756</R01>
+					<R02>0.820764542</R02>
+					<R10>-9.31322575e-010</R10>
+					<R11>0.999528289</R11>
+					<R12>0.030709153</R12>
+					<R20>-0.821151793</R20>
+					<R21>0.0175260156</R21>
+					<R22>-0.57044065</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.66316998</X>
-					<Y>3.04906845</Y>
-					<Z>-0.343367338</Z>
+					<X>0.159999967</X>
+					<Y>0.650000036</Y>
+					<Z>-5.26000023</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
