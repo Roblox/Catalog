@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">true</bool>
+			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -19,7 +19,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">Fabrege Finder</string>
+			<string name="Name">Fabrege Cloner</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=110337397</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.66316998</X>
-					<Y>3.04906845</Y>
-					<Z>-0.343367308</Z>
-					<R00>-0.294132501</R00>
-					<R01>0.0420443006</R01>
-					<R02>-0.95483923</R02>
-					<R10>0.0143943699</R10>
-					<R11>0.999112308</R11>
-					<R12>0.0395601466</R12>
-					<R20>0.955655932</R20>
-					<R21>-0.0021088405</R21>
-					<R22>-0.294476032</R22>
+					<X>0.160000011</X>
+					<Y>0.0500000007</Y>
+					<Z>-5.26000023</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>-1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>-0</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>-0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -160,148 +160,163 @@
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">CompassScript</string>
+				<string name="Name">ClonerScript</string>
 				<ProtectedString name="Source">local Tool = script.Parent 
-local Compass = Tool.Handle 
+local Cloner = Tool.Handle
 
 local Character
 local Player 
 
+local PlayerGui 
+
+local FabregeGui 
+
 local Torso 
 local Humanoid 
 
-local Eggs_Model = Game.Workspace:WaitForChild(&apos;Eggs&apos;)
-local EggMetaData_Model = Game.Lighting:WaitForChild(&apos;Eggs&apos;)
+local SelectedFabrege = nil 
 
-local Compass_Type = Tool:WaitForChild(&apos;CompassType&apos;)
-local RarityRange = {40, 100}
-local EggType_List = {} 
+local FabregeToAward 
 
-local Arrow = Instance.new(&apos;Part&apos;)
-Arrow.FormFactor = 3
-Arrow.Size = Vector3.new(1, 1, 4)
-Arrow.Anchored = true 
-Arrow.CanCollide = false 
-Arrow.Name = &apos;Arrow&apos;
+local PersistBadges
+local BadgeConnection 
 
-local ArrowMesh = Instance.new(&apos;SpecialMesh&apos;)
-ArrowMesh.Parent = Arrow 
-ArrowMesh.Scale = Vector3.new(8, 8, 8)
-ArrowMesh.MeshId = &apos;http://www.roblox.com/asset/?id=110309063&apos;
-ArrowMesh.TextureId = &apos;http://www.roblox.com/asset/?id=110324377&apos;
-ArrowMesh.VertexColor = Vector3.new(1, 1, 0)
 
-if Compass_Type.Value == &apos;Rare&apos; then 
-&#9;RarityValue = {20 , 39}&#9;
-end 
+local EggIcons_List = {
+&#9;[&apos;DreamWeaverFabregeEgg&apos;] = {[&apos;Selected&apos;] = 110685176, [&apos;Unselected&apos;] = 110685141, [&apos;BadgeId&apos;] = 110693091},
+&#9;[&apos;PurpleFabregeEgg&apos;] = {[&apos;Selected&apos;] = 110685266, [&apos;Unselected&apos;] = 110685222, [&apos;BadgeId&apos;] = 110692797},
+&#9;[&apos;DragonFabrege&apos;] = {[&apos;Selected&apos;] = 110685357, [&apos;Unselected&apos;] = 110685335, [&apos;BadgeId&apos;] = 110693177},
+}
 
-local Equipped = false 
+local FontSizes = {
+&#9;Enum.FontSize.Size18,
+&#9;Enum.FontSize.Size14,
+&#9;Enum.FontSize.Size18,
+&#9;Enum.FontSize.Size24, 
+}
 
-local function CacheEggTypes()
-&#9;local eChildren = EggMetaData_Model:GetChildren()
-&#9;for _, eggMD in pairs(eChildren) do 
-&#9;&#9;if eggMD:FindFirstChild(&apos;Rarity&apos;) and eggMD[&apos;Rarity&apos;].Value &gt;= RarityRange[1] and eggMD[&apos;Rarity&apos;].Value &lt; RarityRange[2] then 
-&#9;&#9;&#9;EggType_List[eggMD.Name] = true 
+local function IsFabEgg(badgeId)
+&#9;for eggName, eggList in pairs(EggIcons_List) do 
+&#9;&#9;if eggList[&apos;BadgeId&apos;] == badgeId then 
+&#9;&#9;&#9;return eggName 
 &#9;&#9;end 
 &#9;end 
-end 
+&#9;return nil 
+end
 
-local function FindPartInModel(model)
-&#9;local mChildren = model:GetChildren()&#9;
-&#9;for i = 1, #mChildren do 
-&#9;&#9;if mChildren[i]:IsA(&apos;BasePart&apos;) then 
-&#9;&#9;&#9;return mChildren[i]&#9;&#9;&#9;
-&#9;&#9;end &#9;&#9; 
-&#9;end &#9;
-&#9;for i = 1, #mChildren do 
-&#9;&#9;if #mChildren[i]:GetChildren() &gt;= 1 then 
-&#9;&#9;&#9;return FindPartInModel(mChildren[i])
-&#9;&#9;end
-&#9;end 
-end 
+local function ShowNotification(eggName)
+&#9;local gui = Instance.new(&apos;ScreenGui&apos;)
+&#9;gui.Name = &apos;FabGui&apos;
+&#9;gui.Parent = PlayerGui 
+&#9;print(PlayerGui, &quot; is nil&quot;) 
+&#9;
+&#9;local tLabel = Instance.new(&apos;TextLabel&apos;)
+&#9;tLabel.Font = Enum.Font.ArialBold 
+&#9;tLabel.TextColor3 = Color3.new(54/255, 96/255, 192/255)
+&#9;tLabel.Size = UDim2.new(0, 200, 0, 20)
+&#9;tLabel.BackgroundTransparency = 1.0
+&#9;tLabel.Parent = gui 
+&#9;tLabel.Text = &quot;Congratulations! You just cloned yourself a &quot; .. eggName 
+&#9;tLabel.Position = UDim2.new(0.5, -100, 0, 150)
+&#9;tLabel.FontSize = Enum.FontSize.Size18
+&#9;
+&#9;local lastTick = tick() 
+&#9;local count = 0 
+&#9;Game:GetService(&apos;Debris&apos;):AddItem(gui, 4.5)  
+end
 
-local function FindNearestEgg()
-&#9;local minDistance = math.huge 
-&#9;local egg
-&#9;local eggLocation 
-&#9;for eggName, _ in pairs(EggType_List) do
-&#9;&#9;print(&apos;Found a bunch of eggs&apos;)
-&#9;&#9;if Eggs_Model:FindFirstChild(eggName) then 
-&#9;&#9;&#9;local eggPart = FindPartInModel(Eggs_Model[eggName])
-&#9;&#9;&#9;local distance = (eggPart.Position - Torso.Position).magnitude 
-&#9;&#9;&#9;if distance &lt; minDistance then 
-&#9;&#9;&#9;&#9;egg = Eggs_Model[eggName]
-&#9;&#9;&#9;&#9;eggLocation = eggPart.Position 
-&#9;&#9;&#9;end 
-&#9;&#9;end 
+local function CreateGui()
+&#9;FabregeGui = Instance.new(&apos;ScreenGui&apos;)
+&#9;FabregeGui.Parent = PlayerGui 
+&#9;
+&#9;local frame = Instance.new(&apos;Frame&apos;)
+&#9;frame.Name = &apos;SelectorFrame&apos; 
+&#9;frame.Size = UDim2.new(0, 300, 0, 100)
+&#9;frame.Parent = FabregeGui 
+&#9;frame.BackgroundTransparency = 1.0 
+&#9;frame.Position = UDim2.new(0.5, -150, 1, -200)
+&#9;
+&#9;for egg, eggImageList in pairs(EggIcons_List) do 
+&#9;&#9;local eggButton = Instance.new(&apos;ImageButton&apos;)
+&#9;&#9;eggButton.Name = egg
+&#9;&#9;eggButton.Parent = frame 
+&#9;&#9;eggButton.Image = &quot;http://www.roblox.com/asset/?id=&quot; .. eggImageList[&apos;Unselected&apos;] 
+&#9;&#9;eggButton.BackgroundTransparency = 1.0
+&#9;&#9;eggButton.Size = UDim2.new(0, 100, 0, 100) 
+&#9;&#9;eggButton.Position = UDim2.new(0, (#frame:GetChildren() -1) * 100, 0, 0) 
+&#9;
+&#9;&#9;eggButton.MouseButton1Click:connect(function()
+&#9;&#9;&#9;FabregeToAward.Value = eggImageList[&apos;BadgeId&apos;]  
+&#9;&#9;&#9;for _, eButton in pairs(frame:GetChildren()) do 
+&#9;&#9;&#9;&#9;eButton.Image = &quot;http://www.roblox.com/asset/?id=&quot; .. EggIcons_List[eButton.Name][&apos;Unselected&apos;] 
+&#9;&#9;&#9;end
+&#9;&#9;&#9;eggButton.Image = &quot;http://www.roblox.com/asset/?id=&quot; .. eggImageList[&apos;Selected&apos;] 
+&#9;&#9;end)
 &#9;end 
-&#9;return egg, eggLocation 
 end 
 
 local function OnEquipped()
-&#9;Equipped = true 
 &#9;Character = Tool.Parent 
-&#9;Player = Game.Players:GetPlayerFromCharacter(Character) 
-&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)&#9;
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Arrow.Parent = Character
-&#9;Spawn(function()&#9;&#9;
-&#9;&#9;local lastEggTime 
-&#9;&#9;local egg, eggLocation
-&#9;&#9;while Equipped do &#9;&#9;&#9;
-&#9;&#9;&#9;if not lastEggTime or tick() - lastEggTime &gt; 5.0 then 
-&#9;&#9;&#9;&#9;lastEggTime = tick() 
-&#9;&#9;&#9;&#9;egg, eggLocation = FindNearestEgg() 
-&#9;&#9;&#9;end &#9;&#9;&#9;
-&#9;&#9;&#9;if egg and eggLocation then &#9;
-&#9;&#9;&#9;&#9;-- Come back and optimize 
-&#9;&#9;&#9;&#9;-- This is running at 30HZ or more &#9;&#9;&#9;
-&#9;&#9;&#9;&#9;Arrow.CFrame = CFrame.new(Torso.Position + Vector3.new(0, 4, 0), Vector3.new(eggLocation.X, Torso.Position.Y + 4, eggLocation.Z)) 
+&#9;Player = Game.Players:GetPlayerFromCharacter(Character)
+&#9;if Player:FindFirstChild(&apos;FabregeToAward&apos;) == nil then 
+&#9;&#9;FabregeToAward = Instance.new(&apos;IntValue&apos;)
+&#9;&#9;FabregeToAward.Name = &apos;FabregeToAward&apos; 
+&#9;&#9;FabregeToAward.Parent = Player 
+&#9;else 
+&#9;&#9;FabregeToAward = Player:WaitForChild(&apos;FabregeToAward&apos;) 
+&#9;end 
+&#9;PlayerGui = Player:WaitForChild(&apos;PlayerGui&apos;) 
+&#9;if FabregeGui then 
+&#9;&#9;FabregeGui.Parent = PlayerGui 
+&#9;else 
+&#9;&#9;CreateGui()
+&#9;end &#9;
+&#9;PersistBadges = Player:WaitForChild(&apos;PersistBadges&apos;) 
+&#9;if not BadgeConnection then 
+&#9;&#9;BadgeConnection = PersistBadges.ChildAdded:connect(function(child)
+&#9;&#9;&#9;if child and child:IsA(&apos;IntValue&apos;) then 
+ &#9;&#9;&#9;&#9;if IsFabEgg(child.Value) and child.Value == FabregeToAward.Value then 
+&#9;&#9;&#9;&#9;&#9;local egg = IsFabEgg(child.Value) 
+&#9;&#9;&#9;&#9;&#9;ShowNotification(egg)
+&#9;&#9;&#9;&#9;end 
 &#9;&#9;&#9;end 
-&#9;&#9;&#9;wait(0.015)
-&#9;&#9;end
-&#9;end)
+&#9;&#9;end)
+&#9;end 
 end
 
 local function OnUnequipped()
-&#9;Arrow.Parent = nil 
-&#9;Equipped = false 
-end
+&#9;FabregeGui.Parent = nil 
+end 
 
-CacheEggTypes() 
 Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)</ProtectedString>
+Tool.Unequipped:connect(OnUnequipped) 
+
+</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="StringValue" referent="RBX5">
-			<Properties>
-				<string name="Name">CompassType</string>
-				<string name="Value"></string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX6">
+		<Item class="Camera" referent="RBX5">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-2.71845961</X>
-					<Y>5.34640026</Y>
-					<Z>0.571583569</Z>
-					<R00>0.406690985</R00>
-					<R01>0.652713358</R01>
-					<R02>-0.639192998</R02>
-					<R10>-2.98023224e-008</R10>
-					<R11>0.699668288</R11>
-					<R12>0.714467824</R12>
-					<R20>0.913565755</R20>
-					<R21>-0.290567607</R21>
-					<R22>0.284548789</R22>
+					<X>-1.66457224</X>
+					<Y>1.78815651</Y>
+					<Z>-3.70717454</Z>
+					<R00>0.648118258</R00>
+					<R01>0.447189689</R01>
+					<R02>-0.616412342</R02>
+					<R10>-0</R10>
+					<R11>0.809429049</R11>
+					<R12>0.587217748</R12>
+					<R20>0.761539817</R20>
+					<R21>-0.380586535</R21>
+					<R22>0.524605691</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.66316998</X>
-					<Y>3.04906845</Y>
-					<Z>-0.343367338</Z>
+					<X>0.159999967</X>
+					<Y>0.0500000119</Y>
+					<Z>-5.26000023</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
