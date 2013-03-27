@@ -3,12 +3,12 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">true</bool>
+			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
 				<Y>0</Y>
-				<Z>0</Z>
+				<Z>0.649999976</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -37,8 +37,8 @@
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
 					<X>0</X>
-					<Y>0.600000024</Y>
-					<Z>0</Z>
+					<Y>0</Y>
+					<Z>-5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -156,7 +156,13 @@
 				<Ref name="Part1">null</Ref>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="StringValue" referent="RBX4">
+			<Properties>
+				<string name="Name">CompassType</string>
+				<string name="Value">Rare</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -175,21 +181,13 @@ local EggMetaData_Model = Game.Lighting:WaitForChild(&apos;Eggs&apos;)
 
 local Compass_Type = Tool:WaitForChild(&apos;CompassType&apos;)
 local RarityRange = {40, 100}
-local EggType_List = {} 
+local EggType_List = {
+&#9;[&apos;CannonicalEgg&apos;] = true,
+&#9;[&apos;AlienEgg&apos;] = true,
+&#9;[&apos;EggOfDuty&apos;] = true 
+} 
 
-local Arrow = Instance.new(&apos;Part&apos;)
-Arrow.FormFactor = 3
-Arrow.Size = Vector3.new(1, 1, 4)
-Arrow.Anchored = true 
-Arrow.CanCollide = false 
-Arrow.Name = &apos;Arrow&apos;
-
-local ArrowMesh = Instance.new(&apos;SpecialMesh&apos;)
-ArrowMesh.Parent = Arrow 
-ArrowMesh.Scale = Vector3.new(8, 8, 8)
-ArrowMesh.MeshId = &apos;http://www.roblox.com/asset/?id=110309063&apos;
-ArrowMesh.TextureId = &apos;http://www.roblox.com/asset/?id=110324377&apos;
-ArrowMesh.VertexColor = Vector3.new(1, 1, 0)
+local Pos = Tool:WaitForChild(&apos;Pos&apos;)
 
 if Compass_Type.Value == &apos;Rare&apos; then 
 &#9;RarityValue = {20 , 39}&#9;
@@ -201,7 +199,7 @@ local function CacheEggTypes()
 &#9;local eChildren = EggMetaData_Model:GetChildren()
 &#9;for _, eggMD in pairs(eChildren) do 
 &#9;&#9;if eggMD:FindFirstChild(&apos;Rarity&apos;) and eggMD[&apos;Rarity&apos;].Value &gt;= RarityRange[1] and eggMD[&apos;Rarity&apos;].Value &lt; RarityRange[2] then 
-&#9;&#9;&#9;EggType_List[eggMD.Name] = true 
+&#9;&#9;&#9;--EggType_List[eggMD.Name] = true 
 &#9;&#9;end 
 &#9;end 
 end 
@@ -225,13 +223,13 @@ local function FindNearestEgg()
 &#9;local egg
 &#9;local eggLocation 
 &#9;for eggName, _ in pairs(EggType_List) do
-&#9;&#9;print(&apos;Found a bunch of eggs&apos;)
 &#9;&#9;if Eggs_Model:FindFirstChild(eggName) then 
 &#9;&#9;&#9;local eggPart = FindPartInModel(Eggs_Model[eggName])
 &#9;&#9;&#9;local distance = (eggPart.Position - Torso.Position).magnitude 
 &#9;&#9;&#9;if distance &lt; minDistance then 
 &#9;&#9;&#9;&#9;egg = Eggs_Model[eggName]
 &#9;&#9;&#9;&#9;eggLocation = eggPart.Position 
+&#9;&#9;&#9;&#9;minDistance = distance 
 &#9;&#9;&#9;end 
 &#9;&#9;end 
 &#9;end 
@@ -244,19 +242,21 @@ local function OnEquipped()
 &#9;Player = Game.Players:GetPlayerFromCharacter(Character) 
 &#9;Torso = Character:WaitForChild(&apos;Torso&apos;)&#9;
 &#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Arrow.Parent = Character
+&#9;--Arrow.Parent = Character
 &#9;Spawn(function()&#9;&#9;
 &#9;&#9;local lastEggTime 
 &#9;&#9;local egg, eggLocation
 &#9;&#9;while Equipped do &#9;&#9;&#9;
 &#9;&#9;&#9;if not lastEggTime or tick() - lastEggTime &gt; 5.0 then 
 &#9;&#9;&#9;&#9;lastEggTime = tick() 
+&#9;&#9;&#9;&#9;print(&apos;Finding closer egg - &apos;, math.floor(tick() - lastEggTime))
 &#9;&#9;&#9;&#9;egg, eggLocation = FindNearestEgg() 
+&#9;&#9;&#9;&#9;print(&apos;Egg that is found - &apos;, egg) 
 &#9;&#9;&#9;end &#9;&#9;&#9;
 &#9;&#9;&#9;if egg and eggLocation then &#9;
 &#9;&#9;&#9;&#9;-- Come back and optimize 
 &#9;&#9;&#9;&#9;-- This is running at 30HZ or more &#9;&#9;&#9;
-&#9;&#9;&#9;&#9;Arrow.CFrame = CFrame.new(Torso.Position + Vector3.new(0, 4, 0), Vector3.new(eggLocation.X, Torso.Position.Y + 4, eggLocation.Z)) 
+&#9;&#9;&#9;&#9;Pos.Value = eggLocation 
 &#9;&#9;&#9;end 
 &#9;&#9;&#9;wait(0.015)
 &#9;&#9;end
@@ -264,7 +264,7 @@ local function OnEquipped()
 end
 
 local function OnUnequipped()
-&#9;Arrow.Parent = nil 
+&#9;--Arrow.Parent = nil 
 &#9;Equipped = false 
 end
 
@@ -273,35 +273,119 @@ Tool.Equipped:connect(OnEquipped)
 Tool.Unequipped:connect(OnUnequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="StringValue" referent="RBX5">
+		<Item class="Vector3Value" referent="RBX6">
 			<Properties>
-				<string name="Name">CompassType</string>
-				<string name="Value">Rare</string>
+				<string name="Name">Pos</string>
+				<Vector3 name="Value">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX6">
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalCompassScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent 
+local Pos = Tool:WaitForChild(&apos;Pos&apos;)
+
+local Camera = Game.Workspace.CurrentCamera 
+
+local Character 
+local Torso 
+
+local Arrow = Instance.new(&apos;Part&apos;)
+Arrow.FormFactor = 3
+Arrow.Size = Vector3.new(1, 1, 4)
+Arrow.Anchored = true 
+Arrow.CanCollide = false 
+Arrow.Name = &apos;Arrow&apos;
+
+local ArrowMesh = Instance.new(&apos;SpecialMesh&apos;)
+ArrowMesh.Parent = Arrow 
+ArrowMesh.Scale = Vector3.new(8, 8, 8)
+ArrowMesh.MeshId = &apos;http://www.roblox.com/asset/?id=110309063&apos;
+ArrowMesh.TextureId = &apos;http://www.roblox.com/asset/?id=110324377&apos;
+ArrowMesh.VertexColor = Vector3.new(1, 1, 0)
+
+local ArrowScales = { Vector3.new(1, 1, 1), Vector3.new(1.5, 1.5, 1.5),  Vector3.new(-1, -1, -1),Vector3.new(-1.5, -1.5, -1.5)} 
+
+local function OnEquipped()
+&#9;Character = Tool.Parent 
+&#9;Torso = Character:WaitForChild(&apos;Torso&apos;) 
+&#9;Arrow.Parent = Camera 
+&#9;Equipped = true 
+end
+
+local function OnUnequipped()
+&#9;Equipped = false 
+&#9;Arrow.Parent = nil 
+end
+
+local ArrowCo = coroutine.create(function() end)
+coroutine.resume(ArrowCo) 
+
+local eggLocation 
+
+Pos.Changed:connect(function()
+&#9;eggLocation = Pos.Value 
+&#9;if Torso then 
+&#9;&#9;Arrow.Parent = Camera 
+&#9;&#9;if ArrowCo == nil or coroutine.status(ArrowCo) == &apos;dead&apos; then 
+&#9;&#9;&#9;print(coroutine.status(ArrowCo)) 
+&#9;&#9;&#9;ArrowCo = coroutine.create(function()&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local count = 1 
+&#9;&#9;&#9;&#9;local pCount = 1
+&#9;&#9;&#9;&#9;while true do 
+&#9;&#9;&#9;&#9;&#9;if Equipped then 
+&#9;&#9;&#9;&#9;&#9;&#9;Arrow.CFrame = CFrame.new(Torso.Position + Vector3.new(0, 4, 0), Vector3.new(eggLocation.X, Torso.Position.Y + 4, eggLocation.Z)) &#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;local distance = (Torso.Position - eggLocation).magnitude
+&#9;&#9;&#9;&#9;&#9;&#9;pCount = pCount + 1
+&#9;&#9;&#9;&#9;&#9;&#9;if pCount%40 == 0 then print(&apos;DISTANCE - &apos;, math.floor(distance)) end 
+&#9;&#9;&#9;&#9;&#9;&#9;if distance &lt; 50 then 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;ArrowMesh.Scale = ArrowMesh.Scale + ArrowScales[(count%#ArrowScales) + 1]
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;count = count + 1
+&#9;&#9;&#9;&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;ArrowMesh.Scale = Vector3.new(8, 8, 8) 
+&#9;&#9;&#9;&#9;&#9;&#9;end &#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;&#9;&#9;wait(0.015)
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;coroutine.resume(ArrowCo) 
+&#9;&#9;end   
+&#9;end 
+end)
+
+Tool.Equipped:connect(OnEquipped) 
+Tool.Unequipped:connect(OnUnequipped) </ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX8">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.323208302</X>
-					<Y>2.5737114</Y>
-					<Z>-7.94977132e-006</Z>
-					<R00>-2.45964293e-005</R00>
-					<R01>0.986855686</R01>
-					<R02>-0.161604151</R02>
-					<R10>-0</R10>
-					<R11>0.161604151</R11>
-					<R12>0.986855686</R12>
-					<R20>1</R20>
-					<R21>2.42731257e-005</R21>
-					<R22>-3.97488566e-006</R22>
+					<X>0.919429004</X>
+					<Y>1.34498358</Y>
+					<Z>-3.83997393</Z>
+					<R00>0.783692241</R00>
+					<R01>-0.417718261</R01>
+					<R02>0.459715009</R02>
+					<R10>1.4901163e-008</R10>
+					<R11>0.740103841</R11>
+					<R12>0.672492504</R12>
+					<R20>-0.621149302</R20>
+					<R21>-0.52702713</R21>
+					<R22>0.580013633</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
 					<X>0</X>
-					<Y>0.600000024</Y>
-					<Z>0</Z>
+					<Y>0</Y>
+					<Z>-5</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
