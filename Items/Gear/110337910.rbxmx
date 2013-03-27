@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">true</bool>
+			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.66316998</X>
-					<Y>3.04906845</Y>
-					<Z>-0.343367308</Z>
-					<R00>-0.294132501</R00>
-					<R01>0.0420443006</R01>
-					<R02>-0.95483923</R02>
-					<R10>0.0143943699</R10>
-					<R11>0.999112308</R11>
-					<R12>0.0395601466</R12>
-					<R20>0.955655932</R20>
-					<R21>-0.0021088405</R21>
-					<R22>-0.294476032</R22>
+					<X>0.160000011</X>
+					<Y>17.3800011</Y>
+					<Z>21.7600002</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>-1</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>-0</R12>
+					<R20>1</R20>
+					<R21>0</R21>
+					<R22>-0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -156,152 +156,155 @@
 				<Ref name="Part1">null</Ref>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="LocalScript" referent="RBX4">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">CompassScript</string>
+				<string name="Name">EggTrackerScript</string>
 				<ProtectedString name="Source">local Tool = script.Parent 
-local Compass = Tool.Handle 
+local Tracker = Tool.Handle
 
-local Character
+local TrackerGui 
+local TrackerFrame 
+
 local Player 
+local PlayerGui 
 
-local Torso 
-local Humanoid 
+local Character 
 
-local Eggs_Model = Game.Workspace:WaitForChild(&apos;Eggs&apos;)
-local EggMetaData_Model = Game.Lighting:WaitForChild(&apos;Eggs&apos;)
+local Eggs_Model = Game.Workspace:WaitForChild(&apos;Eggs&apos;) 
+local LightingEggs_Model = Game.Lighting:WaitForChild(&apos;Eggs&apos;) 
 
-local Compass_Type = Tool:WaitForChild(&apos;CompassType&apos;)
-local RarityRange = {40, 100}
-local EggType_List = {} 
+local ToolTip = Instance.new(&apos;TextLabel&apos;)
+ToolTip.BackgroundTransparency = 0.25
+ToolTip.BackgroundColor3 = Color3.new(1, 1, 1)
+ToolTip.Size = UDim2.new(0, 140, 0, 20) 
+ToolTip.TextColor3 = Color3.new(54/255, 96/255, 191/255)
+ToolTip.FontSize = Enum.FontSize.Size18
+ToolTip.Font = Enum.Font.ArialBold
+ToolTip.Visible = false 
 
-local Arrow = Instance.new(&apos;Part&apos;)
-Arrow.FormFactor = 3
-Arrow.Size = Vector3.new(1, 1, 4)
-Arrow.Anchored = true 
-Arrow.CanCollide = false 
-Arrow.Name = &apos;Arrow&apos;
-
-local ArrowMesh = Instance.new(&apos;SpecialMesh&apos;)
-ArrowMesh.Parent = Arrow 
-ArrowMesh.Scale = Vector3.new(8, 8, 8)
-ArrowMesh.MeshId = &apos;http://www.roblox.com/asset/?id=110309063&apos;
-ArrowMesh.TextureId = &apos;http://www.roblox.com/asset/?id=110324377&apos;
-ArrowMesh.VertexColor = Vector3.new(1, 1, 0)
-
-if Compass_Type.Value == &apos;Rare&apos; then 
-&#9;RarityValue = {20 , 39}&#9;
-end 
-
-local Equipped = false 
-
-local function CacheEggTypes()
-&#9;local eChildren = EggMetaData_Model:GetChildren()
-&#9;for _, eggMD in pairs(eChildren) do 
-&#9;&#9;if eggMD:FindFirstChild(&apos;Rarity&apos;) and eggMD[&apos;Rarity&apos;].Value &gt;= RarityRange[1] and eggMD[&apos;Rarity&apos;].Value &lt; RarityRange[2] then 
-&#9;&#9;&#9;EggType_List[eggMD.Name] = true 
-&#9;&#9;end 
+local function CreateTrackerGui()
+&#9;local eggsFrame 
+&#9;if TrackerFrame and TrackerFrame:FindFirstChild(&apos;EggsFrame&apos;) then 
+&#9;&#9;TrackerFrame[&apos;EggsFrame&apos;]:ClearAllChildren() 
+&#9;end
+&#9;
+&#9;if not TrackerGui then 
+&#9;&#9;TrackerGui = Instance.new(&apos;ScreenGui&apos;)
+&#9;&#9;TrackerGui.Parent = PlayerGui 
+&#9;&#9;TrackerGui.Name = &apos;TrackerGui&apos;
+&#9;&#9;
+&#9;&#9;local frame = Instance.new(&apos;Frame&apos;)
+&#9;&#9;frame.Size = UDim2.new(0, 650, 0, 340) 
+&#9;&#9;frame.BackgroundTransparency = 1.0
+&#9;&#9;frame.Position = UDim2.new(0.5, -325, 0.5, -170)
+&#9;&#9;frame.Name = &apos;TrackerFrame&apos; 
+&#9;&#9;frame.Parent = TrackerGui
+&#9;&#9;
+&#9;&#9;TrackerFrame = frame 
+&#9;
+&#9;&#9;ToolTip.Parent = TrackerFrame 
+&#9;&#9;
+&#9;&#9;local background = Instance.new(&apos;ImageLabel&apos;)
+&#9;&#9;background.BackgroundTransparency = 1.0
+&#9;&#9;background.Name = &apos;Background&apos; 
+&#9;&#9;background.Image = &quot;http://www.roblox.com/asset/?id=110700195&quot;
+&#9;&#9;background.Parent = TrackerFrame 
+&#9;&#9;background.Size = UDim2.new(1, 0, 1, 0)
+&#9;&#9;
+&#9;&#9;eggsFrame = Instance.new(&apos;Frame&apos;)
+&#9;&#9;eggsFrame.Parent = TrackerFrame 
+&#9;&#9;eggsFrame.Name = &apos;EggsFrame&apos; 
+&#9;&#9;eggsFrame.BackgroundTransparency = 1.0
+&#9;&#9;eggsFrame.Size = UDim2.new(1, 0, 1, 0) 
 &#9;end 
-end 
-
-local function FindPartInModel(model)
-&#9;local mChildren = model:GetChildren()&#9;
-&#9;for i = 1, #mChildren do 
-&#9;&#9;if mChildren[i]:IsA(&apos;BasePart&apos;) then 
-&#9;&#9;&#9;return mChildren[i]&#9;&#9;&#9;
-&#9;&#9;end &#9;&#9; 
-&#9;end &#9;
-&#9;for i = 1, #mChildren do 
-&#9;&#9;if #mChildren[i]:GetChildren() &gt;= 1 then 
-&#9;&#9;&#9;return FindPartInModel(mChildren[i])
-&#9;&#9;end
-&#9;end 
-end 
-
-local function FindNearestEgg()
-&#9;local minDistance = math.huge 
-&#9;local egg
-&#9;local eggLocation 
-&#9;for eggName, _ in pairs(EggType_List) do
-&#9;&#9;print(&apos;Found a bunch of eggs&apos;)
-&#9;&#9;if Eggs_Model:FindFirstChild(eggName) then 
-&#9;&#9;&#9;local eggPart = FindPartInModel(Eggs_Model[eggName])
-&#9;&#9;&#9;local distance = (eggPart.Position - Torso.Position).magnitude 
-&#9;&#9;&#9;if distance &lt; minDistance then 
-&#9;&#9;&#9;&#9;egg = Eggs_Model[eggName]
-&#9;&#9;&#9;&#9;eggLocation = eggPart.Position 
+&#9;
+&#9;eggsFrame = eggsFrame or TrackerFrame:FindFirstChild(&apos;EggsFrame&apos;) 
+&#9;local rowNum = 1
+&#9;local columnNum = 0
+&#9;for _, egg in pairs(Eggs_Model:GetChildren()) do 
+&#9;&#9;if LightingEggs_Model:FindFirstChild(egg.Name) and not eggsFrame:FindFirstChild(egg.Name) then 
+&#9;&#9;&#9;local eImage = Instance.new(&apos;ImageLabel&apos;) 
+&#9;&#9;&#9;eImage.Size = UDim2.new(0, 64, 0, 64)
+&#9;&#9;&#9;eImage.Parent = eggsFrame 
+&#9;&#9;&#9;eImage.BackgroundTransparency = 1.0
+&#9;&#9;&#9;eImage.Name = egg.Name
+&#9;&#9;&#9;eImage.ZIndex = 5.0
+&#9;&#9;&#9;eImage.Position = UDim2.new(0, 35 + (columnNum * 78), 0, 60 + (rowNum - 1) * 75) 
+&#9;&#9;&#9;eImage.Image = &quot;http://www.roblox.com/asset/?id=&quot; .. LightingEggs_Model[egg.Name][&apos;SelectedIcon&apos;].Value 
+&#9;&#9;&#9;rowNum = rowNum + 1
+&#9;&#9;&#9;if #eggsFrame:GetChildren()%3 == 0 then 
+&#9;&#9;&#9;&#9;columnNum = columnNum + 1
+&#9;&#9;&#9;&#9;rowNum = 1
 &#9;&#9;&#9;end 
+&#9;&#9;&#9;
+&#9;&#9;&#9;eImage.MouseEnter:connect(function()
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;ToolTip.Visible = true 
+&#9;&#9;&#9;&#9;ToolTip.Text = eImage.Name 
+&#9;&#9;&#9;&#9;ToolTip.Position = eImage.Position + UDim2.new(0, 40, 0, 40)
+&#9;&#9;&#9;&#9;ToolTip.ZIndex = 9.0 
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;
+&#9;&#9;&#9;eImage.MouseLeave:connect(function()
+&#9;&#9;&#9;&#9;ToolTip.Visible = false 
+&#9;&#9;&#9;end) 
 &#9;&#9;end 
 &#9;end 
-&#9;return egg, eggLocation 
 end 
 
 local function OnEquipped()
-&#9;Equipped = true 
 &#9;Character = Tool.Parent 
 &#9;Player = Game.Players:GetPlayerFromCharacter(Character) 
-&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)&#9;
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Arrow.Parent = Character
-&#9;Spawn(function()&#9;&#9;
-&#9;&#9;local lastEggTime 
-&#9;&#9;local egg, eggLocation
-&#9;&#9;while Equipped do &#9;&#9;&#9;
-&#9;&#9;&#9;if not lastEggTime or tick() - lastEggTime &gt; 5.0 then 
-&#9;&#9;&#9;&#9;lastEggTime = tick() 
-&#9;&#9;&#9;&#9;egg, eggLocation = FindNearestEgg() 
-&#9;&#9;&#9;end &#9;&#9;&#9;
-&#9;&#9;&#9;if egg and eggLocation then &#9;
-&#9;&#9;&#9;&#9;-- Come back and optimize 
-&#9;&#9;&#9;&#9;-- This is running at 30HZ or more &#9;&#9;&#9;
-&#9;&#9;&#9;&#9;Arrow.CFrame = CFrame.new(Torso.Position + Vector3.new(0, 4, 0), Vector3.new(eggLocation.X, Torso.Position.Y + 4, eggLocation.Z)) 
-&#9;&#9;&#9;end 
-&#9;&#9;&#9;wait(0.015)
-&#9;&#9;end
-&#9;end)
-end
+&#9;PlayerGui = Player:WaitForChild(&apos;PlayerGui&apos;) 
+&#9;
+&#9;if not TrackerGui then 
+&#9;&#9;CreateTrackerGui() 
+&#9;else 
+&#9;&#9;TrackerGui.Parent = PlayerGui 
+&#9;end 
+end 
 
 local function OnUnequipped()
-&#9;Arrow.Parent = nil 
-&#9;Equipped = false 
-end
+&#9;TrackerGui.Parent = nil 
+end 
 
-CacheEggTypes() 
 Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)</ProtectedString>
+Tool.Unequipped:connect(OnUnequipped) 
+
+Eggs_Model.ChildAdded:connect(function()
+&#9;CreateTrackerGui()
+end)
+
+Eggs_Model.ChildRemoved:connect(function()
+&#9;CreateTrackerGui()
+end)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="StringValue" referent="RBX5">
-			<Properties>
-				<string name="Name">CompassType</string>
-				<string name="Value"></string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX6">
+		<Item class="Camera" referent="RBX5">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.390209079</X>
-					<Y>4.07667542</Y>
-					<Z>2.51557016</Z>
-					<R00>0.938333929</R00>
-					<R01>-0.110489987</R01>
-					<R02>0.327599466</R02>
-					<R10>-7.45057971e-009</R10>
-					<R11>0.947557867</R11>
-					<R12>0.31958437</R12>
-					<R20>-0.345730275</R20>
-					<R21>-0.299876869</R21>
-					<R22>0.889125705</R22>
+					<X>2.40878439</X>
+					<Y>17.8736439</Y>
+					<Z>23.6203499</Z>
+					<R00>0.637422621</R00>
+					<R01>-0.128499493</R01>
+					<R02>0.759723783</R02>
+					<R10>-0</R10>
+					<R11>0.98599565</R11>
+					<R12>0.166771054</R12>
+					<R20>-0.770514369</R20>
+					<R21>-0.10630364</R21>
+					<R22>0.628495932</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.66316998</X>
-					<Y>3.04906845</Y>
-					<Z>-0.343367338</Z>
+					<X>0.159999967</X>
+					<Y>17.3800011</Y>
+					<Z>21.7600002</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
