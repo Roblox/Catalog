@@ -133,7 +133,60 @@
 				<string name="Name">holdAni</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="Script" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ThumbnailFixer</string>
+				<ProtectedString name="Source">function WaitForChild(parent,child)
+&#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
+&#9;return parent[child]
+end
+
+local handle = WaitForChild(script.Parent,&apos;Handle&apos;)
+
+script.Parent.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 1, -3.9340253e-007, 0, 3.9340253e-007, 1)
+
+handle.Size = Vector3.new(0.2, 4.89, 6.08)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX6">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-11.3508101</X>
+					<Y>37.8244476</Y>
+					<Z>-31.3105278</Z>
+					<R00>0.487869173</R00>
+					<R01>0.243556485</R01>
+					<R02>-0.838250518</R02>
+					<R10>-0</R10>
+					<R11>0.960286915</R11>
+					<R12>0.279014558</R12>
+					<R20>0.872916758</R20>
+					<R21>-0.136122599</R21>
+					<R22>0.468494356</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-9.67430878</X>
+					<Y>37.2664185</Y>
+					<Z>-32.2475166</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -236,16 +289,18 @@ function onEquipped(nmouse)
 &#9;print(&apos;got to equipped&apos;)
 &#9;Spawn(function()
 &#9;&#9;if Equipped then
-&#9;&#9;&#9;onUnequipped()
+&#9;&#9;&#9;return
 &#9;&#9;end
 &#9;&#9;--
+&#9;&#9;&#9;Character=script.Parent.Parent
+&#9;&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
 &#9;&#9;&#9;if not FakeHandle then
 &#9;&#9;&#9;&#9;FakeHandle = handle:Clone()
 &#9;&#9;&#9;&#9;FakeHandle.Name = &apos;FakeHandle&apos;
 &#9;&#9;&#9;&#9;FakeHandle.Size = Vector3.new(1, 4.89, 6.08)
 &#9;&#9;&#9;end
 &#9;&#9;&#9;FakeHandle.Parent = script.Parent
-&#9;&#9;&#9;FakeHandle.CFrame = handle.CFrame
+&#9;&#9;&#9;FakeHandle.CFrame = myTorso.CFrame
 &#9;&#9;&#9;handle.Transparency = 1
 &#9;&#9;&#9;--script.Parent.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 1, -3.9340253e-007, 0, 3.9340253e-007, 1)
 &#9;&#9;&#9;
@@ -254,8 +309,7 @@ function onEquipped(nmouse)
 &#9;&#9;&#9;print(&apos;got in if&apos;)
 &#9;&#9;&#9;mouse=nmouse
 &#9;&#9;&#9;Equipped = true
-&#9;&#9;&#9;Character=script.Parent.Parent
-&#9;&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
+&#9;&#9;&#9;
 &#9;&#9;&#9;handle.CFrame = myTorso.CFrame
 &#9;&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = true
 &#9;&#9;&#9;
@@ -327,32 +381,53 @@ end
 
 function onUnequipped()
 &#9;Equipped = false
-&#9;wait(.3)
-&#9;SmokePart.Parent = nil
-&#9;FakeHandle:Remove()
-&#9;FakeHandle = nil
+&#9;if SmokePart then
+&#9;&#9;SmokePart.Parent = nil
+&#9;end
+&#9;if FakeHandle then
+&#9;&#9;FakeHandle:Remove()
+&#9;&#9;FakeHandle = nil
+&#9;end
 &#9;handle.Transparency = 0
 &#9;--handle.Size = Vector3.new(0.2, 0.2, 0.2)
 &#9;forwards = false
 &#9;left = false
 &#9;back = false
 &#9;right = false&#9;
-&#9;RotationForce:Destroy()
-&#9;RotationForce=nil
-&#9;thrustForce:Destroy()
-&#9;thrustForce=nil
-&#9;TurnGyro:Destroy()
-&#9;TurnGyro=nil
-&#9;HoldAniTrack:Stop()
-&#9;torsoWeld:Destroy()
-&#9;key_down_connect:disconnect()
-&#9;key_down_connect=nil
-&#9;key_up_connect:disconnect()
-&#9;key_up_connect=nil
-&#9;torsoWeld=nil
-&#9;EngineSound:Stop()
-&#9;Character.Humanoid.WalkSpeed = 16
-&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = false
+&#9;if RotationForce then
+&#9;&#9;RotationForce:Destroy()
+&#9;&#9;RotationForce=nil
+&#9;end
+&#9;if thrustForce then
+&#9;&#9;thrustForce:Destroy()
+&#9;&#9;thrustForce=nil
+&#9;end
+&#9;if TurnGyro then
+&#9;&#9;TurnGyro:Destroy()
+&#9;&#9;TurnGyro=nil
+&#9;end
+&#9;if HoldAniTrack then
+&#9;&#9;HoldAniTrack:Stop()
+&#9;end
+&#9;if torsoWeld then
+&#9;&#9;torsoWeld:Destroy()
+&#9;&#9;torsoWeld=nil
+&#9;end 
+&#9;if key_down_connect then
+&#9;&#9;key_down_connect:disconnect()
+&#9;&#9;key_down_connect=nil
+&#9;end
+&#9;if key_up_connect then
+&#9;&#9;key_up_connect:disconnect()
+&#9;&#9;key_up_connect=nil
+&#9;end
+&#9;if EngineSound then
+&#9;&#9;EngineSound:Stop()
+&#9;end
+&#9;if Character and Character:FindFirstChild(&apos;Humanoid&apos;) then
+&#9;&#9;Character.Humanoid.WalkSpeed = 16
+&#9;&#9;Character.Humanoid.PlatformStand = false
+&#9;end
 &#9;print(&quot;I unequipped!&quot;)
 end
 
@@ -423,59 +498,6 @@ script.Parent.Unequipped:connect(onUnequipped)
 script.Parent.Equipped:connect(onEquipped)
 
 </ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX6">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ThumbnailFixer</string>
-				<ProtectedString name="Source">function WaitForChild(parent,child)
-&#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
-&#9;return parent[child]
-end
-
-local handle = WaitForChild(script.Parent,&apos;Handle&apos;)
-
-script.Parent.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 1, -3.9340253e-007, 0, 3.9340253e-007, 1)
-
-handle.Size = Vector3.new(0.2, 4.89, 6.08)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX7">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-11.3508101</X>
-					<Y>37.8244476</Y>
-					<Z>-31.3105278</Z>
-					<R00>0.487869173</R00>
-					<R01>0.243556485</R01>
-					<R02>-0.838250518</R02>
-					<R10>-0</R10>
-					<R11>0.960286915</R11>
-					<R12>0.279014558</R12>
-					<R20>0.872916758</R20>
-					<R21>-0.136122599</R21>
-					<R22>0.468494356</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-9.67430878</X>
-					<Y>37.2664185</Y>
-					<Z>-32.2475166</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
