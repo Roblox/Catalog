@@ -1,12 +1,14 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Hat" referent="RBX0">
+	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<CoordinateFrame name="AttachmentPoint">
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>-0.100000001</Y>
-				<Z>0</Z>
+				<Y>-1</Y>
+				<Z>-0.5</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -17,7 +19,9 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">DragonEgg</string>
+			<string name="Name">GreenDragon</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=112601422</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -30,11 +34,11 @@
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1</int>
+				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>45.6000023</X>
-					<Y>1.80000007</Y>
-					<Z>28.6000023</Z>
+					<X>0</X>
+					<Y>17.3299999</Y>
+					<Z>22.0100002</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -79,19 +83,19 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<token name="formFactorRaw">0</token>
-				<token name="shape">0</token>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>2</X>
-					<Y>2</Y>
-					<Z>2</Z>
+					<X>1</X>
+					<Y>1.20000005</Y>
+					<Z>1</Z>
 				</Vector3>
 			</Properties>
 			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=110222423   </url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=112601269</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -100,11 +104,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>1.29999995</X>
+						<Y>1.29999995</Y>
+						<Z>1.29999995</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=110028551</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=112601344</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -113,29 +117,502 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX3">
+		<Item class="LocalScript" referent="RBX3">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SummonOnce</string>
+				<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local PET_ID = 112599423
+local AI_SCRIPT_NAME = &apos;DragonAi&apos;
+
+--------------------
+--| WaitForChild |--
+--------------------
+
+-- Waits for parent.child to exist, then returns it
+local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+-----------------
+--| Variables |--
+-----------------
+
+local InsertService = Game:GetService(&apos;InsertService&apos;)
+local PlayersService = Game:GetService(&apos;Players&apos;)
+
+local MyPlayer = PlayersService.LocalPlayer
+
+local Tool = script.Parent
+local ToolHandle = Tool.Handle
+
+local AiScript = WaitForChild(script, AI_SCRIPT_NAME)
+local CreatorTag = WaitForChild(AiScript, &apos;creator&apos;)
+
+local Pet = nil
+local MyHumanoid = nil
+
+-----------------
+--| Functions |--
+-----------------
+
+local function OnEquipped()
+&#9;CreatorTag.Value = MyPlayer
+&#9;if MyPlayer.Character then
+&#9;&#9;MyHumanoid = MyPlayer.Character:FindFirstChild(&apos;Humanoid&apos;)
+&#9;end
+end
+
+local function OnActivated()
+&#9;if not Pet then -- LoadAsset failed, try again
+&#9;&#9;Pet = InsertService:LoadAsset(PET_ID):GetChildren()[1]
+&#9;end
+&#9;if Pet and Tool.Enabled and MyHumanoid and MyHumanoid.Health &gt; 0 then
+&#9;&#9;Tool.Enabled = false
+
+&#9;&#9;-- Place the Pet
+&#9;&#9;Pet.Parent = Workspace
+&#9;&#9;Pet:MoveTo(ToolHandle.Position)
+
+&#9;&#9;-- Give Pet the AiScript
+&#9;&#9;AiScript.Parent = Pet
+&#9;&#9;AiScript.Disabled = false
+
+&#9;&#9;Tool:Destroy()
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Pet = InsertService:LoadAsset(PET_ID):GetChildren()[1]
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Activated:connect(OnActivated)
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX4">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">DragonAi</string>
+					<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local FPS = 30 -- FramesPerSecond
+local TURN_RATE = 0.1 -- Can range from 0 to 1
+local FIREBALL_SPEED = 70 -- Speed of the projectile
+local FIREBALL_NAME = &apos;FireBall&apos; -- Name of the projectile
+local FIREBALL_LENGTH = 2 -- Seconds until the projectile is removed
+local FIREBALL_TIME_BETWEEN = 0.1 -- Seconds between each projectile launch
+local FIREBALL_NUMBER = 11 -- Number of projectiles to launch when breathing fire
+local PET_FLIGHT_SPEED = 50 -- Speed of the pet
+local PET_ATTACK_SPEED = 60 -- Speed of the pet when attacking
+
+--------------------
+--| WaitForChild |--
+--------------------
+
+-- Waits for parent.child to exist, then returns it
+local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+-----------------
+--| Variables |--
+-----------------
+
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+local PlayersService = Game:GetService(&apos;Players&apos;)
+
+local Pet = script.Parent
+local PetBody = WaitForChild(Pet, &apos;Body&apos;)
+local LeftShoulderJoint = WaitForChild(PetBody, &apos;Left Shoulder&apos;)
+local RightShoulderJoint = WaitForChild(PetBody, &apos;Right Shoulder&apos;)
+local NeckJoint = WaitForChild(PetBody, &apos;Neck&apos;)
+local PetHead = WaitForChild(Pet, &apos;Head&apos;)
+
+local CreatorTag = WaitForChild(script, &apos;creator&apos;)
+local Fire = WaitForChild(script, &apos;Fire&apos;)
+local FireBallScript = WaitForChild(script, &apos;FireBall&apos;)
+local SummonSound = WaitForChild(script, &apos;Summon&apos;)
+
+local MyPlayer = CreatorTag.Value
+
+local TargetPoint = PetBody.Position
+local MoveAmount = Vector3.new()
+
+local Flapping, Waiting, Down = false, false, true
+local LastWingAngle = 0
+
+local FireBall = nil
+
+-------------------------
+--| Utility Functions |--
+-------------------------
+
+-- Returns the closest living Humanoid to position who isn&apos;t in excludeList
+local function FindClosestHumanoid(position, excludeList) -- (Vector3, table)
+&#9;if not position then print(&quot;Need a Vector3 position&quot;) return nil end
+
+&#9;-- Change list values to keys so we can use indexing
+&#9;local excludeSet = {}
+&#9;if excludeList and type(excludeList) == &quot;table&quot; then
+&#9;&#9;for _, l in ipairs(excludeList) do
+&#9;&#9;&#9;excludeSet[l] = true
+&#9;&#9;end
+&#9;end
+
+&#9;-- Search through Workspace children
+&#9;local closestHumanoid = nil
+&#9;for _, child in pairs(Game.Workspace:GetChildren()) do
+&#9;&#9;if (child and child:FindFirstChild(&quot;Humanoid&quot;) and child.Humanoid.Health &gt; 0 and not excludeSet[child.Humanoid])
+&#9;&#9;and (not closestHumanoid or (child.Humanoid.Torso.Position - position).magnitude &lt; (closestHumanoid.Torso.Position - position).magnitude) then
+&#9;&#9;&#9;closestHumanoid = child.Humanoid
+&#9;&#9;end
+&#9;end
+&#9;return closestHumanoid --NOTE: Can be nil
+end
+
+-- Returns true if a is within epsilon of b
+local function IsClose(a, b, epsilon)
+&#9;epsilon = epsilon or 0.01
+&#9;return (a &lt;= b + epsilon and a &gt;= b - epsilon)
+end
+
+-----------------------
+--| Other Functions |--
+-----------------------
+
+local function OnPetPartTouched(otherPart)
+&#9;if otherPart and otherPart.Name ~= FIREBALL_NAME and not otherPart:IsDescendantOf(MyPlayer.Character) then
+&#9;&#9;--print(&quot;Valid Touch:&quot;, otherPart)
+
+&#9;end
+end
+
+local function SetFlyTarget(position, duration)
+&#9;TargetPoint = position
+&#9;MoveAmount = (position - PetBody.Position) / (duration * FPS)
+end
+
+local function LaunchFireBall()
+&#9;local fireBallClone = FireBall:Clone()
+&#9;DebrisService:AddItem(fireBallClone, FIREBALL_LENGTH)
+&#9;fireBallClone.Parent = Workspace
+&#9;fireBallClone.CFrame = PetHead.CFrame
+&#9;fireBallClone.Velocity = fireBallClone.CFrame.lookVector * FIREBALL_SPEED
+end
+
+local function BreatheFire()
+&#9;Spawn(function()
+&#9;&#9;SummonSound:Play()
+&#9;&#9;NeckJoint.DesiredAngle = 0.3
+&#9;&#9;wait(0.5)
+&#9;&#9;for i = 1, FIREBALL_NUMBER do
+&#9;&#9;&#9;LaunchFireBall()
+&#9;&#9;&#9;wait(FIREBALL_TIME_BETWEEN)
+&#9;&#9;end
+&#9;&#9;NeckJoint.DesiredAngle = 0
+&#9;&#9;wait(0.5)
+&#9;end)
+end
+
+local function Initialize()
+&#9;CreatorTag.Parent = nil
+&#9;SummonSound.Parent = PetHead
+
+&#9;BreatheFire()
+
+&#9;-- Create the initial FireBall to clone from
+&#9;FireBall = Instance.new(&apos;Part&apos;)
+&#9;FireBall.Name = FIREBALL_NAME
+&#9;FireBall.Transparency = 1
+&#9;FireBall.CanCollide = false
+&#9;FireBall.TopSurface = Enum.SurfaceType.Smooth
+&#9;FireBall.BottomSurface = Enum.SurfaceType.Smooth
+&#9;FireBall.Size = Vector3.new(4, 4, 4)
+&#9;Instance.new(&quot;BodyForce&quot;, FireBall).force = Vector3.new(0, FireBall:GetMass() * 196.2, 0) -- Antigravity
+&#9;Fire:Clone().Parent = FireBall -- Fire it up
+&#9;CreatorTag:Clone().Parent = FireBall -- Attach creator tag
+&#9;local ballScriptClone = FireBallScript:Clone()
+&#9;ballScriptClone.Parent = FireBall
+&#9;ballScriptClone.Disabled = false
+
+&#9;-- Connect to all pet parts
+&#9;for _, child in pairs(Pet:GetChildren()) do
+&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;child.Touched:connect(OnPetPartTouched)
+&#9;&#9;end
+&#9;end
+
+&#9;-- Start flying upwards
+&#9;local upLookVector = (Vector3.new(0, 1, 0) + PetBody.CFrame.lookVector).unit
+&#9;SetFlyTarget(PetBody.Position + (upLookVector * 100), 4)
+&#9;Flapping = true
+end
+
+local function DiveBomb()
+&#9;local humanoid = FindClosestHumanoid(PetBody.Position, {MyPlayer.Character.Humanoid})
+&#9;if humanoid then
+&#9;&#9;local target = humanoid.Parent.Torso.Position
+&#9;&#9;local direction = (target - PetBody.Position).unit
+&#9;&#9;local verticalOffset = Vector3.new(0, 1, 0) * 10
+&#9;&#9;local horizontalOffset = Vector3.new(direction.x, 0, direction.z) * 50
+&#9;&#9;local beforePoint = target - horizontalOffset + verticalOffset
+&#9;&#9;local timeToDestination = (beforePoint - PetBody.Position).magnitude / PET_ATTACK_SPEED
+&#9;&#9;SetFlyTarget(beforePoint, timeToDestination)
+&#9;&#9;wait(timeToDestination * 0.8)
+&#9;&#9;BreatheFire()
+&#9;&#9;wait(timeToDestination * 0.2)
+&#9;&#9;local afterPoint = target + horizontalOffset + verticalOffset
+&#9;&#9;timeToDestination = (afterPoint - PetBody.Position).magnitude / PET_ATTACK_SPEED
+&#9;&#9;SetFlyTarget(afterPoint, timeToDestination)
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Initialize()
+
+Spawn(function()
+&#9;while true do
+&#9;&#9;wait(math.random(5, 15))
+&#9;&#9;DiveBomb()
+&#9;end
+end)
+
+local myHead = MyPlayer.Character.Head
+local myHumanoid = MyPlayer.Character.Humanoid
+
+myHumanoid.Died:connect(function()
+&#9;myHumanoid = nil
+end)
+
+PlayersService.PlayerRemoving:connect(function(player)
+&#9;if player == MyPlayer then
+&#9;&#9;myHumanoid = nil
+&#9;end
+end)
+
+while PetBody and PetHead and TargetPoint and myHead and myHumanoid do
+&#9;if (TargetPoint - PetBody.Position).magnitude &gt; 5 then -- Incrementally fly toward TargetPoint
+&#9;&#9;local newPosition = PetBody.Position + MoveAmount
+&#9;&#9;local direction = (TargetPoint - PetBody.Position).unit
+&#9;&#9;local newLookVector = PetBody.CFrame.lookVector:Lerp(direction, TURN_RATE)
+&#9;&#9;PetBody.CFrame = CFrame.new(newPosition, newPosition + newLookVector)
+&#9;else -- Made it to TargetPoint, pick a new target
+&#9;&#9;print(&quot;Made it to target, picking a new random one&quot;)
+&#9;&#9;local newTarget = nil
+&#9;&#9;local distance = 0
+&#9;&#9;while distance &lt; 80 do
+&#9;&#9;&#9;local angle = 2 * math.pi * math.random()
+&#9;&#9;&#9;local radius = math.random(50, 150)
+&#9;&#9;&#9;local height = math.random(100, 150)
+&#9;&#9;&#9;local x, z = radius * math.cos(angle), radius * math.sin(angle)
+&#9;&#9;&#9;newTarget = myHead.Position + Vector3.new(x, height, z)
+&#9;&#9;&#9;distance = (newTarget - TargetPoint).magnitude
+&#9;&#9;end
+&#9;&#9;SetFlyTarget(newTarget, distance / PET_FLIGHT_SPEED)
+&#9;end
+
+&#9;if Flapping then -- Update wings
+&#9;&#9;if not Waiting then
+&#9;&#9;&#9;local angle = Down and 0.5 or -0.4
+&#9;&#9;&#9;LeftShoulderJoint.DesiredAngle = angle
+&#9;&#9;&#9;RightShoulderJoint.DesiredAngle = angle
+&#9;&#9;&#9;LastWingAngle = angle
+&#9;&#9;&#9;Waiting = true
+&#9;&#9;else -- Waiting for wings to reach desired angle
+&#9;&#9;&#9;if IsClose(LeftShoulderJoint.CurrentAngle, LastWingAngle) or IsClose(RightShoulderJoint.CurrentAngle, LastWingAngle) then
+&#9;&#9;&#9;&#9;Down = not Down
+&#9;&#9;&#9;&#9;Waiting = false
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+
+&#9;wait(1 / FPS)
+end
+
+DebrisService:AddItem(Pet, 0)
+</ProtectedString>
+				</Properties>
+				<Item class="Fire" referent="RBX5">
+					<Properties>
+						<Color3 name="Color">4289396480</Color3>
+						<bool name="Enabled">true</bool>
+						<string name="Name">Fire</string>
+						<Color3 name="SecondaryColor">4294967295</Color3>
+						<float name="heat_xml">9</float>
+						<float name="size_xml">5</float>
+					</Properties>
+				</Item>
+				<Item class="ObjectValue" referent="RBX6">
+					<Properties>
+						<string name="Name">creator</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+				<Item class="Script" referent="RBX7">
+					<Properties>
+						<bool name="Disabled">true</bool>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">FireBall</string>
+						<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local HAT_ID = 36883367
+local BODY_MESH_IDS = {36780113, 36780032, 36780156, 36780079, 36780195}
+local BODY_TEXTURE_ID = 36780292
+
+--------------------
+--| WaitForChild |--
+--------------------
+
+-- Waits for parent.child to exist, then returns it
+local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+-----------------
+--| Variables |--
+-----------------
+
+local InsertService = Game:GetService(&apos;InsertService&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+
+local Ball = script.Parent
+
+local CreatorTag = WaitForChild(Ball, &apos;creator&apos;)
+local Fire = WaitForChild(Ball, &apos;Fire&apos;)
+
+local Connection = nil
+
+-----------------
+--| Functions |--
+-----------------
+
+-- Returns the ancestor that contains a Humanoid, if it exists
+local function FindCharacterAncestor(subject)
+&#9;if subject and subject ~= Workspace then
+&#9;&#9;local humanoid = subject:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;return subject, humanoid
+&#9;&#9;else
+&#9;&#9;&#9;return FindCharacterAncestor(subject.Parent)
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+-- Removes any old creator tags and applies the new one to target
+local function ApplyTags(target)
+&#9;while target:FindFirstChild(&apos;creator&apos;) do
+&#9;&#9;target.creator:Destroy()
+&#9;end
+&#9;local creatorTagClone = CreatorTag:Clone()
+&#9;creatorTagClone.Parent = target
+&#9;DebrisService:AddItem(creatorTagClone, 1.5)
+end
+
+-- Turns the character into a Skeleton!
+local function Skeletonify(character)
+&#9;InsertService:LoadAsset(HAT_ID):GetChildren()[1].Parent = character
+&#9;for i, meshId in ipairs(BODY_MESH_IDS) do
+&#9;&#9;local characterMesh = Instance.new(&apos;CharacterMesh&apos;)
+&#9;&#9;characterMesh.BodyPart = i
+&#9;&#9;characterMesh.MeshId = meshId
+&#9;&#9;characterMesh.OverlayTextureId = BODY_TEXTURE_ID
+&#9;&#9;characterMesh.Parent = character
+&#9;end
+end
+
+-- Sets the character ablaze!
+local function Ignite(character, fire)
+&#9;fire = fire or Instance.new(&apos;Fire&apos;)
+&#9;for _, child in pairs(character:GetChildren()) do
+&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;fire:Clone().Parent = child
+&#9;&#9;end
+&#9;end
+end
+
+-- When the ball touches an enemy, turn them into a dead skeleton
+local function OnTouched(otherPart)
+&#9;if otherPart and otherPart.Name ~= Ball.Name then
+&#9;&#9;local character, humanoid = FindCharacterAncestor(otherPart.Parent)
+&#9;&#9;if character and humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;local myPlayer = CreatorTag.Value
+&#9;&#9;&#9;if character ~= myPlayer.Character and not (character:FindFirstChild(&apos;creator&apos;) and character.creator.Value ~= myPlayer) then
+&#9;&#9;&#9;&#9;-- (Only do the following if the character isn&apos;t myPlayer and they haven&apos;t already been converted)
+&#9;&#9;&#9;&#9;ApplyTags(humanoid)
+&#9;&#9;&#9;&#9;Skeletonify(character)
+&#9;&#9;&#9;&#9;Ignite(character, Fire)
+&#9;&#9;&#9;&#9;character:BreakJoints()
+&#9;&#9;&#9;&#9;Ball:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Ball.Touched:connect(OnTouched)
+</ProtectedString>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBX8">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Summon</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=86939835</url></Content>
+						<float name="Volume">1</float>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX9">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>42.0854988</X>
-					<Y>2.92630649</Y>
-					<Z>25.7558041</Z>
-					<R00>-0.709538221</R00>
-					<R01>0.146015406</R01>
-					<R02>-0.689372957</R02>
+					<X>-1.12041283</X>
+					<Y>17.6043339</Y>
+					<Z>19.7920132</Z>
+					<R00>-0.892581522</R00>
+					<R01>0.04947716</R01>
+					<R02>-0.448163301</R02>
 					<R10>-0</R10>
-					<R11>0.978296161</R11>
-					<R12>0.207211941</R12>
-					<R20>0.704666972</R20>
-					<R21>0.147024795</R21>
-					<R22>-0.694138467</R22>
+					<R11>0.993961096</R11>
+					<R12>0.109733135</R12>
+					<R20>0.45088625</R20>
+					<R21>0.0979457647</R21>
+					<R22>-0.887191176</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>43.4642448</X>
-					<Y>2.51188254</Y>
-					<Z>27.1440811</Z>
+					<X>0</X>
+					<Y>17.3299999</Y>
+					<Z>22.0100002</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
