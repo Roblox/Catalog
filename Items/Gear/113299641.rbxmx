@@ -23,41 +23,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=113216950</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
-local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
-
-local Tool = script.Parent
-
-local Mouse = nil
-
-local function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
-&#9;end
-end
-
-local function OnEquipped(mouse)
-&#9;Mouse = mouse
-&#9;UpdateIcon()
-end
-
-local function OnChanged(property)
-&#9;if property == &apos;Enabled&apos; then
-&#9;&#9;UpdateIcon()
-&#9;end
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX2">
+		<Item class="Script" referent="RBX1">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -97,6 +63,7 @@ local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
 local MyModel = nil
 local MyPlayer = nil
 local MyHumanoid = nil
+local MyTorso = nil
 
 local NumberOfOrbitingJets = 0
 
@@ -186,30 +153,34 @@ local function JetLogic(jet, bodyPosition, bodyGyro, jetNumber)
 &#9;end)
 
 &#9;-- Orbit and attack closest player
-&#9;while jet and jet.Parent == Workspace and MyHumanoid and MyHumanoid.Health &gt; 0 and MyHumanoid.Torso do
+&#9;while jet and jet.Parent == Workspace and MyHumanoid and MyHumanoid.Health &gt; 0 and MyTorso and MyTorso.Parent ~= nil do
 &#9;&#9;-- Update orbit
-&#9;&#9;local myTorso = MyHumanoid.Torso
 &#9;&#9;local thetaLol = (tick() * ORBIT_SPEED_FACTOR) + (jetNumber * (2 * math.pi / MAX_JETS))
 &#9;&#9;local offset = Vector3.new(ORBIT_RADIUS * math.cos(thetaLol), ORBIT_VERTICAL_OFFSET, ORBIT_RADIUS * math.sin(thetaLol))
-&#9;&#9;bodyPosition.position = myTorso.Position + offset
+&#9;&#9;bodyPosition.position = MyTorso.Position + offset
 &#9;&#9;bodyGyro.cframe = CFrame.new(jet.Position, bodyPosition.position)
 
 &#9;&#9;-- Check for targets
 &#9;&#9;local targetHumanoid = FindClosestHumanoid(jet.Position, {MyHumanoid})
 &#9;&#9;if targetHumanoid and targetHumanoid.Health &gt; 0 and targetHumanoid.Torso then -- Attack
 &#9;&#9;&#9;local targetTorso = targetHumanoid.Torso
-&#9;&#9;&#9;local distance = (targetTorso.Position - myTorso.Position).magnitude
+&#9;&#9;&#9;local distance = (targetTorso.Position - MyTorso.Position).magnitude
 &#9;&#9;&#9;if distance &lt; ATTACK_RADIUS then
 &#9;&#9;&#9;&#9;DebrisService:AddItem(jet, ATTACK_TIME_MAX)
 &#9;&#9;&#9;&#9;bodyPosition:Destroy()
 &#9;&#9;&#9;&#9;bodyGyro:Destroy()
 &#9;&#9;&#9;&#9;Instance.new(&apos;BodyForce&apos;, jet).force = Vector3.new(0, jet:GetMass() * 196.2, 0) -- Antigravity
-&#9;&#9;&#9;&#9;jet.CFrame = CFrame.new(jet.Position, targetHumanoid.Torso.Position)
+&#9;&#9;&#9;&#9;jet.CFrame = CFrame.new(jet.Position, targetTorso.Position)
 &#9;&#9;&#9;&#9;jet.Velocity = jet.CFrame.lookVector * ATTACK_SPEED
-&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;return
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;&#9;wait(ONE_STEP)
+&#9;end
+
+&#9;-- If we get here, player has died or been deleted
+&#9;if jet then
+&#9;&#9;jet:Destroy()
 &#9;end
 end
 
@@ -245,6 +216,7 @@ local function OnEquipped()
 &#9;MyModel = Tool.Parent
 &#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyModel)
 &#9;MyHumanoid = MyModel:WaitForChild(&apos;Humanoid&apos;)
+&#9;MyTorso = MyModel:WaitForChild(&apos;Torso&apos;)
 end
 
 local function OnActivated()
@@ -271,7 +243,7 @@ Tool.Activated:connect(OnActivated)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX3">
+		<Item class="Script" referent="RBX2">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -289,7 +261,7 @@ ToolScript.Disabled = false
 script:Destroy()
 </ProtectedString>
 			</Properties>
-			<Item class="Part" referent="RBX4">
+			<Item class="Part" referent="RBX3">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -357,7 +329,7 @@ script:Destroy()
 						<Z>0.670000136</Z>
 					</Vector3>
 				</Properties>
-				<Item class="SpecialMesh" referent="RBX5">
+				<Item class="SpecialMesh" referent="RBX4">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -382,7 +354,7 @@ script:Destroy()
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX6">
+				<Item class="Weld" referent="RBX5">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -413,12 +385,12 @@ script:Destroy()
 							<R22>-0.66701144</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX7</Ref>
-						<Ref name="Part1">RBX4</Ref>
+						<Ref name="Part0">RBX6</Ref>
+						<Ref name="Part1">RBX3</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX8">
+			<Item class="Part" referent="RBX7">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -486,7 +458,7 @@ script:Destroy()
 						<Z>0.670000136</Z>
 					</Vector3>
 				</Properties>
-				<Item class="SpecialMesh" referent="RBX9">
+				<Item class="SpecialMesh" referent="RBX8">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -511,7 +483,7 @@ script:Destroy()
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX10">
+				<Item class="Weld" referent="RBX9">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -542,13 +514,13 @@ script:Destroy()
 							<R22>-0.132326111</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX7</Ref>
-						<Ref name="Part1">RBX8</Ref>
+						<Ref name="Part0">RBX6</Ref>
+						<Ref name="Part1">RBX7</Ref>
 					</Properties>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX7">
+		<Item class="Part" referent="RBX6">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -616,7 +588,7 @@ script:Destroy()
 					<Z>0.670000136</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX11">
+			<Item class="SpecialMesh" referent="RBX10">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -642,7 +614,7 @@ script:Destroy()
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX12">
+		<Item class="Camera" referent="RBX11">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
