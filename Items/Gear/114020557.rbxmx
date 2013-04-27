@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">true</bool>
+			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -144,6 +144,15 @@ local HAT_ID = 36883367
 local BODY_MESH_IDS = {36780113, 36780032, 36780156, 36780079, 36780195}
 local BODY_TEXTURE_ID = 36780292
 
+local BODY_PART_ENUM = { -- :[
+&#9;[&apos;Head&apos;] = Enum.BodyPart.Head,
+&#9;[&apos;Torso&apos;] = Enum.BodyPart.Torso,
+&#9;[&apos;Left Arm&apos;] = Enum.BodyPart.LeftArm,
+&#9;[&apos;Right Arm&apos;] = Enum.BodyPart.RightArm,
+&#9;[&apos;Left Leg&apos;] = Enum.BodyPart.LeftLeg,
+&#9;[&apos;Right Leg&apos;] = Enum.BodyPart.RightLeg
+}
+
 -----------------
 --| Variables |--
 -----------------
@@ -157,6 +166,8 @@ local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
 
 local SlashAnimation = script:WaitForChild(&apos;SlashAnimation&apos;)
 local SlashSound = ToolHandle:WaitForChild(&apos;SlashSound&apos;)
+
+local Hat = InsertService:LoadAsset(HAT_ID):GetChildren()[1]
 
 local MyCharacter = nil
 local MyHumanoid = nil
@@ -200,39 +211,43 @@ local function ApplyTags(target)
 &#9;DebrisService:AddItem(creatorTag, 4)
 end
 
-local function Skeletonify(character)
-&#9;if not character:FindFirstChild(&apos;SkeletonTag&apos;) then
-&#9;&#9;Instance.new(&apos;BoolValue&apos;, character).Name = &apos;SkeletonTag&apos;
-&#9;&#9;local head = character:FindFirstChild(&apos;Head&apos;)
-&#9;&#9;if head then
-&#9;&#9;&#9;head.Transparency = 0.99
-&#9;&#9;&#9;while head:FindFirstChild(&apos;HeadWeld&apos;) do
-&#9;&#9;&#9;&#9;head.HeadWeld:Destroy()
-&#9;&#9;&#9;end
+local function ChangeLimb(character, limb)
+&#9;if Hat and limb.Name == &apos;Head&apos; and not limb:FindFirstChild(&apos;Swapped&apos;) then
+&#9;&#9;Instance.new(&apos;BoolValue&apos;, limb).Name = &apos;Swapped&apos;
+&#9;&#9;limb.Transparency = 0.99 -- Skeleton-specific
+&#9;&#9;while limb:FindFirstChild(&apos;HeadWeld&apos;) do
+&#9;&#9;&#9;limb.HeadWeld:Destroy()
 &#9;&#9;end
-&#9;&#9;InsertService:LoadAsset(HAT_ID):GetChildren()[1].Parent = character
-&#9;&#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;&#9;if child:IsA(&apos;CharacterMesh&apos;) then
-&#9;&#9;&#9;&#9;child:Destroy()
+&#9;&#9;Hat:Clone().Parent = character
+&#9;else
+&#9;&#9;local targetBodyPart = BODY_PART_ENUM[limb.Name]
+&#9;&#9;if targetBodyPart then
+&#9;&#9;&#9;local characterMesh = nil
+&#9;&#9;&#9;for _, child in pairs(character:GetChildren()) do
+&#9;&#9;&#9;&#9;if child:IsA(&apos;CharacterMesh&apos;) and child.BodyPart == targetBodyPart then
+&#9;&#9;&#9;&#9;&#9;characterMesh = child
+&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;for i, meshId in ipairs(BODY_MESH_IDS) do
-&#9;&#9;&#9;local characterMesh = Instance.new(&apos;CharacterMesh&apos;)
-&#9;&#9;&#9;characterMesh.BodyPart = i
-&#9;&#9;&#9;characterMesh.MeshId = meshId
+&#9;&#9;&#9;if not characterMesh then
+&#9;&#9;&#9;&#9;characterMesh = Instance.new(&apos;CharacterMesh&apos;)
+&#9;&#9;&#9;&#9;characterMesh.BodyPart = targetBodyPart
+&#9;&#9;&#9;&#9;characterMesh.Parent = character
+&#9;&#9;&#9;end
+&#9;&#9;&#9;characterMesh.MeshId = BODY_MESH_IDS[targetBodyPart.Value]
 &#9;&#9;&#9;characterMesh.OverlayTextureId = BODY_TEXTURE_ID
-&#9;&#9;&#9;characterMesh.Parent = character
 &#9;&#9;end
 &#9;end
 end
 
 local function OnTouched(otherPart)
 &#9;local character, humanoid = FindCharacterAncestor(otherPart)
-&#9;if character and humanoid and not HitList[character] then
-&#9;&#9;HitList[character] = true
-&#9;&#9;ApplyTags(humanoid)
-&#9;&#9;humanoid:TakeDamage(DAMAGE)
-&#9;&#9;Skeletonify(character)
+&#9;if character and humanoid then
+&#9;&#9;if not HitList[character] then
+&#9;&#9;&#9;HitList[character] = true
+&#9;&#9;&#9;ApplyTags(humanoid)
+&#9;&#9;&#9;humanoid:TakeDamage(DAMAGE)
+&#9;&#9;end
+&#9;&#9;ChangeLimb(character, otherPart)
 &#9;end
 end
 
@@ -276,7 +291,7 @@ Tool.Activated:connect(OnActivated)
 			</Properties>
 			<Item class="Animation" referent="RBX5">
 				<Properties>
-					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=45913583</url></Content>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=94160738</url></Content>
 					<string name="Name">SlashAnimation</string>
 				</Properties>
 			</Item>
