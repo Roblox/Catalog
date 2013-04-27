@@ -218,7 +218,12 @@ local function ChangeLimb(character, limb)
 &#9;&#9;while limb:FindFirstChild(&apos;HeadWeld&apos;) do
 &#9;&#9;&#9;limb.HeadWeld:Destroy()
 &#9;&#9;end
-&#9;&#9;Hat:Clone().Parent = character
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;local hatClone = Hat:Clone()
+&#9;&#9;&#9;local hatHandle = hatClone:WaitForChild(&apos;Handle&apos;)
+&#9;&#9;&#9;hatHandle.CFrame = limb.CFrame
+&#9;&#9;&#9;hatClone.Parent = character
+&#9;&#9;end)
 &#9;else
 &#9;&#9;local targetBodyPart = BODY_PART_ENUM[limb.Name]
 &#9;&#9;if targetBodyPart then
@@ -231,10 +236,10 @@ local function ChangeLimb(character, limb)
 &#9;&#9;&#9;if not characterMesh then
 &#9;&#9;&#9;&#9;characterMesh = Instance.new(&apos;CharacterMesh&apos;)
 &#9;&#9;&#9;&#9;characterMesh.BodyPart = targetBodyPart
-&#9;&#9;&#9;&#9;characterMesh.Parent = character
 &#9;&#9;&#9;end
 &#9;&#9;&#9;characterMesh.MeshId = BODY_MESH_IDS[targetBodyPart.Value]
 &#9;&#9;&#9;characterMesh.OverlayTextureId = BODY_TEXTURE_ID
+&#9;&#9;&#9;characterMesh.Parent = character
 &#9;&#9;end
 &#9;end
 end
@@ -242,12 +247,12 @@ end
 local function OnTouched(otherPart)
 &#9;local character, humanoid = FindCharacterAncestor(otherPart)
 &#9;if character and humanoid then
+&#9;&#9;ChangeLimb(character, otherPart)
 &#9;&#9;if not HitList[character] then
 &#9;&#9;&#9;HitList[character] = true
 &#9;&#9;&#9;ApplyTags(humanoid)
 &#9;&#9;&#9;humanoid:TakeDamage(DAMAGE)
 &#9;&#9;end
-&#9;&#9;ChangeLimb(character, otherPart)
 &#9;end
 end
 
@@ -256,6 +261,7 @@ local function OnEquipped()
 &#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
 &#9;MyHumanoid = MyCharacter:WaitForChild(&apos;Humanoid&apos;)
 &#9;SlashAnimTrack = MyHumanoid:LoadAnimation(SlashAnimation)
+&#9;MyHumanoid.WalkSpeed = 20
 end
 
 local function OnActivated()
@@ -281,12 +287,17 @@ local function OnActivated()
 &#9;end
 end
 
+local function OnUnequipped()
+&#9;MyHumanoid.WalkSpeed = 16
+end
+
 --------------------
 --| Script Logic |--
 --------------------
 
 Tool.Equipped:connect(OnEquipped)
 Tool.Activated:connect(OnActivated)
+Tool.Unequipped:connect(OnUnequipped)
 </ProtectedString>
 			</Properties>
 			<Item class="Animation" referent="RBX5">
