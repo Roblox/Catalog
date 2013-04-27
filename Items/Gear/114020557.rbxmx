@@ -7,7 +7,7 @@
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>-0.899999976</Y>
+				<Y>-1.39999998</Y>
 				<Z>0</Z>
 				<R00>1</R00>
 				<R01>0</R01>
@@ -19,9 +19,9 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">Pretty Princess Wand</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=113949712</url></Content>
-			<string name="ToolTip">Pretty Princess Wand</string>
+			<string name="Name">KorbloxSword</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset?id=114004769</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -34,11 +34,11 @@
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1032</int>
+				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>17.8999996</X>
-					<Y>21.3000011</Y>
-					<Z>7.9000001</Z>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -60,7 +60,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">true</bool>
+				<bool name="Locked">false</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -86,16 +86,16 @@
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.300000012</X>
-					<Y>3</Y>
-					<Z>0.600000024</Z>
+					<X>0.420002103</X>
+					<Y>4.09998751</Y>
+					<Z>1.38000023</Z>
 				</Vector3>
 			</Properties>
 			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=113951395</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset?id=114005496</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -104,11 +104,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1.5</X>
-						<Y>1.5</Y>
-						<Z>1.5</Z>
+						<X>3</X>
+						<Y>3</Y>
+						<Z>3</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=113949852</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset?id=114005479</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -119,11 +119,11 @@
 			<Item class="Sound" referent="RBX3">
 				<Properties>
 					<bool name="Looped">false</bool>
-					<string name="Name">Sound</string>
+					<string name="Name">SlashSound</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=113952851</url></Content>
-					<float name="Volume">1</float>
+					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
+					<float name="Volume">0.349999994</float>
 				</Properties>
 			</Item>
 		</Item>
@@ -131,219 +131,174 @@
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Stickmasterluke
+				<string name="Name">ToolScript</string>
+				<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
 
+local DAMAGE = 45
+local DAMAGE_TIME = 0.5
+local COOLDOWN = 1
 
-sp=script.Parent
+local HAT_ID = 36883367
+local BODY_MESH_IDS = {36780113, 36780032, 36780156, 36780079, 36780195}
+local BODY_TEXTURE_ID = 36780292
 
+-----------------
+--| Variables |--
+-----------------
 
-range=100
-hairs={13476917,13745548,14815761,65941351}
-hats={53039427,1032641,41453145,51244458,1031418,53040003,69434580,10770304}
+local PlayersService = Game:GetService(&apos;Players&apos;)
+local InsertService = Game:GetService(&apos;InsertService&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
 
+local Tool = script.Parent
+local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
 
+local SlashAnimation = script:WaitForChild(&apos;SlashAnimation&apos;)
+local SlashSound = ToolHandle:WaitForChild(&apos;SlashSound&apos;)
 
-rate=1/30
-check=true
-equipped=false
-debris=game:GetService(&quot;Debris&quot;)
+local MyCharacter = nil
+local MyHumanoid = nil
+local SlashAnimTrack = nil
 
+local HitList = {} -- Used for debounce
 
+-----------------
+--| Functions |--
+-----------------
 
-local waveAnimation=sp:WaitForChild(&quot;WaveAnim&quot;)
-local handle=sp:WaitForChild(&quot;Handle&quot;)
-local sound=handle:WaitForChild(&quot;Sound&quot;)
-
-
-function fire(targetPart,heat,size,clr1,clr2)
-&#9;local newFire=Instance.new(&quot;Fire&quot;)
-&#9;newFire.Heat=heat
-&#9;newFire.Size=size
-&#9;newFire.Color=clr1
-&#9;newFire.SecondaryColor=clr2
-&#9;newFire.Parent=targetPart
-&#9;return newFire
+-- Returns a character ancestor and its Humanoid, or nil
+local function FindCharacterAncestor(subject)
+&#9;if subject and subject ~= Workspace then
+&#9;&#9;local humanoid = subject:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;return subject, humanoid
+&#9;&#9;else
+&#9;&#9;&#9;return FindCharacterAncestor(subject.Parent)
+&#9;&#9;end
+&#9;end
+&#9;return nil
 end
 
+-- Removes any old creator tags and applies new ones to the specified target
+local function ApplyTags(target)
+&#9;while target:FindFirstChild(&apos;creator&apos;) do
+&#9;&#9;target.creator:Destroy()
+&#9;end
 
-function onEquipped(mouse)
-&#9;if mouse~=nil then
-&#9;&#9;equipped=true
-&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;if mouse~=nil and check and mouse.Target then
-&#9;&#9;&#9;&#9;local myHumanoid=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;local myTorso=sp.Parent:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;local targetHumanoid=mouse.Target.Parent:FindFirstChild(&quot;Humanoid&quot;) or mouse.Target.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;local targetTorso=mouse.Target.Parent:FindFirstChild(&quot;Torso&quot;) or mouse.Target.Parent.Parent:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;if myHumanoid and myHumanoid.Health&gt;0 and myTorso and targetHumanoid and targetHumanoid.Health&gt;0 and targetTorso and check then
-&#9;&#9;&#9;&#9;&#9;local targetCharacter=targetHumanoid.Parent
-&#9;&#9;&#9;&#9;&#9;local originalDistance=(myTorso.Position-targetTorso.Position).magnitude
-&#9;&#9;&#9;&#9;&#9;if originalDistance&lt;range and targetCharacter:FindFirstChild(&quot;Princess Torso&quot;)==nil then
-&#9;&#9;&#9;&#9;&#9;&#9;check=false
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;waveAnim=myHumanoid:LoadAnimation(waveAnimation)
-&#9;&#9;&#9;&#9;&#9;&#9;if waveAnim then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;waveAnim:Play(nil,nil,1)
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;sound:Play()
-&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;local magic=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;magic.Name=&quot;Effect&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;magic.Transparency=1
-&#9;&#9;&#9;&#9;&#9;&#9;magic.formFactor=&quot;Custom&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;magic.Size=Vector3.new(0,0,0)
-&#9;&#9;&#9;&#9;&#9;&#9;magic.TopSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;magic.BottomSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;magic.CFrame=handle.CFrame*CFrame.new(0,2,0)
-&#9;&#9;&#9;&#9;&#9;&#9;magic.CanCollide=false
-&#9;&#9;&#9;&#9;&#9;&#9;magic.Anchored=true
-&#9;&#9;&#9;&#9;&#9;&#9;local sparkles=Instance.new(&quot;Sparkles&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;sparkles.Parent=magic
-&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(magic,10)
-&#9;&#9;&#9;&#9;&#9;&#9;magic.Parent=game.Workspace
-&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;local frames=1/rate
-&#9;&#9;&#9;&#9;&#9;&#9;for frame=1,frames do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if magic and targetTorso then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local vec=(magic.Position-targetTorso.Position).unit
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;magic.CFrame=CFrame.new(targetTorso.Position+vec*((1-(frame/frames))*originalDistance))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(rate)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;if magic then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;magic:remove()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;if targetCharacter and targetTorso then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local fire1=fire(targetTorso,10,15,Color3.new(1,1/3,1),Color3.new(1,2/3,1))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local fire2=fire(targetTorso,0,20,Color3.new(1,1,1),Color3.new(1,2/3,1))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local fire3=fire(targetTorso,-10,15,Color3.new(1,1/3,1),Color3.new(1,2/3,1))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(fire1,5)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(fire2,5)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(fire3,5)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if targetCharacter and targetTorso then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i,v in ipairs(targetCharacter:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and (v.className==&quot;CharacterMesh&quot; or v.className==&quot;&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:remove()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i,v in ipairs(targetTorso:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and (v.className==&quot;Decal&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:remove()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local torsoMesh=Instance.new(&quot;CharacterMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torsoMesh.Name=&quot;Princess Torso&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torsoMesh.BodyPart=&quot;Torso&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torsoMesh.BaseTextureId=0
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torsoMesh.MeshId=54069300
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torsoMesh.OverlayTextureId=54069610
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torsoMesh.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local leftArmMesh=Instance.new(&quot;CharacterMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftArmMesh.Name=&quot;Princess Left Arm&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftArmMesh.BodyPart=&quot;LeftArm&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftArmMesh.BaseTextureId=0
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftArmMesh.MeshId=54069504
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftArmMesh.OverlayTextureId=54069610
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftArmMesh.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local rightArmMesh=Instance.new(&quot;CharacterMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightArmMesh.Name=&quot;Princess Right Arm&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightArmMesh.BodyPart=&quot;RightArm&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightArmMesh.BaseTextureId=0
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightArmMesh.MeshId=54069400
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightArmMesh.OverlayTextureId=54069610
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightArmMesh.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local leftLegMesh=Instance.new(&quot;CharacterMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftLegMesh.Name=&quot;Princess Left Leg&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftLegMesh.BodyPart=&quot;LeftLeg&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftLegMesh.BaseTextureId=0
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftLegMesh.MeshId=-1
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftLegMesh.OverlayTextureId=54069610
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;leftLegMesh.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local rightLegMesh=Instance.new(&quot;CharacterMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightLegMesh.Name=&quot;Princess Right Leg&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightLegMesh.BodyPart=&quot;RightLeg&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightLegMesh.BaseTextureId=0
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightLegMesh.MeshId=-1
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightLegMesh.OverlayTextureId=54069610
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;rightLegMesh.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local hair=game:GetService(&quot;InsertService&quot;):LoadAsset(hairs[math.random(1,#hairs)]):GetChildren()[1]
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;hair.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local hat=game:GetService(&quot;InsertService&quot;):LoadAsset(hats[math.random(1,#hats)]):GetChildren()[1]
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;hat.Parent=targetCharacter
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(1.5)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if fire1 and fire2 and fire3 then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;fire1.Enabled=false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;fire2.Enabled=false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;fire3.Enabled=false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;&#9;wait(3)
-&#9;&#9;&#9;&#9;&#9;&#9;if mouse then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;check=true
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
+&#9;local creatorTag = Instance.new(&apos;ObjectValue&apos;)
+&#9;creatorTag.Value = MyPlayer
+&#9;creatorTag.Name = &apos;creator&apos; --NOTE: Must be called &apos;creator&apos; for website stats
+
+&#9;local iconTag = Instance.new(&apos;StringValue&apos;)
+&#9;iconTag.Value = Tool.TextureId
+&#9;iconTag.Name = &apos;icon&apos;
+
+&#9;iconTag.Parent = creatorTag
+&#9;creatorTag.Parent = target
+&#9;DebrisService:AddItem(creatorTag, 4)
+end
+
+local function Skeletonify(character)
+&#9;if not character:FindFirstChild(&apos;SkeletonTag&apos;) then
+&#9;&#9;Instance.new(&apos;BoolValue&apos;, character).Name = &apos;SkeletonTag&apos;
+&#9;&#9;local head = character:FindFirstChild(&apos;Head&apos;)
+&#9;&#9;if head then
+&#9;&#9;&#9;head.Transparency = 0.99
+&#9;&#9;&#9;while head:FindFirstChild(&apos;HeadWeld&apos;) do
+&#9;&#9;&#9;&#9;head.HeadWeld:Destroy()
 &#9;&#9;&#9;end
-&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;InsertService:LoadAsset(HAT_ID):GetChildren()[1].Parent = character
+&#9;&#9;for i, meshId in ipairs(BODY_MESH_IDS) do
+&#9;&#9;&#9;local characterMesh = Instance.new(&apos;CharacterMesh&apos;)
+&#9;&#9;&#9;characterMesh.BodyPart = i
+&#9;&#9;&#9;characterMesh.MeshId = meshId
+&#9;&#9;&#9;characterMesh.OverlayTextureId = BODY_TEXTURE_ID
+&#9;&#9;&#9;characterMesh.Parent = character
+&#9;&#9;end
 &#9;end
 end
 
-function onUnequipped()
-&#9;equipped=false
-&#9;if waveAnim then
-&#9;&#9;waveAnim:Stop()
+local function OnTouched(otherPart)
+&#9;local character, humanoid = FindCharacterAncestor(otherPart)
+&#9;if character and humanoid and not HitList[character] then
+&#9;&#9;HitList[character] = true
+&#9;&#9;ApplyTags(humanoid)
+&#9;&#9;humanoid:TakeDamage(DAMAGE)
+&#9;&#9;Skeletonify(character)
 &#9;end
 end
 
-sp.Unequipped:connect(onUnequipped)
-sp.Equipped:connect(onEquipped)
+local function OnEquipped()
+&#9;MyCharacter = Tool.Parent
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+&#9;MyHumanoid = MyCharacter:WaitForChild(&apos;Humanoid&apos;)
+&#9;SlashAnimTrack = MyHumanoid:LoadAnimation(SlashAnimation)
+end
+
+local function OnActivated()
+&#9;if Tool.Enabled and MyHumanoid and MyHumanoid.Health &gt; 0 then
+&#9;&#9;Tool.Enabled = false
+
+&#9;&#9;HitList = {}
+&#9;&#9;local connection = ToolHandle.Touched:connect(OnTouched)
+
+&#9;&#9;if SlashAnimTrack then
+&#9;&#9;&#9;SlashAnimTrack:Play()
+&#9;&#9;end
+
+&#9;&#9;SlashSound:Play()
+
+&#9;&#9;wait(DAMAGE_TIME)
+
+&#9;&#9;connection:disconnect()
+
+&#9;&#9;wait(COOLDOWN - DAMAGE_TIME)
+
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Activated:connect(OnActivated)
 </ProtectedString>
 			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX5">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=55270038</url></Content>
-				<string name="Name">WaveAnim</string>
-			</Properties>
+			<Item class="Animation" referent="RBX5">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=45913583</url></Content>
+					<string name="Name">SlashAnimation</string>
+				</Properties>
+			</Item>
 		</Item>
 		<Item class="Camera" referent="RBX6">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>15.2257471</X>
-					<Y>22.2262688</Y>
-					<Z>6.90480852</Z>
-					<R00>-0.348770738</R00>
-					<R01>0.289368451</R01>
-					<R02>-0.891417265</R02>
+					<X>2.91884279</X>
+					<Y>-0.944195986</Y>
+					<Z>-0.563103199</Z>
+					<R00>-0.201087251</R00>
+					<R01>0.307587147</R01>
+					<R02>0.930029094</R02>
 					<R10>-0</R10>
-					<R11>0.951141238</R11>
-					<R12>0.308755815</R12>
-					<R20>0.937208056</R20>
-					<R21>0.107684992</R21>
-					<R22>-0.331730276</R22>
+					<R11>0.949422598</R11>
+					<R12>-0.314001143</R12>
+					<R20>-0.979573309</R20>
+					<R21>-0.0631416291</R21>
+					<R22>-0.190916792</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>17.8999996</X>
-					<Y>21.3000011</Y>
-					<Z>7.89999962</Z>
+					<X>1.05878544</X>
+					<Y>-0.316193998</Y>
+					<Z>-0.181269795</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
