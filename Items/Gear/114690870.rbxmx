@@ -6,9 +6,9 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0.200000003</X>
+				<X>0</X>
 				<Y>0</Y>
-				<Z>0.200000003</Z>
+				<Z>0</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -19,11 +19,618 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">Cinco De Mayo Pinata</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=114654402</url></Content>
+			<string name="Name">DualPlungers</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset?id=114737476</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ToolScript</string>
+				<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local MAXVELOCITY_START = 0.2
+local MAXVELOCITY_RATE = 0.05
+local MAXVELOCITY_MAX = 0.6
+local MAXVELOCITY_RESET = 0.15
+local MAXVELOCITY_STEP = 0.5
+
+local ANGLE_START_LEFT = 0
+local ANGLE_START_RIGHT = 3
+local ANGLE_STEP = 1 / 30
+
+local THROW_UP_BOOST = Vector3.new(0, 50, 0)
+local POP_SOUND_IDS = {114745014, 114745028, 114745043, 114745060, 114745081}
+
+local BIG_NUMBER = 1e6
+local PI = math.pi
+local TWO_PI = PI * 2
+local ASSET_URL = &apos;http://www.roblox.com/asset?id=&apos;
+
+-----------------
+--| Variables |--
+-----------------
+
+local PlayersService = Game:GetService(&apos;Players&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+
+local Tool = script.Parent
+local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
+
+local MyAnimateScript = script:WaitForChild(&apos;AnimateNoShoulders&apos;)
+local PlungerScript = script:WaitForChild(&apos;PlungerScript&apos;)
+local Fire = script:WaitForChild(&apos;Fire&apos;)
+
+local MyPlayer = nil
+local MyCharacter = nil
+local MyHumanoid = nil
+local LeftShoulder = nil
+local RightShoulder = nil
+local BasePlunger = nil
+local LeftHandle = nil
+local LeftFire = nil
+local RightFire = nil
+
+local HoldingDown = false
+
+-----------------
+--| Functions |--
+-----------------
+
+local function MakeBasePlunger()
+&#9;local plunger = ToolHandle:Clone()
+&#9;plunger.Name = &apos;Plunger&apos;
+&#9;plunger.CanCollide = true
+
+&#9;-- Add creator tag
+&#9;local creatorTag = Instance.new(&apos;ObjectValue&apos;, plunger)
+&#9;creatorTag.Name = &apos;creator&apos; --NOTE: Must be called &apos;creator&apos; for website stats
+&#9;creatorTag.Value = MyPlayer
+&#9;local iconTag = Instance.new(&apos;StringValue&apos;, creatorTag)
+&#9;iconTag.Name = &apos;icon&apos;
+&#9;iconTag.Value = Tool.TextureId
+
+&#9;-- Arm the plunger
+&#9;local plungerScriptClone = PlungerScript:Clone()
+&#9;plungerScriptClone.Disabled = false
+&#9;plungerScriptClone.Parent = plunger
+
+&#9;return plunger
+end
+
+local function Throw(parentPlunger, shoulderSpeed)
+&#9;local plunger = BasePlunger:Clone()
+&#9;plunger.CFrame = parentPlunger.CFrame
+&#9;plunger.Velocity = (plunger.CFrame * CFrame.Angles(-math.pi / 2, 0, 0)).lookVector * (75 + (250 * (shoulderSpeed)^2)) + THROW_UP_BOOST
+&#9;if shoulderSpeed &gt;= MAXVELOCITY_MAX then
+&#9;&#9;Fire:Clone().Parent = plunger
+&#9;end
+&#9;local popSound = Instance.new(&apos;Sound&apos;)
+&#9;popSound.Name = &apos;PopSound&apos;
+&#9;popSound.SoundId = ASSET_URL .. POP_SOUND_IDS[math.random(#POP_SOUND_IDS)]
+&#9;popSound.Parent = plunger
+&#9;DebrisService:AddItem(plunger, 6)
+&#9;plunger.Parent = Workspace
+&#9;Spawn(function()
+&#9;&#9;local throwSound = plunger:WaitForChild(&apos;Throw&apos;)
+&#9;&#9;throwSound.Pitch = 1.1 + (0.15 * math.random())
+&#9;&#9;throwSound:Play()
+&#9;end)
+end
+
+local function ThrowLogic(shoulder, plunger)
+&#9;local angle = shoulder.CurrentAngle % TWO_PI
+&#9;angle = (shoulder == RightShoulder) and TWO_PI - angle or angle
+&#9;if plunger.Transparency == 0 and angle &gt;= PI then
+&#9;&#9;Throw(plunger, shoulder.MaxVelocity)
+&#9;&#9;plunger.Transparency = 1
+&#9;elseif plunger.Transparency == 1 and angle &lt; PI then
+&#9;&#9;plunger.Transparency = 0
+&#9;end
+end
+
+local function AddFireIfNecessary(target)
+&#9;if target then
+&#9;&#9;local fire = target:FindFirstChild(&apos;Fire&apos;)
+&#9;&#9;if not fire then
+&#9;&#9;&#9;Fire:Clone().Parent = target
+&#9;&#9;end
+&#9;end
+end
+
+local function RemoveFire(target)
+&#9;if target then
+&#9;&#9;local fire = target:FindFirstChild(&apos;Fire&apos;)
+&#9;&#9;if fire then
+&#9;&#9;&#9;fire:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+local function OnButton1(isDown)
+&#9;HoldingDown = isDown
+&#9;if isDown then
+&#9;&#9;-- Start spinnin
+&#9;&#9;LeftShoulder.MaxVelocity = MAXVELOCITY_START
+&#9;&#9;RightShoulder.MaxVelocity = MAXVELOCITY_START
+&#9;&#9;LeftShoulder.DesiredAngle = BIG_NUMBER
+&#9;&#9;RightShoulder.DesiredAngle = -BIG_NUMBER
+
+&#9;&#9;-- Spawn off throwing logic
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;ToolHandle.Transparency = 1
+&#9;&#9;&#9;while HoldingDown do
+&#9;&#9;&#9;&#9;wait(ANGLE_STEP)
+&#9;&#9;&#9;&#9;ThrowLogic(LeftShoulder, LeftHandle)
+&#9;&#9;&#9;&#9;ThrowLogic(RightShoulder, ToolHandle)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if LeftHandle then
+&#9;&#9;&#9;&#9;LeftHandle.Transparency = 0
+&#9;&#9;&#9;end
+&#9;&#9;&#9;ToolHandle.Transparency = 0
+&#9;&#9;end)
+
+&#9;&#9;-- Slowly speed up
+&#9;&#9;while HoldingDown do
+&#9;&#9;&#9;wait(MAXVELOCITY_STEP)
+&#9;&#9;&#9;if LeftShoulder.MaxVelocity &lt; MAXVELOCITY_MAX then
+&#9;&#9;&#9;&#9;LeftShoulder.MaxVelocity = LeftShoulder.MaxVelocity + MAXVELOCITY_RATE
+&#9;&#9;&#9;&#9;RightShoulder.MaxVelocity = RightShoulder.MaxVelocity + MAXVELOCITY_RATE
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;AddFireIfNecessary(LeftHandle)
+&#9;&#9;&#9;&#9;AddFireIfNecessary(ToolHandle)
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;else
+&#9;&#9;-- Enough of that
+&#9;&#9;LeftShoulder.DesiredAngle = ANGLE_START_LEFT
+&#9;&#9;RightShoulder.DesiredAngle = ANGLE_START_RIGHT
+&#9;&#9;LeftShoulder.CurrentAngle = ANGLE_START_LEFT
+&#9;&#9;RightShoulder.CurrentAngle = ANGLE_START_RIGHT
+&#9;&#9;LeftShoulder.MaxVelocity = MAXVELOCITY_RESET
+&#9;&#9;RightShoulder.MaxVelocity = MAXVELOCITY_RESET
+
+&#9;&#9;RemoveFire(LeftHandle)
+&#9;&#9;RemoveFire(ToolHandle)
+&#9;end
+end
+
+local function OnEquipped(mouse)
+&#9;wait(0) -- Needed for adding stuff to character
+
+&#9;-- Initialize stuff
+&#9;MyCharacter = Tool.Parent
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+&#9;MyHumanoid = MyCharacter:WaitForChild(&apos;Humanoid&apos;)
+&#9;local torso = MyCharacter:WaitForChild(&apos;Torso&apos;)
+&#9;LeftShoulder = torso:WaitForChild(&apos;Left Shoulder&apos;) --TODO: Left shoulder may not exist
+&#9;RightShoulder = torso:WaitForChild(&apos;Right Shoulder&apos;)
+&#9;BasePlunger = MakeBasePlunger()
+
+&#9;-- Create second plunger
+&#9;local leftArm = MyCharacter:FindFirstChild(&apos;Left Arm&apos;)
+&#9;if leftArm then
+&#9;&#9;LeftHandle = ToolHandle:Clone()
+&#9;&#9;LeftHandle.Name = &quot;LeftHandle&quot;
+&#9;&#9;local weld = Instance.new(&apos;Weld&apos;)
+&#9;&#9;weld.Part0 = leftArm
+&#9;&#9;weld.Part1 = LeftHandle
+&#9;&#9;weld.Parent = LeftHandle
+&#9;&#9;weld.C1 = CFrame.Angles(math.pi / 2, 0, 0) + Vector3.new(0, 0, (weld.Part0.Size.Z + weld.Part1.Size.Z) / 2)
+&#9;&#9;LeftHandle.Parent = MyCharacter
+&#9;end
+
+&#9;-- Switch to custom Animate script
+&#9;local animateScript = MyCharacter:FindFirstChild(&apos;Animate&apos;)
+&#9;if animateScript then
+&#9;&#9;animateScript.Disabled = true
+&#9;end
+&#9;local myAnimateScript = MyAnimateScript:Clone()
+&#9;myAnimateScript.Disabled = false
+&#9;myAnimateScript.Parent = MyCharacter
+
+&#9;-- Party time
+&#9;mouse.Button1Down:connect(function() OnButton1(true) end)
+&#9;mouse.Button1Up:connect(function() OnButton1(false) end)
+&#9;LeftShoulder.DesiredAngle = ANGLE_START_LEFT
+&#9;RightShoulder.DesiredAngle = ANGLE_START_RIGHT
+&#9;MyHumanoid.WalkSpeed = 24
+end
+
+local function OnUnequipped()
+&#9;MyHumanoid.WalkSpeed = 16
+
+&#9;LeftShoulder.DesiredAngle = 0
+&#9;RightShoulder.DesiredAngle = 0
+&#9;LeftShoulder.CurrentAngle = 0
+&#9;RightShoulder.CurrentAngle = 0
+&#9;LeftShoulder.MaxVelocity = MAXVELOCITY_RESET
+&#9;RightShoulder.MaxVelocity = MAXVELOCITY_RESET
+
+&#9;if LeftHandle then
+&#9;&#9;LeftHandle:Destroy()
+&#9;end
+
+&#9;-- Switch back to default Animate script
+&#9;local myAnimateScript = MyCharacter:FindFirstChild(MyAnimateScript.Name)
+&#9;if myAnimateScript then
+&#9;&#9;myAnimateScript:Destroy()
+&#9;end
+&#9;local animateScript = MyCharacter:FindFirstChild(&apos;Animate&apos;)
+&#9;if animateScript then
+&#9;&#9;animateScript.Disabled = false
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+</ProtectedString>
+			</Properties>
+			<Item class="LocalScript" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">AnimateNoShoulders</string>
+					<ProtectedString name="Source">function waitForChild(parent, childName)
+&#9;local child = parent:findFirstChild(childName)
+&#9;if child then return child end
+&#9;while true do
+&#9;&#9;child = parent.ChildAdded:wait()
+&#9;&#9;if child.Name==childName then return child end
+&#9;end
+end
+
+-- ANIMATION
+
+-- declarations
+
+local Figure = script.Parent
+local Torso = waitForChild(Figure, &quot;Torso&quot;)
+--local RightShoulder = waitForChild(Torso, &quot;Right Shoulder&quot;)
+--local LeftShoulder = waitForChild(Torso, &quot;Left Shoulder&quot;)
+local RightHip = waitForChild(Torso, &quot;Right Hip&quot;)
+local LeftHip = waitForChild(Torso, &quot;Left Hip&quot;)
+local Neck = waitForChild(Torso, &quot;Neck&quot;)
+local Humanoid = waitForChild(Figure, &quot;Humanoid&quot;)
+local pose = &quot;Standing&quot;
+
+local toolAnim = &quot;None&quot;
+local toolAnimTime = 0
+
+local jumpMaxLimbVelocity = 0.75
+
+-- functions
+
+function onRunning(speed)
+&#9;if speed&gt;0 then
+&#9;&#9;pose = &quot;Running&quot;
+&#9;else
+&#9;&#9;pose = &quot;Standing&quot;
+&#9;end
+end
+
+function onDied()
+&#9;pose = &quot;Dead&quot;
+end
+
+function onJumping()
+&#9;pose = &quot;Jumping&quot;
+end
+
+function onClimbing()
+&#9;pose = &quot;Climbing&quot;
+end
+
+function onGettingUp()
+&#9;pose = &quot;GettingUp&quot;
+end
+
+function onFreeFall()
+&#9;pose = &quot;FreeFall&quot;
+end
+
+function onFallingDown()
+&#9;pose = &quot;FallingDown&quot;
+end
+
+function onSeated()
+&#9;pose = &quot;Seated&quot;
+end
+
+function onPlatformStanding()
+&#9;pose = &quot;PlatformStanding&quot;
+end
+
+function onSwimming(speed)
+&#9;if speed&gt;0 then
+&#9;&#9;pose = &quot;Running&quot;
+&#9;else
+&#9;&#9;pose = &quot;Standing&quot;
+&#9;end
+end
+
+function moveJump()
+&#9;--RightShoulder.MaxVelocity = jumpMaxLimbVelocity
+&#9;--LeftShoulder.MaxVelocity = jumpMaxLimbVelocity
+&#9;--RightShoulder:SetDesiredAngle(3.14)
+&#9;--LeftShoulder:SetDesiredAngle(-3.14)
+&#9;RightHip:SetDesiredAngle(0)
+&#9;LeftHip:SetDesiredAngle(0)
+end
+
+
+-- same as jump for now
+
+function moveFreeFall()
+&#9;--RightShoulder.MaxVelocity = jumpMaxLimbVelocity
+&#9;--LeftShoulder.MaxVelocity = jumpMaxLimbVelocity
+&#9;--RightShoulder:SetDesiredAngle(3.14)
+&#9;--LeftShoulder:SetDesiredAngle(-3.14)
+&#9;RightHip:SetDesiredAngle(0)
+&#9;LeftHip:SetDesiredAngle(0)
+end
+
+function moveSit()
+&#9;--RightShoulder.MaxVelocity = 0.15
+&#9;--LeftShoulder.MaxVelocity = 0.15
+&#9;--RightShoulder:SetDesiredAngle(3.14 /2)
+&#9;--LeftShoulder:SetDesiredAngle(-3.14 /2)
+&#9;RightHip:SetDesiredAngle(3.14 /2)
+&#9;LeftHip:SetDesiredAngle(-3.14 /2)
+end
+
+function getTool()&#9;
+&#9;for _, kid in ipairs(Figure:GetChildren()) do
+&#9;&#9;if kid.className == &quot;Tool&quot; then return kid end
+&#9;end
+&#9;return nil
+end
+
+function getToolAnim(tool)
+&#9;for _, c in ipairs(tool:GetChildren()) do
+&#9;&#9;if c.Name == &quot;toolanim&quot; and c.className == &quot;StringValue&quot; then
+&#9;&#9;&#9;return c
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+function animateTool()
+&#9;
+&#9;if (toolAnim == &quot;None&quot;) then
+&#9;&#9;--RightShoulder:SetDesiredAngle(1.57)
+&#9;&#9;return
+&#9;end
+
+&#9;if (toolAnim == &quot;Slash&quot;) then
+&#9;&#9;--RightShoulder.MaxVelocity = 0.5
+&#9;&#9;--RightShoulder:SetDesiredAngle(0)
+&#9;&#9;return
+&#9;end
+
+&#9;if (toolAnim == &quot;Lunge&quot;) then
+&#9;&#9;--RightShoulder.MaxVelocity = 0.5
+&#9;&#9;--LeftShoulder.MaxVelocity = 0.5
+&#9;&#9;RightHip.MaxVelocity = 0.5
+&#9;&#9;LeftHip.MaxVelocity = 0.5
+&#9;&#9;--RightShoulder:SetDesiredAngle(1.57)
+&#9;&#9;--LeftShoulder:SetDesiredAngle(1.0)
+&#9;&#9;RightHip:SetDesiredAngle(1.57)
+&#9;&#9;LeftHip:SetDesiredAngle(1.0)
+&#9;&#9;return
+&#9;end
+end
+
+function move(time)
+&#9;local amplitude
+&#9;local frequency
+  
+&#9;if (pose == &quot;Jumping&quot;) then
+&#9;&#9;moveJump()
+&#9;&#9;return
+&#9;end
+
+&#9;if (pose == &quot;FreeFall&quot;) then
+&#9;&#9;moveFreeFall()
+&#9;&#9;return
+&#9;end
+ 
+&#9;if (pose == &quot;Seated&quot;) then
+&#9;&#9;moveSit()
+&#9;&#9;return
+&#9;end
+
+&#9;local climbFudge = 0
+&#9;
+&#9;if (pose == &quot;Running&quot;) then
+    --if (RightShoulder.CurrentAngle &gt; 1.5 or RightShoulder.CurrentAngle &lt; -1.5) then
+&#9;if (RightHip.CurrentAngle &gt; 1.5 or RightHip.CurrentAngle &lt; -1.5) then
+&#9;&#9;&#9;--RightShoulder.MaxVelocity = jumpMaxLimbVelocity
+&#9;&#9;else&#9;&#9;&#9;
+&#9;&#9;&#9;--RightShoulder.MaxVelocity = 0.15
+&#9;&#9;end
+&#9;&#9;--if (LeftShoulder.CurrentAngle &gt; 1.5 or LeftShoulder.CurrentAngle &lt; -1.5) then
+&#9;&#9;if (LeftHip.CurrentAngle &gt; 1.5 or LeftHip.CurrentAngle &lt; -1.5) then
+&#9;&#9;&#9;--LeftShoulder.MaxVelocity = jumpMaxLimbVelocity
+&#9;&#9;else&#9;&#9;&#9;
+&#9;&#9;&#9;--LeftShoulder.MaxVelocity = 0.15
+&#9;&#9;end
+&#9;&#9;amplitude = 1
+&#9;&#9;frequency = 9
+&#9;elseif (pose == &quot;Climbing&quot;) then
+&#9;&#9;--RightShoulder.MaxVelocity = 0.5 
+&#9;&#9;--LeftShoulder.MaxVelocity = 0.5
+&#9;&#9;amplitude = 1
+&#9;&#9;frequency = 9
+&#9;&#9;climbFudge = 3.14
+&#9;else
+&#9;&#9;amplitude = 0.1
+&#9;&#9;frequency = 1
+&#9;end
+
+&#9;desiredAngle = amplitude * math.sin(time*frequency)
+
+&#9;--RightShoulder:SetDesiredAngle(desiredAngle + climbFudge)
+&#9;--LeftShoulder:SetDesiredAngle(desiredAngle - climbFudge)
+&#9;RightHip:SetDesiredAngle(-desiredAngle)
+&#9;LeftHip:SetDesiredAngle(-desiredAngle)
+
+
+&#9;local tool-- = getTool()
+
+&#9;if tool then
+&#9;
+&#9;&#9;animStringValueObject = getToolAnim(tool)
+
+&#9;&#9;if animStringValueObject then
+&#9;&#9;&#9;toolAnim = animStringValueObject.Value
+&#9;&#9;&#9;-- message recieved, delete StringValue
+&#9;&#9;&#9;animStringValueObject.Parent = nil
+&#9;&#9;&#9;toolAnimTime = time + .3
+&#9;&#9;end
+
+&#9;&#9;if time &gt; toolAnimTime then
+&#9;&#9;&#9;toolAnimTime = 0
+&#9;&#9;&#9;toolAnim = &quot;None&quot;
+&#9;&#9;end
+
+&#9;&#9;animateTool()
+
+&#9;&#9;
+&#9;else
+&#9;&#9;toolAnim = &quot;None&quot;
+&#9;&#9;toolAnimTime = 0
+&#9;end
+end
+
+
+-- connect events
+
+Humanoid.Died:connect(onDied)
+Humanoid.Running:connect(onRunning)
+Humanoid.Jumping:connect(onJumping)
+Humanoid.Climbing:connect(onClimbing)
+Humanoid.GettingUp:connect(onGettingUp)
+Humanoid.FreeFalling:connect(onFreeFall)
+Humanoid.FallingDown:connect(onFallingDown)
+Humanoid.Seated:connect(onSeated)
+Humanoid.PlatformStanding:connect(onPlatformStanding)
+Humanoid.Swimming:connect(onSwimming)
+-- main program
+
+local runService = game:service(&quot;RunService&quot;);
+
+while Figure.Parent~=nil do
+&#9;local _, time = wait(0.1)
+&#9;move(time)
+end
+</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX3">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">PlungerScript</string>
+					<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local DAMAGE = 35
+local FACE_STICK_TIME = 8
+
+-----------------
+--| Variables |--
+-----------------
+
+local PlayersService = Game:GetService(&apos;Players&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+
+local Plunger = script.Parent
+local CreatorTag = Plunger:WaitForChild(&apos;creator&apos;)
+
+local TouchConnection = nil
+
+-----------------
+--| Functions |--
+-----------------
+
+-- Returns a character ancestor and its Humanoid, or nil
+local function FindCharacterAncestor(subject)
+&#9;if subject and subject ~= Workspace then
+&#9;&#9;local humanoid = subject:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;return subject, humanoid
+&#9;&#9;else
+&#9;&#9;&#9;return FindCharacterAncestor(subject.Parent)
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+-- Removes any old creator tags and applies new ones to the specified target
+local function ApplyTags(target)
+&#9;while target:FindFirstChild(&apos;creator&apos;) do
+&#9;&#9;target.creator:Destroy()
+&#9;end
+&#9;local creatorTagClone = CreatorTag:Clone()
+&#9;creatorTagClone.Parent = target
+&#9;DebrisService:AddItem(creatorTagClone, 4)
+end
+
+local function OnTouched(otherPart)
+&#9;local character, humanoid = FindCharacterAncestor(otherPart)
+&#9;if character and humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;local player = PlayersService:GetPlayerFromCharacter(character)
+&#9;&#9;if player ~= CreatorTag.Value then -- Skip if hitting self
+&#9;&#9;&#9;ApplyTags(humanoid)
+&#9;&#9;&#9;local head = character:FindFirstChild(&apos;Head&apos;)
+&#9;&#9;&#9;if head then
+&#9;&#9;&#9;&#9;local weld = Instance.new(&apos;Weld&apos;)
+&#9;&#9;&#9;&#9;weld.Part0 = head
+&#9;&#9;&#9;&#9;weld.Part1 = Plunger
+&#9;&#9;&#9;&#9;weld.Parent = Plunger
+&#9;&#9;&#9;&#9;weld.C1 = CFrame.Angles(math.pi / 2, 0, 0) + Vector3.new(0, -(weld.Part0.Size.Y + weld.Part1.Size.Y) / 2, 0)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;humanoid:TakeDamage(DAMAGE)
+&#9;&#9;&#9;local popSound = Plunger:FindFirstChild(&apos;PopSound&apos;)
+&#9;&#9;&#9;if popSound then
+&#9;&#9;&#9;&#9;popSound:Play()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;DebrisService:AddItem(Plunger, FACE_STICK_TIME)
+&#9;&#9;&#9;TouchConnection:disconnect()
+&#9;&#9;end
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+TouchConnection = Plunger.Touched:connect(OnTouched)
+</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Fire" referent="RBX4">
+				<Properties>
+					<Color3 name="Color">4294934528</Color3>
+					<bool name="Enabled">true</bool>
+					<string name="Name">Fire</string>
+					<Color3 name="SecondaryColor">4294901760</Color3>
+					<float name="heat_xml">13</float>
+					<float name="size_xml">3</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX5">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -32,22 +639,22 @@
 				<token name="BackSurfaceInput">0</token>
 				<float name="BottomParamA">-0.5</float>
 				<float name="BottomParamB">0.5</float>
-				<token name="BottomSurface">4</token>
+				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1032</int>
+				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-115.589249</X>
-					<Y>7.75725126</Y>
-					<Z>95.8012619</Z>
-					<R00>0.176547885</R00>
-					<R01>0.0007837718</R01>
-					<R02>-0.984298408</R02>
-					<R10>-2.14298283e-021</R10>
-					<R11>0.999999642</R11>
-					<R12>0.000796274282</R12>
-					<R20>0.984298646</R20>
-					<R21>-0.000140580552</R21>
-					<R22>0.17654784</R22>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -60,7 +667,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">true</bool>
+				<bool name="Locked">false</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -75,7 +682,7 @@
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
-				<token name="TopSurface">3</token>
+				<token name="TopSurface">0</token>
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
@@ -83,19 +690,19 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<token name="formFactorRaw">1</token>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>2</X>
-					<Y>2</Y>
-					<Z>1</Z>
+					<X>0.999999821</X>
+					<Y>2.80000019</Y>
+					<Z>0.999999821</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX6">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=114654521</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset?id=114692902</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -104,11 +711,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>1.5</X>
+						<Y>1.5</Y>
+						<Z>1.5</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=114654485</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset?id=114692941</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -116,245 +723,186 @@
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBX7">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Throw</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=97095069</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Script" referent="RBX3">
+		<Item class="Script" referent="RBX8">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Script</string>
-				<ProtectedString name="Source">--
+				<string name="Name">ThumbnailScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local ToolScript = Tool:WaitForChild(&apos;ToolScript&apos;)
 
-local Tool = script.Parent
-local torso = nil
-local debris=game:GetService(&quot;Debris&quot;)
-
-function onEquipped()
-&#9;torso = Tool.Parent:FindFirstChild(&quot;Torso&quot;)
-end
-Tool.Equipped:connect(onEquipped)
-
-
-function onUnequipped()
-&#9;if Tool.Handle.Transparency == 1 then
-&#9;&#9;Tool.Parent = game.Players:GetPlayerFromCharacter(torso.Parent).Backpack
-&#9;end
-end
-Tool.Unequipped:connect(onUnequipped)
-
-function pinataExists()
-&#9;return game.Workspace:FindFirstChild(torso.Parent.Name .. &quot;&apos;s Pinata&quot;)
+for _, child in pairs(script:GetChildren()) do
+&#9;child:Destroy()
 end
 
-local enabled = false
-function onActivated()
-
-&#9;if pinataExists() == nil then
-&#9;&#9;enabled = false
-&#9;end
-
-&#9;if enabled then return end
-&#9;enabled = true
-
-&#9;local pinata = Tool.Handle:clone()
-&#9;pinata.Name = &quot;Head&quot;
-&#9;pinata.CanCollide = true
-&#9;pinata.Size = Vector3.new(3,3,1)
-&#9;pinata.Position = Vector3.new(torso.Position.x + (torso.CFrame.lookVector.unit.x * 8),torso.Position.y,torso.Position.z + (torso.CFrame.lookVector.unit.z * 8))
-
-&#9;local model = Instance.new(&quot;Model&quot;)
-&#9;model.Name = torso.Parent.Name .. &quot;&apos;s Pinata&quot;
-&#9;pinata.Parent = model
-
-&#9;local sound = Instance.new(&quot;Sound&quot;)
-&#9;sound.Name = &quot;BrokenSound&quot;
-&#9;sound.SoundId = &quot;http://www.roblox.com/asset/?id=34300463&quot;
-&#9;sound.Volume=1
-&#9;sound.Parent = pinata
-
-&#9;local humanoid = Instance.new(&quot;Humanoid&quot;)
-&#9;humanoid.MaxHealth = 0
-&#9;humanoid.Parent = model
-
-&#9;Tool.Handle.Transparency = 1
-&#9;
-&#9;local script = Tool.PinataScript:clone()
-&#9;script.Parent = pinata
-&#9;script.Disabled = false
-&#9;
-&#9;local bodyPos = Instance.new(&quot;BodyPosition&quot;)
-&#9;bodyPos.position = Vector3.new(pinata.Position.x,torso.Position.y + 5, pinata.Position.z)
-&#9;bodyPos.P = 8000
-&#9;bodyPos.D = bodyPos.P
-&#9;bodyPos.maxForce = Vector3.new(bodyPos.P,bodyPos.P,bodyPos.P)
-&#9;bodyPos.Parent = pinata
-
-&#9;local bodyGyro = Instance.new(&quot;BodyGyro&quot;)
-&#9;bodyGyro.P = 50
-&#9;bodyGyro.D = bodyGyro.P
-&#9;bodyGyro.maxTorque = Vector3.new(bodyGyro.P,bodyGyro.P,bodyGyro.P)
-&#9;bodyGyro.cframe = pinata.CFrame
-&#9;bodyGyro.Parent = pinata
-
-&#9;Tool:remove()
-&#9;
-&#9;debris:AddItem(model,5*60)
-&#9;model.Parent = game.Workspace
-&#9;
-&#9;checkForTransparency()
-
-end
-Tool.Activated:connect(onActivated)
-
-
-function checkForTransparency()
-&#9;while pinataExists() do wait(0.5) end
-&#9;Tool.Handle.Transparency = 0
-end
+ToolScript.Disabled = false
+script:Destroy()
 </ProtectedString>
 			</Properties>
+			<Item class="Part" referent="RBX9">
+				<Properties>
+					<bool name="Anchored">true</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>-3.25952578</X>
+						<Y>-1.49876499</Y>
+						<Z>0.79087925</Z>
+						<R00>0.974657595</R00>
+						<R01>0.223702073</R01>
+						<R02>9.77832837e-009</R02>
+						<R10>2.08587627e-021</R10>
+						<R11>-4.37113883e-008</R11>
+						<R12>1</R12>
+						<R20>0.223702073</R20>
+						<R21>-0.974657595</R21>
+						<R22>-4.2603638e-008</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">false</bool>
+					<token name="Material">256</token>
+					<string name="Name">ThumbHandle</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.999999821</X>
+						<Y>2.80000019</Y>
+						<Z>0.999999821</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBX10">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset?id=114692902</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>1.5</X>
+							<Y>1.5</Y>
+							<Z>1.5</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset?id=114692941</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="Weld" referent="RBX11">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>0.974657416</R00>
+							<R01>2.58415303e-021</R01>
+							<R02>0.223702073</R02>
+							<R10>0.000178128234</R10>
+							<R11>0.999999642</R11>
+							<R12>-0.000776094734</R12>
+							<R20>-0.223702028</R20>
+							<R21>0.000796274282</R21>
+							<R22>0.974657178</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>3.00000024</X>
+							<Y>1.5</Y>
+							<Z>1.49876499</Z>
+							<R00>0.974657595</R00>
+							<R01>2.08587627e-021</R01>
+							<R02>0.223702073</R02>
+							<R10>0.223702073</R10>
+							<R11>-4.37113883e-008</R11>
+							<R12>-0.974657595</R12>
+							<R20>9.77832837e-009</R20>
+							<R21>1</R21>
+							<R22>-4.2603638e-008</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX5</Ref>
+						<Ref name="Part1">RBX9</Ref>
+					</Properties>
+				</Item>
+			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">PinataScript</string>
-				<ProtectedString name="Source">local pinata = script.Parent
-local theWholeThing = pinata.Parent
-local humanoid=theWholeThing:WaitForChild(&quot;Humanoid&quot;)
-local health = 100
-local gears = {Sombrero=26673654,Sombrero2=26673654,Poncho=26673669,VaqueroSombrero=53901180,footbag=52180858,taco=15177716,Epicsauce=31314931,waterballoon=29100543,Epicsausegreen=38861951,Bugle=33683368,Guitar=26673760,Maraca=21351465,Tambourine=21392417,teddy=12848902}
-geardropchance=.5
-
-local debris = game:GetService(&quot;Debris&quot;)
-
-local scale = 1
-local increment = 0.1
-while scale &lt; 1.6 do
-&#9;pinata.Mesh.Scale = Vector3.new(scale,scale,scale)
-&#9;scale = scale + increment
-&#9;wait()
-end
-
-function pinataPieces()
-&#9;for i = 1, 20 do
-&#9;&#9;local pinataPart = Instance.new(&quot;Part&quot;)
-&#9;&#9;pinataPart.Name = &quot;Pinata Piece&quot;
-&#9;&#9;pinataPart.formFactor  = 2
-&#9;&#9;pinataPart.Size = Vector3.new(1,0.4,1)
-&#9;&#9;local color = math.random(1,3)
-&#9;&#9;if color == 1 then
-&#9;&#9;&#9;pinataPart.BrickColor = BrickColor.new(&quot;Bright red&quot;)
-&#9;&#9;elseif color == 2 then
-&#9;&#9;&#9;pinataPart.BrickColor = BrickColor.new(&quot;Bright yellow&quot;)
-&#9;&#9;else
-&#9;&#9;&#9;pinataPart.BrickColor = BrickColor.new(&quot;Hot pink&quot;)
-&#9;&#9;end
-&#9;&#9;pinataPart.BottomSurface = 0
-&#9;&#9;pinataPart.TopSurface = 0
-&#9;&#9;pinataPart.Material = Enum.Material.Grass
-&#9;&#9;pinataPart.Position = Vector3.new(pinata.Position.x + math.random(-1,1),pinata.Position.y + math.random(-1,1),pinata.Position.z + math.random(-1,1))
-&#9;&#9;pinataPart.Parent = game.Workspace
-&#9;&#9;debris:AddItem(pinataPart,math.random(3,7))
-&#9;end
-end
-
-local breaking = false
-function checkHealth()
-
-&#9;print(health)
-&#9;-- time to break out some gear!
-&#9;if health &lt;= 0 then
-
-&#9;&#9;if breaking then return end
-&#9;&#9;breaking = true
-&#9;&#9;
-&#9;&#9;local sound=pinata:FindFirstChild(&quot;BrokenSound&quot;)
-&#9;&#9;if sound then
-&#9;&#9;&#9;sound:Play()
-&#9;&#9;end
-
-&#9;&#9;delay(0,function()
-&#9;&#9;&#9;local gearInstances = {}
-&#9;&#9;&#9;for _,v in pairs(gears) do
-&#9;&#9;&#9;&#9;if math.random()&lt;geardropchance then
-&#9;&#9;&#9;&#9;&#9;--This call will cause a &quot;wait&quot; until the data comes back --DONT CARE, DELAY&apos;D(coroutine&apos;d) IT
-&#9;&#9;&#9;&#9;&#9;local root = game:GetService(&quot;InsertService&quot;):LoadAsset(v)
-&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;local instances = root:GetChildren()
-&#9;&#9;&#9;&#9;&#9;if #instances == 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;root:Remove()
-&#9;&#9;&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;root = root:GetChildren()
-&#9;&#9;&#9;&#9;&#9;root[1].Handle.Position = Vector3.new(pinata.Position.x + math.random(-1,1),pinata.Position.y + math.random(-1,1),pinata.Position.z + math.random(-1,1))
-&#9;&#9;&#9;&#9;&#9;root[1].Handle.Velocity=Vector3.new(math.random()-.5,math.random()-.5,math.random()-.5)*50
-&#9;&#9;&#9;&#9;&#9;root[1].Parent=game.Workspace
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-
-&#9;&#9;pinata.Transparency = 1
-&#9;&#9;pinata.CanCollide = false
-
-&#9;&#9;pinataPieces()
-
-&#9;
-
-&#9;&#9;debris:AddItem(pinata,3)
-&#9;&#9;wait(3)
-&#9;&#9;theWholeThing:remove()
-&#9;end
-end
-
-
-local touching = false
-function onTouched(part)
-&#9;if touching then return end
-&#9;touching = true
-&#9;
-&#9;if part.CanCollide then
-&#9;&#9;health = math.max(0,health - math.min(5,math.max(1,part.Velocity.magnitude/8)))
-&#9;&#9;checkHealth()
-&#9;&#9;wait(0.1)
-&#9;end
-
-&#9;touching = false
-end
-
-pinata.Touched:connect(onTouched)
-
-while true do
-&#9;humanoid.Health=health
-&#9;humanoid.MaxHealth=100
-&#9;wait(.5)
-end
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX5">
+		<Item class="Camera" referent="RBX12">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-111.767365</X>
-					<Y>8.38120556</Y>
-					<Z>95.0564651</Z>
-					<R00>-0.187488049</R00>
-					<R01>-0.10710761</R01>
-					<R02>0.976409853</R02>
-					<R10>-0</R10>
-					<R11>0.994037151</R11>
-					<R12>0.109041259</R12>
-					<R20>-0.982266843</R20>
-					<R21>0.0204439331</R21>
-					<R22>-0.186370105</R22>
+					<X>-1.68069112</X>
+					<Y>0.834308505</Y>
+					<Z>-1.86799765</Z>
+					<R00>-0.762945056</R00>
+					<R01>0.206194103</R01>
+					<R02>-0.612698078</R02>
+					<R10>-1.4901163e-008</R10>
+					<R11>0.947769165</R11>
+					<R12>0.31895712</R12>
+					<R20>0.646463454</R20>
+					<R21>0.243346766</R21>
+					<R22>-0.723095655</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-113.720192</X>
-					<Y>8.16312218</Y>
-					<Z>95.4292068</Z>
+					<X>-0.455294967</X>
+					<Y>0.196394265</Y>
+					<Z>-0.421806335</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -365,7 +913,7 @@ end
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<string name="Name">ThumnbailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
