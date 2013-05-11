@@ -63,6 +63,7 @@ local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
 local MyAnimateScript = script:WaitForChild(&apos;AnimateNoShoulders&apos;)
 local PlungerScript = script:WaitForChild(&apos;PlungerScript&apos;)
 local Fire = script:WaitForChild(&apos;Fire&apos;)
+local Light = script:WaitForChild(&apos;Light&apos;)
 
 local MyPlayer = nil
 local MyCharacter = nil
@@ -71,8 +72,6 @@ local LeftShoulder = nil
 local RightShoulder = nil
 local BasePlunger = nil
 local LeftHandle = nil
-local LeftFire = nil
-local RightFire = nil
 
 local HoldingDown = false
 
@@ -101,12 +100,35 @@ local function MakeBasePlunger()
 &#9;return plunger
 end
 
+local function AddFireIfNecessary(target)
+&#9;if target then
+&#9;&#9;local fire = target:FindFirstChild(Fire.Name)
+&#9;&#9;if not fire then
+&#9;&#9;&#9;Fire:Clone().Parent = target
+&#9;&#9;&#9;Light:Clone().Parent = target
+&#9;&#9;end
+&#9;end
+end
+
+local function RemoveFire(target)
+&#9;if target then
+&#9;&#9;local fire = target:FindFirstChild(Fire.Name)
+&#9;&#9;if fire then
+&#9;&#9;&#9;fire:Destroy()
+&#9;&#9;end
+&#9;&#9;local light = target:FindFirstChild(Light.Name)
+&#9;&#9;if light then
+&#9;&#9;&#9;light:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
 local function Throw(parentPlunger, shoulderSpeed)
 &#9;local plunger = BasePlunger:Clone()
 &#9;plunger.CFrame = parentPlunger.CFrame
 &#9;plunger.Velocity = (plunger.CFrame * CFrame.Angles(-math.pi / 2, 0, 0)).lookVector * (75 + (250 * (shoulderSpeed)^2)) + THROW_UP_BOOST
 &#9;if shoulderSpeed &gt;= MAXVELOCITY_MAX then
-&#9;&#9;Fire:Clone().Parent = plunger
+&#9;&#9;AddFireIfNecessary(plunger)
 &#9;end
 &#9;local popSound = Instance.new(&apos;Sound&apos;)
 &#9;popSound.Name = &apos;PopSound&apos;
@@ -129,24 +151,6 @@ local function ThrowLogic(shoulder, plunger)
 &#9;&#9;plunger.Transparency = 1
 &#9;elseif plunger.Transparency == 1 and angle &lt; PI then
 &#9;&#9;plunger.Transparency = 0
-&#9;end
-end
-
-local function AddFireIfNecessary(target)
-&#9;if target then
-&#9;&#9;local fire = target:FindFirstChild(&apos;Fire&apos;)
-&#9;&#9;if not fire then
-&#9;&#9;&#9;Fire:Clone().Parent = target
-&#9;&#9;end
-&#9;end
-end
-
-local function RemoveFire(target)
-&#9;if target then
-&#9;&#9;local fire = target:FindFirstChild(&apos;Fire&apos;)
-&#9;&#9;if fire then
-&#9;&#9;&#9;fire:Destroy()
-&#9;&#9;end
 &#9;end
 end
 
@@ -629,8 +633,17 @@ TouchConnection = Plunger.Touched:connect(OnTouched)
 					<float name="size_xml">3</float>
 				</Properties>
 			</Item>
+			<Item class="PointLight" referent="RBX5">
+				<Properties>
+					<float name="Brightness">1</float>
+					<Color3 name="Color">4294944538</Color3>
+					<bool name="Enabled">true</bool>
+					<string name="Name">Light</string>
+					<float name="Range">8</float>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Part" referent="RBX5">
+		<Item class="Part" referent="RBX6">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -698,7 +711,7 @@ TouchConnection = Plunger.Touched:connect(OnTouched)
 					<Z>0.999999821</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX6">
+			<Item class="SpecialMesh" referent="RBX7">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -723,7 +736,7 @@ TouchConnection = Plunger.Touched:connect(OnTouched)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX7">
+			<Item class="Sound" referent="RBX8">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Throw</string>
@@ -734,7 +747,7 @@ TouchConnection = Plunger.Touched:connect(OnTouched)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX8">
+		<Item class="Script" referent="RBX9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -750,7 +763,7 @@ ToolScript.Disabled = false
 script:Destroy()
 </ProtectedString>
 			</Properties>
-			<Item class="Part" referent="RBX9">
+			<Item class="Part" referent="RBX10">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -818,7 +831,7 @@ script:Destroy()
 						<Z>0.999999821</Z>
 					</Vector3>
 				</Properties>
-				<Item class="SpecialMesh" referent="RBX10">
+				<Item class="SpecialMesh" referent="RBX11">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -843,7 +856,7 @@ script:Destroy()
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX11">
+				<Item class="Weld" referent="RBX12">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -874,13 +887,13 @@ script:Destroy()
 							<R22>-4.2603638e-008</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX5</Ref>
-						<Ref name="Part1">RBX9</Ref>
+						<Ref name="Part0">RBX6</Ref>
+						<Ref name="Part1">RBX10</Ref>
 					</Properties>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX12">
+		<Item class="Camera" referent="RBX13">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
