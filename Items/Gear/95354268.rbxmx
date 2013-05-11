@@ -19,7 +19,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">Trollamom</string>
+			<string name="Name">Trollamom2</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=115302207</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
@@ -27,7 +27,7 @@
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">TrollamomScript</string>
+				<string name="Name">TrollamomScript2</string>
 				<ProtectedString name="Source">-----------------
 --| Constants |--
 -----------------
@@ -38,6 +38,7 @@ local SUMMON_ID = 105428829
 local SUMMON_SPAWN_OFFSET = Vector3.new(15, 0, 15)
 local AI_SCRIPT_NAME = &apos;TelamonAi&apos;
 
+--[[
 local EYE_OFFSET_LEFT = Vector3.new(-0.1, 0.7, -0.2)
 local EYE_OFFSET_RIGHT = Vector3.new(0.1, 0.7, -0.2)
 
@@ -48,6 +49,7 @@ local LASER_COLOR = Color3.new(1, 0, 0)
 local LASER_TIME_BETWEEN_SHOTS = 0.1
 local LASER_DEBRIS_TIME = 3
 local LASER_NAME = &apos;Laser&apos;
+--]]
 
 local COOLDOWN = 1
 
@@ -61,7 +63,7 @@ local DebrisService = Game:GetService(&apos;Debris&apos;)
 
 local Tool = script.Parent
 local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
-local PewPewSound = script:WaitForChild(&apos;PewPew&apos;)
+--local PewPewSound = script:WaitForChild(&apos;PewPew&apos;)
 
 local AiScript = script:WaitForChild(AI_SCRIPT_NAME)
 local CreatorTag = AiScript:WaitForChild(&apos;creator&apos;)
@@ -69,7 +71,7 @@ local CreatorTag = AiScript:WaitForChild(&apos;creator&apos;)
 local MyCharacter = nil
 local MyHumanoid = nil
 local Summon = nil
-local BaseLaser = nil
+--local BaseLaser = nil
 
 -----------------
 --| Functions |--
@@ -81,6 +83,7 @@ local function OnEquipped()
 &#9;CreatorTag.Value = PlayersService:GetPlayerFromCharacter(MyCharacter)
 end
 
+--[[
 -- Returns a character ancestor and its Humanoid, or nil
 local function FindCharacterAncestor(subject)
 &#9;if subject and subject ~= Workspace then
@@ -146,6 +149,7 @@ local function ShootLaser(offset, targetPoint)
 &#9;&#9;end
 &#9;end)
 end
+--]]
 
 local function OnActivated()
 &#9;if Tool.Enabled and MyHumanoid.Health &gt; 0 then
@@ -166,12 +170,14 @@ local function OnActivated()
 
 &#9;&#9;-- Pew pew
 &#9;&#9;local targetPoint = MyHumanoid.TargetPoint
+&#9;&#9;--[[
 &#9;&#9;ShootLaser(EYE_OFFSET_LEFT, targetPoint)
 &#9;&#9;Delay(LASER_TIME_BETWEEN_SHOTS, function()
 &#9;&#9;&#9;if Tool.Parent == MyCharacter then
 &#9;&#9;&#9;&#9;ShootLaser(EYE_OFFSET_RIGHT, targetPoint)
 &#9;&#9;&#9;end
 &#9;&#9;end)
+&#9;&#9;--]]
 
 &#9;&#9;wait(COOLDOWN)
 &#9;&#9;Tool.Enabled = true
@@ -189,7 +195,7 @@ end
 --| Script Logic |--
 --------------------
 
-BaseLaser = MakeBaseLaser()
+--BaseLaser = MakeBaseLaser()
 
 Tool.Equipped:connect(OnEquipped)
 Tool.Activated:connect(OnActivated)
@@ -561,8 +567,18 @@ Tool.Changed:connect(OnChanged)
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBX11">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">LaserSound</string>
+					<float name="Pitch">1.20000005</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=115400975</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX11">
+		<Item class="Camera" referent="RBX12">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -596,6 +612,119 @@ Tool.Changed:connect(OnChanged)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX13">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">NewLasers</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local ToolHandle = Tool:WaitForChild(&apos;Handle&apos;)
+local LaserSound = ToolHandle:WaitForChild(&apos;LaserSound&apos;)
+
+local Mouse = nil
+local RayPartsLeft, RayPartsRight = {}, {}
+local Equipped = false
+
+local function ResetRayParts()
+&#9;for _, part in pairs(RayPartsLeft) do
+&#9;&#9;part.Parent = nil
+&#9;end
+&#9;for _, part in pairs(RayPartsRight) do
+&#9;&#9;part.Parent = nil
+&#9;end
+&#9;RayPartsLeft, RayPartsRight = {}, {}
+end
+
+local function OnEquipped(mouse)
+&#9;Mouse = mouse
+&#9;Equipped = true
+end
+
+-- Borrowed from finger lasers and modified
+local function CastLightRay(startPos, endPos, parts, effectfunc)
+&#9;endPos = startPos + ((endPos - startPos).unit * 50) -- MAX 50
+&#9;local color = BrickColor.new(1, 0, 0)
+&#9;local segLength = 5
+&#9;local segSpeed = 0.2
+
+&#9;local part, nend = game.Workspace:FindPartOnRay( Ray.new(startPos,(endPos-startPos)),Tool.Parent)
+&#9;if nend then endPos = nend end
+&#9;
+&#9;if part and part.Parent then
+&#9;&#9;if part.Parent:FindFirstChild(&apos;Humanoid&apos;) and part.Parent ~=Tool.Parent then
+&#9;&#9;&#9;effectfunc(part.Parent.Humanoid,(endPos-startPos).unit)
+&#9;&#9;elseif part.Parent.Parent and part.Parent.Parent:FindFirstChild(&apos;Humanoid&apos;)  and part.Parent.Parent~=Tool.Parent then
+&#9;&#9;&#9;effectfunc(part.Parent.Parent.Humanoid,(endPos-startPos).unit)
+&#9;&#9;end
+&#9;end&#9;
+&#9;
+&#9;
+&#9;local numSegments = math.floor(math.min((startPos-endPos).magnitude/segLength,50))
+&#9;local initNumParts = #parts
+&#9;for i=numSegments,initNumParts,1 do
+&#9;&#9;if parts[i] then
+&#9;&#9;&#9;parts[i]:Destroy()
+&#9;&#9;&#9;parts[i]=nil
+&#9;&#9;end
+&#9;end
+&#9;for i=1,numSegments,1 do
+&#9;&#9;if not parts[i] then
+&#9;&#9;&#9;parts[i] = Instance.new(&apos;Part&apos;)
+&#9;&#9;&#9;parts[i].Parent = Tool
+&#9;&#9;&#9;parts[i].Anchored = true
+&#9;&#9;&#9;parts[i].FormFactor = &apos;Custom&apos;
+&#9;&#9;&#9;parts[i].Size = Vector3.new(0,0,segLength)
+&#9;&#9;&#9;parts[i].CanCollide = false
+&#9;&#9;&#9;local tlight = Instance.new(&apos;PointLight&apos;)
+&#9;&#9;&#9;tlight.Name = &apos;Light&apos;
+&#9;&#9;&#9;tlight.Parent = parts[i]
+&#9;&#9;&#9;
+&#9;&#9;end
+&#9;&#9;parts[i].BrickColor = color
+&#9;&#9;parts[i]:WaitForChild(&apos;Light&apos;).Color = color.Color
+&#9;&#9;parts[i].Light.Range =((math.sin(tick()*3)+1)*1)+5
+&#9;&#9;parts[i].Light.Brightness =((math.sin(tick()*3)+1)*1)+1
+
+&#9;&#9;parts[i].CFrame = CFrame.new(((i-.4)*(endPos-startPos).unit*segLength)+startPos,endPos)
+
+&#9;end
+&#9;
+&#9;return parts
+end
+
+local function DamageFunction(humanoid)
+&#9;humanoid:TakeDamage(2)
+end
+
+local function OnChanged(property)
+&#9;if property == &apos;Enabled&apos; and Tool.Enabled == false then
+&#9;&#9;local startTime = tick()
+&#9;&#9;LaserSound:Play()
+&#9;&#9;while Equipped and tick() - startTime &lt;= 0.5 do
+&#9;&#9;&#9;local startPoint = ToolHandle.Position + ToolHandle.CFrame:vectorToWorldSpace(Vector3.new(-0.2, 0.8, -0.2))
+&#9;&#9;&#9;local endPoint = Mouse.Hit.p
+&#9;&#9;&#9;RayPartsLeft = CastLightRay(startPoint, endPoint, RayPartsLeft, DamageFunction)
+&#9;&#9;&#9;startPoint = ToolHandle.Position + ToolHandle.CFrame:vectorToWorldSpace(Vector3.new(0.2, 0.8, -0.2))
+&#9;&#9;&#9;RayPartsRight = CastLightRay(startPoint, endPoint, RayPartsRight, DamageFunction)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;LaserSound:Stop()
+&#9;&#9;ResetRayParts()
+&#9;end
+end
+
+local function OnUnequipped()
+&#9;Equipped = false
+&#9;ResetRayParts()
+&#9;LaserSound:Stop()
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
