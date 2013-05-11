@@ -3,6 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -20,7 +21,7 @@
 			</CoordinateFrame>
 			<string name="Name">Torch</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=31596396</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -49,9 +50,7 @@
 					<R22>-0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">0</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -84,7 +83,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">0</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1</X>
@@ -115,7 +114,6 @@
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Fire" referent="RBX3">
@@ -124,7 +122,6 @@
 					<bool name="Enabled">false</bool>
 					<string name="Name">Fire</string>
 					<Color3 name="SecondaryColor">4294901760</Color3>
-					<bool name="archivable">true</bool>
 					<float name="heat_xml">18</float>
 					<float name="size_xml">2</float>
 				</Properties>
@@ -134,15 +131,22 @@
 					<bool name="Looped">false</bool>
 					<string name="Name">Light</string>
 					<float name="Pitch">1</float>
-					<int name="PlayCount">-1</int>
 					<bool name="PlayOnRemove">false</bool>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31836045</url></Content>
 					<float name="Volume">0.5</float>
-					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="PointLight" referent="RBX5">
+				<Properties>
+					<float name="Brightness">2</float>
+					<Color3 name="Color">4294947914</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">PointLight</string>
+					<float name="Range">16</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX5">
+		<Item class="Script" referent="RBX6">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -151,85 +155,111 @@
 local debris = game:GetService(&quot;Debris&quot;)
 local player = nil
 
+Tool.Handle:WaitForChild(&quot;Fire&quot;)
+Tool.Handle:WaitForChild(&quot;PointLight&quot;)
+Tool.Handle:WaitForChild(&quot;Light&quot;)
+Tool:WaitForChild(&quot;FireScript&quot;)
+
 Tool.Equipped:connect(function()
-	player = Tool.Parent
+&#9;player = Tool.Parent
 end)
 
 Tool.Handle.Touched:connect(function(part)
 
-	if Tool.Handle.Fire.Enabled == false then return end
-	local children = part:GetChildren()
-	for i = 1, #children do
-		if children[i].className == &quot;Fire&quot; then return end
-	end
-	if part.Parent == player then return end
+&#9;if Tool.Handle.Fire.Enabled == false then
+&#9;&#9;return
+&#9;end
+&#9;local children = part:GetChildren()
+&#9;for i = 1, #children do
+&#9;&#9;if children[i].className == &quot;Fire&quot; then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;end
+&#9;if part.Parent == player then
+&#9;&#9;return
+&#9;end
 
-	if part.Material ==  Enum.Material.Wood then
-		local fire = Tool.Handle.Fire:clone()
-		fire.Parent = part
-		
-		local fireScript = Tool.FireScript:clone()
-		fireScript.Parent = part
-		fireScript.Disabled = false
+&#9;if part.Material ==  Enum.Material.Wood then
+&#9;&#9;local fire = Tool.Handle.Fire:clone()
+&#9;&#9;fire.Parent = part
+&#9;&#9;local light=Tool.Handle.PointLight:clone()
+&#9;&#9;light.Parent=part
+&#9;&#9;
+&#9;&#9;local fireScript = Tool.FireScript:clone()
+&#9;&#9;fireScript.Parent = part
+&#9;&#9;fireScript.Disabled = false
 
-		debris:AddItem(fire,35)
-	end
+&#9;&#9;debris:AddItem(fire,35)
+&#9;&#9;debris:AddItem(light,35)
+&#9;end
 
 end)
 
 Tool.Activated:connect(function()
-	Tool.Handle.Fire.Enabled = not Tool.Handle.Fire.Enabled
-	Tool.Handle.Light:Play()
+&#9;Tool.Handle.Fire.Enabled = not Tool.Handle.Fire.Enabled
+&#9;Tool.Handle.PointLight.Enabled = not Tool.Handle.PointLight.Enabled
+&#9;Tool.Handle.Light:Play()
 end)
 </ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX6">
+		<Item class="Script" referent="RBX7">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">FireScript</string>
 				<ProtectedString name="Source">local fire = script.Parent:FindFirstChild(&quot;Fire&quot;)
+local light = script.Parent:FindFirstChild(&quot;PointLight&quot;)
 
 function largestSide(length,width,height)
 
-	local large = 0
-	if length &gt; width then
-		large = length
-	else
-		large = width
-	end
-	if large &lt; height then large = height end
-	if large &gt; 30 then return 30 end
-	return large
+&#9;local large = 0
+&#9;if length &gt; width then
+&#9;&#9;large = length
+&#9;else
+&#9;&#9;large = width
+&#9;end
+&#9;if large &lt; height then
+&#9;&#9;large = height
+&#9;end
+&#9;if large &gt; 30 then
+&#9;&#9;return 30
+&#9;end
+&#9;return large
 
 end
 
 local largestSize = largestSide(script.Parent.Size.x,script.Parent.Size.y,script.Parent.Size.z)
 local interval = largestSize/15
 
-while fire and fire.Size &lt;= largestSize do
-	fire.Size = fire.Size + interval
-	wait(1)
-	fire = script.Parent:FindFirstChild(&quot;Fire&quot;)
+while fire and light and fire.Size &lt;= largestSize do
+&#9;fire.Size = fire.Size + interval
+&#9;light.Range=fire.Size*6
+&#9;wait(1)
+&#9;fire = script.Parent:FindFirstChild(&quot;Fire&quot;)
+&#9;light = script.Parent:FindFirstChild(&quot;PointLight&quot;)
 end
 
 wait(3)
 
 fire = script.Parent:FindFirstChild(&quot;Fire&quot;)
-while fire and fire.Size &gt; 2 do
-	fire.Size = fire.Size - interval
-	wait(1)
-	fire = script.Parent:FindFirstChild(&quot;Fire&quot;)
+light = script.Parent:FindFirstChild(&quot;PointLight&quot;)
+while fire and light and fire.Size &gt; 2 do
+&#9;fire.Size = fire.Size - interval
+&#9;light.Range=fire.Size*6
+&#9;wait(1)
+&#9;fire = script.Parent:FindFirstChild(&quot;Fire&quot;)
+&#9;light = script.Parent:FindFirstChild(&quot;PointLight&quot;)
 end
 
-if fire then fire.Enabled = false end
+if fire and light then
+&#9;fire.Enabled = false
+&#9;light.Enabled=false
+end
 
 wait(1)
 
 script:remove()</ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 	</Item>
