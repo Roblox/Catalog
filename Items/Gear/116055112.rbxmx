@@ -1,0 +1,532 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0.400000006</X>
+				<Y>-0.100000001</Y>
+				<Z>0.699999988</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">OgrePlushie</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=115990474</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ToolMain</string>
+				<ProtectedString name="Source">-- stravant
+
+
+----  setting constants  ----
+local RELOAD_TIME = 1
+
+
+----   library imports   ----
+local Create = LoadLibrary(&apos;RbxUtility&apos;).Create
+
+-- x^3 curve shifted to the dom/range [0,1], good for curving
+-- animations
+local function scurve(x)
+&#9;return (x*2-1)^3 *0.5 +0.5
+end
+
+
+----       globals       ----
+local Tool = script.Parent
+local Player
+local Character
+local Torso
+local Humanoid
+local Mouse
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local FireEffect = Handle:WaitForChild(&apos;Fire&apos;)
+
+local Sound_Punt = Handle:WaitForChild(&apos;SOUND_Punt&apos;)
+local Sound_Warchant = Handle:WaitForChild(&apos;SOUND_Warchant&apos;)
+local Sound_Damaged = Handle:WaitForChild(&apos;SOUND_Damaged&apos;)
+
+
+----      main state     ----
+local Ready = true
+local HumanoidWalkspeedToReset = nil
+local HumanoidWalkspeedToResetSpeed = 0
+local ChantSword;
+local ResetFire;
+
+
+----   animation tracks  ----
+local Anim_Hold
+local Anim_Punt
+local Anim_WarChant
+local Anim_Fire
+
+
+----   main functions for modes ----
+function DoPunt()
+&#9;-- play the punt anim and wait until the part where the handle hits
+&#9;-- the character&apos;s foot
+&#9;Anim_Punt:Play()
+&#9;repeat until Anim_Punt.KeyframeReached:wait() == &apos;PuntHit&apos;
+
+&#9;-- now hide the handle and make a fake one to kick away
+&#9;Handle.Transparency = 1
+&#9;Handle.CanCollide = false
+
+&#9;-- make new handle
+&#9;local punted = Handle:Clone()
+&#9;punted.Transparency = 0
+&#9;game.Debris:AddItem(punted, 5)
+&#9;punted.CFrame = punted.CFrame + Torso.CFrame.lookVector*1.4
+&#9;punted.CanCollide = true
+&#9;punted.Velocity = (Torso.CFrame*CFrame.Angles(0.6,0,0)).lookVector*100
+&#9;punted.RotVelocity = Vector3.new(math.random(-10,10), 
+&#9;                                 math.random(-10,10),
+&#9;                                 math.random(-10,10))
+&#9;punted.Parent = Character
+
+&#9;Sound_Punt:Play()
+
+&#9;-- wait for a bit
+&#9;wait(1)
+
+&#9;-- now make the handle gradually appear again (2 seconds)
+&#9;for trans = 1, 0, -1/20 do
+&#9;&#9;Handle.Transparency = trans
+&#9;&#9;wait(0.1)
+&#9;end
+&#9;Handle.CanCollide = true
+end
+
+function DoWarchant()
+&#9;-- hold us still for this
+&#9;local oldWalkspeed = Humanoid.WalkSpeed
+&#9;HumanoidWalkspeedToReset = Humanoid
+&#9;HumanoidWalkspeedToResetSpeed = oldWalkspeed
+&#9;Humanoid.WalkSpeed = 0
+
+&#9;-- play the warchant anim (3 seconds long)
+&#9;Anim_WarChant:Play()
+&#9;Sound_Warchant:Play()
+
+&#9;-- naw create a sword to fly up infront of the character
+&#9;ChantSword = Create&apos;Part&apos;{
+&#9;&#9;Name = &apos;WarchantSword&apos;;
+&#9;&#9;TopSurface = &apos;Smooth&apos;;
+&#9;&#9;BottomSurface = &apos;Smooth&apos;;
+&#9;&#9;Size = Vector3.new(1, 0.8, 4);
+&#9;&#9;Anchored = true;
+&#9;&#9;Locked = true;
+&#9;&#9;CanCollide = false;
+&#9;&#9;Transparency = 0.2;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;--
+&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;MeshType = &apos;FileMesh&apos;;
+&#9;&#9;&#9;Name = &apos;Mesh&apos;;
+&#9;&#9;&#9;MeshId = &apos;rbxasset://fonts/sword.mesh&apos;;
+&#9;&#9;&#9;TextureId = &apos;rbxasset://textures/SwordTexture.png&apos;;
+&#9;&#9;&#9;Scale = Vector3.new(4,2,4);
+&#9;&#9;};
+&#9;}
+
+&#9;-- fade the sword at the end of the fly
+&#9;Delay(2, function()
+&#9;&#9;for i = 0, 1, 1/30 do 
+&#9;&#9;&#9;ChantSword.Transparency = 0.2 + 0.8*i
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;end)
+
+&#9;-- now, to animate the sword
+&#9;game.Debris:AddItem(sw, 3)
+&#9;ChantSword.Parent = game.Workspace
+&#9;for i = 0, 1, 1/30/3 do
+&#9;&#9;if not ChantSword then return end
+&#9;&#9;ChantSword.CFrame = Torso.CFrame*CFrame.Angles(-math.pi/2, 0, 0)
+&#9;&#9;                                *CFrame.new(0, 3, -3+scurve(i)*20)
+&#9;&#9;wait()
+&#9;end
+
+&#9;-- kill sword
+&#9;if ChantSword then
+&#9;&#9;ChantSword:Destroy()
+&#9;&#9;ChantSword = nil
+&#9;end
+
+&#9;-- reset walkspeed
+&#9;if HumanoidWalkspeedToReset then
+&#9;&#9;HumanoidWalkspeedToReset.WalkSpeed = HumanoidWalkspeedToResetSpeed
+&#9;&#9;HumanoidWalkspeedToReset = nil
+&#9;end
+end
+
+function DoOnfire()
+&#9;-- onfire 
+&#9;Anim_Fire:Play()
+&#9;FireEffect.Enabled = true
+
+&#9;-- damage the character a bit
+&#9;Delay(0.5, function()
+&#9;&#9;Humanoid:TakeDamage(5)
+&#9;&#9;Sound_Damaged:Play()
+&#9;end)
+
+&#9;Delay(1, function()
+&#9;&#9;Humanoid:TakeDamage(5)
+&#9;&#9;Sound_Damaged:Play()
+&#9;end)
+
+&#9;-- wait until the plushie hits the ground to make it invisible
+&#9;-- and create the dummy
+&#9;repeat until Anim_Fire.KeyframeReached:wait() == &apos;HitGround&apos;
+
+&#9;-- create dummy, clone of handle
+&#9;local dummy = Handle:Clone()
+&#9;dummy.CanCollide = true
+&#9;dummy:WaitForChild(&apos;Fire&apos;).Enabled = true
+&#9;game.Debris:AddItem(dummy, 5)
+&#9;dummy.Parent = Character
+&#9;dummy.Velocity = Torso.CFrame.lookVector*20
+
+&#9;-- turn off the fire effect and make the handle invisible
+&#9;-- also turn off the fire effect
+&#9;Handle.Transparency = 1
+&#9;FireEffect.Enabled = false
+
+&#9;wait(1)
+
+&#9;-- fade back in the handle
+&#9;for i = 1, 0, -1/30 do 
+&#9;&#9;Handle.Transparency = i
+&#9;&#9;wait()
+&#9;end
+end
+
+
+----   main setup   ----
+local LastMode = math.random(1,3)
+Tool.Equipped:connect(function(mouse)
+&#9;-- initial setup
+&#9;Character = Tool.Parent
+&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
+&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
+&#9;Mouse = mouse
+&#9;
+&#9;-- load animations
+&#9;Anim_Hold = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Hold&apos;))
+&#9;Anim_Punt = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Punt&apos;))
+&#9;Anim_WarChant = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Warchant&apos;))
+&#9;Anim_Fire = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Fire&apos;))
+
+&#9;-- start hold anim
+&#9;Anim_Hold:Play()
+
+&#9;-- make ready
+&#9;Ready = true
+
+&#9;-- setup listener for click
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;if Ready then
+&#9;&#9;&#9;Ready = false
+&#9;&#9;&#9;local mode = math.random(1,3)
+&#9;&#9;&#9;while mode == LastMode do
+&#9;&#9;&#9;&#9;mode = math.random(1,3)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;LastMode = mode
+&#9;&#9;&#9;if mode == 1 then
+&#9;&#9;&#9;&#9;DoPunt()
+&#9;&#9;&#9;elseif mode == 2 then
+&#9;&#9;&#9;&#9;DoWarchant()
+&#9;&#9;&#9;elseif mode == 3 then
+&#9;&#9;&#9;&#9;DoOnfire()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Ready = true
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;-- end all of the anims
+&#9;Anim_Hold:Stop()
+&#9;Anim_Punt:Stop()
+&#9;Anim_WarChant:Stop()
+&#9;Anim_Fire:Stop()
+
+&#9;-- fix things up if we stopped mid-effect --
+
+&#9;-- fix up walkspeed &amp; sword on chant
+&#9;if HumanoidWalkspeedToReset then
+&#9;&#9;HumanoidWalkspeedToReset.WalkSpeed = HumanoidWalkspeedToResetSpeed
+&#9;&#9;HumanoidWalkspeedToReset = nil
+&#9;end
+&#9;if ChantSword then
+&#9;&#9;ChantSword:Destroy()
+&#9;&#9;ChantSword = nil
+&#9;end
+&#9;FireEffect.Enabled = false
+
+&#9;-- fix the handle transparency
+&#9;Handle.Transparency = 0
+end)</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">MotorizeRightGrip</string>
+					<ProtectedString name="Source">function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Tool = script.Parent.Parent
+
+local armChildRemovedConn = nil
+local Motor6DGrip = nil
+local EquippedNum = 0
+
+Tool.Equipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;local myEquip = EquippedNum
+&#9;--some vars
+&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;local Character = Player.Character
+
+&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
+&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
+&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
+&#9;&#9;local handle = rightGrip.Part1
+
+&#9;&#9;--kill my joint when the normal joint is removed
+&#9;&#9;--this must be done here so that the joint is removed 
+&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
+&#9;&#9;--glitch up.
+&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+&#9;&#9;&#9;if ch == rightGrip then
+&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
+&#9;&#9;&#9;&#9;Motor6DGrip = nil
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
+&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
+&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
+&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+
+&#9;&#9;--make my new joint
+&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
+&#9;&#9;&#9;Part0 = rightarm,
+&#9;&#9;&#9;Part1 = handle,
+&#9;&#9;}
+&#9;&#9;--kill the old weld
+&#9;&#9;rightGrip.Part1 = nil
+&#9;&#9;rightGrip.Part0 = nil
+&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;if armChildRemovedConn then
+&#9;&#9;armChildRemovedConn:disconnect()
+&#9;&#9;armChildRemovedConn = nil
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">0</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Sound" referent="RBX4">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SOUND_Punt</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=116048294 </url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SOUND_Warchant</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=116049255 </url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX6">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SOUND_Damaged</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/uuhhh.mp3</url></Content>
+					<float name="Volume">0.100000001</float>
+				</Properties>
+			</Item>
+			<Item class="Fire" referent="RBX7">
+				<Properties>
+					<Color3 name="Color">4294934528</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Fire</string>
+					<Color3 name="SecondaryColor">4294901760</Color3>
+					<float name="heat_xml">8</float>
+					<float name="size_xml">4</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX8">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=115990612</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2</X>
+						<Y>2</Y>
+						<Z>2</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=115990545
+</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=116048079 </url></Content>
+				<string name="Name">ANIM_Hold</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX10">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=116048158 </url></Content>
+				<string name="Name">ANIM_Punt</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX11">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=116048217 </url></Content>
+				<string name="Name">ANIM_Warchant</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX12">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=116047903 </url></Content>
+				<string name="Name">ANIM_Fire</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
