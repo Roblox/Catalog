@@ -3,6 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -20,7 +21,7 @@
 			</CoordinateFrame>
 			<string name="Name">Binoculray</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=27039817</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -49,9 +50,7 @@
 					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">2</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -84,7 +83,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">2</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>2</X>
@@ -115,7 +114,6 @@
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Sound" referent="RBX3">
@@ -123,11 +121,9 @@
 					<bool name="Looped">false</bool>
 					<string name="Name">zoomOut</string>
 					<float name="Pitch">1</float>
-					<int name="PlayCount">-1</int>
 					<bool name="PlayOnRemove">false</bool>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=27041544</url></Content>
 					<float name="Volume">0.5</float>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 		</Item>
@@ -135,7 +131,6 @@
 			<Properties>
 				<string name="Name">CamFocus</string>
 				<Ref name="Value">null</Ref>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 		<Item class="Script" referent="RBX5">
@@ -159,173 +154,172 @@ local animup = nil
 
 function createBinocPoint(h)
 
-	whereToZoom = h.CFrame.lookVector.unit
+&#9;whereToZoom = h.CFrame.lookVector.unit
 
-	binocPoint = Instance.new(&quot;Part&quot;)
-	binocPoint.Size = Vector3.new(1,1,1)
-	binocPoint.Transparency = 1
-	binocPoint.CFrame = h.CFrame
-	binocPoint.Parent = game.Workspace
-	binocPoint.Position = Vector3.new(h.Position.x,h.Position.y,h.Position.z) + (whereToZoom * 17)
-	binocPoint.CanCollide = false
+&#9;binocPoint = Instance.new(&quot;Part&quot;)
+&#9;binocPoint.Size = Vector3.new(1,1,1)
+&#9;binocPoint.Transparency = 1
+&#9;binocPoint.CFrame = h.CFrame
+&#9;binocPoint.Parent = game.Workspace
+&#9;binocPoint.Position = Vector3.new(h.Position.x,h.Position.y,h.Position.z) + (whereToZoom * 17)
+&#9;binocPoint.CanCollide = false
 
-	binocBodyPos = Instance.new(&quot;BodyPosition&quot;)
-	binocBodyPos.P = 10000
-	binocBodyPos.D = 1000
-	binocBodyPos.maxForce = Vector3.new(10000,10000,10000)
-	binocBodyPos.position = binocPoint.Position
-	binocBodyPos.Parent = binocPoint
+&#9;binocBodyPos = Instance.new(&quot;BodyPosition&quot;)
+&#9;binocBodyPos.P = 10000
+&#9;binocBodyPos.D = 1000
+&#9;binocBodyPos.maxForce = Vector3.new(10000,10000,10000)
+&#9;binocBodyPos.position = binocPoint.Position
+&#9;binocBodyPos.Parent = binocPoint
 
-	local binocBodyGyro = Instance.new(&quot;BodyGyro&quot;)
-	binocBodyGyro.cframe = binocPoint.CFrame
-	binocBodyGyro.P = 100000
-	binocBodyGyro.D = 1
-	binocBodyGyro.maxTorque = Vector3.new(100000,100000,100000)
-	binocBodyGyro.Parent = binocPoint
-	
-	local sound = script.Parent.Handle.zoomOut:clone()
-	sound.Parent = binocPoint
+&#9;local binocBodyGyro = Instance.new(&quot;BodyGyro&quot;)
+&#9;binocBodyGyro.cframe = binocPoint.CFrame
+&#9;binocBodyGyro.P = 100000
+&#9;binocBodyGyro.D = 1
+&#9;binocBodyGyro.maxTorque = Vector3.new(100000,100000,100000)
+&#9;binocBodyGyro.Parent = binocPoint
+&#9;
+&#9;local sound = script.Parent.Handle.zoomOut:clone()
+&#9;sound.Parent = binocPoint
 end
 
 script.Parent.Changed:connect(function(pr)
-	if pr == &quot;Parent&quot; then
-		if script.Parent.Parent == game.Workspace then --dropped
-			dropped = true	
-			script.Parent.Handle.CanCollide = true
-		elseif dropped then
-			dropped = false
-			script.Parent.Handle.CanCollide = false
-		end
-	end
+&#9;if pr == &quot;Parent&quot; then
+&#9;&#9;if script.Parent.Parent == game.Workspace then --dropped
+&#9;&#9;&#9;dropped = true&#9;
+&#9;&#9;&#9;script.Parent.Handle.CanCollide = true
+&#9;&#9;elseif dropped then
+&#9;&#9;&#9;dropped = false
+&#9;&#9;&#9;script.Parent.Handle.CanCollide = false
+&#9;&#9;end
+&#9;end
 end)
 
 script.Parent.Equipped:connect(function()
-	equipped = true
-	player = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
-	gui = script.Parent.BinocGui:clone()
-	gui.Parent = player.PlayerGui
-	-- enable failsafe
-	wait() --needed, strange error occurs when no wait is put here
-	local fail = script.Parent.CamFocusFailsafe:clone()
-	fail.Disabled = false
-	fail.Tool.Value = script.Parent
-	fail.Target.Value = player.Character.Humanoid
-	--put in character
-	fail.Parent = script.Parent.Parent
-	---
-	local turnpressed = false
-	---
-	gui.ActivateFrame.Activate.MouseButton1Down:connect(function()
-		gui.ActivateFrame.Activate.Visible = false
-		gui.ActivateFrame.Deactivate.Visible = true
-		gui.ControlsFrame.Visible = true
-		gui.BinocFrame.Visible = true
-		
-		local torso = script.Parent.Parent:FindFirstChild(&quot;Torso&quot;, false)
-		local head = script.Parent.Parent:FindFirstChild(&quot;Head&quot;, false)
-		createBinocPoint(head)
-		script.Parent.CamFocus.Value = binocPoint
-		initPos = torso.Position
+&#9;equipped = true
+&#9;player = game.Players:GetPlayerFromCharacter(script.Parent.Parent)
+&#9;gui = script.Parent.BinocGui:clone()
+&#9;gui.Parent = player.PlayerGui
+&#9;-- enable failsafe
+&#9;wait() --needed, strange error occurs when no wait is put here
+&#9;local fail = script.Parent.CamFocusFailsafe:clone()
+&#9;fail.Disabled = false
+&#9;fail.Tool.Value = script.Parent
+&#9;fail.Target.Value = player.Character.Humanoid
+&#9;--put in character
+&#9;fail.Parent = script.Parent.Parent
+&#9;---
+&#9;local turnpressed = false
+&#9;---
+&#9;gui.ActivateFrame.Activate.MouseButton1Down:connect(function()
+&#9;&#9;gui.ActivateFrame.Activate.Visible = false
+&#9;&#9;gui.ActivateFrame.Deactivate.Visible = true
+&#9;&#9;gui.ControlsFrame.Visible = true
+&#9;&#9;gui.BinocFrame.Visible = true
+&#9;&#9;
+&#9;&#9;local torso = script.Parent.Parent:FindFirstChild(&quot;Torso&quot;, false)
+&#9;&#9;local head = script.Parent.Parent:FindFirstChild(&quot;Head&quot;, false)
+&#9;&#9;createBinocPoint(head)
+&#9;&#9;script.Parent.CamFocus.Value = binocPoint
+&#9;&#9;initPos = torso.Position
 
-		bodyPos = Instance.new(&quot;BodyPosition&quot;)
-		bodyPos.position = torso.Position
-		bodyPos.maxForce = Vector3.new(90000,90000,90000)
-		bodyPos.P = 90000
-		bodyPos.D = 10
-		bodyPos.Name = &quot;bodyPos&quot;
-		bodyPos.Parent = torso
+&#9;&#9;bodyPos = Instance.new(&quot;BodyPosition&quot;)
+&#9;&#9;bodyPos.position = torso.Position
+&#9;&#9;bodyPos.maxForce = Vector3.new(90000,90000,90000)
+&#9;&#9;bodyPos.P = 90000
+&#9;&#9;bodyPos.D = 10
+&#9;&#9;bodyPos.Name = &quot;bodyPos&quot;
+&#9;&#9;bodyPos.Parent = torso
 
-		humanoid = script.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;, false)
-		script.Parent.GripPos = Vector3.new(1.5,-1.3,-0.3)
+&#9;&#9;humanoid = script.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;, false)
+&#9;&#9;script.Parent.GripPos = Vector3.new(1.5,-1.3,-0.3)
 
-		local head = script.Parent.Parent:FindFirstChild(&quot;Head&quot;, false)
-		look = head.CFrame.lookVector.unit
-	end)
+&#9;&#9;local head = script.Parent.Parent:FindFirstChild(&quot;Head&quot;, false)
+&#9;&#9;look = head.CFrame.lookVector.unit
+&#9;end)
 
-	gui.ActivateFrame.Deactivate.MouseButton1Down:connect(function()
-		gui.ActivateFrame.Activate.Visible = true
-		gui.ActivateFrame.Deactivate.Visible = false
-		gui.BinocFrame.Visible = false
-		gui.ControlsFrame.Visible = false
-		script.Parent.CamFocus.Value = nil
+&#9;gui.ActivateFrame.Deactivate.MouseButton1Down:connect(function()
+&#9;&#9;gui.ActivateFrame.Activate.Visible = true
+&#9;&#9;gui.ActivateFrame.Deactivate.Visible = false
+&#9;&#9;gui.BinocFrame.Visible = false
+&#9;&#9;gui.ControlsFrame.Visible = false
+&#9;&#9;script.Parent.CamFocus.Value = nil
 
-		if bodyPos then
-			bodyPos:remove()
-			bodyPos = nil
-		end
-		script.Parent.GripPos = Vector3.new(0, 0, 0.7)
-		binocPoint:remove()
-		balance = 0
-	end)
+&#9;&#9;if bodyPos then
+&#9;&#9;&#9;bodyPos:remove()
+&#9;&#9;&#9;bodyPos = nil
+&#9;&#9;end
+&#9;&#9;script.Parent.GripPos = Vector3.new(0, 0, 0.7)
+&#9;&#9;binocPoint:remove()
+&#9;&#9;balance = 0
+&#9;end)
 
-	gui.ControlsFrame.PanLeft.MouseButton1Down:connect(function()
+&#9;gui.ControlsFrame.PanLeft.MouseButton1Down:connect(function()
 
-		if binocPoint and balance &gt; -1 then
-			balance = balance - 1
-			local leftX = (look.x * math.cos(-math.pi/2)) - (look.z * math.sin(-math.pi/2))
-			local leftZ = (look.x * math.sin(-math.pi/2)) - (look.z * math.cos(-math.pi/2))
-			binocBodyPos.position = Vector3.new(binocPoint.Position.x + (leftX* zoomFactor),
-				binocPoint.Position.y,binocPoint.Position.z  + (leftZ* zoomFactor))
-		end
+&#9;&#9;if binocPoint and balance &gt; -1 then
+&#9;&#9;&#9;balance = balance - 1
+&#9;&#9;&#9;local leftX = (look.x * math.cos(-math.pi/2)) - (look.z * math.sin(-math.pi/2))
+&#9;&#9;&#9;local leftZ = (look.x * math.sin(-math.pi/2)) - (look.z * math.cos(-math.pi/2))
+&#9;&#9;&#9;binocBodyPos.position = Vector3.new(binocPoint.Position.x + (leftX* zoomFactor),
+&#9;&#9;&#9;&#9;binocPoint.Position.y,binocPoint.Position.z  + (leftZ* zoomFactor))
+&#9;&#9;end
 
-	end)
-	gui.ControlsFrame.PanRight.MouseButton1Down:connect(function()
+&#9;end)
+&#9;gui.ControlsFrame.PanRight.MouseButton1Down:connect(function()
 
-		if binocPoint and balance &lt; 1 then
-			balance = balance + 1
-			local rightX = (look.x * math.cos(math.pi/2)) - (look.z * math.sin(math.pi/2))
-			local rightZ = (look.x * math.sin(math.pi/2)) - (look.z * math.cos(math.pi/2))
-			binocBodyPos.position = Vector3.new(binocPoint.Position.x + (rightX * zoomFactor) ,
-				binocPoint.Position.y,binocPoint.Position.z + (rightZ* zoomFactor))
-		end
+&#9;&#9;if binocPoint and balance &lt; 1 then
+&#9;&#9;&#9;balance = balance + 1
+&#9;&#9;&#9;local rightX = (look.x * math.cos(math.pi/2)) - (look.z * math.sin(math.pi/2))
+&#9;&#9;&#9;local rightZ = (look.x * math.sin(math.pi/2)) - (look.z * math.cos(math.pi/2))
+&#9;&#9;&#9;binocBodyPos.position = Vector3.new(binocPoint.Position.x + (rightX * zoomFactor) ,
+&#9;&#9;&#9;&#9;binocPoint.Position.y,binocPoint.Position.z + (rightZ* zoomFactor))
+&#9;&#9;end
 
-	end)
-	gui.ControlsFrame.ZoomIn.MouseButton1Down:connect(function()
+&#9;end)
+&#9;gui.ControlsFrame.ZoomIn.MouseButton1Down:connect(function()
 
-		if binocPoint then
-			
-			local diff = Vector2.new(binocPoint.Position.x - initPos.x,binocPoint.Position.z - initPos.z)
-			if diff.magnitude &lt; 150 then
-				binocPoint.zoomOut:Play()
-				binocBodyPos.position = Vector3.new(binocPoint.Position.x + (whereToZoom.x * zoomFactor),
-					binocPoint.Position.y,binocPoint.Position.z + (whereToZoom.z * zoomFactor))
-			end
-		end
+&#9;&#9;if binocPoint then
+&#9;&#9;&#9;
+&#9;&#9;&#9;local diff = Vector2.new(binocPoint.Position.x - initPos.x,binocPoint.Position.z - initPos.z)
+&#9;&#9;&#9;if diff.magnitude &lt; 150 then
+&#9;&#9;&#9;&#9;binocPoint.zoomOut:Play()
+&#9;&#9;&#9;&#9;binocBodyPos.position = Vector3.new(binocPoint.Position.x + (whereToZoom.x * zoomFactor),
+&#9;&#9;&#9;&#9;&#9;binocPoint.Position.y,binocPoint.Position.z + (whereToZoom.z * zoomFactor))
+&#9;&#9;&#9;end
+&#9;&#9;end
 
-	end)
-	gui.ControlsFrame.ZoomOut.MouseButton1Down:connect(function()
+&#9;end)
+&#9;gui.ControlsFrame.ZoomOut.MouseButton1Down:connect(function()
 
-		if binocPoint then
+&#9;&#9;if binocPoint then
 
-			xMag = binocPoint.Position.x - initPos.x
-			zMag = binocPoint.Position.z - initPos.z
-			totalDist = xMag + zMag
-			if totalDist &gt; 60 then
-				binocPoint.zoomOut:Play()
-				binocBodyPos.position = Vector3.new(binocPoint.Position.x + (whereToZoom.x * -zoomFactor), 
-					binocPoint.Position.y,binocPoint.Position.z + (whereToZoom.z * -zoomFactor))
-			end
+&#9;&#9;&#9;xMag = binocPoint.Position.x - initPos.x
+&#9;&#9;&#9;zMag = binocPoint.Position.z - initPos.z
+&#9;&#9;&#9;totalDist = xMag + zMag
+&#9;&#9;&#9;if totalDist &gt; 60 then
+&#9;&#9;&#9;&#9;binocPoint.zoomOut:Play()
+&#9;&#9;&#9;&#9;binocBodyPos.position = Vector3.new(binocPoint.Position.x + (whereToZoom.x * -zoomFactor), 
+&#9;&#9;&#9;&#9;&#9;binocPoint.Position.y,binocPoint.Position.z + (whereToZoom.z * -zoomFactor))
+&#9;&#9;&#9;end
 
-		end
+&#9;&#9;end
 
-	end)
+&#9;end)
 
 end)
 
 script.Parent.Unequipped:connect(function()
-	equipped = false
-	script.Parent.CamFocus.Value = nil
-	if bodyPos then
-		bodyPos:remove()
-		bodyPos = nil
-	end
-	if gui then
-		gui:remove()
-		gui = nil
-	end
+&#9;equipped = false
+&#9;script.Parent.CamFocus.Value = nil
+&#9;if bodyPos then
+&#9;&#9;bodyPos:remove()
+&#9;&#9;bodyPos = nil
+&#9;end
+&#9;if gui then
+&#9;&#9;gui:remove()
+&#9;&#9;gui = nil
+&#9;end
 end)
 </ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX6">
@@ -338,36 +332,33 @@ end)
 --avoid error, script runs before script.Tool and script.Target are added as children
 wait()
 script.Tool.Value.Changed:connect(function(pr)
-	--print(&quot;Tool \&quot;&quot;, script.Tool.Value, &quot;\&quot;s parent changed to &quot;, script.Tool.Value.Parent)
-	if pr == &quot;Parent&quot; then
-		if script.Tool.Value.Parent == game.Workspace then
-			game.Workspace.CurrentCamera.CameraType = 5	
-			game.Workspace.CurrentCamera.CameraSubject = script.Target.Value
-		end
-	end
+&#9;--print(&quot;Tool \&quot;&quot;, script.Tool.Value, &quot;\&quot;s parent changed to &quot;, script.Tool.Value.Parent)
+&#9;if pr == &quot;Parent&quot; then
+&#9;&#9;if script.Tool.Value.Parent == game.Workspace then
+&#9;&#9;&#9;game.Workspace.CurrentCamera.CameraType = 5&#9;
+&#9;&#9;&#9;game.Workspace.CurrentCamera.CameraSubject = script.Target.Value
+&#9;&#9;end
+&#9;end
 end)
 
 script.Tool.Value.Unequipped:connect(function()
-	wait(0.5)
-	script:remove()
+&#9;wait(0.5)
+&#9;script:remove()
 end)
 
 print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 </ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 			<Item class="ObjectValue" referent="RBX7">
 				<Properties>
 					<string name="Name">Target</string>
 					<Ref name="Value">null</Ref>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="ObjectValue" referent="RBX8">
 				<Properties>
 					<string name="Name">Tool</string>
 					<Ref name="Value">null</Ref>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 		</Item>
@@ -378,24 +369,22 @@ print(&quot;PaperPlaneGear :: CamFocusFailsafe loaded&quot;)
 				<string name="Name">LocalScript</string>
 				<ProtectedString name="Source">wait(0.5)
 script.Parent.CamFocus.Changed:connect(function()
-	local o = script.Parent.CamFocus.Value
-	if o then
-		wait()
-		game.Workspace.CurrentCamera.CameraType = 1
-		game.Workspace.CurrentCamera.CameraSubject = o
-	else
-		wait()
-		game.Workspace.CurrentCamera.CameraType = 5	
-		game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid	
-	end
+&#9;local o = script.Parent.CamFocus.Value
+&#9;if o then
+&#9;&#9;wait()
+&#9;&#9;game.Workspace.CurrentCamera.CameraType = 1
+&#9;&#9;game.Workspace.CurrentCamera.CameraSubject = o
+&#9;else
+&#9;&#9;wait()
+&#9;&#9;game.Workspace.CurrentCamera.CameraType = 5&#9;
+&#9;&#9;game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid&#9;
+&#9;end
 end)</ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 		<Item class="ScreenGui" referent="RBX10">
 			<Properties>
 				<string name="Name">BinocGui</string>
-				<bool name="archivable">true</bool>
 			</Properties>
 			<Item class="ImageLabel" referent="RBX11">
 				<Properties>
@@ -404,13 +393,15 @@ end)</ProtectedString>
 					<float name="BackgroundTransparency">0</float>
 					<Color3 name="BorderColor3">4279970357</Color3>
 					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
 					<Content name="Image"><null></null></Content>
 					<string name="Name">ActivateFrame</string>
 					<UDim2 name="Position">
 						<XS>0.5</XS>
 						<XO>0</XO>
 						<YS>1</YS>
-						<YO>0</YO>
+						<YO>-100</YO>
 					</UDim2>
 					<UDim2 name="Size">
 						<XS>0</XS>
@@ -421,7 +412,6 @@ end)</ProtectedString>
 					<token name="SizeConstraint">0</token>
 					<bool name="Visible">true</bool>
 					<int name="ZIndex">2</int>
-					<bool name="archivable">true</bool>
 				</Properties>
 				<Item class="ImageButton" referent="RBX12">
 					<Properties>
@@ -431,7 +421,10 @@ end)</ProtectedString>
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=26960022</url></Content>
+						<bool name="Modal">false</bool>
 						<string name="Name">Activate</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -447,9 +440,9 @@ end)</ProtectedString>
 							<YO>32</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 					<Item class="TextLabel" referent="RBX13">
 						<Properties>
@@ -458,6 +451,10 @@ end)</ProtectedString>
 							<float name="BackgroundTransparency">1</float>
 							<Color3 name="BorderColor3">4279970357</Color3>
 							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">0</token>
 							<string name="Name">TXT</string>
 							<UDim2 name="Position">
 								<XS>0</XS>
@@ -474,13 +471,15 @@ end)</ProtectedString>
 							<token name="SizeConstraint">0</token>
 							<string name="Text">Throw Plane</string>
 							<Color3 name="TextColor3">4279970357</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">1</float>
-							<bool name="TextWrap">false</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
-							<bool name="archivable">true</bool>
 						</Properties>
 					</Item>
 				</Item>
@@ -492,7 +491,10 @@ end)</ProtectedString>
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=26980860</url></Content>
+						<bool name="Modal">false</bool>
 						<string name="Name">Deactivate</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -508,9 +510,9 @@ end)</ProtectedString>
 							<YO>32</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 					<Item class="TextLabel" referent="RBX15">
 						<Properties>
@@ -519,6 +521,10 @@ end)</ProtectedString>
 							<float name="BackgroundTransparency">1</float>
 							<Color3 name="BorderColor3">4279970357</Color3>
 							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">0</token>
 							<string name="Name">TXT</string>
 							<UDim2 name="Position">
 								<XS>0</XS>
@@ -535,13 +541,15 @@ end)</ProtectedString>
 							<token name="SizeConstraint">0</token>
 							<string name="Text">Throw Plane</string>
 							<Color3 name="TextColor3">4279970357</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">1</float>
-							<bool name="TextWrap">false</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
-							<bool name="archivable">true</bool>
 						</Properties>
 					</Item>
 				</Item>
@@ -553,13 +561,15 @@ end)</ProtectedString>
 					<float name="BackgroundTransparency">0</float>
 					<Color3 name="BorderColor3">4279970357</Color3>
 					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
 					<Content name="Image"><null></null></Content>
 					<string name="Name">ControlsFrame</string>
 					<UDim2 name="Position">
 						<XS>0.800000012</XS>
 						<XO>0</XO>
 						<YS>1</YS>
-						<YO>0</YO>
+						<YO>-70</YO>
 					</UDim2>
 					<UDim2 name="Size">
 						<XS>0</XS>
@@ -570,7 +580,6 @@ end)</ProtectedString>
 					<token name="SizeConstraint">0</token>
 					<bool name="Visible">false</bool>
 					<int name="ZIndex">2</int>
-					<bool name="archivable">true</bool>
 				</Properties>
 				<Item class="ImageButton" referent="RBX17">
 					<Properties>
@@ -580,7 +589,10 @@ end)</ProtectedString>
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=26981216</url></Content>
+						<bool name="Modal">false</bool>
 						<string name="Name">ZoomIn</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -596,9 +608,9 @@ end)</ProtectedString>
 							<YO>32</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 					<Item class="TextLabel" referent="RBX18">
 						<Properties>
@@ -607,6 +619,10 @@ end)</ProtectedString>
 							<float name="BackgroundTransparency">1</float>
 							<Color3 name="BorderColor3">4279970357</Color3>
 							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">0</token>
 							<string name="Name">TXT</string>
 							<UDim2 name="Position">
 								<XS>0</XS>
@@ -623,13 +639,15 @@ end)</ProtectedString>
 							<token name="SizeConstraint">0</token>
 							<string name="Text">Throw Plane</string>
 							<Color3 name="TextColor3">4279970357</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">1</float>
-							<bool name="TextWrap">false</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
-							<bool name="archivable">true</bool>
 						</Properties>
 					</Item>
 				</Item>
@@ -641,7 +659,10 @@ end)</ProtectedString>
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=26981228</url></Content>
+						<bool name="Modal">false</bool>
 						<string name="Name">ZoomOut</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -657,9 +678,9 @@ end)</ProtectedString>
 							<YO>32</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 					<Item class="TextLabel" referent="RBX20">
 						<Properties>
@@ -668,6 +689,10 @@ end)</ProtectedString>
 							<float name="BackgroundTransparency">1</float>
 							<Color3 name="BorderColor3">4279970357</Color3>
 							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">0</token>
 							<string name="Name">TXT</string>
 							<UDim2 name="Position">
 								<XS>0</XS>
@@ -684,13 +709,15 @@ end)</ProtectedString>
 							<token name="SizeConstraint">0</token>
 							<string name="Text">Throw Plane</string>
 							<Color3 name="TextColor3">4279970357</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">1</float>
-							<bool name="TextWrap">false</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
-							<bool name="archivable">true</bool>
 						</Properties>
 					</Item>
 				</Item>
@@ -702,7 +729,10 @@ end)</ProtectedString>
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=26981238</url></Content>
+						<bool name="Modal">false</bool>
 						<string name="Name">PanLeft</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -718,9 +748,9 @@ end)</ProtectedString>
 							<YO>32</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 					<Item class="TextLabel" referent="RBX22">
 						<Properties>
@@ -729,6 +759,10 @@ end)</ProtectedString>
 							<float name="BackgroundTransparency">1</float>
 							<Color3 name="BorderColor3">4279970357</Color3>
 							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">0</token>
 							<string name="Name">TXT</string>
 							<UDim2 name="Position">
 								<XS>0</XS>
@@ -745,13 +779,15 @@ end)</ProtectedString>
 							<token name="SizeConstraint">0</token>
 							<string name="Text">Throw Plane</string>
 							<Color3 name="TextColor3">4279970357</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">1</float>
-							<bool name="TextWrap">false</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
-							<bool name="archivable">true</bool>
 						</Properties>
 					</Item>
 				</Item>
@@ -763,7 +799,10 @@ end)</ProtectedString>
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=26981251</url></Content>
+						<bool name="Modal">false</bool>
 						<string name="Name">PanRight</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -779,9 +818,9 @@ end)</ProtectedString>
 							<YO>32</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 					<Item class="TextLabel" referent="RBX24">
 						<Properties>
@@ -790,6 +829,10 @@ end)</ProtectedString>
 							<float name="BackgroundTransparency">1</float>
 							<Color3 name="BorderColor3">4279970357</Color3>
 							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">0</token>
 							<string name="Name">TXT</string>
 							<UDim2 name="Position">
 								<XS>0</XS>
@@ -806,13 +849,15 @@ end)</ProtectedString>
 							<token name="SizeConstraint">0</token>
 							<string name="Text">Throw Plane</string>
 							<Color3 name="TextColor3">4279970357</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">1</float>
-							<bool name="TextWrap">false</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
-							<bool name="archivable">true</bool>
 						</Properties>
 					</Item>
 				</Item>
@@ -824,6 +869,8 @@ end)</ProtectedString>
 					<float name="BackgroundTransparency">1</float>
 					<Color3 name="BorderColor3">4279970357</Color3>
 					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
 					<Content name="Image"><url>http://www.roblox.com/asset/?id=27075775</url></Content>
 					<string name="Name">BinocFrame</string>
 					<UDim2 name="Position">
@@ -841,91 +888,13 @@ end)</ProtectedString>
 					<token name="SizeConstraint">0</token>
 					<bool name="Visible">false</bool>
 					<int name="ZIndex">1</int>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 		</Item>
 		<Item class="Animation" referent="RBX26">
 			<Properties>
-				<Content name="AnimationId"><binary>PHJvYmxveCB4bWxuczp4bWltZT0iaHR0cDovL3d3dy53My5vcmcvMjAwNS8wNS94bWxtaW1l
-IiB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNl
-IiB4c2k6bm9OYW1lc3BhY2VTY2hlbWFMb2NhdGlvbj0iaHR0cDovL3d3dy5yb2Jsb3guY29t
-L3JvYmxveC54c2QiIHZlcnNpb249IjQiIGFzc2V0dHlwZT0iYW5pbWF0aW9uIj4KCTxFeHRl
-cm5hbD5udWxsPC9FeHRlcm5hbD4KCTxFeHRlcm5hbD5uaWw8L0V4dGVybmFsPgoJPEl0ZW0g
-Y2xhc3M9IktleWZyYW1lU2VxdWVuY2UiIHJlZmVyZW50PSJSQlgwIj4KCQk8UHJvcGVydGll
-cz4KCQkJPGJvb2wgbmFtZT0iTG9vcCI+dHJ1ZTwvYm9vbD4KCQkJPHN0cmluZyBuYW1lPSJO
-YW1lIj5iaW5vY3VwPC9zdHJpbmc+CgkJCTx0b2tlbiBuYW1lPSJQcmlvcml0eSI+MjwvdG9r
-ZW4+CgkJCTxib29sIG5hbWU9ImFyY2hpdmFibGUiPnRydWU8L2Jvb2w+CgkJPC9Qcm9wZXJ0
-aWVzPgoJCTxJdGVtIGNsYXNzPSJLZXlmcmFtZSIgcmVmZXJlbnQ9IlJCWDEiPgoJCQk8UHJv
-cGVydGllcz4KCQkJCTxzdHJpbmcgbmFtZT0iTmFtZSI+ZW5kPC9zdHJpbmc+CgkJCQk8Zmxv
-YXQgbmFtZT0iVGltZSI+MTwvZmxvYXQ+CgkJCQk8Ym9vbCBuYW1lPSJhcmNoaXZhYmxlIj50
-cnVlPC9ib29sPgoJCQk8L1Byb3BlcnRpZXM+CgkJCTxJdGVtIGNsYXNzPSJQb3NlIiByZWZl
-cmVudD0iUkJYMiI+CgkJCQk8UHJvcGVydGllcz4KCQkJCQk8Q29vcmRpbmF0ZUZyYW1lIG5h
-bWU9IkNGcmFtZSI+CgkJCQkJCTxYPjA8L1g+CgkJCQkJCTxZPjA8L1k+CgkJCQkJCTxaPjA8
-L1o+CgkJCQkJCTxSMDA+MTwvUjAwPgoJCQkJCQk8UjAxPjA8L1IwMT4KCQkJCQkJPFIwMj4w
-PC9SMDI+CgkJCQkJCTxSMTA+MDwvUjEwPgoJCQkJCQk8UjExPjE8L1IxMT4KCQkJCQkJPFIx
-Mj4wPC9SMTI+CgkJCQkJCTxSMjA+MDwvUjIwPgoJCQkJCQk8UjIxPjA8L1IyMT4KCQkJCQkJ
-PFIyMj4xPC9SMjI+CgkJCQkJPC9Db29yZGluYXRlRnJhbWU+CgkJCQkJPGZsb2F0IG5hbWU9
-Ik1hc2tXZWlnaHQiPjA8L2Zsb2F0PgoJCQkJCTxzdHJpbmcgbmFtZT0iTmFtZSI+VG9yc288
-L3N0cmluZz4KCQkJCQk8ZmxvYXQgbmFtZT0iV2VpZ2h0Ij4xPC9mbG9hdD4KCQkJCQk8Ym9v
-bCBuYW1lPSJhcmNoaXZhYmxlIj50cnVlPC9ib29sPgoJCQkJPC9Qcm9wZXJ0aWVzPgoJCQkJ
-PEl0ZW0gY2xhc3M9IlBvc2UiIHJlZmVyZW50PSJSQlgzIj4KCQkJCQk8UHJvcGVydGllcz4K
-CQkJCQkJPENvb3JkaW5hdGVGcmFtZSBuYW1lPSJDRnJhbWUiPgoJCQkJCQkJPFg+MDwvWD4K
-CQkJCQkJCTxZPjA8L1k+CgkJCQkJCQk8Wj4wPC9aPgoJCQkJCQkJPFIwMD4tMC41MDE0NjUw
-ODI8L1IwMD4KCQkJCQkJCTxSMDE+LTAuODQ3Mzk1NjU4PC9SMDE+CgkJCQkJCQk8UjAyPjAu
-MTc0NTA4NjkxPC9SMDI+CgkJCQkJCQk8UjEwPjAuODY1MTc3ODc8L1IxMD4KCQkJCQkJCTxS
-MTE+LTAuNDkxMTU4MzY2PC9SMTE+CgkJCQkJCQk8UjEyPjAuMTAxMTQ2ODQ3PC9SMTI+CgkJ
-CQkJCQk8UjIwPjA8L1IyMD4KCQkJCQkJCTxSMjE+MC4yMDE3MDI2ODQ8L1IyMT4KCQkJCQkJ
-CTxSMjI+MC45Nzk0NDY3Njk8L1IyMj4KCQkJCQkJPC9Db29yZGluYXRlRnJhbWU+CgkJCQkJ
-CTxmbG9hdCBuYW1lPSJNYXNrV2VpZ2h0Ij4wPC9mbG9hdD4KCQkJCQkJPHN0cmluZyBuYW1l
-PSJOYW1lIj5SaWdodCBBcm08L3N0cmluZz4KCQkJCQkJPGZsb2F0IG5hbWU9IldlaWdodCI+
-MTwvZmxvYXQ+CgkJCQkJCTxib29sIG5hbWU9ImFyY2hpdmFibGUiPnRydWU8L2Jvb2w+CgkJ
-CQkJPC9Qcm9wZXJ0aWVzPgoJCQkJPC9JdGVtPgoJCQkJPEl0ZW0gY2xhc3M9IlBvc2UiIHJl
-ZmVyZW50PSJSQlg0Ij4KCQkJCQk8UHJvcGVydGllcz4KCQkJCQkJPENvb3JkaW5hdGVGcmFt
-ZSBuYW1lPSJDRnJhbWUiPgoJCQkJCQkJPFg+MDwvWD4KCQkJCQkJCTxZPjA8L1k+CgkJCQkJ
-CQk8Wj4wPC9aPgoJCQkJCQkJPFIwMD4tMC41MTM2NzExPC9SMDA+CgkJCQkJCQk8UjAxPjAu
-ODI0ODA1OTE1PC9SMDE+CgkJCQkJCQk8UjAyPi0wLjIzNjI5ODY4PC9SMDI+CgkJCQkJCQk8
-UjEwPi0wLjg0NjUyNTQzMTwvUjEwPgoJCQkJCQkJPFIxMT4tMC41MzIwNzU2NDQ8L1IxMT4K
-CQkJCQkJCTxSMTI+LTAuMDE3MDI2OTkwNzwvUjEyPgoJCQkJCQkJPFIyMD4tMC4xMzk3NzI3
-NzM8L1IyMD4KCQkJCQkJCTxSMjE+MC4xOTEyODY1Nzk8L1IyMT4KCQkJCQkJCTxSMjI+MC45
-NzE1MzEyNzI8L1IyMj4KCQkJCQkJPC9Db29yZGluYXRlRnJhbWU+CgkJCQkJCTxmbG9hdCBu
-YW1lPSJNYXNrV2VpZ2h0Ij4wPC9mbG9hdD4KCQkJCQkJPHN0cmluZyBuYW1lPSJOYW1lIj5M
-ZWZ0IEFybTwvc3RyaW5nPgoJCQkJCQk8ZmxvYXQgbmFtZT0iV2VpZ2h0Ij4xPC9mbG9hdD4K
-CQkJCQkJPGJvb2wgbmFtZT0iYXJjaGl2YWJsZSI+dHJ1ZTwvYm9vbD4KCQkJCQk8L1Byb3Bl
-cnRpZXM+CgkJCQk8L0l0ZW0+CgkJCQk8SXRlbSBjbGFzcz0iUG9zZSIgcmVmZXJlbnQ9IlJC
-WDUiPgoJCQkJCTxQcm9wZXJ0aWVzPgoJCQkJCQk8Q29vcmRpbmF0ZUZyYW1lIG5hbWU9IkNG
-cmFtZSI+CgkJCQkJCQk8WD4wPC9YPgoJCQkJCQkJPFk+MDwvWT4KCQkJCQkJCTxaPjA8L1o+
-CgkJCQkJCQk8UjAwPjE8L1IwMD4KCQkJCQkJCTxSMDE+MDwvUjAxPgoJCQkJCQkJPFIwMj4w
-PC9SMDI+CgkJCQkJCQk8UjEwPjA8L1IxMD4KCQkJCQkJCTxSMTE+MTwvUjExPgoJCQkJCQkJ
-PFIxMj4wPC9SMTI+CgkJCQkJCQk8UjIwPjA8L1IyMD4KCQkJCQkJCTxSMjE+MDwvUjIxPgoJ
-CQkJCQkJPFIyMj4xPC9SMjI+CgkJCQkJCTwvQ29vcmRpbmF0ZUZyYW1lPgoJCQkJCQk8Zmxv
-YXQgbmFtZT0iTWFza1dlaWdodCI+MDwvZmxvYXQ+CgkJCQkJCTxzdHJpbmcgbmFtZT0iTmFt
-ZSI+UmlnaHQgTGVnPC9zdHJpbmc+CgkJCQkJCTxmbG9hdCBuYW1lPSJXZWlnaHQiPjE8L2Zs
-b2F0PgoJCQkJCQk8Ym9vbCBuYW1lPSJhcmNoaXZhYmxlIj50cnVlPC9ib29sPgoJCQkJCTwv
-UHJvcGVydGllcz4KCQkJCTwvSXRlbT4KCQkJCTxJdGVtIGNsYXNzPSJQb3NlIiByZWZlcmVu
-dD0iUkJYNiI+CgkJCQkJPFByb3BlcnRpZXM+CgkJCQkJCTxDb29yZGluYXRlRnJhbWUgbmFt
-ZT0iQ0ZyYW1lIj4KCQkJCQkJCTxYPjA8L1g+CgkJCQkJCQk8WT4wPC9ZPgoJCQkJCQkJPFo+
-MDwvWj4KCQkJCQkJCTxSMDA+MTwvUjAwPgoJCQkJCQkJPFIwMT4wPC9SMDE+CgkJCQkJCQk8
-UjAyPjA8L1IwMj4KCQkJCQkJCTxSMTA+MDwvUjEwPgoJCQkJCQkJPFIxMT4xPC9SMTE+CgkJ
-CQkJCQk8UjEyPjA8L1IxMj4KCQkJCQkJCTxSMjA+MDwvUjIwPgoJCQkJCQkJPFIyMT4wPC9S
-MjE+CgkJCQkJCQk8UjIyPjE8L1IyMj4KCQkJCQkJPC9Db29yZGluYXRlRnJhbWU+CgkJCQkJ
-CTxmbG9hdCBuYW1lPSJNYXNrV2VpZ2h0Ij4wPC9mbG9hdD4KCQkJCQkJPHN0cmluZyBuYW1l
-PSJOYW1lIj5MZWZ0IExlZzwvc3RyaW5nPgoJCQkJCQk8ZmxvYXQgbmFtZT0iV2VpZ2h0Ij4x
-PC9mbG9hdD4KCQkJCQkJPGJvb2wgbmFtZT0iYXJjaGl2YWJsZSI+dHJ1ZTwvYm9vbD4KCQkJ
-CQk8L1Byb3BlcnRpZXM+CgkJCQk8L0l0ZW0+CgkJCQk8SXRlbSBjbGFzcz0iUG9zZSIgcmVm
-ZXJlbnQ9IlJCWDciPgoJCQkJCTxQcm9wZXJ0aWVzPgoJCQkJCQk8Q29vcmRpbmF0ZUZyYW1l
-IG5hbWU9IkNGcmFtZSI+CgkJCQkJCQk8WD4wPC9YPgoJCQkJCQkJPFk+MDwvWT4KCQkJCQkJ
-CTxaPjA8L1o+CgkJCQkJCQk8UjAwPjE8L1IwMD4KCQkJCQkJCTxSMDE+MDwvUjAxPgoJCQkJ
-CQkJPFIwMj4wPC9SMDI+CgkJCQkJCQk8UjEwPjA8L1IxMD4KCQkJCQkJCTxSMTE+MTwvUjEx
-PgoJCQkJCQkJPFIxMj4wPC9SMTI+CgkJCQkJCQk8UjIwPjA8L1IyMD4KCQkJCQkJCTxSMjE+
-MDwvUjIxPgoJCQkJCQkJPFIyMj4xPC9SMjI+CgkJCQkJCTwvQ29vcmRpbmF0ZUZyYW1lPgoJ
-CQkJCQk8ZmxvYXQgbmFtZT0iTWFza1dlaWdodCI+MDwvZmxvYXQ+CgkJCQkJCTxzdHJpbmcg
-bmFtZT0iTmFtZSI+SGVhZDwvc3RyaW5nPgoJCQkJCQk8ZmxvYXQgbmFtZT0iV2VpZ2h0Ij4x
-PC9mbG9hdD4KCQkJCQkJPGJvb2wgbmFtZT0iYXJjaGl2YWJsZSI+dHJ1ZTwvYm9vbD4KCQkJ
-CQk8L1Byb3BlcnRpZXM+CgkJCQk8L0l0ZW0+CgkJCTwvSXRlbT4KCQk8L0l0ZW0+Cgk8L0l0
-ZW0+Cjwvcm9ibG94Pg==</binary></Content>
+				<Content name="AnimationId"><null></null></Content>
 				<string name="Name">binocup</string>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 	</Item>
