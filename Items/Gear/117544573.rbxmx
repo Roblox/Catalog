@@ -127,7 +127,57 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="Animation" referent="RBX4">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=99807079</url></Content>
+				<string name="Name">Shake</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX5">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-27.0779514</X>
+					<Y>42.9417</Y>
+					<Z>54.6366959</Z>
+					<R00>-0.728970647</R00>
+					<R01>-0.152828231</R01>
+					<R02>0.667267025</R02>
+					<R10>7.4505806e-009</R10>
+					<R11>0.974760056</R11>
+					<R12>0.223255217</R12>
+					<R20>-0.684544981</R20>
+					<R21>0.162746504</R21>
+					<R22>-0.710571468</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-28.4124851</X>
+					<Y>42.4951897</Y>
+					<Z>56.0578384</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">GripFixer</string>
+				<ProtectedString name="Source">script.Parent.Grip = CFrame.Angles(0,0,0)+Vector3.new(0,.5,.7)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -218,6 +268,7 @@ function SpawnCash()
 &#9;shakeSound:Play()
 &#9;local torso=waitforchild(Tool.Parent,&apos;Torso&apos;)
 &#9;local direction=torso.CFrame.lookVector
+&#9;forcePickup(getNearPlayers(50,torso.CFrame.p),10)
 &#9;for i=0, 10, 1 do
 &#9;&#9;local tbuck = robuck:Clone()
 &#9;&#9;--local tbvel=bVel:Clone()
@@ -232,7 +283,7 @@ function SpawnCash()
 &#9;&#9;game.Debris:AddItem(tbuck,10)
 &#9;&#9;wait(.5)
 &#9;end
-&#9;forcePickup(getNearPlayers(30,torso.CFrame.p),10)
+&#9;
 &#9;CanSpawnCash=true
 end
 
@@ -263,7 +314,7 @@ end
 
 Tool.Equipped:connect(OnEquip)</ProtectedString>
 			</Properties>
-			<Item class="LocalScript" referent="RBX5">
+			<Item class="LocalScript" referent="RBX8">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -304,34 +355,6 @@ animTrack:AdjustSpeed(3)
 --chat.Parent=script.Parent
 
 
-
-local onTouchConn = nil
-
-function onTouch(part)
-&#9;local h = part.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;if h and not h.Parent:FindFirstChild(&quot;callScript&quot;) then
-&#9;&#9;if onTouchConn then
-&#9;&#9;&#9;print(&apos;Disconnecting touch&apos;)
-&#9;&#9;&#9;onTouchConn:disconnect()
-&#9;&#9;&#9;print(&apos;Touch Connected is &apos; .. tostring(onTouchConn.connected))
-&#9;&#9;&#9;onTouchConn = nil
-&#9;&#9;end
-&#9;&#9;local lscript = script:Clone()
-&#9;&#9;lscript.Parent=h.Parent
-&#9;&#9;lscript:FindFirstChild(&quot;laughTime&quot;).Value=5
-&#9;&#9;lscript.Disabled = false 
-&#9;&#9;
-&#9;&#9;--lscript
-&#9;end
-&#9;&#9;script:FindFirstChild(&quot;laughTime&quot;).Value=5
-end
-
-local Handle = script:FindFirstChild(&quot;Handle&quot;)
-
-if Handle then
-&#9;onTouchConn = Handle.Touched:connect(onTouch)
-end
-
 function forceMove()
 &#9;if not script.Parent.Torso then return end
 &#9;local nearplayer = originPlayer.Value
@@ -340,12 +363,47 @@ function forceMove()
 &#9;character:MoveTo(nearplayer.Character.Torso.CFrame.p,nearplayer.Character.Torso)
 end
 
-while(time()-startTime&lt;ltime.Value) do
-&#9;forceMove()
-&#9;wait(.3)
-&#9;forceMove()
-&#9;wait(.2)
+function dropGear(gear)
+&#9;local handle = gear:WaitForChild(&apos;Handle&apos;)
+&#9;handle.Parent = game.Workspace
+&#9;gear.Parent = nil
+&#9;
+&#9;game.Debris:AddItem(handle,3)
+&#9;handle.CFrame = script.Parent.Torso.CFrame
+&#9;local nbodyvel = Instance.new(&apos;RocketPropulsion&apos;)
+&#9;local gearTarget = originPlayer.Value.Character.Torso.CFrame.p
+&#9;nbodyvel.Target = originPlayer.Value.Character.Torso
+&#9;nbodyvel.Parent = handle
+&#9;nbodyvel:Fire()
 end
+
+function giveUpAllGear()
+&#9;local localPlayer = game.Players.LocalPlayer
+&#9;for _,i in pairs(localPlayer.Backpack:GetChildren()) do
+&#9;&#9;if i:IsA(&apos;Tool&apos;) then
+&#9;&#9;&#9;dropGear(i)
+&#9;&#9;&#9;wait(.2)
+&#9;&#9;end
+&#9;end
+&#9;--[[
+&#9;for _,i in pairs(localPlayer.Character:GetChildren()) do
+&#9;&#9;if i:IsA(&apos;Tool&apos;) then
+&#9;&#9;&#9;dropGear(i)
+&#9;&#9;&#9;wait(.2)
+&#9;&#9;end
+&#9;end
+&#9;--]]
+end
+Spawn(giveUpAllGear)
+
+while(time()-startTime&lt;ltime.Value) do
+&#9;--forceMove()
+&#9;wait(.3)
+&#9;
+&#9;--forceMove()
+&#9;--wait(.2)
+end
+
 
 
 animTrack:Stop()
@@ -354,19 +412,19 @@ print(&quot;stopped laughing&quot;)
 
 script:Destroy()</ProtectedString>
 				</Properties>
-				<Item class="NumberValue" referent="RBX6">
+				<Item class="NumberValue" referent="RBX9">
 					<Properties>
 						<string name="Name">laughTime</string>
 						<double name="Value">5</double>
 					</Properties>
 				</Item>
-				<Item class="ObjectValue" referent="RBX7">
+				<Item class="ObjectValue" referent="RBX10">
 					<Properties>
 						<string name="Name">OriginPlayer</string>
 						<Ref name="Value">null</Ref>
 					</Properties>
 				</Item>
-				<Item class="Sound" referent="RBX8">
+				<Item class="Sound" referent="RBX11">
 					<Properties>
 						<bool name="Looped">false</bool>
 						<string name="Name">cheerSound</string>
@@ -377,7 +435,7 @@ script:Destroy()</ProtectedString>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Script" referent="RBX9">
+			<Item class="Script" referent="RBX12">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -409,56 +467,6 @@ script.Parent.Touched:connect(OnTouched)
 </ProtectedString>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Animation" referent="RBX10">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=99807079</url></Content>
-				<string name="Name">Shake</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX11">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-27.0779514</X>
-					<Y>42.9417</Y>
-					<Z>54.6366959</Z>
-					<R00>-0.728970647</R00>
-					<R01>-0.152828231</R01>
-					<R02>0.667267025</R02>
-					<R10>7.4505806e-009</R10>
-					<R11>0.974760056</R11>
-					<R12>0.223255217</R12>
-					<R20>-0.684544981</R20>
-					<R21>0.162746504</R21>
-					<R22>-0.710571468</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-28.4124851</X>
-					<Y>42.4951897</Y>
-					<Z>56.0578384</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX12">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">GripFixer</string>
-				<ProtectedString name="Source">script.Parent.Grip = CFrame.Angles(0,0,0)+Vector3.new(0,.5,.7)</ProtectedString>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
