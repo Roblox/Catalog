@@ -1,0 +1,673 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">HumanRocket</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=119777414 </url></Content>
+			<string name="ToolTip">Light em up!</string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">HumanRocketMain</string>
+				<ProtectedString name="Source">local RELOAD_TIME = 10
+
+local Create = LoadLibrary(&apos;RbxUtility&apos;).Create
+
+local Tool = script.Parent
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local RocketScript = Tool:WaitForChild(&apos;RocketScript&apos;)
+local Player;
+local Character;
+local Torso;
+local Humanoid;
+local Equipped = false
+
+local LastUse = Tool:WaitForChild(&apos;LastUse&apos;)
+
+local Cursor_PlaceRocket = &apos;http://www.roblox.com/asset/?id=119809015&apos;
+local Cursor_Reloading =   &apos;http://www.roblox.com/asset/?id=119809109&apos;
+
+local ANIM_Hold =  Tool:WaitForChild(&apos;ANIM_Hold&apos;)
+local ANIM_Place = Tool:WaitForChild(&apos;ANIM_Place&apos;)
+local Anim_Hold, Anim_Place;
+
+local function IsReadyToFire()
+&#9;return (Workspace.DistributedGameTime - LastUse.Value) &gt; RELOAD_TIME
+end
+
+local function PlaceRocket()
+&#9;local rocket = Handle:Clone()
+&#9;rocket.CanCollide = true
+&#9;rocket.creator.Value = Player
+&#9;local sc = RocketScript:Clone()
+&#9;sc.Parent = rocket
+&#9;--
+&#9;Anim_Place:Play()
+&#9;repeat until Anim_Place.KeyframeReached:wait() == &apos;Dropped&apos;
+&#9;Handle.Transparency = 1
+&#9;--
+&#9;rocket.Parent = game.Workspace
+&#9;local curDir = rocket.CFrame.lookVector
+&#9;local at = rocket.Position + Torso.CFrame.lookVector*0.9 + Vector3.new(0, -0.5, 0)
+&#9;rocket.CFrame = CFrame.new(at, at + Vector3.new(curDir.x, 0, curDir.z))
+&#9;rocket.RotVelocity = Vector3.new(0,0,0)
+&#9;rocket.Velocity = Vector3.new(0,0,0)
+&#9;local correctGyro = Create&apos;BodyGyro&apos;{
+&#9;&#9;Parent = rocket;
+&#9;&#9;maxTorque = Vector3.new(100,100,100);
+&#9;&#9;cframe = rocket.CFrame;
+&#9;}
+&#9;game.Debris:AddItem(correctGyro, 0.5)
+&#9;sc.Disabled = false
+&#9;--
+&#9;for i = 1, 0, -0.06 do
+&#9;&#9;Handle.Transparency = i
+&#9;&#9;wait()
+&#9;end
+&#9;Handle.Transparency = 0
+end
+
+Tool.Equipped:connect(function(mouse)
+&#9;Equipped = true
+&#9;Character = Tool.Parent
+&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
+&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
+&#9;--
+&#9;Anim_Hold =  Humanoid:LoadAnimation(ANIM_Hold)
+&#9;Anim_Place = Humanoid:LoadAnimation(ANIM_Place)
+&#9;--
+&#9;Anim_Hold:Play()
+&#9;--
+&#9;if IsReadyToFire then
+&#9;&#9;mouse.Icon = Cursor_PlaceRocket
+&#9;else
+&#9;&#9;mouse.Icon = Cursor_Reloading
+&#9;&#9;while not IsReadyToFire() do wait() end
+&#9;&#9;if not Equipped then return end
+&#9;&#9;mouse.Icon = Cursor_PlaceRocket
+&#9;end
+&#9;--
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;local elapsed = (Workspace.DistributedGameTime - LastUse.Value)
+&#9;&#9;if not IsReadyToFire() then return end
+&#9;&#9;LastUse.Value = Workspace.DistributedGameTime
+&#9;&#9;--
+&#9;&#9;PlaceRocket()
+&#9;&#9;--
+&#9;&#9;mouse.Icon = Cursor_Reloading
+&#9;&#9;wait(RELOAD_TIME)
+&#9;&#9;mouse.Icon = Cursor_PlaceRocket
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;Equipped = false
+&#9;Handle.Transparency = 0
+&#9;if Anim_Hold then
+&#9;&#9;Anim_Hold:Stop()
+&#9;end
+&#9;if Anim_Place then
+&#9;&#9;Anim_Place:Stop()
+&#9;end
+end)</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">MotorizeRightGrip</string>
+					<ProtectedString name="Source">function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Tool = script.Parent.Parent
+
+local armChildRemovedConn = nil
+local Motor6DGrip = nil
+local EquippedNum = 0
+
+Tool.Equipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;local myEquip = EquippedNum
+&#9;--some vars
+&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;local Character = Player.Character
+
+&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
+&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
+&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
+&#9;&#9;local handle = rightGrip.Part1
+
+&#9;&#9;--kill my joint when the normal joint is removed
+&#9;&#9;--this must be done here so that the joint is removed 
+&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
+&#9;&#9;--glitch up.
+&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+&#9;&#9;&#9;if ch == rightGrip then
+&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
+&#9;&#9;&#9;&#9;Motor6DGrip = nil
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
+&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
+&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
+&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+
+&#9;&#9;--make my new joint
+&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
+&#9;&#9;&#9;Part0 = rightarm,
+&#9;&#9;&#9;Part1 = handle,
+&#9;&#9;}
+&#9;&#9;--kill the old weld
+&#9;&#9;rightGrip.Part1 = nil
+&#9;&#9;rightGrip.Part0 = nil
+&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;if armChildRemovedConn then
+&#9;&#9;armChildRemovedConn:disconnect()
+&#9;&#9;armChildRemovedConn = nil
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX3">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RocketScript</string>
+				<ProtectedString name="Source">
+local Rocket = script.Parent
+local CreatorTag = Rocket:WaitForChild(&apos;creator&apos;)
+while not CreatorTag.Value do CreatorTag.Changed:wait() end
+local CreatorCharacter = CreatorTag.Value.Character
+local CreatedAt = tick()
+
+local Firing = false
+
+
+Spawn(function()
+&#9;wait(20)
+&#9;if not Firing then
+&#9;&#9;Rocket:Destroy()
+&#9;end
+end)
+
+--
+
+Rocket:WaitForChild(&apos;Place&apos;):Play()
+
+--
+
+Rocket.Touched:connect(function(part)
+&#9;if Firing then return end
+&#9;if not part.Parent then return end
+&#9;local hum = part.Parent:FindFirstChild(&apos;Humanoid&apos;)
+&#9;if not hum and part.Parent.Parent then
+&#9;&#9;hum = part.Parent.Parent:FindFirstChild(&apos;Humanoid&apos;)
+&#9;end
+&#9;-- don&apos;t shoot ourselves while placing
+&#9;if hum and hum.Parent == CreatorCharacter and (tick()-CreatedAt) &lt; 1.2 then return end
+&#9;--
+&#9;if hum then
+&#9;&#9;Firing = true
+&#9;&#9;DoEffect(hum.Parent)
+&#9;end
+end)
+
+--
+
+function DoEffect(character)
+&#9;-- Failsafe remove us
+&#9;game.Debris:AddItem(Rocket, 10)
+
+&#9;-- Sound
+&#9;Rocket:WaitForChild(&apos;Swoosh&apos;):Play()
+
+&#9;-- light our fire
+&#9;Rocket.Fire.Enabled = true
+
+&#9;-- Platform stand them in preparation
+&#9;character.Humanoid.PlatformStand = true
+
+&#9;--
+&#9;local torso = character:FindFirstChild(&apos;Torso&apos;)
+&#9;if not torso then return end
+
+&#9;-- Attach the rocket to them
+&#9;local w = Instance.new(&apos;Weld&apos;, torso)
+&#9;w.Part0 = w.Parent
+&#9;w.Part1 = Rocket
+&#9;w.C0 = CFrame.new(0,0.6,1.2)
+
+&#9;-- Rocket them up
+&#9;local pushforce = Instance.new(&apos;BodyVelocity&apos;, torso)
+&#9;pushforce.maxForce = Vector3.new(0, 10000, 0)
+&#9;pushforce.velocity = Vector3.new(0, 20, 0)
+
+&#9;-- Wait for them to go up a bit
+&#9;wait(3)
+
+&#9;-- Detach ourself and make us fly away
+&#9;w:Destroy()
+&#9;Rocket.Velocity = Vector3.new(0, Rocket.Velocity.y, 0) - torso.CFrame.lookVector*20
+&#9;Rocket.RotVelocity = Vector3.new(math.random(-2,2), math.random(-2,2), math.random(-2,2))
+&#9;Rocket.Fire.Enabled = false
+
+&#9;-- Stop the rocket sound
+&#9;Rocket:WaitForChild(&apos;Swoosh&apos;):Stop()
+
+&#9;-- Kill the effects on the character
+&#9;pushforce:Destroy()
+
+&#9;-- Make them glide
+&#9;local glideScript = script:FindFirstChild(&apos;GlideScript&apos;)
+&#9;if glideScript then
+&#9;&#9;local sc = glideScript:Clone()
+&#9;&#9;sc.Parent = character
+&#9;&#9;sc.Disabled = false
+&#9;end
+
+&#9;-- Fade us out
+&#9;for i = 1, 0, -0.1 do
+&#9;&#9;wait()
+&#9;&#9;Rocket.Transparency = i
+&#9;end
+
+&#9;Rocket:Destroy()
+end
+</ProtectedString>
+			</Properties>
+			<Item class="LocalScript" referent="RBX4">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">GlideScript</string>
+					<ProtectedString name="Source">
+local Create = LoadLibrary(&apos;RbxUtility&apos;).Create
+
+------------------------------------------------------------------
+--|                        Main Globals                        |--
+------------------------------------------------------------------
+local Character = script.Parent
+local Torso = Character:WaitForChild(&apos;Torso&apos;)
+local Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
+
+local Glider;
+
+local FlyingVelo;
+local FlyingGyro;
+
+local FlyAnimSource = Create&apos;Animation&apos;{
+&#9;Name = &apos;FlyGliderAnim&apos;;
+&#9;Parent = Character;
+&#9;AnimationId = &apos;http://www.roblox.com/asset/?id=119783214&apos;;
+}
+local FlyAnim = Humanoid:LoadAnimation(FlyAnimSource)
+
+
+------------------------------------------------------------------
+--|                     Setup functions                        |--
+------------------------------------------------------------------
+local function CreateGlider()
+&#9;Glider = Create&apos;Part&apos;{
+&#9;&#9;Parent = Character;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;Size = Vector3.new(0.2,0.2,0.2);
+&#9;&#9;TopSurface = &apos;Smooth&apos;;
+&#9;&#9;BottomSurface = &apos;Smooth&apos;;
+&#9;&#9;--
+&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;MeshType = &apos;FileMesh&apos;;
+&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=119780517&apos;;
+&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=119779068&apos;;
+&#9;&#9;};
+&#9;&#9;--
+&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = &apos;Deploy&apos;;
+&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=119877640&apos;;
+&#9;&#9;};
+&#9;}
+&#9;local weld = Create&apos;Weld&apos;{
+&#9;&#9;Parent = Torso;
+&#9;&#9;Part0 = Torso;
+&#9;&#9;Part1 = Glider;
+&#9;&#9;C0 =  CFrame.Angles(0.2, 0, 0)*CFrame.new(0, 5.2, -0.1);
+&#9;}
+end
+
+
+local function StopFlying()
+&#9;Humanoid.PlatformStand = false
+&#9;Glider:Destroy()
+&#9;FlyAnimSource:Destroy()
+&#9;FlyAnim:Stop()
+&#9;FlyingGyro:Destroy()
+&#9;FlyingVelo:Destroy()
+&#9;script:Destroy()
+end
+
+
+local function OnPartTouched(other)
+&#9;if other.Name == &apos;Handle&apos; then return end
+&#9;if not other:IsDescendantOf(Character) then
+&#9;&#9;StopFlying()
+&#9;end
+end
+
+
+local function RecursiveConnectTouched(obj)
+&#9;for _, ch in pairs(obj:GetChildren()) do
+&#9;&#9;if ch:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;ch.Touched:connect(OnPartTouched)
+&#9;&#9;else
+&#9;&#9;&#9;RecursiveConnectTouched(ch)
+&#9;&#9;end
+&#9;end
+end
+
+
+------------------------------------------------------------------
+--|                    Flight Controlls                        |--
+------------------------------------------------------------------
+local CurrentFlightHeading;
+
+local function SetupCharacterForFlight()
+&#9;Humanoid.PlatformStand = true
+&#9;--
+&#9;local torsoCF = Torso.CFrame
+&#9;local dir = Vector3.new(torsoCF.lookVector.x, 0, torsoCF.lookVector.z)
+&#9;CurrentFlightHeading = dir.unit
+&#9;--
+&#9;FlyingVelo = Create&apos;BodyVelocity&apos;{
+&#9;&#9;Name = &apos;GliderFlyingVelo&apos;;
+&#9;&#9;Parent = Torso;
+&#9;&#9;velocity = Vector3.new();
+&#9;&#9;maxForce = Vector3.new(10000,10000,10000);
+&#9;}
+&#9;FlyingGyro = Create&apos;BodyGyro&apos;{
+&#9;&#9;Name = &apos;GliderFlyingGyro&apos;;
+&#9;&#9;Parent = Torso;
+&#9;&#9;cframe = CFrame.new(Vector3.new(), CurrentFlightHeading);
+&#9;&#9;maxTorque = Vector3.new(10000,10000,10000);
+&#9;}
+end
+
+
+local function Slerp(t, a, b)
+&#9;local om = math.acos(math.min(1, a:Dot(b)))
+&#9;if om &lt; 0.01 then
+&#9;&#9;return (1-t)*a +
+&#9;&#9;          t *b
+&#9;else
+&#9;&#9;return (math.sin((1-t)*om)/math.sin(om))*a +
+&#9;&#9;       (math.sin(   t *om)/math.sin(om))*b
+&#9;end
+end
+
+
+local TURN_ALPHA = math.pi * 0.8 -- per second
+local MAX_SPEED = 40
+local DESCENT_SPEED = 15
+
+local function DoFlight(dt)
+&#9;local camCF = Workspace.CurrentCamera.CoordinateFrame
+&#9;local desiredHeading = (camCF * CFrame.Angles(0.2, 0, 0)).lookVector
+&#9;--
+&#9;-- HAXX :Dot in this case shouldn&apos;t be &gt; 1, but it sometimes is ~1.000001 
+&#9;-- due to FP error, killing the arccos and nuking the character.
+&#9;local thetaBetween = math.acos(math.min(1, desiredHeading:Dot(CurrentFlightHeading)))
+&#9;local allowedTheta = TURN_ALPHA * dt
+&#9;if thetaBetween &lt; allowedTheta then
+&#9;&#9;CurrentFlightHeading = desiredHeading
+&#9;else
+&#9;&#9;local frac = allowedTheta / thetaBetween
+&#9;&#9;CurrentFlightHeading = Slerp(frac, CurrentFlightHeading, desiredHeading)
+&#9;end
+&#9;if CurrentFlightHeading ~= CurrentFlightHeading then
+&#9;&#9;StopFlying()
+&#9;end
+&#9;--
+&#9;local speedMod = (-CurrentFlightHeading.y + 1) / 2 -- 1 when going straight down
+&#9;local liftMod = math.min(0, CurrentFlightHeading.y)
+&#9;--
+&#9;local dirXZ = Vector3.new(CurrentFlightHeading.x, 0, CurrentFlightHeading.z).unit
+&#9;--
+&#9;local tilt = math.min(4, math.max(-4, Torso.RotVelocity.y))
+&#9;--
+&#9;FlyingVelo.velocity = dirXZ*speedMod*MAX_SPEED + Vector3.new(0, liftMod, 0)*DESCENT_SPEED
+&#9;FlyingGyro.cframe = CFrame.new(Vector3.new(), CurrentFlightHeading) * CFrame.Angles(0, 0, tilt/8)
+end
+
+
+------------------------------------------------------------------
+--|                        Call setup                          |--
+------------------------------------------------------------------
+CreateGlider()
+SetupCharacterForFlight()
+RecursiveConnectTouched(Character)
+Glider.Deploy:Play()
+FlyAnim:Play(0.2)
+
+
+------------------------------------------------------------------
+--|                     Main Flight Loop                       |--
+------------------------------------------------------------------
+local LastTime = tick()
+while true do
+&#9;local thisTime = tick()
+&#9;local dt = thisTime-LastTime
+&#9;LastTime = thisTime
+&#9;--
+&#9;DoFlight(dt)
+&#9;--
+&#9;wait()
+end</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="NumberValue" referent="RBX5">
+			<Properties>
+				<string name="Name">LastUse</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=119810509</url></Content>
+				<string name="Name">ANIM_Hold</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=119810554</url></Content>
+				<string name="Name">ANIM_Place</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX8">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-3.50000024</X>
+					<Y>61.0000038</Y>
+					<Z>96.5</Z>
+					<R00>-1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>-1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>2</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX9">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=119780441 </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=119778350 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Fire" referent="RBX10">
+				<Properties>
+					<Color3 name="Color">4289549824</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Fire</string>
+					<Color3 name="SecondaryColor">4294930976</Color3>
+					<float name="heat_xml">-25</float>
+					<float name="size_xml">3.5</float>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBX11">
+				<Properties>
+					<string name="Name">creator</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX12">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Swoosh</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/Rocket whoosh 01.wav</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX13">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Deploy</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=119877640</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX14">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Place</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=119877855</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
