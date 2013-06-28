@@ -247,6 +247,7 @@ local lastAttack = 0
 
 local DARKNESS_LOCK_TIME = 30
 local TRANSPARENT_TIME = 15
+local DARKNESS_SPARKLES_TIME = 1
 
 local r = game:service(&quot;RunService&quot;)
 
@@ -277,13 +278,18 @@ function lunge(humanoid, torso) &#9;
 end 
 
 function lightsOut(key)
-&#9;if key:lower() == &quot;q&quot; and not Tool:FindFirstChild(&apos;DarknessDisabled&apos;) and vCharacter then
+&#9;if key:lower() == &quot;q&quot; and not Tool:FindFirstChild(&apos;DarknessDisabled&apos;) and not game.Lighting:FindFirstChild(&quot;BlackPeriastronWasHere&quot;) and vCharacter then
 &#9;&#9;LightsOutSound = Tool:FindFirstChild(&apos;LightsOutSound&apos;)
 &#9;&#9;if LightsOutSound then LightsOutSound:Play() end
+&#9;&#9;-- Create tag in lighting so other players with this gear can&apos;t mess it up
+&#9;&#9;LightingTag = Instance.new(&quot;BoolValue&quot;)
+&#9;&#9;LightingTag.Name = &quot;BlackPeriastronWasHere&quot;
+&#9;&#9;LightingTag.Value = true
+&#9;&#9;LightingTag.Parent = game.Lighting
+&#9;&#9;
 &#9;&#9;-- Remove sparkles, make handle invisible...
 &#9;&#9;local sparkles = Handle:FindFirstChild(&apos;Sparkles&apos;)
 &#9;&#9;if sparkles then sparkles.Parent = nil end
-&#9;&#9;Handle.Transparency = 1.0&#9;&#9;
 &#9;&#9;
 &#9;&#9;-- Lock special attack so you can&apos;t use it multiple times in succession.
 &#9;&#9;local lock = Instance.new(&apos;BoolValue&apos;)
@@ -293,13 +299,11 @@ function lightsOut(key)
 &#9;&#9;game:GetService(&apos;Debris&apos;):AddItem(lock, DARKNESS_LOCK_TIME)
 &#9;&#9;
 &#9;&#9;-- Make sparkles reset when darkness can be used again&#9;&#9;
-&#9;&#9;if sparkles then
-&#9;&#9;&#9;Tool.ChildRemoved:connect(function(child)
-&#9;&#9;&#9;&#9;if child.Name == &apos;DarknessDisabled&apos; then
-&#9;&#9;&#9;&#9;&#9;sparkles.Parent = Handle
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;end
+&#9;&#9;Tool.ChildRemoved:connect(function(child)
+&#9;&#9;&#9;if child.Name == &apos;DarknessDisabled&apos; then
+&#9;&#9;&#9;&#9;if sparkles then sparkles.Parent = Handle end
+&#9;&#9;&#9;end
+&#9;&#9;end)
 
 &#9;&#9;-- Create a new part to hold the light
 &#9;&#9;local lightHolder = Instance.new(&apos;Part&apos;)
@@ -314,6 +318,7 @@ function lightsOut(key)
 &#9;&#9;-- this character dies
 &#9;&#9;local lightsOutScript = Tool:WaitForChild(&apos;LightsOutScript&apos;):Clone()
 &#9;&#9;lightsOutScript.LightHolder.Value = lightHolder
+&#9;&#9;lightsOutScript.Handle.Value = Handle
 &#9;&#9;lightsOutScript.Parent = Workspace
 &#9;&#9;lightsOutScript.Disabled = false
 &#9;&#9;
@@ -321,11 +326,6 @@ function lightsOut(key)
 &#9;&#9;local ninjafyScript = Tool:WaitForChild(&apos;Ninjafy&apos;):Clone()
 &#9;&#9;ninjafyScript.Parent = vCharacter
 &#9;&#9;ninjafyScript.Disabled = false
-&#9;&#9;vCharacter.ChildRemoved:connect(function(child)
-&#9;&#9;&#9;if child == ninjafyScript then
-&#9;&#9;&#9;&#9;Handle.Transparency = 0.0
-&#9;&#9;&#9;end
-&#9;&#9;end)
 &#9;end 
 end 
 
@@ -340,6 +340,14 @@ function onActivated()
 &#9;
 &#9;if myTorso == nil or myHumanoid == nil then 
 &#9;&#9;return 
+&#9;end
+&#9;
+&#9;-- Add sparkles for visibility if it&apos;s dark
+&#9;if Handle.Transparency &gt; 0.5 then
+&#9;&#9;local newSparkles = Instance.new(&quot;Sparkles&quot;)
+&#9;&#9;newSparkles.SparkleColor = Color3.new(0,0,0)
+&#9;&#9;newSparkles.Parent = Handle
+&#9;&#9;game:GetService(&apos;Debris&apos;):AddItem(newSparkles, DARKNESS_SPARKLES_TIME)
 &#9;end
 
 &#9;Tool.Enabled = false
@@ -362,6 +370,7 @@ function onEquipped(mouse)&#9;
 &#9;if mouse then 
 &#9;&#9;mouse.KeyDown:connect(lightsOut)
 &#9;end
+&#9;vCharacter = Tool.Parent
 end
 
 function onUnequipped()
@@ -404,6 +413,7 @@ local Ambient = Lighting.Ambient
 local OutdoorAmbient = Lighting.OutdoorAmbient
 local TimeOfDay = Lighting.TimeOfDay
 local LightHolder = script:WaitForChild(&apos;LightHolder&apos;).Value
+local Handle = script:WaitForChild(&apos;Handle&apos;).Value
 
 local BLACK = Color3.new(0,0,0)
 local MIDNIGHT = &quot;00:00:00&quot;
@@ -420,6 +430,8 @@ local function AbsorbLight()
 &#9;light.Brightness = LIGHT_BRIGHTNESS
 &#9;light.Range = LIGHT_RANGE
 &#9;light.Parent = LightHolder
+&#9;
+&#9;Handle.Transparency = 1.0
 end
 
 local function ReturnToNormal()
@@ -427,7 +439,12 @@ local function ReturnToNormal()
 &#9;Lighting.OutdoorAmbient = OutdoorAmbient
 &#9;Lighting.TimeOfDay = TimeOfDay
 &#9;
+&#9;local tag = Lighting:FindFirstChild(&quot;BlackPeriastronWasHere&quot;)
+&#9;if tag then tag:Remove() end
+&#9;
 &#9;LightHolder:Destroy()
+&#9;
+&#9;Handle.Transparency = 0.0
 end
 
 AbsorbLight()
@@ -442,8 +459,14 @@ script:Remove()
 					<Ref name="Value">null</Ref>
 				</Properties>
 			</Item>
+			<Item class="ObjectValue" referent="RBX12">
+				<Properties>
+					<string name="Name">Handle</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Script" referent="RBX12">
+		<Item class="Script" referent="RBX13">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -479,7 +502,7 @@ script:Remove()
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Sound" referent="RBX13">
+		<Item class="Sound" referent="RBX14">
 			<Properties>
 				<bool name="Looped">false</bool>
 				<string name="Name">LightsOutSound</string>
@@ -489,23 +512,23 @@ script:Remove()
 				<float name="Volume">1</float>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX14">
+		<Item class="Camera" referent="RBX15">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.3461577</X>
-					<Y>16.760067</Y>
-					<Z>29.8130417</Z>
-					<R00>0.999995589</R00>
-					<R01>0.000212131068</R01>
-					<R02>0.0029493554</R02>
+					<X>-0.234192804</X>
+					<Y>16.171793</Y>
+					<Z>29.7406807</Z>
+					<R00>0.999855638</R00>
+					<R01>0.0024578704</R01>
+					<R02>0.0168145597</R02>
 					<R10>-0</R10>
-					<R11>0.997423351</R11>
-					<R12>-0.0717392415</R12>
-					<R20>-0.00295697385</R20>
-					<R21>0.0717389286</R21>
-					<R22>0.997419059</R22>
+					<R11>0.989484727</R11>
+					<R12>-0.144638047</R12>
+					<R20>-0.0169932488</R20>
+					<R21>0.14461717</R21>
+					<R22>0.989341795</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
