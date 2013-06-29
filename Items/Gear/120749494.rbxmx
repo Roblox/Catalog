@@ -6,24 +6,144 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
-				<Y>0</Y>
-				<Z>1</Z>
-				<R00>-0</R00>
+				<X>0.5</X>
+				<Y>-0.300000012</Y>
+				<Z>0.5</Z>
+				<R00>-4.37113883e-08</R00>
 				<R01>0</R01>
 				<R02>-1</R02>
 				<R10>1</R10>
-				<R11>0</R11>
-				<R12>-0</R12>
-				<R20>0</R20>
+				<R11>-4.37113883e-08</R11>
+				<R12>-4.37113883e-08</R12>
+				<R20>-4.37113883e-08</R20>
 				<R21>-1</R21>
-				<R22>-0</R22>
+				<R22>1.91068547e-15</R22>
 			</CoordinateFrame>
-			<string name="Name">Sparkler</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120538126</url></Content>
+			<string name="Name">EaglePet</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120647457</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">function WaitForChild(parent, child)
+&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
+&#9;return parent[child]
+end
+
+
+local Tool = script.Parent
+local birdPrototypeContainer = game:GetService(&quot;InsertService&quot;):LoadAsset(120756595)
+--local birdPrototype = game.Lighting:WaitForChild(&apos;AmericanEagle&apos;)
+local birdPrototype = birdPrototypeContainer:GetChildren()[1]
+
+local MAX_NUM_BIRDS = 3
+local birds = {}
+local numBirds = 0
+local myCharacter
+local myTorso
+
+local Handle = WaitForChild(Tool, &quot;Handle&quot;)
+local SmallHorn = WaitForChild(Handle, &quot;SmallHorn&quot;)
+local BigHorn = WaitForChild(Handle, &quot;BigHorn&quot;)
+
+print(&quot;Got it&quot;)
+
+local SkeletonBirdDuration = 1*60
+
+--&#9;&#9;&#9;Create&apos;Sound&apos;{
+--&#9;&#9;&#9;&#9;Name = &apos;CawSound&apos;;
+--&#9;&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=96100733&apos;;
+--&#9;&#9;&#9;&#9;Volume = 1;
+--&#9;&#9;&#9;&#9;Pitch = math.random(80,120)/100;
+--&#9;&#9;&#9;};
+
+
+function removeDeadBirds()
+&#9;for birdRef, bird in pairs(birds) do
+&#9;&#9;if not bird or not bird.Parent then
+&#9;&#9;&#9;birds[birdRef] = nil
+&#9;&#9;&#9;birdRef.Parent = nil
+&#9;&#9;&#9;numBirds = numBirds - 1
+&#9;&#9;end
+&#9;end
+end
+
+function spawnBird(torsoPosition)
+&#9;local newBird = birdPrototype:Clone()
+&#9;print(&quot;spawn bird prewait&quot;)
+&#9;local newBirdTorso = WaitForChild(newBird, &quot;Torso&quot;)
+&#9;local ownerRef = WaitForChild(newBirdTorso, &quot;OwnerRef&quot;)
+&#9;ownerRef.Value = myCharacter
+&#9;print(&quot;spawn bird post wait&quot;)
+&#9;local newBirdTag = Instance.new(&quot;ObjectValue&quot;)
+&#9;newBirdTag.Name = &quot;SkeletonBirdRefObject&quot;
+&#9;newBirdTag.Value = newBird
+&#9;birds[newBirdTag] = newBird
+&#9;newBirdTag.Parent = myCharacter
+
+&#9;local angle = math.pi * 2 * numBirds / (MAX_NUM_BIRDS + 1)
+&#9;local spawnPosition = torsoPosition + 200*(Vector3.new(math.sin(angle), 1, math.cos(angle)))
+&#9;newBird:TranslateBy(spawnPosition - newBird:GetModelCFrame().p)
+
+&#9;newBird.Parent = workspace
+&#9;numBirds = numBirds + 1
+&#9;game:GetService(&quot;Debris&quot;):AddItem(newBird, SkeletonBirdDuration)
+&#9;print(&quot;Added bird&quot;)
+end
+
+local debounce = false
+function onActivated()
+&#9;if not myTorso or debounce then return end
+&#9;debounce = true
+&#9;Tool.Enabled = false
+&#9;removeDeadBirds()
+
+&#9;local addedBird = false
+
+&#9;if numBirds &lt; MAX_NUM_BIRDS then BigHorn.Volume = 1 SmallHorn.Volume = 0 else SmallHorn.Volume = 1 BigHorn.Volume = 0 end
+
+&#9;while numBirds &lt; MAX_NUM_BIRDS do
+&#9;&#9;print(&quot;Spawning a bird&quot;)
+&#9;&#9;spawnBird(myTorso.CFrame.p)
+&#9;&#9;wait(1)
+&#9;&#9;addedBird = true
+&#9;end
+
+&#9;local myHumanoid = nil
+&#9;if myCharacter then myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;) end
+
+&#9;if not myHumanoid or addedBird then debounce = false Tool.Enabled = true return end
+&#9;wait(.5)
+&#9;for birdRef, bird in pairs(birds) do
+&#9;&#9;local birdTorso = bird:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;if birdTorso then
+&#9;&#9;&#9;local birdTarget = birdTorso:FindFirstChild(&quot;TargetPoint&quot;)
+&#9;&#9;&#9;if birdTarget then birdTarget.Value = myHumanoid.TargetPoint end
+&#9;&#9;end
+&#9;end
+
+&#9;wait(1.5)
+&#9;Tool.Enabled = true
+&#9;debounce = false
+end
+
+function onEquipped()
+&#9;myCharacter = Tool.Parent
+&#9;if not myCharacter or not myCharacter.Parent then myTorso = nil return end
+
+&#9;myTorso = myCharacter:FindFirstChild(&quot;Torso&quot;)
+end
+
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -34,20 +154,20 @@
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1002</int>
+				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.400000006</X>
-					<Y>5</Y>
-					<Z>0.5</Z>
-					<R00>-0</R00>
-					<R01>1</R01>
-					<R02>-0</R02>
-					<R10>-0</R10>
-					<R11>0</R11>
-					<R12>-1</R12>
-					<R20>-1</R20>
+					<X>0</X>
+					<Y>0.5</Y>
+					<Z>0.100000001</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
 					<R21>0</R21>
-					<R22>-0</R22>
+					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -63,7 +183,7 @@
 				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
-				<float name="Reflectance">0</float>
+				<float name="Reflectance">0.699999988</float>
 				<float name="RightParamA">-0.5</float>
 				<float name="RightParamB">0.5</float>
 				<token name="RightSurface">0</token>
@@ -83,19 +203,19 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<token name="formFactorRaw">2</token>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>1</X>
-					<Y>1.20000005</Y>
-					<Z>2</Z>
+					<X>0.700000465</X>
+					<Y>0.880000353</Y>
+					<Z>3</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX3">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=120538244</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=120647529</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -104,11 +224,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>1.25</X>
+						<Y>1.25</Y>
+						<Z>1.25</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120538173</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120647378</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -116,200 +236,257 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX4">
 				<Properties>
 					<bool name="Looped">false</bool>
-					<string name="Name">OpenSound</string>
+					<string name="Name">BigHorn</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12555589</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-			<Item class="Weld" referent="RBX4">
-				<Properties>
-					<CoordinateFrame name="C0">
-						<X>-2.96131202e-006</X>
-						<Y>1.15200116e-008</Y>
-						<Z>-5.08313747e-008</Z>
-						<R00>-0.999999583</R00>
-						<R01>-2.1935306e-005</R01>
-						<R02>-3.42888029e-007</R02>
-						<R10>-2.19863105e-005</R10>
-						<R11>1</R11>
-						<R12>-1.28208176e-005</R12>
-						<R20>4.00148849e-007</R20>
-						<R21>-1.27812382e-005</R21>
-						<R22>-1.00000012</R22>
-					</CoordinateFrame>
-					<CoordinateFrame name="C1">
-						<X>-2.96131202e-006</X>
-						<Y>1.15200116e-008</Y>
-						<Z>-5.08313747e-008</Z>
-						<R00>-0.999999583</R00>
-						<R01>-2.1935306e-005</R01>
-						<R02>-3.42888029e-007</R02>
-						<R10>-2.19863105e-005</R10>
-						<R11>1</R11>
-						<R12>-1.28208176e-005</R12>
-						<R20>4.00148849e-007</R20>
-						<R21>-1.27812382e-005</R21>
-						<R22>-1.00000012</R22>
-					</CoordinateFrame>
-					<string name="Name">Weld</string>
-					<Ref name="Part0">null</Ref>
-					<Ref name="Part1">null</Ref>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=96100733</url></Content>
+					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
 			<Item class="Sound" referent="RBX5">
 				<Properties>
-					<bool name="Looped">true</bool>
-					<string name="Name">DrinkSound</string>
-					<float name="Pitch">1</float>
+					<bool name="Looped">false</bool>
+					<string name="Name">SmallHorn</string>
+					<float name="Pitch">1.29999995</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12555594</url></Content>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=96100733</url></Content>
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="PointLight" referent="RBX6">
-				<Properties>
-					<float name="Brightness">1</float>
-					<Color3 name="Color">4294967295</Color3>
-					<bool name="Enabled">false</bool>
-					<string name="Name">PointLight</string>
-					<float name="Range">20</float>
-				</Properties>
-			</Item>
-			<Item class="Sparkles" referent="RBX7">
-				<Properties>
-					<bool name="Enabled">false</bool>
-					<string name="Name">Sparkles</string>
-					<Color3 name="SparkleColor">4294967295</Color3>
-				</Properties>
-			</Item>
-			<Item class="Camera" referent="RBX8">
-				<Properties>
-					<Ref name="CameraSubject">null</Ref>
-					<token name="CameraType">0</token>
-					<CoordinateFrame name="CoordinateFrame">
-						<X>-2.27158546</X>
-						<Y>0.822215617</Y>
-						<Z>2.92253494</Z>
-						<R00>0.64278847</R00>
-						<R01>-0.0440963469</R01>
-						<R02>-0.764773488</R02>
-						<R10>1.86264515e-009</R10>
-						<R11>0.998341799</R11>
-						<R12>-0.0575637445</R12>
-						<R20>0.766043723</R20>
-						<R21>0.0370013118</R21>
-						<R22>0.64172262</R22>
-					</CoordinateFrame>
-					<float name="FieldOfView">70</float>
-					<CoordinateFrame name="Focus">
-						<X>-0.742040634</X>
-						<Y>0.937342942</Y>
-						<Z>1.63909149</Z>
-						<R00>1</R00>
-						<R01>0</R01>
-						<R02>0</R02>
-						<R10>0</R10>
-						<R11>1</R11>
-						<R12>0</R12>
-						<R20>0</R20>
-						<R21>0</R21>
-						<R22>1</R22>
-					</CoordinateFrame>
-					<string name="Name">ThumbnailCamera</string>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Script" referent="RBX9">
+		<Item class="LocalScript" referent="RBX6">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Script</string>
-				<ProtectedString name="Source">local Tool = script.Parent;
-Tool.Grip = CFrame.new(0,0,0,0,0,0,0,0,0,0,0,0)
-enabled = true
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">Tool = script.Parent 
+
+local stillEquipped = false 
+
+function onEquippedLocal(mouse) 
+     stillEquipped = true 
+     if mouse == nil then 
+          print(&quot;Mouse not found&quot;) 
+          return 
+     end 
+     while stillEquipped do 
+          print(&quot;Setting Mouse to go&quot;) 
+          mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot; 
+          while Tool.Enabled and stillEquipped do 
+               wait(0.01) 
+          end 
+          print(&quot;Setting Mouse to wait&quot;) 
+          mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot; 
+          while not Tool.Enabled and stillEquipped do 
+               wait(0.01) 
+          end      
+     end 
+end 
 
 
-local r = 1
-local g = 0
-local b = 0
-local mode = 0
-local light = script.Parent.Handle.PointLight
-spark = true
+function onUnequippedLocal() 
+     stillEquipped = false 
+end 
 
-function onActivated()
-&#9;if not enabled then return end
-&#9;enabled = false
-&#9;spark = not spark
-&#9;if spark then
-&#9;&#9;light.Enabled = true
-&#9;&#9;script.Parent.Handle.Sparkles.Enabled = true
-&#9;&#9;for i = 1,math.random(10),1 do
-&#9;&#9;&#9;part = Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;part.FormFactor = &quot;Custom&quot;
-&#9;&#9;&#9;part.Size = Vector3.new(0.5,0.5,0.5)
-&#9;&#9;&#9;part.Position = script.Parent.Handle.Position
-&#9;&#9;&#9;part.Velocity = Vector3.new(math.random(-50,50),math.random(70),math.random(-50,50))
-&#9;&#9;&#9;part.TopSurface = &quot;Smooth&quot;
-&#9;&#9;&#9;part.BottomSurface = &quot;Smooth&quot;
-&#9;&#9;&#9;newlight = Instance.new(&quot;PointLight&quot;)
-&#9;&#9;&#9;newlight.Range = 15
-&#9;&#9;&#9;newlight.Enabled = true
-&#9;&#9;&#9;newlight.Color = Color3.new(r,g,b)
-&#9;&#9;&#9;newlight.Parent = part
-&#9;&#9;&#9;sparkles = Instance.new(&quot;Sparkles&quot;)
-&#9;&#9;&#9;sparkles.SparkleColor = Color3.new(r,g,b)
-&#9;&#9;&#9;sparkles.Parent = part
-&#9;&#9;&#9;part.Parent = game.Workspace
-&#9;&#9;&#9;game.Debris:AddItem(part,20);
-&#9;&#9;end
-&#9;&#9;Tool.Handle.DrinkSound.Looped = true
-&#9;&#9;Tool.Handle.DrinkSound:Play()
-&#9;else
-&#9;&#9;light.Enabled = false
-&#9;&#9;script.Parent.Handle.Sparkles.Enabled = false
-&#9;&#9;Tool.Handle.DrinkSound.Looped = false
-&#9;&#9;Tool.Handle.DrinkSound:Stop()
-&#9;end
-&#9;wait(0.2)
-&#9;enabled = true
+Tool.Equipped:connect(onEquippedLocal) 
+Tool.Unequipped:connect(onUnequippedLocal)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=70439232</url></Content>
+				<string name="Name">BlowAnimation</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=70439247</url></Content>
+				<string name="Name">HoldAnimation</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX9">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">HornAnimate</string>
+				<ProtectedString name="Source">function WaitForChild(parent, child)
+&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
+&#9;return parent[child]
 end
+
+local Tool = script.Parent
+local Blow = WaitForChild(Tool, &quot;BlowAnimation&quot;)
+local Hold = WaitForChild(Tool, &quot;HoldAnimation&quot;)
+local Character
+
+local BlowAnimation
+local HoldAnimation
+
+local Handle = WaitForChild(Tool, &quot;Handle&quot;)
+local BigHorn = WaitForChild(Handle, &quot;BigHorn&quot;)
+local SmallHorn = WaitForChild(Handle, &quot;SmallHorn&quot;)
 
 function onEquipped()
-&#9;Tool.Handle.OpenSound:play()
-end
-
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
-
-while wait(0.1) do
-&#9;light.Color = Color3.new(r,g,b)
-&#9;script.Parent.Handle.Sparkles.SparkleColor = Color3.new(r,g,b)
-&#9;mode = mode + 0.02
-&#9;if spark then
-&#9;&#9;if mode &lt; 1 then
-&#9;&#9;&#9;r = 1
-&#9;&#9;&#9;g = 0
-&#9;&#9;&#9;b = 0
-&#9;&#9;elseif mode &lt; 2 then
-&#9;&#9;&#9;r = 1
-&#9;&#9;&#9;g = 1
-&#9;&#9;&#9;b = 1
-&#9;&#9;elseif mode &lt; 3 then
-&#9;&#9;&#9;r = 0
-&#9;&#9;&#9;g = 0
-&#9;&#9;&#9;b = 1
-&#9;&#9;else
-&#9;&#9;&#9;mode = 0
-&#9;&#9;end
+&#9;Character = Tool.Parent
+&#9;local Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if Humanoid then
+&#9;&#9;BlowAnimation = Humanoid:LoadAnimation(Blow)
+&#9;&#9;HoldAnimation = Humanoid:LoadAnimation(Hold)
+&#9;&#9;HoldAnimation:Play()
 &#9;end
 end
 
+function onUnequipped()
+&#9;if HoldAnimation then HoldAnimation:Stop() end
+end
+
+local debounce = false
+function onActivated()
+&#9;if debounce then return end
+&#9;while Tool.Enabled do wait() end
+&#9;debounce = true
+&#9;BlowAnimation:Play(0)
+&#9;wait(.5)
+&#9;BigHorn:Play()
+&#9;SmallHorn:Play()
+&#9;
+&#9;while not Tool.Enabled do wait() end
+
+&#9;debounce = false
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+Tool.Activated:connect(onActivated)
 </ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX10">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">MotorizeRightGrip</string>
+					<ProtectedString name="Source">print(&quot;Run RightgripScript, parent=&quot;, script.Parent)
+
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Tool = script.Parent.Parent
+
+local armChildRemovedConn = nil
+local Motor6DGrip = nil
+local EquippedNum = 0
+
+Tool.Equipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;local myEquip = EquippedNum
+&#9;--some vars
+&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;local Character = Player.Character
+
+&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
+&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
+&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
+&#9;&#9;local handle = rightGrip.Part1
+
+&#9;&#9;--kill my joint when the normal joint is removed
+&#9;&#9;--this must be done here so that the joint is removed 
+&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
+&#9;&#9;--glitch up.
+&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+&#9;&#9;&#9;if ch == rightGrip then
+&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
+&#9;&#9;&#9;&#9;Motor6DGrip = nil
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
+&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
+&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
+&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+
+&#9;&#9;--make my new joint
+&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
+&#9;&#9;&#9;Part0 = rightarm,
+&#9;&#9;&#9;Part1 = handle,
+&#9;&#9;&#9;C0 = CFrame.new(),
+&#9;&#9;&#9;C1 = rightGrip.C1
+&#9;&#9;}
+&#9;&#9;--kill the old weld
+&#9;&#9;rightGrip.Part1 = nil
+&#9;&#9;rightGrip.Part0 = nil
+&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;if armChildRemovedConn then
+&#9;&#9;armChildRemovedConn:disconnect()
+&#9;&#9;armChildRemovedConn = nil
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX11">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-3.90439844</X>
+					<Y>2.68832588</Y>
+					<Z>-4.40497255</Z>
+					<R00>-0.804896057</R00>
+					<R01>0.209765092</R01>
+					<R02>-0.555104494</R02>
+					<R10>-2.98023224e-08</R10>
+					<R11>0.935439289</R11>
+					<R12>0.353487551</R12>
+					<R20>0.593415856</R20>
+					<R21>0.284520775</R21>
+					<R22>-0.752931356</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-2.79418945</X>
+					<Y>1.98135078</Y>
+					<Z>-2.89910984</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
