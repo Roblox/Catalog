@@ -6,24 +6,560 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
+				<X>0.5</X>
 				<Y>0</Y>
-				<Z>1</Z>
-				<R00>-0</R00>
-				<R01>0</R01>
-				<R02>-1</R02>
-				<R10>1</R10>
-				<R11>0</R11>
-				<R12>-0</R12>
-				<R20>0</R20>
-				<R21>-1</R21>
-				<R22>-0</R22>
+				<Z>0</Z>
+				<R00>0.860230029</R00>
+				<R01>0.41553843</R01>
+				<R02>-0.295520216</R02>
+				<R10>-0.509293437</R10>
+				<R11>0.728590786</R11>
+				<R12>-0.45801273</R12>
+				<R20>0.024991408</R20>
+				<R21>0.544502795</R21>
+				<R22>0.838386655</R22>
 			</CoordinateFrame>
-			<string name="Name">Sparkler</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120538126</url></Content>
-			<string name="ToolTip"></string>
+			<string name="Name">JusticeHammer</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120607637</url></Content>
+			<string name="ToolTip">For Justice!</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">JusticeHammerScript</string>
+				<ProtectedString name="Source">
+------------------------------------------------------
+--|                  Main Globals                  |--
+------------------------------------------------------
+local Create = LoadLibrary(&apos;RbxUtility&apos;).Create
+local Tool = script.Parent
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local Character;
+local Player;
+local Torso;
+local RightLeg;
+local Head;
+local Mouse;
+local Humanoid;
+
+
+-------------------------------------------------------
+--|            Stolen from Christmas Katana         |--
+-------------------------------------------------------
+local function frand(low, high)
+&#9;return low + math.random()*(high-low)
+end
+
+--make the hitting ground effect
+local PossibleSplashColors = {Color3.new(1, 0, 0), Color3.new(1, 1, 1), Color3.new(0, 0, 1)}
+local function CreateSplashEffect(pos)
+&#9;local splashParts = {}
+&#9;for i = 1, 20 do
+&#9;&#9;local part = Create&apos;Part&apos;{
+&#9;&#9;&#9;FormFactor = &apos;Custom&apos;,
+&#9;&#9;&#9;Name = &apos;SlashParticle&apos;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;Size = Vector3.new(0.5, 0.5, 0.5),
+&#9;&#9;&#9;CFrame = CFrame.new(pos),
+&#9;&#9;&#9;Create&apos;Fire&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Effect&apos;,
+&#9;&#9;&#9;&#9;Size = 2,
+&#9;&#9;&#9;&#9;Color = PossibleSplashColors[math.random(1, #PossibleSplashColors)],
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create&apos;BodyVelocity&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;Fly&apos;,
+&#9;&#9;&#9;&#9;P = 100000,
+&#9;&#9;&#9;&#9;maxForce = Vector3.new(0, 0, 0),
+&#9;&#9;&#9;&#9;velocity = Vector3.new(frand(-1, 1), 
+&#9;&#9;&#9;&#9;                       frand(0.5,1), 
+&#9;&#9;&#9;&#9;                       frand(-1, 1)).unit * frand(20, 80),
+&#9;&#9;&#9;},
+&#9;&#9;}
+&#9;&#9;splashParts[#splashParts+1] = part
+&#9;&#9;part.Parent = Character
+&#9;&#9;part.Velocity = part.Fly.velocity
+&#9;&#9;game.Debris:AddItem(part, 0.5)
+&#9;&#9;Delay(frand(0.1, 0.4), function()
+&#9;&#9;&#9;part.Parent = nil
+&#9;&#9;end)
+&#9;end
+end
+
+
+-------------------------------------------------------
+--|               Animation Globals                 |--
+-------------------------------------------------------
+-- Sounds
+local Sound_Spin = Handle:WaitForChild(&apos;SOUND_Spin&apos;)
+local Sound_HitGround = Handle:WaitForChild(&apos;SOUND_HitGround&apos;)
+local Sound_Swish = Handle:WaitForChild(&apos;SOUND_Swish&apos;)
+-- Movement
+local AnimSource_Equip = Tool:WaitForChild(&apos;ANIM_Equip&apos;)
+local AnimSource_Idle  = Tool:WaitForChild(&apos;ANIM_Idle&apos;)
+local AnimSource_Run   = Tool:WaitForChild(&apos;ANIM_Run&apos;)
+local Anim_Equip, Anim_Idle, Anim_Run;
+-- Attacks
+local AnimSource_Swing =      Tool:WaitForChild(&apos;ANIM_Swing&apos;)
+local AnimSource_Spin =       Tool:WaitForChild(&apos;ANIM_Spin&apos;)
+local AnimSource_BeginSmash = Tool:WaitForChild(&apos;ANIM_BeginSmash&apos;)
+local AnimSource_EndSmash =   Tool:WaitForChild(&apos;ANIM_EndSmash&apos;)
+local Anim_Swing, Anim_Spin, Anim_BeginSmash, Anim_EndSmash
+
+
+-------------------------------------------------------
+--|                   Tool State                    |--
+-------------------------------------------------------
+local Equipped = false
+
+local HammerTrailOn = false
+
+local LastClick = 0
+local PlayingRunning = false
+local DoingSwing = false
+local DoingSmash = false
+local SmashForce;
+local SpinForce;
+local DoingSpin = false -- True while spin key being held
+
+
+-------------------------------------------------------
+--|                  Main Methods                   |--
+-------------------------------------------------------
+local function IsRunning()
+&#9;return (Torso.Velocity - Vector3.new(0, Torso.Velocity.y, 0)).magnitude &gt; 1
+end
+
+Handle.Touched:connect(function(part)
+&#9;if not Humanoid or Humanoid.Health &lt;= 0 then return end
+&#9;if part:IsDescendantOf(Character) then return end
+&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;if hum then
+&#9;&#9;local damage;
+&#9;&#9;if DoingSpin then
+&#9;&#9;&#9;damage = 10
+&#9;&#9;elseif DoingSmash then
+&#9;&#9;&#9;damage = 30
+&#9;&#9;elseif DoingSwing then
+&#9;&#9;&#9;damage = 100
+&#9;&#9;else
+&#9;&#9;&#9;damage = 0
+&#9;&#9;end
+&#9;&#9;hum:TakeDamage(damage)
+&#9;end
+end)
+
+local TrailEffectPart = Instance.new(&apos;Part&apos;)
+TrailEffectPart.FormFactor = &apos;Custom&apos;
+TrailEffectPart.Size = Vector3.new(1, 0.4, 1)
+TrailEffectPart.TopSurface = &apos;Smooth&apos;
+TrailEffectPart.BottomSurface = &apos;Smooth&apos;
+TrailEffectPart.Anchored = true
+TrailEffectPart.CanCollide = false
+TrailEffectPart.Locked = true
+local TrailMesh = Instance.new(&apos;SpecialMesh&apos;, TrailEffectPart)
+TrailMesh.Name = &apos;Mesh&apos;
+TrailMesh.MeshType = &apos;FileMesh&apos;
+TrailMesh.TextureId = &apos;http://www.roblox.com/asset/?id=120736941&apos;
+TrailMesh.MeshId = &apos;http://www.roblox.com/asset/?id=1078075&apos;
+TrailMesh.Scale = Vector3.new(1.5, 3, 1.5)
+
+local BlueVector = Vector3.new(0, 0, 1)
+local RedVector = Vector3.new(1, 0, 0)
+local WhiteVector = Vector3.new(1, 1, 1)
+local ColorVectors = {BlueVector, RedVector, WhiteVector}
+local CurrentColor = 1
+
+local LastEffectPos = nil;
+
+Spawn(function()
+&#9;while true do
+&#9;&#9;if HammerTrailOn then
+&#9;&#9;&#9;local trailPart = TrailEffectPart:Clone()
+&#9;&#9;&#9;local at = (Handle.CFrame * 
+&#9;&#9;&#9;            CFrame.new(2.72, 0.01, 1) * 
+&#9;&#9;&#9;            CFrame.Angles(0, math.pi/2, math.pi/2)).p
+&#9;&#9;&#9;if LastEffectPos then
+&#9;&#9;&#9;&#9;local dist = (at - LastEffectPos).magnitude
+&#9;&#9;&#9;&#9;trailPart.CFrame = CFrame.new(LastEffectPos, at) * CFrame.new(0, 0, -dist/2) *
+&#9;&#9;&#9;&#9;                   CFrame.Angles(math.pi/2, 0, 0)
+&#9;&#9;&#9;&#9;trailPart.Mesh.Scale = Vector3.new(1.5, dist/0.4, 1.5)
+&#9;&#9;&#9;&#9;trailPart.Parent = Character
+&#9;&#9;&#9;&#9;CurrentColor = CurrentColor + 1
+&#9;&#9;&#9;&#9;if CurrentColor &gt; #ColorVectors then
+&#9;&#9;&#9;&#9;&#9;CurrentColor = 1
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;trailPart.Mesh.VertexColor = ColorVectors[CurrentColor]
+&#9;&#9;&#9;&#9;game.Debris:AddItem(trailPart, 0.2)
+&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;for i = 0, 1, 0.2 do
+&#9;&#9;&#9;&#9;&#9;&#9;trailPart.Transparency = i
+&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;trailPart.Transparency = 1
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;LastEffectPos = at
+&#9;&#9;else
+&#9;&#9;&#9;LastEffectPos = nil
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+end)
+
+-------------------------------------------------------
+--|                  Entry Point                    |--
+-------------------------------------------------------
+Tool.Equipped:connect(function(mouse)
+&#9;Mouse = mouse
+&#9;Character = Tool.Parent
+&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
+&#9;Head = Character:WaitForChild(&apos;Head&apos;)
+&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
+&#9;RightLeg = Character:WaitForChild(&apos;Right Leg&apos;)
+&#9;--
+&#9;Anim_Equip = Humanoid:LoadAnimation(AnimSource_Equip)
+&#9;Anim_Swing = Humanoid:LoadAnimation(AnimSource_Swing)
+&#9;Anim_Run =   Humanoid:LoadAnimation(AnimSource_Run)
+&#9;Anim_Idle =  Humanoid:LoadAnimation(AnimSource_Idle)
+&#9;Anim_BeginSmash = Humanoid:LoadAnimation(AnimSource_BeginSmash)
+&#9;Anim_EndSmash =   Humanoid:LoadAnimation(AnimSource_EndSmash)
+&#9;Anim_Spin = Humanoid:LoadAnimation(AnimSource_Spin)
+&#9;--
+&#9;Anim_Equip:Play()
+&#9;repeat until Anim_Equip.KeyframeReached:wait() == &apos;Complete&apos;
+&#9;--
+&#9;Equipped = true
+&#9;--
+&#9;if not Equipped then return end
+&#9;--
+&#9;if IsRunning() then
+&#9;&#9;PlayingRunning = true
+&#9;&#9;Anim_Run:Play(0)
+&#9;else
+&#9;&#9;PlayingRunning = false
+&#9;&#9;Anim_Idle:Play(0)
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;while Equipped do
+&#9;&#9;&#9;local isRunning = IsRunning()
+&#9;&#9;&#9;if not DoingSwing then
+&#9;&#9;&#9;&#9;if isRunning and not PlayingRunning then
+&#9;&#9;&#9;&#9;&#9;Anim_Idle:Stop(0.3)
+&#9;&#9;&#9;&#9;&#9;Anim_Run:Play(0)
+&#9;&#9;&#9;&#9;elseif not isRunning and PlayingRunning then
+&#9;&#9;&#9;&#9;&#9;Anim_Run:Stop(0.3)
+&#9;&#9;&#9;&#9;&#9;Anim_Idle:Play(0)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;PlayingRunning = isRunning
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;end)
+&#9;--
+&#9;Mouse.KeyDown:connect(function(key)
+&#9;&#9;if key:lower() == &apos;q&apos; and not DoingSmash and not DoingSwing then
+&#9;&#9;&#9;DoingSpin = true
+&#9;&#9;&#9;Anim_Spin:Play()
+&#9;&#9;&#9;Sound_Spin:Play()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;SpinForce = Instance.new(&apos;BodyAngularVelocity&apos;)
+&#9;&#9;&#9;SpinForce.maxTorque = Vector3.new(0, 10000000, 0)
+&#9;&#9;&#9;SpinForce.angularvelocity = Vector3.new(0, 10, 0)
+&#9;&#9;&#9;SpinForce.P = 10000
+&#9;&#9;&#9;SpinForce.Parent = Torso
+&#9;&#9;&#9;--
+&#9;&#9;&#9;HammerTrailOn = true
+&#9;&#9;&#9;while DoingSpin do
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;HammerTrailOn = false
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Anim_Spin:Stop()
+&#9;&#9;&#9;Sound_Spin:Stop()
+&#9;&#9;&#9;SpinForce:Destroy()
+&#9;&#9;&#9;SpinForce = nil
+&#9;&#9;&#9;DoingSpin = false
+&#9;&#9;&#9;if IsRunning then
+&#9;&#9;&#9;&#9;Anim_Run:Play()
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;Anim_Idle:Play()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(key)
+&#9;&#9;if key:lower() == &apos;q&apos; then
+&#9;&#9;&#9;DoingSpin = false
+&#9;&#9;end
+&#9;end)
+&#9;--
+&#9;local Swing_Id = 0
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;if (tick()-LastClick) &lt; 0.3 and not DoingSmash and not DoingSpin then
+&#9;&#9;&#9;LastClick = 0
+&#9;&#9;&#9;Anim_Swing:Stop()
+&#9;&#9;&#9;DoingSwing = false
+&#9;&#9;&#9;if IsRunning() then
+&#9;&#9;&#9;&#9;Anim_Run:Play()
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;Anim_Idle:Play()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;--
+&#9;&#9;&#9;DoingSmash = true
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Humanoid.Jump = true
+&#9;&#9;&#9;SmashForce = Instance.new(&apos;BodyVelocity&apos;)
+&#9;&#9;&#9;SmashForce.Name = &apos;SmashForce&apos;
+&#9;&#9;&#9;SmashForce.maxForce = Vector3.new(0, 1000000, 0)
+&#9;&#9;&#9;SmashForce.velocity = Vector3.new(0, 100, 0)
+&#9;&#9;&#9;SmashForce.Parent = Torso
+&#9;&#9;&#9;game.Debris:AddItem(SmashForce, 0.1)
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Anim_BeginSmash:Play()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;wait(0.1)
+&#9;&#9;&#9;if Torso.Velocity.y &gt; 0 then
+&#9;&#9;&#9;&#9;while Torso.Velocity.y &gt; 0 do
+&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;Anim_BeginSmash:Stop(0)
+&#9;&#9;&#9;&#9;HammerTrailOn = true
+&#9;&#9;&#9;&#9;Anim_EndSmash:Play(0)
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;-- wait for us to hit the ground
+&#9;&#9;&#9;&#9;repeat until not RightLeg.Touched:wait():IsDescendantOf(Character) 
+&#9;&#9;&#9;&#9;Anim_EndSmash:Stop()
+&#9;&#9;&#9;&#9;-- hit ground, show effect from the hammer
+&#9;&#9;&#9;&#9;local at = (Handle.CFrame * 
+&#9;&#9;&#9;&#9;            CFrame.new(2.72, 0.01, 1) * 
+&#9;&#9;&#9;&#9;            CFrame.Angles(0,math.pi/2,math.pi/2)).p
+&#9;&#9;&#9;&#9;CreateSplashEffect(at)
+&#9;&#9;&#9;&#9;Sound_HitGround:Play()
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;HammerTrailOn = false
+&#9;&#9;&#9;&#9;DoingSmash = false
+&#9;&#9;&#9;&#9;SmashForce = nil
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;-- failed
+&#9;&#9;&#9;&#9;DoingSmash = false
+&#9;&#9;&#9;&#9;SmashForce = nil
+&#9;&#9;&#9;end
+&#9;&#9;elseif not DoingSpin and not DoingSmash and not DoingSwing then
+&#9;&#9;&#9;LastClick = tick()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;DoingSwing = true
+&#9;&#9;&#9;Anim_Run:Stop()
+&#9;&#9;&#9;Anim_Idle:Stop()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Sound_Swish:Play()
+&#9;&#9;&#9;Anim_Swing:Play()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Swing_Id = Swing_Id + 1
+&#9;&#9;&#9;local mySwingId = Swing_Id
+&#9;&#9;&#9;Delay(0.5, function()
+&#9;&#9;&#9;&#9;if DoingSwing and mySwingId == Swing_Id then
+&#9;&#9;&#9;&#9;&#9;Sound_HitGround:Play()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;wait(1.3)
+&#9;&#9;&#9;if DoingSwing and mySwingId == Swing_Id then
+&#9;&#9;&#9;&#9;if IsRunning() then
+&#9;&#9;&#9;&#9;&#9;Anim_Run:Play(0.1)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;Anim_Idle:Play(0.1)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;DoingSwing = false
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;Sound_Spin:Stop()
+&#9;HammerTrailOn = false
+&#9;Equipped = false
+&#9;DoingSwing = false
+&#9;DoingSpin = false
+&#9;DoingSmash = false
+&#9;Anim_Idle:Stop()
+&#9;Anim_Run:Stop()
+&#9;Anim_Swing:Stop()
+&#9;Anim_Equip:Stop()
+&#9;Anim_BeginSmash:Stop()
+&#9;Anim_EndSmash:Stop()
+&#9;Anim_Spin:Stop()
+&#9;if SpinForce then SpinForce:Destroy() end
+&#9;if SmashForce then SmashForce:Destroy() end
+end)</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">MotorizeRightGrip</string>
+					<ProtectedString name="Source">print(&quot;Run RightgripScript, parent=&quot;, script.Parent)
+
+function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Tool = script.Parent.Parent
+
+local armChildRemovedConn = nil
+local Motor6DGrip = nil
+local EquippedNum = 0
+
+Tool.Equipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;local myEquip = EquippedNum
+&#9;--some vars
+&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;local Character = Player.Character
+
+&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
+&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
+&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
+&#9;&#9;local handle = rightGrip.Part1
+
+&#9;&#9;--kill my joint when the normal joint is removed
+&#9;&#9;--this must be done here so that the joint is removed 
+&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
+&#9;&#9;--glitch up.
+&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+&#9;&#9;&#9;if ch == rightGrip then
+&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
+&#9;&#9;&#9;&#9;Motor6DGrip = nil
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
+&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
+&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
+&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+
+&#9;&#9;--make my new joint
+&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
+&#9;&#9;&#9;Part0 = rightarm,
+&#9;&#9;&#9;Part1 = handle,
+&#9;&#9;}
+&#9;&#9;--kill the old weld
+&#9;&#9;rightGrip.Part1 = nil
+&#9;&#9;rightGrip.Part0 = nil
+&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;if armChildRemovedConn then
+&#9;&#9;armChildRemovedConn:disconnect()
+&#9;&#9;armChildRemovedConn = nil
+&#9;end
+end)
+</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX3">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120642286</url></Content>
+				<string name="Name">ANIM_Equip</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX4">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120735631</url></Content>
+				<string name="Name">ANIM_Swing</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120735709</url></Content>
+				<string name="Name">ANIM_BeginSmash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX6">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120735762</url></Content>
+				<string name="Name">ANIM_EndSmash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120732433</url></Content>
+				<string name="Name">ANIM_Spin</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120642404</url></Content>
+				<string name="Name">ANIM_Run</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=120642355</url></Content>
+				<string name="Name">ANIM_Idle</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-20.0898705</X>
+					<Y>59.6438713</Y>
+					<Z>99.4725189</Z>
+					<R00>0.941468179</R00>
+					<R01>-0.170496896</R01>
+					<R02>0.290806502</R02>
+					<R10>-0</R10>
+					<R11>0.862666786</R11>
+					<R12>0.505772769</R12>
+					<R20>-0.337101758</R20>
+					<R21>-0.47616896</R21>
+					<R22>0.812173367</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-22.2999992</X>
+					<Y>55.7999992</Y>
+					<Z>93.3000031</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX11">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -32,22 +568,22 @@
 				<token name="BackSurfaceInput">0</token>
 				<float name="BottomParamA">-0.5</float>
 				<float name="BottomParamB">0.5</float>
-				<token name="BottomSurface">0</token>
+				<token name="BottomSurface">4</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">1002</int>
+				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.400000006</X>
-					<Y>5</Y>
-					<Z>0.5</Z>
-					<R00>-0</R00>
-					<R01>1</R01>
-					<R02>-0</R02>
-					<R10>-0</R10>
+					<X>-22.2999992</X>
+					<Y>55.7999992</Y>
+					<Z>93.3000031</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>1</R02>
+					<R10>1</R10>
 					<R11>0</R11>
-					<R12>-1</R12>
-					<R20>-1</R20>
-					<R21>0</R21>
-					<R22>-0</R22>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>1</R21>
+					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -60,7 +596,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">true</bool>
+				<bool name="Locked">false</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -75,7 +611,7 @@
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
-				<token name="TopSurface">0</token>
+				<token name="TopSurface">3</token>
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
@@ -83,19 +619,19 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<token name="formFactorRaw">2</token>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>1</X>
-					<Y>1.20000005</Y>
-					<Z>2</Z>
+					<X>7.59999657</X>
+					<Y>0.600000024</Y>
+					<Z>0.599999845</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX12">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=120538244</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=120607730</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -104,11 +640,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>3.20000005</X>
+						<Y>3.20000005</Y>
+						<Z>3.20000005</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120538173</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120607792</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -116,201 +652,36 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">OpenSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12555589</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-			<Item class="Weld" referent="RBX4">
-				<Properties>
-					<CoordinateFrame name="C0">
-						<X>-2.96131202e-006</X>
-						<Y>1.15200116e-008</Y>
-						<Z>-5.08313747e-008</Z>
-						<R00>-0.999999583</R00>
-						<R01>-2.1935306e-005</R01>
-						<R02>-3.42888029e-007</R02>
-						<R10>-2.19863105e-005</R10>
-						<R11>1</R11>
-						<R12>-1.28208176e-005</R12>
-						<R20>4.00148849e-007</R20>
-						<R21>-1.27812382e-005</R21>
-						<R22>-1.00000012</R22>
-					</CoordinateFrame>
-					<CoordinateFrame name="C1">
-						<X>-2.96131202e-006</X>
-						<Y>1.15200116e-008</Y>
-						<Z>-5.08313747e-008</Z>
-						<R00>-0.999999583</R00>
-						<R01>-2.1935306e-005</R01>
-						<R02>-3.42888029e-007</R02>
-						<R10>-2.19863105e-005</R10>
-						<R11>1</R11>
-						<R12>-1.28208176e-005</R12>
-						<R20>4.00148849e-007</R20>
-						<R21>-1.27812382e-005</R21>
-						<R22>-1.00000012</R22>
-					</CoordinateFrame>
-					<string name="Name">Weld</string>
-					<Ref name="Part0">null</Ref>
-					<Ref name="Part1">null</Ref>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBX13">
 				<Properties>
 					<bool name="Looped">true</bool>
-					<string name="Name">DrinkSound</string>
+					<string name="Name">SOUND_Spin</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12555594</url></Content>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=120745021</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX14">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SOUND_Swish</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=120745021</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX15">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SOUND_HitGround</string>
+					<float name="Pitch">0.100000001</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=116048294 </url></Content>
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="PointLight" referent="RBX6">
-				<Properties>
-					<float name="Brightness">1</float>
-					<Color3 name="Color">4294967295</Color3>
-					<bool name="Enabled">false</bool>
-					<string name="Name">PointLight</string>
-					<float name="Range">20</float>
-				</Properties>
-			</Item>
-			<Item class="Sparkles" referent="RBX7">
-				<Properties>
-					<bool name="Enabled">false</bool>
-					<string name="Name">Sparkles</string>
-					<Color3 name="SparkleColor">4294967295</Color3>
-				</Properties>
-			</Item>
-			<Item class="Camera" referent="RBX8">
-				<Properties>
-					<Ref name="CameraSubject">null</Ref>
-					<token name="CameraType">0</token>
-					<CoordinateFrame name="CoordinateFrame">
-						<X>-2.27158546</X>
-						<Y>0.822215617</Y>
-						<Z>2.92253494</Z>
-						<R00>0.64278847</R00>
-						<R01>-0.0440963469</R01>
-						<R02>-0.764773488</R02>
-						<R10>1.86264515e-009</R10>
-						<R11>0.998341799</R11>
-						<R12>-0.0575637445</R12>
-						<R20>0.766043723</R20>
-						<R21>0.0370013118</R21>
-						<R22>0.64172262</R22>
-					</CoordinateFrame>
-					<float name="FieldOfView">70</float>
-					<CoordinateFrame name="Focus">
-						<X>-0.742040634</X>
-						<Y>0.937342942</Y>
-						<Z>1.63909149</Z>
-						<R00>1</R00>
-						<R01>0</R01>
-						<R02>0</R02>
-						<R10>0</R10>
-						<R11>1</R11>
-						<R12>0</R12>
-						<R20>0</R20>
-						<R21>0</R21>
-						<R22>1</R22>
-					</CoordinateFrame>
-					<string name="Name">ThumbnailCamera</string>
-				</Properties>
-			</Item>
-		</Item>
-		<Item class="Script" referent="RBX9">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Script</string>
-				<ProtectedString name="Source">local Tool = script.Parent;
-Tool.Grip = CFrame.new(0,0,0,0,0,0,0,0,0,0,0,0)
-enabled = true
-
-
-local r = 1
-local g = 0
-local b = 0
-local mode = 0
-local light = script.Parent.Handle.PointLight
-spark = true
-
-function onActivated()
-&#9;if not enabled then return end
-&#9;enabled = false
-&#9;spark = not spark
-&#9;if spark then
-&#9;&#9;light.Enabled = true
-&#9;&#9;script.Parent.Handle.Sparkles.Enabled = true
-&#9;&#9;for i = 1,math.random(10),1 do
-&#9;&#9;&#9;part = Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;part.FormFactor = &quot;Custom&quot;
-&#9;&#9;&#9;part.Size = Vector3.new(0.5,0.5,0.5)
-&#9;&#9;&#9;part.Position = script.Parent.Handle.Position
-&#9;&#9;&#9;part.Velocity = Vector3.new(math.random(-50,50),math.random(70),math.random(-50,50))
-&#9;&#9;&#9;part.TopSurface = &quot;Smooth&quot;
-&#9;&#9;&#9;part.BottomSurface = &quot;Smooth&quot;
-&#9;&#9;&#9;newlight = Instance.new(&quot;PointLight&quot;)
-&#9;&#9;&#9;newlight.Range = 15
-&#9;&#9;&#9;newlight.Enabled = true
-&#9;&#9;&#9;newlight.Color = Color3.new(r,g,b)
-&#9;&#9;&#9;newlight.Parent = part
-&#9;&#9;&#9;sparkles = Instance.new(&quot;Sparkles&quot;)
-&#9;&#9;&#9;sparkles.SparkleColor = Color3.new(r,g,b)
-&#9;&#9;&#9;sparkles.Parent = part
-&#9;&#9;&#9;part.Parent = game.Workspace
-&#9;&#9;&#9;game.Debris:AddItem(part,20);
-&#9;&#9;end
-&#9;&#9;Tool.Handle.DrinkSound.Looped = true
-&#9;&#9;Tool.Handle.DrinkSound:Play()
-&#9;else
-&#9;&#9;light.Enabled = false
-&#9;&#9;script.Parent.Handle.Sparkles.Enabled = false
-&#9;&#9;Tool.Handle.DrinkSound.Looped = false
-&#9;&#9;Tool.Handle.DrinkSound:Stop()
-&#9;end
-&#9;wait(0.2)
-&#9;enabled = true
-end
-
-function onEquipped()
-&#9;Tool.Handle.OpenSound:play()
-end
-
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
-
-while wait(0.1) do
-&#9;light.Color = Color3.new(r,g,b)
-&#9;script.Parent.Handle.Sparkles.SparkleColor = Color3.new(r,g,b)
-&#9;mode = mode + 0.02
-&#9;if spark then
-&#9;&#9;if mode &lt; 1 then
-&#9;&#9;&#9;r = 1
-&#9;&#9;&#9;g = 0
-&#9;&#9;&#9;b = 0
-&#9;&#9;elseif mode &lt; 2 then
-&#9;&#9;&#9;r = 1
-&#9;&#9;&#9;g = 1
-&#9;&#9;&#9;b = 1
-&#9;&#9;elseif mode &lt; 3 then
-&#9;&#9;&#9;r = 0
-&#9;&#9;&#9;g = 0
-&#9;&#9;&#9;b = 1
-&#9;&#9;else
-&#9;&#9;&#9;mode = 0
-&#9;&#9;end
-&#9;end
-end
-
-</ProtectedString>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
