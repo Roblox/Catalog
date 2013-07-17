@@ -36,9 +36,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0</X>
-					<Y>9.66499996</Y>
-					<Z>-0.300000012</Z>
+					<X>-0.200000003</X>
+					<Y>17.7000008</Y>
+					<Z>21.7000008</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -151,6 +151,144 @@
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX4">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">-------- OMG HAX
+
+r = game:service(&quot;RunService&quot;)
+
+
+local damage = 3
+
+
+local slash_damage = 6
+
+
+sword = script.Parent.Handle
+Tool = script.Parent
+
+
+local SlashSound = Instance.new(&quot;Sound&quot;)
+SlashSound.SoundId = &quot;http://www.roblox.com/Asset/?ID=12135982&quot;
+SlashSound.Parent = sword
+SlashSound.Volume = .7
+
+function isTurbo(character)
+&#9;return character:FindFirstChild(&quot;PaperHat&quot;) ~= nil
+end
+
+
+function blow(hit)
+&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+&#9;local vCharacter = Tool.Parent
+&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
+&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
+&#9;if humanoid~=nil and humanoid ~= hum and hum ~= nil then
+&#9;&#9;-- final check, make sure sword is in-hand
+
+&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;if (right_arm ~= nil) then
+&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
+&#9;&#9;&#9;&#9;local d = damage
+&#9;&#9;&#9;&#9;if (isTurbo(vCharacter) == true) then d = d * 2.5 end
+&#9;&#9;&#9;&#9;tagHumanoid(humanoid, vPlayer)
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(d)
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;untagHumanoid(humanoid)
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+
+&#9;end
+end
+
+
+function tagHumanoid(humanoid, player)
+&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value = player
+&#9;creator_tag.Name = &quot;creator&quot;
+&#9;creator_tag.Parent = humanoid
+end
+
+function untagHumanoid(humanoid)
+&#9;if humanoid ~= nil then
+&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
+&#9;&#9;if tag ~= nil then
+&#9;&#9;&#9;tag.Parent = nil
+&#9;&#9;end
+&#9;end
+end
+
+
+function attack()
+&#9;damage = slash_damage
+&#9;SlashSound:play()
+&#9;local anim = Instance.new(&quot;StringValue&quot;)
+&#9;anim.Name = &quot;toolanim&quot;
+&#9;anim.Value = &quot;Slash&quot;
+&#9;anim.Parent = Tool
+&#9;swordOut()
+&#9;wait(.5)
+&#9;swordUp()
+end
+
+
+function swordUp()
+&#9;Tool.Grip=CFrame.new(0.100000001, 1.90999997, 0, -4.37113883e-008, 0, 1, 0, 1, 0, -1, 0, -4.37113883e-008)
+end
+
+function swordOut()
+&#9;Tool.Grip=CFrame.Angles(math.pi,-math.pi/2,0)+Vector3.new(0,1.5,0)
+end
+
+
+
+Tool.Enabled = true
+
+function onActivated()
+
+&#9;if not Tool.Enabled then
+&#9;&#9;return
+&#9;end
+
+&#9;Tool.Enabled = false
+
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;return 
+&#9;end
+
+&#9;
+
+&#9;attack()
+
+&#9;wait(.4)
+
+&#9;Tool.Enabled = true
+end
+
+
+function onEquipped()
+&#9;SlashSound:play()
+end
+
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+
+
+connection = sword.Touched:connect(blow)
+
+
+</ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
