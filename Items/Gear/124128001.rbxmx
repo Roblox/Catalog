@@ -1,0 +1,863 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-2</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">Stick</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=123968979</url></Content>
+			<string name="ToolTip">Stick</string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">--Stickmasterluke
+
+
+sp=script.Parent
+
+
+anims={&quot;RightSlash&quot;,&quot;LeftSlash&quot;}
+basedamage=2
+slashdamage=8
+specialprice=16
+phi=.618033988
+damage=basedamage
+lastclick=0
+specialdebounce=true
+
+
+handle=sp:WaitForChild(&quot;Handle&quot;)
+mesh=handle:WaitForChild(&quot;Mesh&quot;)
+specialsound=handle:FindFirstChild(&quot;SpecialSound&quot;)
+slashSound=handle:WaitForChild(&quot;SwingSound&quot;)
+energy=sp:WaitForChild(&quot;Energy&quot;)
+currentattack=sp:WaitForChild(&quot;CurrentAttack&quot;)
+sp:WaitForChild(&quot;RunAnim&quot;)
+debris=game:GetService(&quot;Debris&quot;)
+r=game:service(&quot;RunService&quot;)
+
+
+
+
+function lunge()
+&#9;local anim = Instance.new(&quot;StringValue&quot;)
+&#9;anim.Name = &quot;toolanim&quot;
+&#9;anim.Value = &quot;Lunge&quot;
+&#9;anim.Parent = sp
+end
+
+function blow(hit)
+&#9;if hit.Parent~=nil then
+&#9;&#9;local humanoid=hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;local vCharacter=sp.Parent
+&#9;&#9;if vCharacter~=nil then
+&#9;&#9;&#9;local vPlayer=game.Players:playerFromCharacter(vCharacter)
+&#9;&#9;&#9;if vPlayer~=nil then
+&#9;&#9;&#9;&#9;local hum=vCharacter:findFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;if humanoid~=nil then
+&#9;&#9;&#9;&#9;&#9;if hum~=nil and humanoid~=hum then
+&#9;&#9;&#9;&#9;&#9;&#9;local right_arm=vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;if right_arm~=nil then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local joint=right_arm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if joint~=nil and (joint.Part0==handle or joint.Part1==handle) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;tagHumanoid(humanoid,vPlayer)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+
+function tagHumanoid(humanoid,player)
+&#9;for i,v in ipairs(humanoid:GetChildren()) do
+&#9;&#9;if v.Name==&quot;creator&quot; then
+&#9;&#9;&#9;v:remove()
+&#9;&#9;end
+&#9;end
+&#9;local creator_tag=Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value=player
+&#9;creator_tag.Name=&quot;creator&quot;
+&#9;creator_tag.Parent=humanoid
+&#9;debris:AddItem(creator_tag,1)
+end
+
+function lunge()
+&#9;local anim = Instance.new(&quot;StringValue&quot;)
+&#9;anim.Name = &quot;toolanim&quot;
+&#9;anim.Value = &quot;Lunge&quot;
+&#9;anim.Parent = sp
+end
+
+function tween(thing,value,startv,endv,timev,ratev)
+&#9;local timev=timev or 1
+&#9;local ratev=ratev or 1/30
+&#9;if thing and value and startv and endv then
+&#9;&#9;local frames=math.floor(timev/ratev)
+&#9;&#9;local difv
+&#9;&#9;if value==&quot;CFrame&quot; then
+&#9;&#9;&#9;difv=(endv.p-startv.p)
+&#9;&#9;else
+&#9;&#9;&#9;difv=(endv-startv)
+&#9;&#9;end
+&#9;&#9;for frame=1,frames do
+&#9;&#9;&#9;if not thing then
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;&#9;thing[value]=startv+difv*(frame/frames)
+&#9;&#9;&#9;wait(ratev)
+&#9;&#9;end
+&#9;end
+end
+
+
+function spawnstick(cframe,lifetime,scale,sdamage)
+&#9;local cframe=cframe or CFrame.new()
+&#9;local sdamage=sdamage or 16
+&#9;local scale=scale or Vector3.new(1,1,1)
+&#9;local lifetime=lifetime or 6
+&#9;local p=Instance.new(&quot;Part&quot;)
+&#9;p.Name=&quot;Stick&quot;
+&#9;p.Anchored=true
+&#9;p.TopSurface=&quot;Smooth&quot;
+&#9;p.BottomSurface=&quot;Smooth&quot;
+&#9;p.BrickColor=BrickColor.new(&quot;Brown&quot;)
+&#9;p.formFactor=&quot;Custom&quot;
+&#9;p.Size=handle.Size*scale
+&#9;local m=Instance.new(&quot;SpecialMesh&quot;)
+&#9;m.MeshId=&quot;http://www.roblox.com/asset/?id=123968188&quot;
+&#9;m.TextureId=&quot;http://www.roblox.com/asset/?id=123968836&quot;
+&#9;m.Scale=mesh.Scale*scale
+&#9;m.VertexColor=Vector3.new(1,1,1)*(.5+(math.random()*.5))
+&#9;m.Parent=p
+&#9;debris:AddItem(p,lifetime)
+&#9;local dealt=false
+&#9;p.Touched:connect(function(hit)
+&#9;&#9;if hit and hit.Parent then
+&#9;&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;if h and hit.Parent~=sp.Parent and h.Health&gt;0 and not dealt then
+&#9;&#9;&#9;&#9;dealt=true
+&#9;&#9;&#9;&#9;local chr=sp.Parent
+&#9;&#9;&#9;&#9;if chr~=nil then
+&#9;&#9;&#9;&#9;&#9;local plr=game.Players:playerFromCharacter(chr)
+&#9;&#9;&#9;&#9;&#9;if plr then
+&#9;&#9;&#9;&#9;&#9;&#9;tagHumanoid(h,plr)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;h:TakeDamage(sdamage)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;p.CFrame=cframe
+&#9;p.Parent=game.Workspace
+&#9;return p
+end
+
+
+magics={
+&#9;Wave=function(t)
+&#9;&#9;specialsound:stop()
+&#9;&#9;specialsound.Pitch=1
+&#9;&#9;specialsound:play()
+&#9;&#9;for i=1,16 do
+&#9;&#9;&#9;local sscf=CFrame.new(t.Position,t.Position+t.CFrame.lookVector*Vector3.new(1,0,1))*CFrame.new(0,-6.5,-((i*3)+5))*CFrame.Angles(0,math.pi*2*math.random(),0)
+&#9;&#9;&#9;local sscf2=sscf*CFrame.new(0,5,0)
+&#9;&#9;&#9;delay((i-1)*.1,function()
+&#9;&#9;&#9;&#9;local stick=spawnstick(sscf,4,nil,24)
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf,sscf2,.1)
+&#9;&#9;&#9;&#9;wait(.2)
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf2,sscf,.25)
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;wait(.5)
+&#9;end,
+&#9;Forest=function(t)
+&#9;&#9;specialsound:stop()
+&#9;&#9;specialsound.Pitch=1
+&#9;&#9;specialsound:play()
+&#9;&#9;for i=1,22 do
+&#9;&#9;&#9;local sscf=CFrame.new(t.Position)*CFrame.Angles(0,math.pi*2*(i/22),0)*CFrame.new(0,-8,10)*CFrame.Angles(0,math.pi*2*math.random(),0)*CFrame.Angles(math.random()-.5,0,math.random()-.5)
+&#9;&#9;&#9;local sscf2=sscf*CFrame.new(0,10,0)
+&#9;&#9;&#9;delay((i%phi)*2,function()
+&#9;&#9;&#9;&#9;local stick=spawnstick(sscf,8,Vector3.new(2,2,2))
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf,sscf2,.1)
+&#9;&#9;&#9;&#9;wait(5)
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf2,sscf,1)
+&#9;&#9;&#9;&#9;if stick then
+&#9;&#9;&#9;&#9;&#9;stick:remove()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;wait(3)
+&#9;end,
+&#9;Fort=function(t)
+&#9;&#9;specialsound:stop()
+&#9;&#9;specialsound.Pitch=1
+&#9;&#9;specialsound:play()
+&#9;&#9;for i=1,22 do
+&#9;&#9;&#9;local myphi=(i%phi)*(1+phi)
+&#9;&#9;&#9;local sscf=CFrame.new(t.Position)*CFrame.Angles(0,math.pi*2*(i/22),0)*CFrame.new(0,-8,1+((1-myphi)*4))*CFrame.Angles(.5,math.pi*2*math.random(),0)
+&#9;&#9;&#9;local sscf2=sscf*CFrame.new(0,5+((1-myphi)*5),0)
+&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;local stick=spawnstick(sscf,8,Vector3.new(2,2,2))
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf,sscf2,.1+(myphi*.5))
+&#9;&#9;&#9;&#9;wait(3+(1-myphi)*1)
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf2,sscf,2-myphi)
+&#9;&#9;&#9;&#9;if stick then
+&#9;&#9;&#9;&#9;&#9;stick:remove()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;wait(4)
+&#9;end,
+&#9;Lift=function(t)
+&#9;&#9;specialsound:stop()
+&#9;&#9;specialsound.Pitch=1
+&#9;&#9;specialsound:play()
+&#9;&#9;delay(0,function()
+&#9;&#9;&#9;local tscf=CFrame.new(t.Position)*CFrame.new(0,-(3+(handle.Size.y*5*.5)),0)*CFrame.Angles(0,math.pi*2*math.random(),0)
+&#9;&#9;&#9;local tscf2=tscf*CFrame.new(0,handle.Size.y*4.8,0)
+&#9;&#9;&#9;local trunk=spawnstick(tscf,20,Vector3.new(7,5,7))
+&#9;&#9;&#9;trunk.Velocity=Vector3.new(0,30/5,0)
+&#9;&#9;&#9;tween(trunk,&quot;CFrame&quot;,tscf,tscf2,5)
+&#9;&#9;&#9;trunk.Velocity=Vector3.new(0,0,0)
+&#9;&#9;&#9;wait(5)
+&#9;&#9;&#9;tween(trunk,&quot;CFrame&quot;,tscf2,tscf,2)
+&#9;&#9;end)
+&#9;&#9;wait(1)
+&#9;end,
+&#9;Strike=function(t)
+&#9;&#9;specialsound:stop()
+&#9;&#9;specialsound.Pitch=1
+&#9;&#9;specialsound:play()
+&#9;&#9;local targetcf=CFrame.new(t.Position,t.Position+t.CFrame.lookVector*Vector3.new(1,0,1))*CFrame.new(0,-3,-15)
+&#9;&#9;for i=1,8 do
+&#9;&#9;&#9;local myphi=(i%phi)*(1+phi)
+&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;local stick=spawnstick(nil,5,Vector3.new(2,.2+((1-myphi)*3),2),22)
+&#9;&#9;&#9;&#9;local sscf=targetcf*CFrame.Angles(0,math.random()*math.pi*2,.2*myphi)*CFrame.new(myphi*2,-stick.Size.y*.6,0)*CFrame.Angles(0,math.random()*math.pi*2,0)
+&#9;&#9;&#9;&#9;local sscf2=sscf*CFrame.new(0,stick.Size.y,0)
+&#9;&#9;&#9;&#9;stick.Velocity=Vector3.new(0,100,0)
+&#9;&#9;&#9;&#9;stick.CFrame=sscf
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf,sscf2,.25)
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;stick.Velocity=Vector3.new(0,0,0)
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf2,sscf,2)
+&#9;&#9;&#9;&#9;if stick then
+&#9;&#9;&#9;&#9;&#9;stick:remove()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;wait(1)
+&#9;end,
+&#9;Blast=function(t)
+&#9;&#9;specialsound:stop()
+&#9;&#9;specialsound.Pitch=1
+&#9;&#9;specialsound:play()
+&#9;&#9;local targetcf=CFrame.new(t.Position,t.Position+t.CFrame.lookVector*Vector3.new(1,0,1))*CFrame.new(0,-3,-10)
+&#9;&#9;for i=1,10 do
+&#9;&#9;&#9;local myphi=(i%phi)*(1+phi)
+&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;local stick=spawnstick(nil,8,Vector3.new(2,.2+((1-myphi)*3),2),14)
+&#9;&#9;&#9;&#9;local sscf=targetcf*CFrame.Angles(0,math.random()*math.pi*2,-.7*myphi)*CFrame.new(0,-stick.Size.y*.5,0)*CFrame.Angles(0,math.random()*math.pi*2,0)
+&#9;&#9;&#9;&#9;local sscf2=sscf*CFrame.new(0,stick.Size.y,0)
+&#9;&#9;&#9;&#9;stick.Velocity=Vector3.new(0,100,0)
+&#9;&#9;&#9;&#9;stick.CFrame=sscf
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf,sscf2,.25)
+&#9;&#9;&#9;&#9;stick.Velocity=Vector3.new(0,0,0)
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;stick.Velocity=Vector3.new(0,0,0)
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;tween(stick,&quot;CFrame&quot;,sscf2,sscf,2)
+&#9;&#9;&#9;&#9;if stick then
+&#9;&#9;&#9;&#9;&#9;stick:remove()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;wait(2)
+&#9;end,
+}
+
+sp.Enabled=true
+function onActivated()
+&#9;delay(.01,function()
+&#9;&#9;lastclick=tick()
+&#9;end)
+&#9;if sp.Enabled then
+&#9;&#9;sp.Enabled=false
+&#9;&#9;local character=sp.Parent;
+&#9;&#9;local humanoid=character.Humanoid
+&#9;&#9;if humanoid==nil then
+&#9;&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;&#9;return 
+&#9;&#9;end
+&#9;&#9;if (tick()-lastclick)&lt;.2 and energy.Value&gt;specialprice and specialdebounce then
+&#9;&#9;&#9;slashSound.Volume=1
+&#9;&#9;&#9;slashSound:play()
+&#9;&#9;&#9;lunge()
+&#9;&#9;&#9;damage=0
+&#9;&#9;&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;sp.RunAnim.Value=&quot;OverHeadSwing&quot;
+&#9;&#9;&#9;if t~=nil then
+&#9;&#9;&#9;&#9;energy.Value=energy.Value-specialprice
+&#9;&#9;&#9;&#9;delay(0,function()
+&#9;&#9;&#9;&#9;&#9;specialdebounce=false
+&#9;&#9;&#9;&#9;&#9;magics[currentattack.Value](t)
+&#9;&#9;&#9;&#9;&#9;specialsound:stop()
+&#9;&#9;&#9;&#9;&#9;specialdebounce=true
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;sp.RunAnim.Value=&quot;&quot;
+&#9;&#9;else
+&#9;&#9;&#9;slashSound.Volume=.7
+&#9;&#9;&#9;slashSound:play()
+&#9;&#9;&#9;newanim=anims[math.random(1,#anims)]
+&#9;&#9;&#9;while newanim==sp.RunAnim.Value do
+&#9;&#9;&#9;&#9;newanim=anims[math.random(1,#anims)]
+&#9;&#9;&#9;end
+&#9;&#9;&#9;sp.RunAnim.Value=newanim
+&#9;&#9;&#9;damage=slashdamage
+&#9;&#9;&#9;wait(.5)
+&#9;&#9;&#9;sp.RunAnim.Value=&quot;&quot;
+&#9;&#9;end
+&#9;&#9;damage=basedamage
+&#9;&#9;sp.Enabled=true
+&#9;end
+end
+
+function onEquipped()
+&#9;equipped=true
+end
+function onUnequipped()
+&#9;equipped=false
+end
+
+sp.Activated:connect(onActivated)
+sp.Equipped:connect(onEquipped)
+sp.Unequipped:connect(onUnequipped)
+
+connection=handle.Touched:connect(blow)
+
+while true do
+&#9;if equipped then
+&#9;&#9;energy.Value=math.min(100,energy.Value+1)
+&#9;end
+&#9;wait(.3)
+end
+
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Local Gui</string>
+				<ProtectedString name="Source">--Made by Stickmasterluke
+
+
+local sp=script.Parent
+
+enabled=true
+handle=sp:WaitForChild(&quot;Handle&quot;)
+gui=sp:WaitForChild(&quot;StickGui&quot;)
+local button=gui:WaitForChild(&quot;ButtonHolder&quot;):WaitForChild(&quot;Button&quot;)
+local fill=gui:WaitForChild(&quot;Bar&quot;):WaitForChild(&quot;Fill&quot;)
+local currentattack=sp:WaitForChild(&quot;CurrentAttack&quot;)
+local energy=sp:WaitForChild(&quot;Energy&quot;)
+magics={
+&#9;&quot;Wave&quot;,
+&#9;&quot;Strike&quot;,
+&#9;&quot;Blast&quot;,
+&#9;&quot;Fort&quot;,
+&#9;&quot;Forest&quot;,
+&#9;&quot;Lift&quot;,
+}
+
+function onButton1Down(mouse)
+&#9;if not enabled then
+&#9;&#9;return
+&#9;end
+&#9;enabled=false
+&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;wait(.5)
+&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;enabled=true
+end
+
+function changemode(a)
+&#9;currentmagic=currentmagic+a
+&#9;if currentmagic&gt;#magics then
+&#9;&#9;currentmagic=1
+&#9;elseif currentmagic&lt;1 then
+&#9;&#9;currentmagic=#magics
+&#9;end
+&#9;currentattack.Value=magics[currentmagic]
+end
+
+function onEquippedLocal(mouse)
+&#9;local currentlast=lastequipped
+&#9;if mouse==nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
+&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;onButton1Down(mouse)
+&#9;end)
+&#9;mouse.KeyDown:connect(function(key)
+&#9;&#9;if key then
+&#9;&#9;&#9;key=string.byte(key)
+&#9;&#9;&#9;if key==string.byte(&quot;q&quot;) then
+&#9;&#9;&#9;&#9;changemode(-1)
+&#9;&#9;&#9;elseif key==string.byte(&quot;e&quot;) then
+&#9;&#9;&#9;&#9;changemode(1)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;local plr=game.Players.LocalPlayer
+&#9;if plr then
+&#9;&#9;local plrgui=plr:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;&#9;if plrgui then
+&#9;&#9;&#9;gui.Parent=plrgui
+&#9;&#9;end
+&#9;end
+end
+sp.Equipped:connect(onEquippedLocal)
+sp.Unequipped:connect(function()
+&#9;gui.Parent=sp
+end)
+
+sp:WaitForChild(&quot;RunAnim&quot;).Changed:connect(function()
+&#9;local h=sp.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;local t=sp.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;local anim=sp:FindFirstChild(sp.RunAnim.Value)
+&#9;if anim and t and h then
+&#9;&#9;theanim=h:LoadAnimation(anim)
+&#9;&#9;if theanim and h.Health&gt;0 then
+&#9;&#9;&#9;theanim:Play()
+&#9;&#9;end
+&#9;end
+end)
+
+currentattack.Changed:connect(function()
+&#9;button.Text=currentattack.Value
+end)
+button.MouseButton1Down:connect(function()
+&#9;changemode(1)
+end)
+
+energy.Changed:connect(function()
+&#9;local percent=energy.Value/100
+&#9;fill.Size=UDim2.new(percent,0,1,0)
+&#9;fill.BackgroundColor3=Color3.new(percent,1,percent)
+end)
+
+currentmagic=math.random(1,#magics)
+currentattack.Value=magics[currentmagic]
+
+
+
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX3">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74813494</url></Content>
+				<string name="Name">RightSlash</string>
+			</Properties>
+		</Item>
+		<Item class="StringValue" referent="RBX4">
+			<Properties>
+				<string name="Name">RunAnim</string>
+				<string name="Value">LeftSwingFast</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74894663</url></Content>
+				<string name="Name">LeftSlash</string>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBX6">
+			<Properties>
+				<string name="Name">Energy</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74897796</url></Content>
+				<string name="Name">OverHeadSwing</string>
+			</Properties>
+		</Item>
+		<Item class="StringValue" referent="RBX8">
+			<Properties>
+				<string name="Name">CurrentAttack</string>
+				<string name="Value">LeftSwingFast</string>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX9">
+			<Properties>
+				<string name="Name">StickGui</string>
+			</Properties>
+			<Item class="Frame" referent="RBX10">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<string name="Name">Bar</string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>-150</XO>
+						<YS>1</YS>
+						<YO>-150</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>145</XO>
+						<YS>0</YS>
+						<YO>30</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">3</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">2</int>
+				</Properties>
+				<Item class="Frame" referent="RBX11">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4278255360</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Fill</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>1</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">2</int>
+					</Properties>
+				</Item>
+				<Item class="Frame" referent="RBX12">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4278190080</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Backing</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>1</XS>
+							<XO>0</XO>
+							<YS>1</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Frame" referent="RBX13">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<string name="Name">ButtonHolder</string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>5</XO>
+						<YS>1</YS>
+						<YO>-150</YO>
+					</UDim2>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>145</XO>
+						<YS>0</YS>
+						<YO>30</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">3</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">2</int>
+				</Properties>
+				<Item class="Frame" referent="RBX14">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4278190080</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Backing</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>-3</XO>
+							<YS>0</YS>
+							<YO>-3</YO>
+						</UDim2>
+						<UDim2 name="Size">
+							<XS>1</XS>
+							<XO>6</XO>
+							<YS>1</YS>
+							<YO>6</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+				<Item class="TextButton" referent="RBX15">
+					<Properties>
+						<bool name="Active">true</bool>
+						<bool name="AutoButtonColor">true</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">2</token>
+						<token name="FontSize">6</token>
+						<bool name="Modal">false</bool>
+						<string name="Name">Button</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>-10</XO>
+							<YS>0</YS>
+							<YO>-10</YO>
+						</UDim2>
+						<bool name="Selected">false</bool>
+						<UDim2 name="Size">
+							<XS>1</XS>
+							<XO>20</XO>
+							<YS>1</YS>
+							<YO>20</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<string name="Text">Strike</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">3</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX16">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">192</int>
+				<CoordinateFrame name="CFrame">
+					<X>-82.8243027</X>
+					<Y>9.57455921</Y>
+					<Z>31.1211224</Z>
+					<R00>-0.798204839</R00>
+					<R01>-0.572859049</R01>
+					<R02>-0.186283156</R02>
+					<R10>-0.50406301</R10>
+					<R11>0.804504275</R11>
+					<R12>-0.314153254</R12>
+					<R20>0.329830974</R20>
+					<R21>-0.156860694</R21>
+					<R22>-0.930916667</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.550000012</X>
+					<Y>5.66001081</Y>
+					<Z>0.340000242</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX17">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=123968188</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=123968836</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX18">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SpecialSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=102544922</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX19">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SwingSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX20">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-83.7374496</X>
+					<Y>11.3097382</Y>
+					<Z>36.2999039</Z>
+					<R00>0.984807968</R00>
+					<R01>0.0544119067</R01>
+					<R02>-0.164901793</R02>
+					<R10>-0</R10>
+					<R11>0.949638426</R11>
+					<R12>0.313347936</R12>
+					<R20>0.173646927</R20>
+					<R21>-0.308587551</R21>
+					<R22>0.935211539</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-83.4076462</X>
+					<Y>10.6830425</Y>
+					<Z>34.4294815</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
