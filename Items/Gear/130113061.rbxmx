@@ -155,7 +155,11 @@ handle.Size = Vector3.new(0.2, 4.89, 6.08)</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">continuumScript</string>
-				<ProtectedString name="Source">function WaitForChild(parent,child)
+				<ProtectedString name="Source">--Made by Fusroblox
+--Stickmasterluke was here last.
+
+
+function WaitForChild(parent,child)
 &#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
 &#9;return parent[child]
 end
@@ -184,15 +188,6 @@ local TurnGyro
 local HoldAniTrack
 
 local torsoWeld
-
-local SmokePart = Instance.new(&apos;Part&apos;)
-SmokePart.Transparency = 1
-SmokePart.Size = Vector3.new(0,0,0)
-local ExhaustSmoke = Instance.new(&apos;Smoke&apos;)
-ExhaustSmoke.Parent = SmokePart
-ExhaustSmoke.Size = .1
-ExhaustSmoke.RiseVelocity = .01
-ExhaustSmoke.Color = Color3.new(.5,.5,.5)
 
 local acceleration = 10
 local deceleration = 10
@@ -255,7 +250,6 @@ function ThrustUpdater()
 &#9;&#9;
 &#9;&#9;local xzAngle = math.atan2(Character.Torso.CFrame.lookVector.z,0, Character.Torso.CFrame.lookVector.x)
 &#9;&#9;TurnGyro.cframe=CFrame.Angles(leanAmount*direction.x,0,leanAmount*direction.z)
-&#9;&#9;ExhaustSmoke.Opacity = (math.min(math.abs(CurrentSpeed),10)/10)*.5
 &#9;&#9;if LastPosition then
 &#9;&#9;&#9;local npos = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
 &#9;&#9;&#9;--(npos-LastPosition).magnitude
@@ -328,7 +322,7 @@ function onEquipped(nmouse)
 &#9;&#9;&#9;&#9;&#9;local tlight = Instance.new(&apos;SpotLight&apos;)
 &#9;&#9;&#9;&#9;&#9;tlight.Brightness = 5
 &#9;&#9;&#9;&#9;&#9;tlight.Angle=45
-&#9;&#9;&#9;&#9;&#9;tlight.Color = Color3.new(0/255,21/255,255/255)
+&#9;&#9;&#9;&#9;&#9;tlight.Color=Color3.new(0/255,40/255,255/255)
 &#9;&#9;&#9;&#9;&#9;tlight.Parent = Light
 &#9;&#9;&#9;&#9;&#9;tlight.Range = 40
 &#9;&#9;&#9;&#9;&#9;
@@ -393,14 +387,6 @@ function onEquipped(nmouse)
 &#9;&#9;&#9;end
 &#9;&#9;&#9;key_down_connect=mouse.KeyDown:connect(keyDownFunc)
 &#9;&#9;&#9;key_up_connect=mouse.KeyUp:connect(keyUpFunc)
-&#9;&#9;
-&#9;&#9;&#9;SmokePart.Parent = FakeHandle
-
-&#9;&#9;&#9;local tweld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;tweld.C0 = CFrame.new(0.600000024, 1.10000014, -2.20000005, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-&#9;&#9;&#9;tweld.Part0 = SmokePart
-&#9;&#9;&#9;tweld.Part1 = FakeHandle
-&#9;&#9;&#9;tweld.Parent = SmokePart
 &#9;&#9;&#9;
 &#9;&#9;&#9;EngineSound:Play()
 &#9;&#9;&#9;Character.Humanoid.WalkSpeed = 0
@@ -411,9 +397,6 @@ end
 
 function onUnequipped()
 &#9;Equipped = false
-&#9;if SmokePart then
-&#9;&#9;SmokePart.Parent = nil
-&#9;end
 &#9;if FakeHandle then
 &#9;&#9;FakeHandle:Remove()
 &#9;&#9;FakeHandle = nil
@@ -535,7 +518,11 @@ script.Parent.Equipped:connect(onEquipped)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">trailScript</string>
-				<ProtectedString name="Source">local UTIL = {}
+				<ProtectedString name="Source">--Made by Fusroblox
+--Stickmasterluke was here last.
+
+
+local UTIL = {}
 ---will call func when instance&apos;s parent is changed to nil
 function UTIL.DefineDestructor(instance,func)
 &#9;instance.AncestryChanged:connect(function (child,parent)
@@ -547,11 +534,14 @@ end
 
 --WARNING: ABANDON ALL HOPE YE WHO TREAD THESE LINES
 
+&#9;--If I don&apos;t make it back, tell my family that I love them. -Luke, 9/25/2013
+
+
 local Camera =game.Workspace.CurrentCamera
 
 local Tool = script.Parent
 local Handle = Tool:WaitForChild(&apos;Handle&apos;)
-
+local debris=game:GetService(&quot;Debris&quot;)
 
 function StartTrail(source,nparent)
 &#9;local trailParts = {}
@@ -565,26 +555,41 @@ function StartTrail(source,nparent)
 &#9;end)
 &#9;local numParts = 60
 &#9;local counter = 1
+&#9;local lastpoint=(source.CFrame*CFrame.new(0,0,4)).p
 &#9;while sourceAlive do
-&#9;&#9;if not trailParts[counter] then
-&#9;&#9;&#9;local tpart = Instance.new(&apos;Part&apos;)
-&#9;&#9;&#9;tpart.Anchored = true
-&#9;&#9;&#9;tpart.CanCollide = false
-&#9;&#9;&#9;tpart.FormFactor = &apos;Custom&apos;
-&#9;&#9;&#9;tpart.Size = Vector3.new(.3,5,3)
-&#9;&#9;&#9;tpart.Transparency = .2
-&#9;&#9;&#9;tpart.BrickColor = BrickColor.new(&apos;Bright blue&apos;)
-&#9;&#9;&#9;tpart.Parent = nparent
-&#9;&#9;&#9;trailParts[counter]=tpart
+&#9;&#9;local currentpoint=(source.CFrame*CFrame.new(0,0,4)).p
+&#9;&#9;if source.Velocity.magnitude&gt;20 then
+&#9;&#9;&#9;if not trailParts[counter] then
+&#9;&#9;&#9;&#9;local tpart = Instance.new(&apos;Part&apos;)
+&#9;&#9;&#9;&#9;tpart.Name=&quot;LightTrail&quot;..tostring(counter)
+&#9;&#9;&#9;&#9;tpart.TopSurface=&quot;SmoothNoOutlines&quot;
+&#9;&#9;&#9;&#9;tpart.BottomSurface=&quot;SmoothNoOutlines&quot;
+&#9;&#9;&#9;&#9;tpart.FrontSurface=&quot;SmoothNoOutlines&quot;
+&#9;&#9;&#9;&#9;tpart.BackSurface=&quot;SmoothNoOutlines&quot;
+&#9;&#9;&#9;&#9;tpart.Anchored = true
+&#9;&#9;&#9;&#9;tpart.CanCollide = false
+&#9;&#9;&#9;&#9;tpart.FormFactor = &apos;Custom&apos;
+&#9;&#9;&#9;&#9;tpart.Size = Vector3.new(.3,5,3)
+&#9;&#9;&#9;&#9;tpart.Transparency = .2
+&#9;&#9;&#9;&#9;tpart.BrickColor = BrickColor.new(&apos;Bright blue&apos;)
+&#9;&#9;&#9;&#9;if counter%5==0 then
+&#9;&#9;&#9;&#9;&#9;local l=Instance.new(&quot;PointLight&quot;)
+&#9;&#9;&#9;&#9;&#9;l.Color=Color3.new(50/255,100/255,255/255)
+&#9;&#9;&#9;&#9;&#9;l.Parent=tpart
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;tpart.Parent = nparent
+&#9;&#9;&#9;&#9;trailParts[counter]=tpart
+&#9;&#9;&#9;end
+&#9;&#9;&#9;trailParts[counter].Size=Vector3.new(.3,5,(currentpoint-lastpoint).magnitude)
+&#9;&#9;&#9;trailParts[counter].CFrame=CFrame.new((currentpoint+lastpoint)*.5,lastpoint)
+&#9;&#9;&#9;counter = counter+1
+&#9;&#9;&#9;if counter&gt;numParts then
+&#9;&#9;&#9;&#9;counter = 1
+&#9;&#9;&#9;end
 &#9;&#9;end
-&#9;&#9;trailParts[counter].CFrame = source.CFrame:toWorldSpace(CFrame.new(0,0,6.5))
-&#9;&#9;counter = counter+1
-&#9;&#9;if counter&gt;numParts then
-&#9;&#9;&#9;counter = 1
-&#9;&#9;end
+&#9;&#9;lastpoint=currentpoint
 &#9;&#9;wait(.025)
 &#9;end
-&#9;
 end
 
 Tool.ChildAdded:connect(function(nchild)
