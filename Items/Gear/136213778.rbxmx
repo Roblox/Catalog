@@ -1,0 +1,941 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-1.29999995</X>
+				<Y>-0.100000001</Y>
+				<Z>0.150000006</Z>
+				<R00>0</R00>
+				<R01>1</R01>
+				<R02>-0</R02>
+				<R10>-1</R10>
+				<R11>0</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">YetiClub</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=136103538 </url></Content>
+			<string name="ToolTip">Charge up your club, then press Q or E to unleash your yeti breath!</string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local RunService = game:service(&apos;RunService&apos;)
+local DebrisService = game:GetService(&apos;Debris&apos;)
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local IsFreezing = Tool:WaitForChild(&apos;IsFreezing&apos;)
+IsFreezing.Value = false
+local RunAnim = Tool:WaitForChild(&apos;RunAnim&apos;)
+local NumHits = Tool:WaitForChild(&apos;NumHits&apos;)
+local CanBreath = Tool:WaitForChild(&apos;CanBreath&apos;)
+
+local Anims = {&apos;RightSlash&apos;, &apos;LeftSlash&apos;, &apos;OverHeadSwing&apos;}
+
+-- CONSTANTS --
+local MAX_HITS_TO_FREEZE = 3
+local SWING_RATE = 1.0
+local BASE_DMG = 35
+local SLASH_DMG = 35
+local SWING_DMG = 35
+
+local Damage = BASE_DMG
+
+local SlashSound = Instance.new(&apos;Sound&apos;)
+SlashSound.SoundId = &apos;rbxasset://sounds\\swordslash.wav&apos;
+SlashSound.Parent = Handle
+SlashSound.Volume = 0.7
+
+local UnsheathSound = Instance.new(&apos;Sound&apos;)
+UnsheathSound.SoundId = &apos;rbxasset://sounds\\unsheath.wav&apos;
+UnsheathSound.Parent = Handle
+UnsheathSound.Volume = 0.5
+
+local function rndm()
+&#9;return (math.random() - 0.5) * 2
+end
+
+local function tagHumanoid(hitHumanoid, player)
+&#9;for i,v in ipairs(hitHumanoid:GetChildren()) do
+&#9;&#9;if v.Name == &apos;creator&apos; then
+&#9;&#9;&#9;v:remove()
+&#9;&#9;end
+&#9;end
+&#9;local creator_tag = Instance.new(&apos;ObjectValue&apos;)
+&#9;creator_tag.Value = player
+&#9;creator_tag.Name = &apos;creator&apos;
+&#9;creator_tag.Parent = hitHumanoid
+&#9;DebrisService:AddItem(creator_tag, 1)
+end
+
+local function makeIcePart(hitLocationCFrame, sizeValue)
+&#9;local part = Instance.new(&apos;Part&apos;)
+&#9;part.Name = &apos;Effect&apos;
+&#9;part.BrickColor = BrickColor.new(&apos;Pastel light blue&apos;)
+&#9;part.FormFactor = &apos;Custom&apos;
+&#9;part.Size = Vector3.new(sizeValue * math.random(), sizeValue * math.random(), sizeValue * math.random())
+&#9;part.Transparency = 0.3
+&#9;part.Reflectance = 0.3
+&#9;part.TopSurface = &apos;Smooth&apos;
+&#9;part.BottomSurface = &apos;Smooth&apos;
+&#9;part.CFrame = hitLocationCFrame * CFrame.new(rndm() * 5, rndm() * 8, rndm() * 5)
+&#9;part.Velocity = Vector3.new(rndm(), rndm(), rndm()) * 100
+&#9;part.RotVelocity=Vector3.new(rndm(), rndm(), rndm()) * 10
+&#9;DebrisService:AddItem(part, 3 + 7 * math.random())
+&#9;part.Parent = game.Workspace
+end
+
+local function setNumHits()
+&#9;NumHits.Value = NumHits.Value + 1
+&#9;if NumHits.Value &gt; MAX_HITS_TO_FREEZE then
+&#9;&#9;NumHits.Value = MAX_HITS_TO_FREEZE
+&#9;end
+&#9;if NumHits.Value == MAX_HITS_TO_FREEZE then
+&#9;&#9;CanBreath.Value = true
+&#9;end
+end
+
+local IsDebounce = false
+local function blow(hit)
+&#9;if IsDebounce or Tool.Enabled then
+&#9;&#9;print(&apos;Debounce &apos; .. tostring(IsDebounce))
+&#9;&#9;print(&apos;ToolEnabled &apos; .. tostring(Tool.Enabled))
+&#9;&#9;return
+&#9;end
+&#9;IsDebounce = true
+&#9;if hit.Parent then
+&#9;&#9;print&apos;hit.Parent is true&apos;
+&#9;&#9;local attackingCharacter = Tool.Parent
+&#9;&#9;
+&#9;&#9;if attackingCharacter then
+&#9;&#9;&#9;print&apos;attacking char is true&apos;
+&#9;&#9;&#9;local attackingPlayer = game.Players:GetPlayerFromCharacter(attackingCharacter)
+&#9;&#9;&#9;if attackingPlayer then
+&#9;&#9;&#9;&#9;print&apos;attackin player is true&apos;
+&#9;&#9;&#9;&#9;local attackingHumanoid = attackingCharacter:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;&#9;local hitHumanoid = hit.Parent:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;&#9;print(hitHumanoid)
+&#9;&#9;&#9;&#9;if hitHumanoid and hitHumanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;print&apos;hit hum is true&apos;
+&#9;&#9;&#9;&#9;&#9;if attackingHumanoid and hitHumanoid ~= attackingHumanoid and attackingHumanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;local rightArm = attackingCharacter:FindFirstChild(&apos;Right Arm&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;print&apos;stuff is true&apos;
+&#9;&#9;&#9;&#9;&#9;&#9;if rightArm then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;print&apos;right arm is true&apos;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local joint = rightArm:FindFirstChild(&apos;RightGrip&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if joint and (joint.Part0 == Handle or joint.Part1 == Handle) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;print&apos;joints are true&apos;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;tagHumanoid(hitHumanoid, attackingPlayer)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local hitTorso = hit.Parent:FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local isKill = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if hitTorso then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;print&apos;hit torso is true&apos;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- other player is frozen
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local iceWeld = hitTorso:FindFirstChild(&apos;IceWeld&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if iceWeld then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;print&apos;iceWeld is true&apos;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if iceWeld.Part1 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local sound = Handle:FindFirstChild(&apos;ShatterSound&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if sound then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sound:Stop()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;sound:Play()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i = 1, 15 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;makeIcePart(iceWeld.Part1.CFrame, 3)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;iceWeld.Part1:remove()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;hitTorso:BreakJoints()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;isKill = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i = 1, 10 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;makeIcePart(hit.CFrame, 0.5)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;hitHumanoid:TakeDamage(Damage)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if not isKill then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;setNumHits()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.9)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;IsDebounce = false
+end
+
+Tool.Enabled = true
+local function onActivated()
+&#9;if Tool.Enabled and not Tool.IsFreezing.Value then
+&#9;&#9;Tool.Enabled = false
+&#9;&#9;local character = Tool.Parent
+&#9;&#9;local humanoid = character:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;if not humanoid then
+&#9;&#9;&#9;print(&apos;Humanoid not found&apos;)
+&#9;&#9;&#9;return 
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;SlashSound:Play()
+&#9;&#9;local newAnim = Anims[math.random(1, #Anims)]
+&#9;&#9;while newAnim == RunAnim.Value do
+&#9;&#9;&#9;newAnim = Anims[math.random(1, #Anims)]
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;RunAnim.Value = newAnim
+&#9;&#9;if newAnim == &apos;OverHeadSwing&apos; then
+&#9;&#9;&#9;Damage = SWING_DMG
+&#9;&#9;else
+&#9;&#9;&#9;Damage = SLASH_DMG
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;wait(SWING_RATE)
+&#9;&#9;Damage = BASE_DMG
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function onEquipped()
+&#9;UnsheathSound:Play()
+&#9;NumHits.Value = 0
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+
+Handle.Touched:connect(blow)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">-- Tool Variables --
+local Tool = script.Parent
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local IsFreezing = Tool:WaitForChild(&apos;IsFreezing&apos;)
+local FreezeAnim = Tool:WaitForChild(&apos;FreezeAnim&apos;)
+local FreezeOtherScript = script:WaitForChild(&apos;FreezeOtherScript&apos;)
+local RestorePlayerScript = script:WaitForChild(&apos;RestorePlayerScript&apos;)
+local RunAnim = Tool:WaitForChild(&apos;RunAnim&apos;)
+local NumHits = Tool:WaitForChild(&apos;NumHits&apos;)
+
+-- GUI Variables --
+local YetiClubGui = Tool:WaitForChild(&apos;YetiClubGui&apos;)
+local BarFrame = YetiClubGui:WaitForChild(&apos;Bar&apos;)
+local FillFrame = BarFrame:WaitForChild(&apos;Fill&apos;)
+local ChargeText = BarFrame:WaitForChild(&apos;Charge&apos;)
+
+-- Character Variables --
+local Character = nil
+local PlayerMouse = nil
+
+local OriginalGrip = Tool.Grip
+local CurrentGrip = OriginalGrip
+local DebrisService = game:GetService(&quot;Debris&quot;)
+
+local IsToolEnabled = true
+local IsFreezing = false
+local IsBreathingIce = false
+
+-- GUI Helper Functions --
+local function ShowGui()
+&#9;local player = game.Players.LocalPlayer
+&#9;if player then
+&#9;&#9;local playerGui = player:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;&#9;if playerGui then
+&#9;&#9;&#9;FillFrame.BackgroundColor3 = Color3.new(171 * 0.004, 22 * 0.004, 24 * 0.004)
+&#9;&#9;&#9;YetiClubGui.Parent = playerGui
+&#9;&#9;end
+&#9;end
+end
+
+local function RemoveGui()
+&#9;YetiClubGui.Parent = Tool
+&#9;ChargeText.Text = &apos;0%&apos;
+end
+
+local function updateGui()
+&#9;if NumHits then
+&#9;&#9;local p = NumHits.Value / 3
+&#9;&#9;if p == 1 then
+&#9;&#9;&#9;FillFrame.BackgroundColor3 = Color3.new(1 * 0.004, 185 * 0.004, 29 * 0.004)
+&#9;&#9;&#9;ChargeText.Text = &apos;Press Q or E!&apos;
+&#9;&#9;else
+&#9;&#9;&#9;ChargeText.Text = string.format(&apos;%i&apos;, p * 100) .. &apos;%&apos;
+&#9;&#9;end
+&#9;&#9;FillFrame.Size = UDim2.new(p, 0, 0.8, 0)
+&#9;end
+end
+
+NumHits.Changed:connect(function(val)
+&#9;if val == 0 then
+&#9;&#9;FillFrame.BackgroundColor3 = Color3.new(171 * 0.004, 22 * 0.004, 24 * 0.004)
+&#9;end
+&#9;updateGui()
+end)
+
+function swordUp()
+&#9;CurrentGrip = OriginalGrip
+end
+
+function swordOut()
+&#9;CurrentGrip = OriginalGrip * CFrame.Angles(math.pi * 0.25, 0.4, 0)
+end
+
+function Toolinsword(Toolintime)
+&#9;delay(0, function()
+&#9;&#9;local startToolin = tick()
+&#9;&#9;local endToolin = startToolin + Toolintime
+&#9;&#9;while tick() &lt; endToolin do
+&#9;&#9;&#9;Tool.Grip = CurrentGrip * CFrame.Angles(math.pi * 2 * ((tick() - startToolin) / Toolintime), 0, 0)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;Tool.Grip = CurrentGrip
+&#9;end)
+end
+
+local function createFrost(parent, riseVelocity, smokeSize)
+&#9;local part = Instance.new(&apos;Part&apos;)
+&#9;part.Name = &apos;Effect&apos;
+&#9;part.CanCollide = false
+&#9;part.Transparency = 1
+&#9;part.FormFactor = &apos;Custom&apos;
+&#9;part.Size = Vector3.new(0, 0, 0)
+&#9;
+&#9;local frost = Instance.new(&quot;Smoke&quot;)
+&#9;frost.Color = Color3.new(0.8, 0.8, 1)
+&#9;frost.Size = smokeSize
+&#9;frost.RiseVelocity = riseVelocity
+&#9;frost.Parent = part
+&#9;
+&#9;local motor = Instance.new(&quot;Motor&quot;)
+&#9;motor.Part0 = parent
+&#9;motor.Part1 = part
+&#9;motor.C0 = CFrame.new(0, 0, 0) * CFrame.Angles((3 * math.pi) * 0.5, 0, 0)
+&#9;motor.Parent = part
+&#9;DebrisService:AddItem(part, 5)
+&#9;part.Parent = parent
+&#9;wait(0.2)
+&#9;
+&#9;return part
+end
+
+local function onBreathingIce(humanoid, torso, head)
+&#9;IsBreathingIce = true
+&#9;if NumHits then
+&#9;&#9;NumHits.Value = 0
+&#9;end
+&#9;Tool.IsFreezing.Value = IsBreathingIce
+&#9;local previousWalkSpeed = humanoid.WalkSpeed
+&#9;humanoid.WalkSpeed = 0.1
+&#9;local freezeAnim = humanoid:LoadAnimation(FreezeAnim)
+&#9;freezeAnim:Play(nil, nil, 1.5)
+&#9;swordUp()
+&#9;Tool.Grip = CurrentGrip
+&#9;wait(0.25)
+&#9;
+&#9;local sound = Handle:FindFirstChild(&quot;FreezeSound&quot;)
+&#9;if sound then
+&#9;&#9;sound:play()
+&#9;end
+&#9;
+&#9;part = createFrost(head, 8, 0.5)
+&#9;
+&#9;for i=1,8 do
+&#9;&#9;if part and part.Parent then
+&#9;&#9;&#9;local part2 = Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;part2.Name = &quot;Effect&quot;
+&#9;&#9;&#9;part2.Transparency = 1
+&#9;&#9;&#9;part2.CanCollide = false
+&#9;&#9;&#9;part2.FormFactor = &quot;Custom&quot;
+&#9;&#9;&#9;part2.Position = part.Position
+&#9;&#9;&#9;part2.Shape = &quot;Ball&quot;
+&#9;&#9;&#9;part2.Size = Vector3.new(3, 3, 3)
+&#9;&#9;&#9;part2.Velocity = (torso.CFrame.lookVector * 40) + (Vector3.new((math.random() - 0.5) * 2, (math.random() - 0.5) * 2,(math.random() - 0.5) * 2) * 8)
+&#9;&#9;&#9;
+&#9;&#9;&#9;local bodyForce = Instance.new(&quot;BodyForce&quot;)
+&#9;&#9;&#9;bodyForce.force = Vector3.new(0, part2:GetMass() * 196.2, 0)
+&#9;&#9;&#9;bodyForce.Parent = part2
+&#9;&#9;&#9;
+&#9;&#9;&#9;local freezeScript = FreezeOtherScript:Clone()
+&#9;&#9;&#9;freezeScript.Parent = part2
+&#9;&#9;&#9;freezeScript.Disabled = false
+&#9;&#9;&#9;
+&#9;&#9;&#9;local objectValue = Instance.new(&apos;ObjectValue&apos;)
+&#9;&#9;&#9;objectValue.Name = &apos;RestorePlayer&apos;
+&#9;&#9;&#9;objectValue.Value = RestorePlayerScript
+&#9;&#9;&#9;objectValue.Parent = part2
+&#9;&#9;&#9;
+&#9;&#9;&#9;local c = Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;c.Name = &quot;creator&quot;
+&#9;&#9;&#9;c.Value = game.Players.LocalPlayer
+&#9;&#9;&#9;c.Parent = part2
+&#9;&#9;&#9;DebrisService:AddItem(part2, 1)
+&#9;&#9;&#9;part2.Parent = game.Workspace
+&#9;&#9;end
+&#9;&#9;wait(0.35)
+&#9;end
+&#9;
+&#9;IsBreathingIce = false
+&#9;local canBreath = Tool:FindFirstChild(&apos;CanBreath&apos;)
+&#9;if canBreath then
+&#9;&#9;ChargeText.Text = &apos;0%&apos;
+&#9;&#9;canBreath.Value = false
+&#9;end
+&#9;Tool.IsFreezing.Value = IsBreathingIce
+&#9;humanoid.WalkSpeed = previousWalkSpeed
+&#9;
+&#9;wait(0.4)
+&#9;if sound then
+&#9;&#9;sound:Stop()
+&#9;end
+&#9;
+&#9;wait(0.1)
+&#9;
+&#9;if part then
+&#9;&#9;part:remove()
+&#9;end
+end
+
+local function onKeyDown(key)
+&#9;key = string.lower(key)
+&#9;
+&#9;if key == &apos;q&apos; or key ==&apos;e&apos; then
+&#9;&#9;if Character then
+&#9;&#9;&#9;local humanoid = Character:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;&#9;local torso = Character:FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;&#9;local head = Character:FindFirstChild(&apos;Head&apos;)
+&#9;&#9;&#9;
+&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and torso and head then
+&#9;&#9;&#9;&#9;if not IsBreathingIce then
+&#9;&#9;&#9;&#9;&#9;local canBreath = Tool:FindFirstChild(&apos;CanBreath&apos;)
+&#9;&#9;&#9;&#9;&#9;if canBreath and canBreath.Value then
+&#9;&#9;&#9;&#9;&#9;&#9;onBreathingIce(humanoid, torso, head)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+local function onEquipped(mouse)
+&#9;--local currentlast = lastequipped
+&#9;
+&#9;if not mouse then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
+&#9;
+&#9;PlayerMouse = mouse
+&#9;
+&#9;-- change icon
+&#9;PlayerMouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;&#9;
+&#9;Character = Tool.Parent
+&#9;ShowGui()
+&#9;PlayerMouse.KeyDown:connect(onKeyDown)
+end
+
+local function onActivated()
+&#9;if not IsToolEnabled then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;IsToolEnabled = false
+&#9;
+&#9;if PlayerMouse then
+&#9;&#9;PlayerMouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
+&#9;&#9;wait(0.75)
+&#9;&#9;PlayerMouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
+&#9;end
+&#9;
+&#9;IsToolEnabled = true
+end
+
+local function onUnequipped()
+&#9;RemoveGui()
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Activated:connect(onActivated)
+Tool.Unequipped:connect(onUnequipped)
+
+RunAnim.Changed:connect(function()
+&#9;if Character then
+&#9;&#9;local humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;local torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;local anim = Tool:FindFirstChild(RunAnim.Value)
+&#9;&#9;if anim and torso and humanoid then
+&#9;&#9;&#9;local theAnim = humanoid:LoadAnimation(anim)
+&#9;&#9;&#9;if theAnim and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;theAnim:Play()
+&#9;&#9;&#9;&#9;if RunAnim.Value == &apos;RightSlash&apos; then
+&#9;&#9;&#9;&#9;&#9;Toolinsword(0.5)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if RunAnim.Value == &apos;OverHeadSwing&apos; then
+&#9;&#9;&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;&#9;&#9;swordOut()
+&#9;&#9;&#9;&#9;&#9;Tool.Grip = CurrentGrip
+&#9;&#9;&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;&#9;&#9;swordUp()
+&#9;&#9;&#9;&#9;&#9;Tool.Grip = CurrentGrip
+&#9;&#9;&#9;&#9;elseif RunAnim.Value == &apos;OverHeadSwingFast&apos; then
+&#9;&#9;&#9;&#9;&#9;wait(0.125)
+&#9;&#9;&#9;&#9;&#9;swordOut()
+&#9;&#9;&#9;&#9;&#9;Tool.Grip = CurrentGrip
+&#9;&#9;&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;&#9;&#9;swordUp()
+&#9;&#9;&#9;&#9;&#9;Tool.Grip = CurrentGrip
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX3">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">FreezeOtherScript</string>
+					<ProtectedString name="Source">local Part = script.Parent
+local DebrisService = game:GetService(&apos;Debris&apos;)
+local Players = game:GetService(&apos;Players&apos;)
+local RestorePlayer = Part:WaitForChild(&apos;RestorePlayer&apos;)
+local RestorePlayerScript = RestorePlayer.Value:clone()
+
+local IsPlayerFrozen = false
+
+local function createFreezeEffect(c, torso, humanoid, hit)
+&#9;-- only freeze if they don&apos;t have an ice weld
+&#9;if c.Value and c.Value ~= nil and torso:FindFirstChild(&apos;IceWeld&apos;) == nil then
+&#9;&#9;local playerHit = Players:GetPlayerFromCharacter(hit.Parent)
+&#9;&#9;if playerHit then
+&#9;&#9;&#9;if playerHit == c.Value then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;IsPlayerFrozen = true
+&#9;&#9;
+&#9;&#9;local part = Instance.new(&apos;Part&apos;)
+&#9;&#9;part.Name = &apos;Effect&apos;
+&#9;&#9;part.BrickColor = BrickColor.new(&apos;Pastel light blue&apos;)
+&#9;&#9;part.FormFactor = &apos;Custom&apos;
+&#9;&#9;part.Size = Vector3.new(5, 8, 5)
+&#9;&#9;part.Transparency = 0.3
+&#9;&#9;part.Reflectance = 0.3
+&#9;&#9;part.CanCollide = false
+&#9;&#9;part.TopSurface = &apos;Smooth&apos;
+&#9;&#9;part.BottomSurface = &apos;Smooth&apos;
+&#9;&#9;
+&#9;&#9;local cf = CFrame.Angles(0, math.pi * 2 * math.random(), 0.5 * math.random())
+&#9;&#9;part.CFrame = torso.CFrame * cf
+&#9;&#9;
+&#9;&#9;local motor = Instance.new(&apos;Motor&apos;)
+&#9;&#9;motor.Name = &apos;IceWeld&apos;
+&#9;&#9;motor.Part0 = torso
+&#9;&#9;motor.Part1 = part
+&#9;&#9;motor.C0 = CFrame.Angles(0, math.pi * 2 * math.random(), 0.5 * math.random())
+&#9;&#9;motor.Parent = torso
+&#9;&#9;
+&#9;&#9;DebrisService:AddItem(part, 8)
+&#9;&#9;part.Parent = game.Workspace
+&#9;&#9;
+&#9;&#9;humanoid.WalkSpeed = 0
+&#9;&#9;RestorePlayerScript.Parent = humanoid
+&#9;&#9;RestorePlayerScript.Disabled = false
+&#9;end
+end
+
+Part.Touched:connect(function(hit)
+&#9;if IsPlayerFrozen then
+&#9;&#9;return
+&#9;end
+&#9;if hit and hit.Parent then
+&#9;&#9;local c = Part:FindFirstChild(&apos;creator&apos;)
+&#9;&#9;local humanoid = hit.Parent:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;local torso = hit.Parent:FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;
+&#9;&#9;if c and humanoid and torso then
+&#9;&#9;&#9;local restorePlayerScript = humanoid:FindFirstChild(&apos;RestorePlayerScript&apos;)
+&#9;&#9;&#9;if not restorePlayerScript then
+&#9;&#9;&#9;&#9;createFreezeEffect(c, torso, humanoid, hit)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+wait(0.8)
+Part:remove()
+</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX4">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">RestorePlayerScript</string>
+					<ProtectedString name="Source">local Humanoid = script.Parent
+wait(8)
+if Humanoid then
+&#9;Humanoid.WalkSpeed = 16
+end
+
+script:Destroy()
+script.Parent = nil</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74813494</url></Content>
+				<string name="Name">RightSlash</string>
+			</Properties>
+		</Item>
+		<Item class="StringValue" referent="RBX6">
+			<Properties>
+				<string name="Name">RunAnim</string>
+				<string name="Value"></string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74897796</url></Content>
+				<string name="Name">OverHeadSwing</string>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX8">
+			<Properties>
+				<string name="Name">IsFreezing</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX9">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">102</int>
+				<CoordinateFrame name="CFrame">
+					<X>22.6000004</X>
+					<Y>11.1999998</Y>
+					<Z>13.8000002</Z>
+					<R00>0</R00>
+					<R01>0</R01>
+					<R02>1</R02>
+					<R10>1</R10>
+					<R11>0</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>1</R21>
+					<R22>0</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0.400000006</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>5.19999981</X>
+					<Y>1.5</Y>
+					<Z>0.75</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX10">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=136101399</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>3</X>
+						<Y>2.5</Y>
+						<Z>2.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=136101449 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX11">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">FreezeSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=87014838</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX12">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">ShatterSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=87015121</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX13">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74894663</url></Content>
+				<string name="Name">LeftSlash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX14">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=86504773</url></Content>
+				<string name="Name">FreezeAnim</string>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX15">
+			<Properties>
+				<string name="Name">NumHits</string>
+				<int name="Value">0</int>
+			</Properties>
+		</Item>
+		<Item class="BoolValue" referent="RBX16">
+			<Properties>
+				<string name="Name">CanBreath</string>
+				<bool name="Value">false</bool>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBX17">
+			<Properties>
+				<string name="Name">YetiClubGui</string>
+			</Properties>
+			<Item class="Frame" referent="RBX18">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Color3 name="BackgroundColor3">4288914085</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4279970357</Color3>
+					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
+					<string name="Name">Bar</string>
+					<UDim2 name="Position">
+						<XS>1</XS>
+						<XO>-270</XO>
+						<YS>1</YS>
+						<YO>-70</YO>
+					</UDim2>
+					<float name="Rotation">0</float>
+					<UDim2 name="Size">
+						<XS>0</XS>
+						<XO>200</XO>
+						<YS>0</YS>
+						<YO>60</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">3</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+				<Item class="Frame" referent="RBX19">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4278303005</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Fill</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0.200000003</YS>
+							<YO>0</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0.800000012</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+				<Item class="TextLabel" referent="RBX20">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">2</token>
+						<token name="FontSize">6</token>
+						<string name="Name">TextLabel</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>45</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>100</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<string name="Text">Charge</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">3</int>
+					</Properties>
+				</Item>
+				<Item class="TextLabel" referent="RBX21">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">2</token>
+						<token name="FontSize">6</token>
+						<string name="Name">Charge</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>45</XO>
+							<YS>0.5</YS>
+							<YO>5</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>100</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<string name="Text">0%</string>
+						<Color3 name="TextColor3">4294967295</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">3</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX22">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>27.7887363</X>
+					<Y>12.8944387</Y>
+					<Z>14.2160473</Z>
+					<R00>0.116686285</R00>
+					<R01>-0.243532345</R01>
+					<R02>0.962848067</R02>
+					<R10>-0</R10>
+					<R11>0.96947068</R11>
+					<R12>0.245207399</R12>
+					<R20>-0.993168831</R20>
+					<R21>-0.0286123399</R21>
+					<R22>0.113123931</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>25.8630409</X>
+					<Y>12.4040241</Y>
+					<Z>13.9897995</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
