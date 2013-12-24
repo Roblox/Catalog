@@ -1,0 +1,451 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.25</Y>
+				<Z>1</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">Drum</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=139432241</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">DrumScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local HandleTouchConn = nil
+local MyCharacter = nil
+local MyHumanoid = nil
+local MyPlayer = nil
+local Players = Game:GetService(&apos;Players&apos;)
+local Cleaner = script:WaitForChild(&apos;Cleaner&apos;)
+local Ragdoller = script:WaitForChild(&apos;Ragdoller&apos;)
+local Rimshot = Handle:WaitForChild(&apos;Rimshot&apos;)
+
+
+local function New(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;if type(v) == &apos;function&apos; then
+&#9;&#9;&#9;&#9;&#9;obj[k]:connect(v)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Animations = {}
+local function PlayAnimation(animationName, speed)
+&#9;speed = speed or 1
+&#9;if Animations[animationName] then
+&#9;&#9;Animations[animationName]:Play(0.1, 1, speed)
+&#9;else
+&#9;&#9;print(&quot;Can&apos;t find animation:&quot; , animationName)
+&#9;end
+end
+
+local function StopAnimation(animationName)
+&#9;if Animations[animationName] then
+&#9;&#9;Animations[animationName]:Stop()
+&#9;end
+end
+
+local function LoadAnimation(animationObject)
+&#9;if MyHumanoid then
+&#9;&#9;Animations[animationObject.Name] = MyHumanoid:LoadAnimation(animationObject)
+&#9;else
+&#9;&#9;print(&quot;Tried to load an anim without a humanoid&quot;)
+&#9;end
+end
+
+
+local function FindCharacterAncestor(part)
+&#9;if part then
+&#9;&#9;if part:FindFirstChild(&apos;Humanoid&apos;) then
+&#9;&#9;&#9;return part
+&#9;&#9;end
+&#9;&#9;return FindCharacterAncestor(part.Parent)
+&#9;end
+end
+
+local function CreateDrum()
+&#9;local drum = New&apos;Part&apos;
+&#9;{
+&#9;&#9;TopSurface = &apos;Smooth&apos;;
+&#9;&#9;BottomSurface = &apos;Smooth&apos;;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;CanCollide = true;
+&#9;&#9;Name = &apos;Drum&apos;;
+&#9;&#9;Size = Vector3.new(4,2.5,4);
+&#9;&#9;Shape = &apos;Ball&apos;;
+&#9;&#9;New&apos;SpecialMesh&apos;
+&#9;&#9;{
+&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=139468173&apos;;
+&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=139432181&apos;;
+&#9;&#9;&#9;Scale = Vector3.new(2,2,2);
+&#9;&#9;}
+&#9;}
+&#9;return drum
+end
+
+local function WeldDrum(drum, torso)
+&#9;if drum and torso then
+&#9;&#9;local weld = New&apos;Weld&apos;
+&#9;&#9;{
+&#9;&#9;&#9;Name = &apos;DrumWeld&apos;;
+&#9;&#9;&#9;Part0 = drum;
+&#9;&#9;&#9;Part1 = torso;
+&#9;&#9;&#9;C0 = (CFrame.new() + Vector3.new(0, 0.2, 0)) * CFrame.Angles(-math.pi * 0.4, 0, 0);
+&#9;&#9;&#9;C1 = CFrame.new();
+&#9;&#9;}
+&#9;&#9;weld.Parent = drum
+&#9;else
+&#9;&#9;print(&quot;WeldDrum: Invalid drum or torso&quot;)
+&#9;end
+end
+
+local function DisconnectTouch()
+&#9;if HandleTouchConn then
+&#9;&#9;HandleTouchConn:disconnect()
+&#9;&#9;HandleTouchConn = nil
+&#9;end
+end
+
+local function OnTouched(hitPart)
+&#9;local hitCharacter = FindCharacterAncestor(hitPart)
+&#9;if MyHumanoid and MyHumanoid.Health &gt; 0 and hitCharacter and hitCharacter ~= MyCharacter then
+&#9;&#9;local drum = CreateDrum()
+&#9;&#9;local torso = hitCharacter:FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;local hitHumanoid = hitCharacter:FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;if torso and hitHumanoid and hitHumanoid.Health &gt; 0 and not hitCharacter:FindFirstChild(&apos;Drum&apos;) then
+&#9;&#9;&#9;local clonedCleaner = Cleaner:Clone()
+&#9;&#9;&#9;local clonedRagdoller = Ragdoller:Clone()
+&#9;&#9;&#9;drum.Parent = hitCharacter
+&#9;&#9;&#9;clonedRagdoller.Parent = hitCharacter
+&#9;&#9;&#9;clonedRagdoller.Disabled = false
+&#9;&#9;&#9;clonedCleaner.Parent = drum
+&#9;&#9;&#9;clonedCleaner.Disabled = false
+&#9;&#9;&#9;WeldDrum(drum, torso)
+&#9;&#9;&#9;if Rimshot then
+&#9;&#9;&#9;&#9;Rimshot:Play()
+&#9;&#9;&#9;end&#9;&#9;&#9;
+&#9;&#9;&#9;torso.RotVelocity = Vector3.new(0.5, 0.1, 0.3)
+&#9;&#9;&#9;DisconnectTouch()
+&#9;&#9;end
+&#9;end
+end
+
+local function OnActivated()
+&#9;if not Tool.Enabled then return end
+&#9;Tool.Enabled = false
+&#9;PlayAnimation(&apos;Swing&apos;, 0.8)
+&#9;wait(0.2)&#9;
+&#9;HandleTouchConn = Handle.Touched:connect(OnTouched)
+&#9;wait(0.5)
+&#9;DisconnectTouch()
+&#9;wait(2)
+&#9;Tool.Enabled = true
+end
+
+
+local AnimConn = nil
+local function OnEquipped(mouse)
+&#9;MyCharacter = Tool.Parent
+&#9;MyHumanoid = MyCharacter:FindFirstChild(&apos;Humanoid&apos;)
+&#9;MyPlayer = Players:GetPlayerFromCharacter(MyCharacter)
+&#9;
+&#9;
+&#9;AnimConn = Tool.ChildAdded:connect(function (child)
+&#9;&#9;if child:IsA(&apos;Animation&apos;) then
+&#9;&#9;&#9;LoadAnimation(animationObject)
+&#9;&#9;end
+&#9;end)
+&#9;for _, child in pairs(Tool:GetChildren()) do
+&#9;&#9;if child:IsA(&apos;Animation&apos;) then
+&#9;&#9;&#9;LoadAnimation(child)
+&#9;&#9;end
+&#9;end
+end
+
+local function OnUnequipped()
+&#9;DisconnectTouch()
+&#9;if Rimshot then
+&#9;&#9;Rimshot:Stop()
+&#9;end
+&#9;for name, animTrack in pairs(Animations) do
+&#9;&#9;StopAnimation(name);
+&#9;end
+&#9;if AnimConn then
+&#9;&#9;AnimConn:disconnect()
+&#9;&#9;AnimConn = nil
+&#9;end
+end
+
+do
+&#9;Tool.Activated:connect(OnActivated)
+&#9;Tool.Equipped:connect(OnEquipped)
+&#9;Tool.Unequipped:connect(OnUnequipped)
+end
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Cleaner</string>
+					<ProtectedString name="Source">local Debris = Game:GetService(&apos;Debris&apos;)
+local DebrisItem = script.Parent
+Debris:AddItem(DebrisItem, 5)</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX3">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Ragdoller</string>
+					<ProtectedString name="Source">local Debris = Game:GetService(&apos;Debris&apos;)
+local Character = script.Parent
+local Humanoid = Character:FindFirstChild(&apos;Humanoid&apos;)
+local BAV = script:WaitForChild(&apos;BAV&apos;)
+local Torso = Character:FindFirstChild(&apos;Torso&apos;)
+
+if Humanoid then
+&#9;Humanoid.PlatformStand = true
+&#9;if Torso then
+&#9;&#9;BAV.angularvelocity = Vector3.new(math.random(1,5), (12 + math.random(0,8)), math.random(1,5))
+&#9;&#9;BAV.Parent = Torso
+&#9;end
+&#9;wait(1)
+&#9;if BAV then
+&#9;&#9;BAV:Destroy()
+&#9;end
+&#9;wait(2)
+&#9;Humanoid.PlatformStand = false
+end
+
+wait(3)
+script:Destroy()
+</ProtectedString>
+				</Properties>
+				<Item class="BodyAngularVelocity" referent="RBX4">
+					<Properties>
+						<string name="Name">BAV</string>
+						<float name="P">1250</float>
+						<Vector3 name="angularvelocity">
+							<X>20</X>
+							<Y>5</Y>
+							<Z>5</Z>
+						</Vector3>
+						<Vector3 name="maxTorque">
+							<X>4000</X>
+							<Y>4000</Y>
+							<Z>4000</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX5">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">1</int>
+				<CoordinateFrame name="CFrame">
+					<X>-8.50080872</X>
+					<Y>4.01000023</Y>
+					<Z>26.2715607</Z>
+					<R00>1</R00>
+					<R01>-2.4094474e-008</R01>
+					<R02>-2.82187216e-007</R02>
+					<R10>1.26479961e-007</R10>
+					<R11>0.929489374</R11>
+					<R12>0.36884886</R12>
+					<R20>2.53402845e-007</R20>
+					<R21>-0.36884886</R21>
+					<R22>0.929489374</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>4</X>
+					<Y>1</Y>
+					<Z>4</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Sound" referent="RBX6">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Rimshot</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=138765693</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX7">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=139432087</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2</X>
+						<Y>2</Y>
+						<Z>2</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=139432181</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX8">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
+local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+
+local Tool = script.Parent
+
+local Mouse = nil
+
+local function UpdateIcon()
+&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+end
+
+local function OnEquipped(mouse)
+&#9;Mouse = mouse
+&#9;UpdateIcon()
+end
+
+local function OnChanged(property)
+&#9;if property == &apos;Enabled&apos; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX9">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=105371766</url></Content>
+				<string name="Name">Swing</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-20.6242294</X>
+					<Y>15.799654</Y>
+					<Z>12.0723753</Z>
+					<R00>-0.752436042</R00>
+					<R01>0.352536589</R01>
+					<R02>-0.556379318</R02>
+					<R10>1.49011612e-008</R10>
+					<R11>0.844707191</R11>
+					<R12>0.535228729</R12>
+					<R20>0.658665299</R20>
+					<R21>0.402725399</R21>
+					<R22>-0.635588169</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-19.5114708</X>
+					<Y>14.7291965</Y>
+					<Z>13.3435516</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
