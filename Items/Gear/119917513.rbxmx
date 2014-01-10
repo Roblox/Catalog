@@ -349,18 +349,31 @@ end
 
 -- Functions:
 
-local function WeldInPlace(part0, part1, name)
+function weldInPlace(part0, part1, name)
 &#9;local weld = Instance.new(&quot;ManualWeld&quot;)
-&#9;if name then
-&#9;&#9;weld.Name = name
-&#9;end
 &#9;weld.Part0 = part0
 &#9;weld.Part1 = part1
 &#9;weld.C0 = CFrame.new()
 &#9;weld.C1 = part1.CFrame:inverse() * part0.CFrame
+&#9;if name then
+&#9;&#9;weld.Name = name
+&#9;end
 &#9;weld.Parent = part0
-&#9;
-&#9;return weld
+end
+
+function weldEverythingInPlace(model, part0)
+&#9;local weldCenter = part0
+&#9;for _, child in pairs(model:GetChildren()) do
+&#9;&#9;if child:IsA(&quot;BasePart&quot;) and child ~= weldCenter then
+&#9;&#9;&#9;weldInPlace(weldCenter, child, &quot;WeldTo&quot; .. child.Name)
+&#9;&#9;elseif child:IsA(&quot;Model&quot;) then
+&#9;&#9;&#9;weldEverythingInPlace(child, weldCenter)
+&#9;&#9;end
+&#9;end
+end
+
+local function RemakeWelds()
+&#9;weldEverythingInPlace(Treehouse, BoundingBox)
 end
 
 function applyToModelParts(func, model, ...)
@@ -376,7 +389,9 @@ end
 local function Grow()
 &#9;AlreadyGrew = true
 &#9;
-&#9;applyToModelParts(function(part) part.Transparency = 0.0 end, Treehouse.HouseInterior)
+&#9;applyToModelParts(function(part)
+&#9;&#9;part.Transparency = 0.0
+&#9;end, Treehouse.HouseInterior)
 
 &#9;local rootC1 = LatestTouchedPart.CFrame:inverse() * BoundingBox.CFrame
 &#9;
@@ -430,7 +445,14 @@ while not AlreadyGrew do
 &#9;end
 &#9;
 &#9;if TicksWithoutMoving &gt;= TICKS_UNTIL_GROW_STARTS and LatestTouchedPart then
+&#9;&#9;applyToModelParts(function(part)
+&#9;&#9;&#9;part.Anchored = true
+&#9;&#9;end, Treehouse)
 &#9;&#9;Grow()
+&#9;&#9;RemakeWelds()
+&#9;&#9;applyToModelParts(function(part)
+&#9;&#9;&#9;part.Anchored = false
+&#9;&#9;end, Treehouse)
 &#9;end
 &#9;
 &#9;wait(TICK_LENGTH)
