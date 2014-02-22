@@ -1,0 +1,492 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0.125</X>
+				<Y>0</Y>
+				<Z>1.20000005</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">DaggerPunch</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=146806452 </url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">PlaySound</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+PlaySound = Handle:WaitForChild(&quot;PlaySound&quot;)
+
+Debris = game:GetService(&quot;Debris&quot;)
+
+PlaySound.Changed:connect(function()
+&#9;if PlaySound.Value ~= &quot;&quot; then
+&#9;&#9;local SoundId = PlaySound.Value
+&#9;&#9;PlaySound.Value = &quot;&quot;
+&#9;&#9;local Sound = Instance.new(&quot;Sound&quot;)
+&#9;&#9;Sound.Looped = false
+&#9;&#9;Sound.Pitch = 1
+&#9;&#9;Sound.SoundId = &quot;http://www.roblox.com/asset?id=&quot; .. SoundId
+&#9;&#9;Sound.PlayOnRemove = false
+&#9;&#9;Sound.Volume = 0.5
+&#9;&#9;Debris:AddItem(Sound, 3)
+&#9;&#9;Sound.Parent = Handle
+&#9;&#9;wait()
+&#9;&#9;Sound:Play()
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+PlaySound = Handle:WaitForChild(&quot;PlaySound&quot;)
+BlackHoleScript = script:WaitForChild(&quot;BlackHoleScript&quot;)
+
+Anims = {
+&#9;Equip = Handle:WaitForChild(&quot;Equip&quot;),
+&#9;Hold = Handle:WaitForChild(&quot;Hold&quot;),
+&#9;LeftSlash = Handle:WaitForChild(&quot;LeftSlash&quot;),
+&#9;RightSlash = Handle:WaitForChild(&quot;RightSlash&quot;),
+&#9;OverHeadSwing = Handle:WaitForChild(&quot;OverHeadSwing&quot;),
+&#9;Stab1 = Handle:WaitForChild(&quot;Stab1&quot;),
+&#9;Stab2 = Handle:WaitForChild(&quot;Stab2&quot;),
+}
+
+AnimSpeed = 1.2
+EquipSpeed = 1.5
+
+Damage = 25
+DamageWindow = 1
+SwingRate = 0.75
+
+SwooshSounds = {91154708, 91155889}
+HitSounds = {91154909, 91154932, 91154954}
+
+Ready = false
+Equipped = false
+Rate = (1 / 30)
+LastSwing = 0
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+Handle.Touched:connect(function(Hit)
+&#9;if Ready and Equipped and Hit and Hit.Parent and not Hit:IsDescendantOf(Tool.Parent) and (tick() - LastSwing) &lt;= DamageWindow then
+&#9;&#9;local character = Hit.Parent
+&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;local torso = character:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;if Humanoid and humanoid and torso and humanoid ~= Humanoid and Humanoid.Health &gt; 0 and humanoid.Health &gt; 0 and RightArm then
+&#9;&#9;&#9;Ready = false
+&#9;&#9;&#9;
+&#9;&#9;&#9;for i,v in pairs(humanoid:GetChildren()) do
+&#9;&#9;&#9;&#9;if v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+
+&#9;&#9;&#9;local LocalDamage = math.floor(Damage * (0.9 + (math.random() * 0.2)))
+&#9;&#9;&#9;if (humanoid.Health - LocalDamage) &lt;= 0 then
+&#9;&#9;&#9;&#9;local BlackHoleScriptClone = BlackHoleScript:Clone()
+&#9;&#9;&#9;&#9;BlackHoleScriptClone.creator.Value = Player
+&#9;&#9;&#9;&#9;BlackHoleScriptClone.Disabled = false
+&#9;&#9;&#9;&#9;BlackHoleScriptClone.Parent = humanoid
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local BodyVelocity = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;&#9;&#9;BodyVelocity.Name = &quot;PushBack&quot;
+&#9;&#9;&#9;&#9;BodyVelocity.P = 100000
+&#9;&#9;&#9;&#9;BodyVelocity.maxForce = Vector3.new(BodyVelocity.P, BodyVelocity.P, BodyVelocity.P)
+&#9;&#9;&#9;&#9;BodyVelocity.velocity = (torso.Position - Torso.Position).unit * 50
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;Debris:AddItem(BodyVelocity, 0.5)
+&#9;&#9;&#9;&#9;BodyVelocity.Parent = torso
+&#9;&#9;&#9;&#9;local creator = Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;&#9;creator.Name = &quot;creator&quot;
+&#9;&#9;&#9;&#9;creator.Value = Player
+&#9;&#9;&#9;&#9;creator.Parent = humanoid
+&#9;&#9;&#9;&#9;Debris:AddItem(creator, 1)
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(LocalDamage)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;PlaySound.Value = HitSounds[math.random(1,#HitSounds)]
+&#9;&#9;end
+&#9;end
+end)
+
+function Activate()
+&#9;if Equipped and (tick() - LastSwing) &gt;= SwingRate then
+&#9;&#9;Ready = true
+&#9;&#9;PlaySound.Value = SwooshSounds[math.random(1,#SwooshSounds)]
+&#9;&#9;if AnimTrack then
+&#9;&#9;&#9;AnimTrack:Stop()
+&#9;&#9;end
+&#9;&#9;local TempAnims = {}
+&#9;&#9;for i, v in pairs(Anims) do
+&#9;&#9;&#9;if v ~= LastAnim then
+&#9;&#9;&#9;&#9;table.insert(TempAnims, v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;NewAnim = TempAnims[math.random(1, #TempAnims)]
+&#9;&#9;LastAnim = NewAnim
+&#9;&#9;AnimTrack = Humanoid:LoadAnimation(NewAnim)
+&#9;&#9;if AnimTrack and Humanoid.Health &gt; 0 then
+&#9;&#9;&#9;AnimTrack:Play(nil, nil, AnimSpeed)
+&#9;&#9;end
+&#9;&#9;LastSwing = tick()
+
+&#9;&#9;Tool.Enabled = false
+&#9;&#9;
+&#9;&#9;wait(SwingRate)
+&#9;&#9;
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;
+&#9;end
+end
+
+function Equipped(Mouse)
+&#9;Equipped = true
+&#9;LastSwing = tick()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;RightArm = Character:FindFirstChild(&quot;Right Arm&quot;)
+&#9;EquipAnim = Humanoid:LoadAnimation(Anims.Equip)
+&#9;if EquipAnim and Humanoid.Health &gt; 0 then
+&#9;&#9;EquipAnim:Play(nil, nil, EquipSpeed)
+&#9;end
+&#9;if HoldAnim then
+&#9;&#9;HoldAnim:Stop()
+&#9;end
+&#9;HoldAnim = Humanoid:LoadAnimation(Anims.Hold)
+&#9;if HoldAnim and Humanoid.Health &gt; 0 then
+&#9;&#9;HoldAnim:Play()
+&#9;end
+end
+
+function Unequipped()
+&#9;Equipped = false
+&#9;Ready = false
+&#9;if HoldAnim then
+&#9;&#9;HoldAnim:Stop()
+&#9;end
+&#9;if EquipAnim then
+&#9;&#9;EquipAnim:Stop()
+&#9;end
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+Tool.Activated:connect(Activate)</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX3">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">BlackHoleScript</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+creator = script:WaitForChild(&quot;creator&quot;)
+
+Debris = game:GetService(&quot;Debris&quot;)
+
+function RayCast(Position, Direction, MaxDistance, IgnoreList)
+&#9;return game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(Position, Direction.unit * (MaxDistance or 999.999)), IgnoreList) 
+end
+
+function GatherAllInstances(Parent)
+&#9;local Instances = {}
+&#9;local function GatherInstances(Parent)
+&#9;&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;&#9;GatherInstances(v)
+&#9;&#9;&#9;table.insert(Instances, v)
+&#9;&#9;end
+&#9;end
+&#9;GatherInstances(Parent)
+&#9;return Instances
+end
+
+humanoid = script.Parent
+character = humanoid.Parent
+torso = character.Torso
+if humanoid and humanoid.Parent and torso and torso.Parent then
+&#9;Character = creator.Value.Character
+&#9;
+&#9;for i,v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+
+&#9;local creator_tag = creator:Clone()
+&#9;creator_tag.Value = creator.Value
+&#9;creator_tag.Parent = humanoid&#9;
+&#9;
+&#9;Hit, Pos = RayCast(torso.Position, Vector3.new(0, -1, 0), 6, {Character, character})
+&#9;BlackHole = Instance.new(&quot;Part&quot;)
+&#9;BlackHole.TopSurface = Enum.SurfaceType.Smooth
+&#9;BlackHole.BottomSurface = Enum.SurfaceType.Smooth
+&#9;BlackHole.FormFactor = Enum.FormFactor.Custom
+&#9;BlackHole.Size = Vector3.new(6, 0.2, 6)
+&#9;BlackHole.Anchored = true
+&#9;BlackHole.BrickColor = BrickColor.new(&quot;Really black&quot;)
+&#9;Instance.new(&quot;CylinderMesh&quot;, BlackHole)
+&#9;Debris:AddItem(BlackHole, 10)
+&#9;local Instances = GatherAllInstances(character)
+&#9;local Parts = {}
+&#9;BlackHole.Parent = character
+&#9;BlackHole.CFrame = ((Hit and CFrame.new(Pos)) or torso.CFrame - Vector3.new(0, 6, 0))
+&#9;for i, v in pairs(Instances) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;table.insert(Parts, v)
+&#9;&#9;&#9;v.Anchored = true
+&#9;&#9;&#9;v.BrickColor = BrickColor.new(&quot;Institutional white&quot;)
+&#9;&#9;&#9;if v.Transparency &lt;= 0 then
+&#9;&#9;&#9;&#9;v.Transparency = 0.5
+&#9;&#9;&#9;end
+&#9;&#9;elseif v:IsA(&quot;CharacterMesh&quot;) then
+&#9;&#9;&#9;v.BaseTextureId = 0
+&#9;&#9;&#9;v.OverlayTextureId = 0
+&#9;&#9;elseif v:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;if v:IsA(&quot;SpecialMesh&quot;) then
+&#9;&#9;&#9;&#9;v.TextureId = &quot;&quot;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local BrickColor = BrickColor.new(&quot;Institutional white&quot;)
+&#9;&#9;&#9;local Color = BrickColor.Color
+&#9;&#9;&#9;local r, g, b = Color.r, Color.g, Color.b
+&#9;&#9;&#9;v.VertexColor = Vector3.new(r, g, b)
+&#9;&#9;elseif v:IsA(&quot;Clothing&quot;) or v:IsA(&quot;ShirtGraphic&quot;) or v:IsA(&quot;Decal&quot;) and v.Name ~= &quot;face&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;while #Parts &gt; 0 do
+&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;v.CFrame = v.CFrame - Vector3.new(0, 0.25, 0)
+&#9;&#9;&#9;&#9;if v.CFrame.y &lt;= BlackHole.CFrame.y then
+&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;&#9;table.remove(Parts, i)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(0.1)
+&#9;&#9;end
+&#9;&#9;BlackHole:Destroy()
+&#9;end)
+end</ProtectedString>
+				</Properties>
+				<Item class="ObjectValue" referent="RBX4">
+					<Properties>
+						<string name="Name">creator</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX5">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>16.4733486</X>
+					<Y>7.43923473</Y>
+					<Z>-170.293564</Z>
+					<R00>0.967337668</R00>
+					<R01>0.00570855755</R01>
+					<R02>-0.253426433</R02>
+					<R10>-1.56339615e-014</R10>
+					<R11>0.999746323</R11>
+					<R12>0.0225197859</R12>
+					<R20>0.253490716</R20>
+					<R21>-0.0217842404</R21>
+					<R22>0.967092395</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>3.5861417e-020</X>
+					<Y>-0.00104037882</Y>
+					<Z>3.5939256e-020</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.200000003</X>
+					<Y>2.5999999</Y>
+					<Z>0.899999976</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX6">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=146806371</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1.20000005</X>
+						<Y>1.20000005</Y>
+						<Z>1.20000005</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=146806423</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX7">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=94160581</url></Content>
+					<string name="Name">Equip</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX8">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=96559165</url></Content>
+					<string name="Name">Hold</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX9">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74894663</url></Content>
+					<string name="Name">LeftSlash</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX10">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74894663</url></Content>
+					<string name="Name">LeftSlash</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX11">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74897796</url></Content>
+					<string name="Name">OverHeadSwing</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX12">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=74813494</url></Content>
+					<string name="Name">RightSlash</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX13">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=96559159</url></Content>
+					<string name="Name">Stab1</string>
+				</Properties>
+			</Item>
+			<Item class="Animation" referent="RBX14">
+				<Properties>
+					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=96559161</url></Content>
+					<string name="Name">Stab2</string>
+				</Properties>
+			</Item>
+			<Item class="StringValue" referent="RBX15">
+				<Properties>
+					<string name="Name">PlaySound</string>
+					<string name="Value"></string>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX16">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
