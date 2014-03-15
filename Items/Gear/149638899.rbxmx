@@ -1,0 +1,614 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0.300000012</X>
+				<Y>-0.200000003</Y>
+				<Z>0.200000003</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">Leprechaun</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset?id=149229736</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LeprechaunScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+-----------------
+--| Constants |--
+-----------------
+
+CHANCE_TO_SUMMON = 0.1
+SUMMON_DEBRIS_TIME = 120
+SUMMON_ID = 149633637
+SUMMON_SPAWN_OFFSET = Vector3.new(15, 0, 15)
+AI_SCRIPT_NAME = &quot;LeprechaunAi&quot;
+
+COOLDOWN = 1
+
+-----------------
+--| Variables |--
+-----------------
+
+InsertService = Game:GetService(&quot;InsertService&quot;)
+Players = Game:GetService(&quot;Players&quot;)
+Debris = Game:GetService(&quot;Debris&quot;)
+
+Tool = script.Parent
+ToolHandle = Tool:WaitForChild(&quot;Handle&quot;)
+AiScript = script:WaitForChild(AI_SCRIPT_NAME)
+CreatorTag = AiScript:WaitForChild(&quot;creator&quot;)
+
+MyPlayer = nil
+MyCharacter = nil
+MyHumanoid = nil
+Summon = nil
+--BaseLaser = nil
+
+PlayerConnections = {}
+
+-----------------
+--| Functions |--
+-----------------
+
+
+-- Returns the closest living Humanoid to position who isn&quot;t in excludeList
+function FindClosestHumanoid(position, excludeList) -- (Vector3, table)
+&#9;if not position then print(&quot;Need a Vector3 position&quot;) return nil end
+
+&#9;-- Change list values to keys so we can use indexing
+&#9;local excludeSet = {}
+&#9;if excludeList and type(excludeList) == &quot;table&quot; then
+&#9;&#9;for _, l in ipairs(excludeList) do
+&#9;&#9;&#9;excludeSet[l] = true
+&#9;&#9;end
+&#9;end
+
+&#9;-- Search through Workspace children
+&#9;local closestHumanoid = nil
+&#9;for _, child in pairs(Game.Workspace:GetChildren()) do
+&#9;&#9;if (child and child:FindFirstChild(&quot;Humanoid&quot;) and child.Humanoid.Health &gt; 0 and not excludeSet[child.Humanoid])
+&#9;&#9;and (not closestHumanoid or (child.Humanoid.Torso.Position - position).magnitude &lt; (closestHumanoid.Torso.Position - position).magnitude) then
+&#9;&#9;&#9;closestHumanoid = child.Humanoid
+&#9;&#9;end
+&#9;end
+&#9;return closestHumanoid --NOTE: Can be nil
+end
+
+-- Removes any old creator tags and applies new ones to the specified target
+function ApplyTags(target)
+&#9;while target:FindFirstChild(&quot;creator&quot;) do
+&#9;&#9;target.creator:Destroy()
+&#9;end
+&#9;local creatorTag = CreatorTag:Clone()
+&#9;Debris:AddItem(creatorTag, 4)
+&#9;creatorTag.Parent = target
+end
+
+function OnThrowableReachedTarget(throwable, targetHumanoid)
+&#9;local smackSound = throwable:FindFirstChild(&quot;Smack&quot;)
+&#9;if smackSound then
+&#9;&#9;smackSound:Play()
+&#9;end
+&#9;if targetHumanoid.Health &gt; 0 then
+&#9;&#9;ApplyTags(targetHumanoid)
+&#9;&#9;targetHumanoid:TakeDamage(THROWABLE_DAMAGE)
+&#9;end
+&#9;throwable:Destroy()
+end
+
+function PickNewTarget(throwable)
+&#9;local homing = throwable:FindFirstChild(&quot;Homing&quot;)
+&#9;if homing then
+&#9;&#9;local targetHumanoid = FindClosestHumanoid(throwable.Position, {MyHumanoid, PetHumanoid})
+&#9;&#9;if targetHumanoid and targetHumanoid.Torso then
+&#9;&#9;&#9;local targetHead = targetHumanoid.Parent:FindFirstChild(&quot;Head&quot;)
+&#9;&#9;&#9;homing.Target = targetHead or targetHumanoid.Torso
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;-- Otherwise, fall
+&#9;&#9;homing:Destroy()
+&#9;end
+&#9;-- Fall to kill plane
+&#9;throwable.CanCollide = false
+end
+
+-- Change target when the old target disappears
+function OnTargetModelChanged(targetModel, property, throwable)
+&#9;if property == &quot;Parent&quot; and targetModel.Parent == nil then
+&#9;&#9;PickNewTarget(throwable)
+&#9;end
+end
+
+function OnEquipped()
+&#9;MyCharacter = Tool.Parent
+&#9;MyHumanoid = MyCharacter:WaitForChild(&quot;Humanoid&quot;)
+&#9;MyPlayer = Players:GetPlayerFromCharacter(MyCharacter)
+&#9;CreatorTag.Value = MyPlayer
+&#9;
+&#9;table.insert(PlayerConnections,MyHumanoid.Died:connect(function()
+&#9;&#9;MyHumanoid = nil
+&#9;end))
+&#9;
+&#9;table.insert(PlayerConnections,Players.PlayerRemoving:connect(function(player)
+&#9;&#9;if player == MyPlayer then
+&#9;&#9;&#9;MyHumanoid = nil
+&#9;&#9;end
+&#9;end))
+end
+
+function OnActivated()
+&#9;if Tool.Enabled and MyHumanoid.Health &gt; 0 then
+&#9;&#9;Tool.Enabled = false
+
+&#9;&#9;-- Chance to summon
+&#9;&#9;if (not Summon or Summon.Parent == nil) then
+&#9;&#9;&#9;---[[
+&#9;&#9;&#9;Summon = InsertService:LoadAsset(SUMMON_ID):GetChildren()[1] --NOTE: Cloning causes health problems
+&#9;&#9;&#9;if Summon then
+&#9;&#9;&#9;&#9;local aiScriptClone = AiScript:Clone()
+&#9;&#9;&#9;&#9;aiScriptClone.Parent = Summon
+&#9;&#9;&#9;&#9;aiScriptClone.Disabled = false
+&#9;&#9;&#9;&#9;Debris:AddItem(Summon, SUMMON_DEBRIS_TIME)
+&#9;&#9;&#9;&#9;Summon.Parent = Workspace
+&#9;&#9;&#9;&#9;Summon:MoveTo(ToolHandle.Position + SUMMON_SPAWN_OFFSET)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;--]]
+&#9;&#9;end
+
+&#9;&#9;-- Pew pew
+&#9;&#9;local targetPoint = MyHumanoid.TargetPoint
+&#9;&#9;
+&#9;&#9;wait(COOLDOWN)
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function OnUnequipped()
+&#9;if Summon then
+&#9;&#9;Summon:Destroy()
+&#9;&#9;Summon = nil
+&#9;end
+&#9;for _,i in pairs(PlayerConnections) do
+&#9;&#9;i:disconnect()
+&#9;end
+&#9;
+&#9;PlayerConnections = {}
+&#9;
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Activated:connect(OnActivated)
+Tool.Unequipped:connect(OnUnequipped)</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">LeprechaunAi</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+-----------------
+--| Constants |--
+-----------------
+
+THROWABLE_DAMAGE = 15
+THROWABLE_CHANCE = 0.05
+THROWABLE_TIMETOLIVE = 15
+
+ONE_STEP = 1 / 30
+
+--------------------
+--| WaitForChild |--
+--------------------
+
+-----------------
+--| Variables |--
+-----------------
+
+Debris = Game:GetService(&quot;Debris&quot;)
+Players = Game:GetService(&quot;Players&quot;)
+
+ThrowSound = script:WaitForChild(&quot;Throw&quot;)
+SwooshSound = script:WaitForChild(&quot;Swoosh&quot;)
+SmackSound = script:WaitForChild(&quot;Smack&quot;)
+
+Pet = script.Parent
+PetHumanoid = Pet:WaitForChild(&quot;Humanoid&quot;)
+Throwable = Pet:WaitForChild(&quot;Throwable&quot;)
+
+CreatorTag = script:WaitForChild(&quot;creator&quot;)
+
+MyPlayer = CreatorTag.Value
+MyModel = MyPlayer.Character
+MyHumanoid = MyModel.Humanoid
+
+LastThrowTime = 0
+
+-----------------
+--| Functions |--
+-----------------
+
+-- Returns the closest living Humanoid to position who isn&quot;t in excludeList
+function FindClosestHumanoid(position, excludeList) -- (Vector3, table)
+&#9;if not position then print(&quot;Need a Vector3 position&quot;) return nil end
+
+&#9;-- Change list values to keys so we can use indexing
+&#9;local excludeSet = {}
+&#9;if excludeList and type(excludeList) == &quot;table&quot; then
+&#9;&#9;for _, l in ipairs(excludeList) do
+&#9;&#9;&#9;excludeSet[l] = true
+&#9;&#9;end
+&#9;end
+
+&#9;-- Search through Workspace children
+&#9;local closestHumanoid = nil
+&#9;for _, child in pairs(Game.Workspace:GetChildren()) do
+&#9;&#9;if (child and child:FindFirstChild(&quot;Humanoid&quot;) and child.Humanoid.Health &gt; 0 and not excludeSet[child.Humanoid])
+&#9;&#9;and (not closestHumanoid or (child.Humanoid.Torso.Position - position).magnitude &lt; (closestHumanoid.Torso.Position - position).magnitude) then
+&#9;&#9;&#9;closestHumanoid = child.Humanoid
+&#9;&#9;end
+&#9;end
+&#9;return closestHumanoid --NOTE: Can be nil
+end
+
+-- Removes any old creator tags and applies new ones to the specified target
+function ApplyTags(target)
+&#9;while target:FindFirstChild(&quot;creator&quot;) do
+&#9;&#9;target.creator:Destroy()
+&#9;end
+&#9;local creatorTag = CreatorTag:Clone()
+&#9;Debris:AddItem(creatorTag, 4)
+&#9;creatorTag.Parent = target
+end
+
+function OnThrowableReachedTarget(throwable, targetHumanoid)
+&#9;local smackSound = throwable:FindFirstChild(&quot;Smack&quot;)
+&#9;if smackSound then
+&#9;&#9;smackSound:Play()
+&#9;end
+&#9;if targetHumanoid.Health &gt; 0 then
+&#9;&#9;ApplyTags(targetHumanoid)
+&#9;&#9;targetHumanoid:TakeDamage(THROWABLE_DAMAGE)
+&#9;end
+&#9;local CoinRadius = 5
+&#9;for i = 1, math.random(1, 5) do
+&#9;&#9;local Coin = Instance.new(&quot;Part&quot;)
+&#9;&#9;Coin.Material = Enum.Material.SmoothPlastic
+&#9;&#9;Coin.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;Coin.TopSurface = Enum.SurfaceType.Smooth
+&#9;&#9;Coin.BottomSurface = Enum.SurfaceType.Smooth
+&#9;&#9;Coin.Size = Vector3.new(1, 0.4, 1)
+&#9;&#9;Coin.Name = &quot;Coin&quot;
+&#9;&#9;Coin.Anchored = false
+&#9;&#9;Coin.CanCollide = true
+&#9;&#9;Coin.Locked = true
+&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
+&#9;&#9;Mesh.MeshId = &quot;http://www.roblox.com/asset/?id=149636787&quot;
+&#9;&#9;Mesh.TextureId = &quot;http://www.roblox.com/asset/?id=19059111&quot;
+&#9;&#9;Mesh.Scale = Vector3.new(1, 1, 1)
+&#9;&#9;Mesh.Parent = Coin
+&#9;&#9;Debris:AddItem(Coin, 10)
+&#9;&#9;Coin.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;Coin.CFrame = CFrame.new((throwable.Position.X + math.random(-CoinRadius, CoinRadius)), (throwable.Position.Y + math.random(0, CoinRadius)), (throwable.Position.Z + math.random(-CoinRadius, CoinRadius)))
+&#9;end
+&#9;throwable:Destroy()
+end
+
+function PickNewTarget(throwable)
+&#9;local homing = throwable:FindFirstChild(&quot;Homing&quot;)
+&#9;if homing then
+&#9;&#9;local targetHumanoid = FindClosestHumanoid(throwable.Position, {MyHumanoid, PetHumanoid})
+&#9;&#9;if targetHumanoid and targetHumanoid.Torso then
+&#9;&#9;&#9;local targetHead = targetHumanoid.Parent:FindFirstChild(&quot;Head&quot;)
+&#9;&#9;&#9;homing.Target = targetHead or targetHumanoid.Torso
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;-- Otherwise, fall
+&#9;&#9;homing:Destroy()
+&#9;end
+&#9;-- Fall to kill plane
+&#9;throwable.CanCollide = false
+end
+
+-- Change target when the old target disappears
+function OnTargetModelChanged(targetModel, property, throwable)
+&#9;if property == &quot;Parent&quot; and targetModel.Parent == nil then
+&#9;&#9;PickNewTarget(throwable)
+&#9;end
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+ThrowSound.Parent = Throwable --NOTE: To be played from hand
+SwooshSound.Parent = Throwable --NOTE: To be played from projectile
+SmackSound.Parent = Throwable --NOTE: To be played from projectile on hit
+
+PetHumanoid.Health = PetHumanoid.MaxHealth -- This never works
+Delay(1, function() PetHumanoid.Health = PetHumanoid.Health + 1 end) -- So at least trigger healing
+
+MyHumanoid.Died:connect(function()
+&#9;MyHumanoid = nil
+end)
+
+Players.PlayerRemoving:connect(function(player)
+&#9;if player == MyPlayer then
+&#9;&#9;MyHumanoid = nil
+&#9;end
+end)
+
+while PetHumanoid and MyHumanoid and MyHumanoid.Health &gt; 0 do
+&#9;local torso = MyHumanoid.Torso
+&#9;PetHumanoid:MoveTo(torso.Position + Vector3.new(-4, 0, -4), torso)
+
+&#9;local now = tick()
+&#9;if now - LastThrowTime &gt; 0.5 and math.random() &lt;= THROWABLE_CHANCE then
+&#9;&#9;--print(&quot;Throw&quot;)
+&#9;&#9;LastThrowTime = now
+&#9;&#9;local targetHumanoid = FindClosestHumanoid(torso.Position, {MyHumanoid, PetHumanoid})
+&#9;&#9;if targetHumanoid and targetHumanoid.Torso then
+&#9;&#9;&#9;local targetModel = targetHumanoid.Parent
+&#9;&#9;&#9;local targetHead = targetModel:FindFirstChild(&quot;Head&quot;)
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;ThrowSound:Play()
+&#9;&#9;&#9;&#9;local throwable = Throwable:Clone()
+&#9;&#9;&#9;&#9;throwable.Name = &quot;HomingTurkey&quot;
+&#9;&#9;&#9;&#9;local homing = Instance.new(&quot;RocketPropulsion&quot;)
+&#9;&#9;&#9;&#9;homing.Name = &quot;Homing&quot;
+&#9;&#9;&#9;&#9;homing.Target = targetHead or targetHumanoid.Torso
+&#9;&#9;&#9;&#9;homing.ReachedTarget:connect(function()
+&#9;&#9;&#9;&#9;&#9;OnThrowableReachedTarget(throwable, targetHumanoid)
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;targetModel.Changed:connect(function(property)
+&#9;&#9;&#9;&#9;&#9;OnTargetModelChanged(targetModel, property, throwable)
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;homing.Parent = throwable
+&#9;&#9;&#9;&#9;Debris:AddItem(throwable, THROWABLE_TIMETOLIVE)
+&#9;&#9;&#9;&#9;throwable.Parent = Workspace
+&#9;&#9;&#9;&#9;throwable.Velocity = Vector3.new(0, 100, 0)
+&#9;&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;&#9;if throwable then
+&#9;&#9;&#9;&#9;&#9;local projectileSwoosh = throwable:FindFirstChild(&quot;Swoosh&quot;)
+&#9;&#9;&#9;&#9;&#9;if projectileSwoosh then
+&#9;&#9;&#9;&#9;&#9;&#9;projectileSwoosh:Play()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;throwable.Size = Vector3.new(0.5, 1, 0.5)
+&#9;&#9;&#9;&#9;&#9;throwable.CanCollide = true
+&#9;&#9;&#9;&#9;&#9;homing:Fire()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+&#9;wait(ONE_STEP)
+end
+
+Debris:AddItem(Pet, 0)
+</ProtectedString>
+				</Properties>
+				<Item class="ObjectValue" referent="RBX3">
+					<Properties>
+						<string name="Name">creator</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBX4">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Throw</string>
+						<float name="Pitch">2</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=105420672</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBX5">
+					<Properties>
+						<bool name="Looped">true</bool>
+						<string name="Name">Swoosh</string>
+						<float name="Pitch">2</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>rbxasset://sounds/Rocket whoosh 01.wav</url></Content>
+						<float name="Volume">0.200000003</float>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBX6">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Smack</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=105424180</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
+local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+
+local Tool = script.Parent
+
+local Mouse = nil
+
+local function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+&#9;end
+end
+
+local function OnEquipped(mouse)
+&#9;Mouse = mouse
+&#9;UpdateIcon()
+end
+
+local function OnChanged(property)
+&#9;if property == &apos;Enabled&apos; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX8">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.100000001</X>
+					<Y>2.5</Y>
+					<Z>0.200000003</Z>
+					<R00>-1</R00>
+					<R01>0</R01>
+					<R02>-0</R02>
+					<R10>-0</R10>
+					<R11>1</R11>
+					<R12>-0</R12>
+					<R20>-0</R20>
+					<R21>0</R21>
+					<R22>-1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>2.59999943</X>
+					<Y>2.60000038</Y>
+					<Z>0.799999893</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX9">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset?id=149636816</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.5</X>
+						<Y>0.5</Y>
+						<Z>0.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset?id=149229711</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX10">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-1.34881639</X>
+					<Y>3.05625343</Y>
+					<Z>3.53212786</Z>
+					<R00>0.951229036</R00>
+					<R01>0.0257446822</R01>
+					<R02>-0.307409316</R02>
+					<R10>-0</R10>
+					<R11>0.996511579</R11>
+					<R12>0.0834550932</R12>
+					<R20>0.308485448</R20>
+					<R21>-0.0793849081</R21>
+					<R22>0.947910786</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.733997822</X>
+					<Y>2.88934326</Y>
+					<Z>1.63630652</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
