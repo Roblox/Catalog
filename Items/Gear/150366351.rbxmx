@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.630000055</X>
-					<Y>2.45000005</Y>
-					<Z>-4.9000001</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<X>20.24263</X>
+					<Y>7.65725517</Y>
+					<Z>78.9431992</Z>
+					<R00>-0.991070211</R00>
+					<R01>-0.00253100041</R01>
+					<R02>0.133315772</R02>
+					<R10>-1.56751087e-014</R10>
+					<R11>0.999819815</R11>
+					<R12>0.0189815834</R12>
+					<R20>-0.133339792</R20>
+					<R21>0.0188120827</R21>
+					<R22>-0.990891635</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -69,9 +69,9 @@
 				<token name="RightSurface">0</token>
 				<token name="RightSurfaceInput">0</token>
 				<Vector3 name="RotVelocity">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
@@ -203,6 +203,22 @@ function RayCast(Position, Direction, MaxDistance, IgnoreList)
 &#9;return game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(Position, Direction.unit * (MaxDistance or 999.999)), IgnoreList) 
 end
 
+function TagHumanoid(humanoid, player)
+&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Name = &quot;creator&quot;
+&#9;creator_tag.Value = player
+&#9;Debris:AddItem(creator_tag, 3)
+&#9;creator_tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
 function Fire(v)
 
 &#9;local missile = Instance.new(&quot;Part&quot;)
@@ -218,14 +234,16 @@ function Fire(v)
 &#9;
 &#9;local mesh = Instance.new(&quot;SpecialMesh&quot;)
 &#9;mesh.MeshType = Enum.MeshType.FileMesh
-&#9;local FlowerChance = math.random(1, 15)
+&#9;local FlowerChance = math.random(1, 5)
 &#9;mesh.MeshId = &quot;http://www.roblox.com/asset?id=&quot; .. tostring((FlowerChance == 1 and 150061774) or 150061796)
 &#9;mesh.TextureId = &quot;http://www.roblox.com/asset?id=150061826&quot;
 &#9;mesh.Scale = ((FlowerChance == 1 and Vector3.new(3, 3, 3)) or Vector3.new(2, 2, 2))
 &#9;mesh.Parent = missile
 
 &#9;missile.Velocity =  v * 50
-&#9;missile.Velocity = missile.Velocity + Vector3.new(0, (100 * ((missile.Velocity.Y &lt;= 0 and -1) or 1)), 0)
+&#9;Delay(0.5, function()
+&#9;&#9;missile.Velocity = missile.Velocity + Vector3.new(0, (100 * ((missile.Velocity.Y &lt;= 0 and -1) or 1)), 0)
+&#9;end)
 &#9;local InitialVelocity = missile.Velocity.magnitude
 &#9;
 &#9;local force = Instance.new(&quot;BodyForce&quot;)
@@ -242,8 +260,11 @@ function Fire(v)
 &#9;&#9;&#9;&#9;Debounce = true
 &#9;&#9;&#9;&#9;if FlowerChance &gt; 1 then
 &#9;&#9;&#9;&#9;&#9;hitsound:Play()
-&#9;&#9;&#9;&#9;&#9;if humanoid then
+&#9;&#9;&#9;&#9;&#9;if humanoid and humanoid ~= Humanoid then
 &#9;&#9;&#9;&#9;&#9;&#9;humanoid.Sit = true
+&#9;&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(15)
+&#9;&#9;&#9;&#9;&#9;&#9;UntagHumanoid(humanoid)
+&#9;&#9;&#9;&#9;&#9;&#9;TagHumanoid(humanoid, Player)
 &#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;--Creates the bouncing effect, thanks to Oozlebachr
 &#9;&#9;&#9;&#9;&#9;missile.Velocity = CFrame.new(Vector3.new(), missile.Velocity).lookVector * InitialVelocity
@@ -256,11 +277,21 @@ function Fire(v)
 &#9;&#9;&#9;&#9;&#9;&#9;missile:Destroy()
 &#9;&#9;&#9;&#9;&#9;&#9;local FlowerRadius = 6
 &#9;&#9;&#9;&#9;&#9;&#9;local IgnoreList = {Character, missile}
+&#9;&#9;&#9;&#9;&#9;&#9;local Flowers = {}
+&#9;&#9;&#9;&#9;&#9;&#9;local FlowerModel = Instance.new(&quot;Model&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;FlowerModel.Name = &quot;FlowerModel&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(FlowerModel, 30)
 &#9;&#9;&#9;&#9;&#9;&#9;for i = 1, (10 + math.random(0, 20)) do
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;local FlowerPosition = MissilePosition + Vector3.new(math.random(-FlowerRadius, FlowerRadius), 0, math.random(-FlowerRadius, FlowerRadius))
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;local Hit2, EndPosition2 = RayCast(FlowerPosition, Vector3.new(0, -1, 0), (missile.Size.Y * 2), IgnoreList)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;if Hit2 then
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Flower = missile:Clone()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Smoke = Instance.new(&quot;Smoke&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Color = BrickColor.new(&quot;New Yeller&quot;).Color
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Opacity = 0.25
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.RiseVelocity = 0.06
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Size = 0.125
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Parent = Flower
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Flower.CanCollide = false
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Flower.Shape = Enum.PartType.Block
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Flower.FormFactor = Enum.FormFactor.Custom
@@ -268,6 +299,7 @@ function Fire(v)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;missile.Velocity = Vector3.new(0, 0, 0)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;mesh:Clone().Parent = Flower
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(IgnoreList, Flower)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Flowers, Flower)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Flower, 25)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Weld = Instance.new(&quot;Motor&quot;)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Weld.Part0 = Hit2
@@ -277,9 +309,30 @@ function Fire(v)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Weld.C0 = ToObjectSpace
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Weld, 20)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Weld.Parent = Flower
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Flower.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;FlowerModel.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Flower.Parent = FlowerModel
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;local FlowerDamage = 3
+&#9;&#9;&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;while #FlowerModel:GetChildren() &gt; 0 do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Flowers) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(Players:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent and vv and vv.Parent and vv.Character and (v.Position - vv.Character:GetModelCFrame().p).magnitude &lt;= 5 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local humanoid = vv.Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and humanoid ~= Humanoid then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if (humanoid.Health - FlowerDamage) &lt;= 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;UntagHumanoid(humanoid)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;TagHumanoid(humanoid, Player)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(FlowerDamage)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.25)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end)
 &#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
@@ -324,42 +377,6 @@ end
 
 Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX7">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-2.77000523</X>
-					<Y>3.91189361</Y>
-					<Z>-6.87681103</Z>
-					<R00>-0.658692658</R00>
-					<R01>0.344620109</R01>
-					<R02>-0.668850422</R02>
-					<R10>1.49011612e-008</R10>
-					<R11>0.888941586</R11>
-					<R12>0.458020449</R12>
-					<R20>0.752412081</R20>
-					<R21>0.301694721</R21>
-					<R22>-0.585539341</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-1.43230438</X>
-					<Y>2.99585271</Y>
-					<Z>-5.70573235</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
