@@ -1,0 +1,400 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-1</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">HotWheels</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=152653157</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">HotWheelsScript</string>
+				<ProtectedString name="Source">local ASSETS = 
+{
+&#9;CarMesh = 149408914;
+&#9;CarTX = 152653238;
+&#9;Icon = 152653157;
+}
+
+
+local Tool = script.Parent
+local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+local Character = nil
+local Torso = nil
+local Humanoid = nil
+local CarPrefab = Game:GetService(&quot;InsertService&quot;):LoadAsset(147928844):GetChildren()[1]
+--local CarPrefab = Game.ReplicatedStorage.Car:Clone()
+local MyMouse = nil
+local Camera = Workspace.CurrentCamera
+
+local CurrentCar = newCar
+
+local GuiPrefab = script:WaitForChild(&apos;HWGui&apos;)
+
+local CurrentGui = nil
+
+local function DestroyCar()
+&#9;--print(&quot;Calling unitialized destroy car func&quot;)
+end
+
+function OnActivated()
+&#9;if not Tool.Enabled then return end
+&#9;if Character and Torso and Humanoid then
+&#9;&#9;Tool.Enabled = false
+&#9;&#9;Humanoid.WalkSpeed = 0
+&#9;&#9;DestroyCar()
+&#9;&#9;Handle.Transparency = 1
+&#9;&#9;CurrentCar = CarPrefab:Clone()
+&#9;&#9;CurrentCar:TranslateBy((Torso.CFrame.p + Torso.CFrame.lookVector * 3)  - CurrentCar:GetModelCFrame().p)
+&#9;&#9;CurrentCar.Parent = Camera
+&#9;&#9;
+&#9;&#9;local CurrentCarMesh = CurrentCar and CurrentCar:FindFirstChild(&apos;Chassis&apos;) and CurrentCar:FindFirstChild(&apos;Chassis&apos;):FindFirstChild(&apos;Mesh&apos;)
+&#9;&#9;CurrentCarMesh.MeshId = &quot;http://www.roblox.com/asset?id=&quot; .. tostring(ASSETS[&apos;CarMesh&apos;])
+&#9;&#9;CurrentCarMesh.TextureId = &quot;http://www.roblox.com/asset?id=&quot; .. tostring(ASSETS[&apos;CarTX&apos;])
+&#9;&#9;
+&#9;&#9;CurrentGui = GuiPrefab:Clone()
+&#9;&#9;if Player and Player:FindFirstChild(&apos;PlayerGui&apos;) then
+&#9;&#9;&#9;CurrentGui.Parent = Player:FindFirstChild(&apos;PlayerGui&apos;)
+&#9;&#9;end
+&#9;&#9;Camera.CameraSubject = CurrentCar
+&#9;&#9;Camera.CameraType = &apos;Follow&apos;
+&#9;&#9;local newCarScript = CurrentCar:WaitForChild(&apos;HWCarScript&apos;)
+&#9;&#9;local SteeringEvent = newCarScript:WaitForChild(&apos;SteeringEvent&apos;)
+&#9;&#9;local ThrottleEvent = newCarScript:WaitForChild(&apos;ThrottleEvent&apos;)
+&#9;&#9;local ThrottleEvent = newCarScript:WaitForChild(&apos;ThrottleEvent&apos;)
+&#9;&#9;newCarScript.Parent = Character
+&#9;&#9;
+&#9;&#9;DestroyCar = function()
+&#9;&#9;&#9;if CurrentCar then
+&#9;&#9;&#9;&#9;CurrentCar:Destroy()
+&#9;&#9;&#9;&#9;CurrentCar = nil
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if newCarScript then
+&#9;&#9;&#9;&#9;newCarScript:Destroy()
+&#9;&#9;&#9;&#9;newCarScript = nil
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if CurrentGui then
+&#9;&#9;&#9;&#9;CurrentGui:Destroy()
+&#9;&#9;&#9;&#9;CurrentGui = nil
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;local function onCharDied()
+&#9;&#9;&#9;DestroyCar()
+&#9;&#9;&#9;if Humanoid then
+&#9;&#9;&#9;&#9;if Camera then
+&#9;&#9;&#9;&#9;&#9;Camera.CameraSubject = Humanoid
+&#9;&#9;&#9;&#9;&#9;Camera.CameraType = &apos;Custom&apos;
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;Humanoid.WalkSpeed = 16
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;Humanoid.Died:connect(onCharDied)
+&#9;&#9;
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;while true do
+&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;if Character ~= Player.Character or (CurrentCar and (CurrentCar.Parent == nil or CurrentCar:GetModelCFrame().p.Y &lt; -300)) then
+&#9;&#9;&#9;&#9;&#9;onCharDied()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;if MyMouse then
+&#9;&#9;&#9;local downKeys = { [string.byte(&apos;s&apos;)] = false; [string.byte(&apos;w&apos;)] = false; [string.byte(&apos;a&apos;)] = false; [string.byte(&apos;d&apos;)] = false }
+&#9;&#9;&#9;local function UpdateEvents()
+&#9;&#9;&#9;&#9;--FireServer
+&#9;&#9;&#9;&#9;local rightArrow = 19
+&#9;&#9;&#9;&#9;local leftArrow = 20
+&#9;&#9;&#9;&#9;local forwardArrow = 17
+&#9;&#9;&#9;&#9;local backArrow = 18
+&#9;&#9;&#9;&#9;ThrottleEvent:Fire(((downKeys[string.byte(&apos;w&apos;)] or downKeys[forwardArrow]) and 1 or 0) + ((downKeys[string.byte(&apos;s&apos;)] or downKeys[backArrow]) and -1 or 0))
+&#9;&#9;&#9;&#9;SteeringEvent:Fire(((downKeys[string.byte(&apos;d&apos;)] or downKeys[rightArrow]) and 1 or 0) + ((downKeys[string.byte(&apos;a&apos;)] or downKeys[leftArrow]) and -1 or 0))
+&#9;&#9;&#9;end
+&#9;&#9;&#9;MyMouse.KeyDown:connect(function(key)
+&#9;&#9;&#9;&#9;key = string.lower(key)
+&#9;&#9;&#9;&#9;downKeys[string.byte(key)] = true
+&#9;&#9;&#9;&#9;UpdateEvents()
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;MyMouse.KeyUp:connect(function(key)
+&#9;&#9;&#9;&#9;key = string.lower(key)&#9;&#9;
+&#9;&#9;&#9;&#9;downKeys[string.byte(key)] = false
+&#9;&#9;&#9;&#9;UpdateEvents()
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;UpdateEvents()
+&#9;&#9;else
+&#9;&#9;&#9;print(&quot;No mouse found&quot;)
+&#9;&#9;end
+&#9;&#9;newCarScript.Disabled = false
+&#9;&#9;
+&#9;&#9;wait(5) -- Cooldown
+&#9;&#9;Tool.Enabled = true
+&#9;else
+&#9;&#9;print(&quot;Couldn&apos;t find Torso&quot;)
+&#9;end
+end
+
+function OnEquipped(mouse)&#9;
+&#9;Handle.Transparency = 0
+&#9;Character = Tool.Parent
+&#9;Player = Game:GetService(&apos;Players&apos;):GetPlayerFromCharacter(Character)
+&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
+&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
+&#9;MyMouse = mouse
+&#9;Player.CharacterAdded:connect(function()
+&#9;&#9;Camera.CameraSubject = Humanoid
+&#9;&#9;Camera.CameraType = &apos;Custom&apos;
+&#9;end)
+end
+
+function OnUnequipped()
+&#9;DestroyCar()
+&#9;if Humanoid then
+&#9;&#9;if Camera then
+&#9;&#9;&#9;Camera.CameraSubject = Humanoid
+&#9;&#9;&#9;Camera.CameraType = &apos;Custom&apos;
+&#9;&#9;end
+&#9;&#9;Humanoid.WalkSpeed = 16
+&#9;end
+end
+
+Tool.Activated:connect(OnActivated)
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+
+local HandleMesh = Handle and Handle:FindFirstChild(&apos;Mesh&apos;)
+
+HandleMesh.MeshId = &quot;http://www.roblox.com/asset?id=&quot; .. tostring(ASSETS[&apos;CarMesh&apos;])
+HandleMesh.TextureId = &quot;http://www.roblox.com/asset?id=&quot; .. tostring(ASSETS[&apos;CarTX&apos;])
+Tool.TextureId = &quot;http://www.roblox.com/asset/?id=&quot; .. tostring(ASSETS[&apos;Icon&apos;])
+</ProtectedString>
+			</Properties>
+			<Item class="ScreenGui" referent="RBX2">
+				<Properties>
+					<string name="Name">HWGui</string>
+				</Properties>
+				<Item class="TextLabel" referent="RBX3">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4294967295</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<token name="Font">4</token>
+						<token name="FontSize">7</token>
+						<string name="Name">TextLabel</string>
+						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>0</XO>
+							<YS>1</YS>
+							<YO>-200</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>100</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<string name="Text">Use the WASD keys to drive the car!</string>
+						<Color3 name="TextColor3">4294944768</Color3>
+						<bool name="TextScaled">false</bool>
+						<Color3 name="TextStrokeColor3">4278190080</Color3>
+						<float name="TextStrokeTransparency">0</float>
+						<float name="TextTransparency">0</float>
+						<bool name="TextWrapped">false</bool>
+						<token name="TextXAlignment">2</token>
+						<token name="TextYAlignment">1</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX4">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>0.600000024</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>4</X>
+					<Y>1.20000005</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX5">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset?id=149408914</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset?id=152653238</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
+local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+
+local Tool = script.Parent
+
+local Mouse = nil
+
+local function UpdateIcon()
+&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+end
+
+local function OnEquipped(mouse)
+&#9;Mouse = mouse
+&#9;UpdateIcon()
+end
+
+local function OnChanged(property)
+&#9;if property == &apos;Enabled&apos; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX7">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-2.3837986</X>
+					<Y>1.39566052</Y>
+					<Z>-2.12468958</Z>
+					<R00>-0.535828888</R00>
+					<R01>0.258222848</R01>
+					<R02>-0.803870916</R02>
+					<R10>-0</R10>
+					<R11>0.952085316</R11>
+					<R12>0.305832833</R12>
+					<R20>0.844326735</R20>
+					<R21>0.16387406</R21>
+					<R22>-0.510154665</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.77605617</X>
+					<Y>0.783994615</Y>
+					<Z>-1.10437989</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
