@@ -1,0 +1,320 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-2</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">GhostShip</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset?id=155403918 </url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+SummonShip = Tool:WaitForChild(&quot;SummonShip&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+ReloadTime = 5
+
+ShipSize = 10
+
+Damage = 60
+
+function TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function FindCharacterAncestor(Parent)
+&#9;if Parent and Parent ~= game:GetService(&quot;Workspace&quot;) then
+&#9;&#9;local humanoid = Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;return Parent, humanoid
+&#9;&#9;else
+&#9;&#9;&#9;return FindCharacterAncestor(Parent.Parent)
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+function Activated()
+&#9;if Tool.Enabled then
+&#9;&#9;Tool.Enabled = false
+&#9;&#9;if SummonShipAnim then
+&#9;&#9;&#9;SummonShipAnim:Stop()
+&#9;&#9;end
+&#9;&#9;SummonShipAnim = Humanoid:LoadAnimation(SummonShip)
+&#9;&#9;if SummonShipAnim then
+&#9;&#9;&#9;SummonShipAnim:Play(0.1, 1, 4)
+&#9;&#9;end
+&#9;&#9;local Ship = Handle:Clone()
+&#9;&#9;Handle.Transparency = 1
+&#9;&#9;Ship.Transparency = 0.35
+&#9;&#9;Ship.Size = Vector3.new((Ship.Size.X * ShipSize), (Ship.Size.Y * ShipSize), (Ship.Size.Z * ShipSize))
+&#9;&#9;Ship.Mesh.Scale = Vector3.new((Ship.Mesh.Scale.X * ShipSize), (Ship.Mesh.Scale.Y * ShipSize), (Ship.Mesh.Scale.Z * ShipSize))
+&#9;&#9;Ship.CanCollide = false
+&#9;&#9;Debris:AddItem(Ship, 10)
+&#9;&#9;local BodyVelocity = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;BodyVelocity.maxForce = Vector3.new(((Ship:GetMass() * 100) * 100), ((Ship:GetMass() * 100) * 100), ((Ship:GetMass() * 100) * 100))
+&#9;&#9;BodyVelocity.Parent = Ship
+&#9;&#9;local HitDebounce = false
+&#9;&#9;Ship.Touched:connect(function(Hit)
+&#9;&#9;&#9;if Hit and Hit.Parent and not HitDebounce then
+&#9;&#9;&#9;&#9;local character, humanoid = FindCharacterAncestor(Hit.Parent)
+&#9;&#9;&#9;&#9;if character and humanoid and character ~= Character then
+&#9;&#9;&#9;&#9;&#9;HitDebounce = true
+&#9;&#9;&#9;&#9;&#9;UntagHumanoid(humanoid)
+&#9;&#9;&#9;&#9;&#9;TagHumanoid(humanoid, Player)
+&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(Damage)
+&#9;&#9;&#9;&#9;&#9;Ship.Anchored = true
+&#9;&#9;&#9;&#9;&#9;for i = 1, 65, 0.1 do
+&#9;&#9;&#9;&#9;&#9;&#9;Ship.Transparency = Ship.Transparency + 0.1
+&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;Ship:Destroy()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;Ship.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;Ship.CFrame = Torso.CFrame + Vector3.new(0, ((Torso.Size.Y * 3) + (Ship.Size.Y / 2)), 0)
+&#9;&#9;Ship.CFrame = CFrame.new(Ship.Position, Humanoid.TargetPoint)
+&#9;&#9;BodyVelocity.velocity = CFrame.new(Ship.Position, Humanoid.TargetPoint).lookVector * 100
+&#9;&#9;wait(ReloadTime)
+&#9;&#9;Handle.Transparency = 0
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Player)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Torso then
+&#9;&#9;return
+&#9;end
+&#9;if not Tool.Enabled then
+&#9;&#9;wait(ReloadTime)
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function Unequipped()
+&#9;Handle.Transparency = 0
+&#9;if SummonShipAnim then
+&#9;&#9;SummonShipAnim:Stop()
+&#9;end
+end
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>32.4300003</X>
+					<Y>14.6200008</Y>
+					<Z>11.2700005</Z>
+					<R00>-1</R00>
+					<R01>0</R01>
+					<R02>-0</R02>
+					<R10>-0</R10>
+					<R11>1</R11>
+					<R12>-0</R12>
+					<R20>-0</R20>
+					<R21>0</R21>
+					<R22>-1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.25</X>
+					<Y>3</Y>
+					<Z>3.5</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX4">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=155403867</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=155403887</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX5">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=71446087</url></Content>
+				<string name="Name">SummonShip</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX6">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">5</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>30.1288338</X>
+					<Y>15.4200459</Y>
+					<Z>12.5227699</Z>
+					<R00>0.422738463</R00>
+					<R01>0.241532356</R01>
+					<R02>-0.873472571</R02>
+					<R10>-0</R10>
+					<R11>0.963830054</R11>
+					<R12>0.266517937</R12>
+					<R20>0.906251788</R20>
+					<R21>-0.112667382</R21>
+					<R22>0.407447994</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>31.8757801</X>
+					<Y>14.8870096</Y>
+					<Z>11.7078733</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
