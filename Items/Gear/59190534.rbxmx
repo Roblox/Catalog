@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="Archivable">true</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -15,16 +15,16 @@
 				<R10>0</R10>
 				<R11>0</R11>
 				<R12>-1</R12>
-				<R20>-0</R20>
+				<R20>0</R20>
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
 			<string name="Name">StoneStaff</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=59057848</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="LocalScript" referent="RBX1">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
@@ -60,14 +60,13 @@ Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 		</Item>
 		<Item class="LocalScript" referent="RBX2">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">StoneStaffMain</string>
 				<ProtectedString name="Source">math.randomseed(tick()); math.random()
 
 local Tool = script.Parent
-local Handle = Tool.Handle
+local Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
 local myCharacter
 local myHumanoid
@@ -239,7 +238,6 @@ Tool.Unequipped:connect(onUnequipped)
 		<Item class="Part" referent="RBX3">
 			<Properties>
 				<bool name="Anchored">false</bool>
-				<bool name="Archivable">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
 				<token name="BackSurface">0</token>
@@ -265,7 +263,6 @@ Tool.Unequipped:connect(onUnequipped)
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">3</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -298,6 +295,7 @@ Tool.Unequipped:connect(onUnequipped)
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>0.290000021</X>
@@ -307,7 +305,6 @@ Tool.Unequipped:connect(onUnequipped)
 			</Properties>
 			<Item class="SpecialMesh" referent="RBX4">
 				<Properties>
-					<bool name="Archivable">true</bool>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
 					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=59058008</url></Content>
@@ -333,7 +330,6 @@ Tool.Unequipped:connect(onUnequipped)
 			</Item>
 			<Item class="Sound" referent="RBX5">
 				<Properties>
-					<bool name="Archivable">true</bool>
 					<bool name="Looped">false</bool>
 					<string name="Name">RockfallSound</string>
 					<float name="Pitch">1</float>
@@ -345,7 +341,6 @@ Tool.Unequipped:connect(onUnequipped)
 		</Item>
 		<Item class="Script" referent="RBX6">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">StoneStaffPersonPetrifyScript</string>
@@ -547,20 +542,17 @@ script:Remove()
 		<Item class="Animation" referent="RBX7">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=59085834</url></Content>
-				<bool name="Archivable">true</bool>
 				<string name="Name">StaffSwing</string>
 			</Properties>
 		</Item>
 		<Item class="Animation" referent="RBX8">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=59088963</url></Content>
-				<bool name="Archivable">true</bool>
 				<string name="Name">StaffThud</string>
 			</Properties>
 		</Item>
 		<Item class="Script" referent="RBX9">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">StonesplosionScript</string>
@@ -576,13 +568,31 @@ function waitForChild(parent, childName)
 end
 
 local Center = waitForChild(script, &quot;Center&quot;).Value
+local range=200
 
 local FileMeshesAndTextures = {}
 local OtherMeshesAndColors = {}
 local PartsBrickColorsAndMaterials = {}
+local everypart={}
 
 local StonifyTag = Instance.new(&quot;BoolValue&quot;)
 StonifyTag.Name = &quot;StoneStaffStonified&quot;
+local greycolor=Vector3.new(BrickColor.new(&quot;Medium stone grey&quot;).Color.r,BrickColor.new(&quot;Medium stone grey&quot;).Color.g,BrickColor.new(&quot;Medium stone grey&quot;).Color.b)
+
+local function cl0(n)
+&#9;return math.max(n,0)
+end
+
+local function RealDistanceFrom(point,part)
+&#9;if part.className==&quot;Part&quot; and part.Shape==&quot;Ball&quot; then
+&#9;&#9;return (part.Position-point).magnitude-(part.Size.x*.5)
+&#9;else
+&#9;&#9;local p = part.CFrame:vectorToObjectSpace(point-part.Position)
+&#9;&#9;local hz = part.Size/2
+&#9;&#9;local sep = Vector3.new(cl0(math.abs(p.x)-hz.x), cl0(math.abs(p.y)-hz.y), cl0(math.abs(p.z)-hz.z))
+&#9;&#9;return sep.magnitude
+&#9;end
+end
 
 function stonify(Part)
 &#9;-- Ignore the part if it&apos;s owned by a character (PC or NPC.)
@@ -608,7 +618,7 @@ function stonify(Part)
 &#9;&#9;&#9;&#9;if Child.VertexColor ~= BrickColor.new(&quot;Medium stone grey&quot;).Color then
 &#9;&#9;&#9;&#9;&#9;if not OtherMeshesAndColors[Child] then
 &#9;&#9;&#9;&#9;&#9;&#9;OtherMeshesAndColors[Child] = Child.VertexColor
-&#9;&#9;&#9;&#9;&#9;&#9;Child.VertexColor = BrickColor.new(&quot;Medium stone grey&quot;).Color
+&#9;&#9;&#9;&#9;&#9;&#9;Child.VertexColor = greycolor
 &#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
@@ -625,7 +635,7 @@ function stonify(Part)
 &#9;end
 end
 
--- MAIN OPERATION: -----
+--[[ MAIN OPERATION: -----
 local TouchPart = Instance.new(&quot;Part&quot;)
 TouchPart.Name = &quot;StonesplosionTouchPart&quot;
 TouchPart.formFactor = Enum.FormFactor.Custom
@@ -634,7 +644,7 @@ TouchPart.CanCollide = false
 TouchPart.Locked = true
 TouchPart.CFrame = CFrame.new(Center)
 TouchPart.BrickColor = BrickColor.new(&quot;Medium stone grey&quot;)
-TouchPart.Transparency = 1
+TouchPart.Transparency = .9
 TouchPart.TopSurface = &quot;Smooth&quot;
 TouchPart.BottomSurface = &quot;Smooth&quot;
 
@@ -646,16 +656,40 @@ AntiGrav.Parent = TouchPart
 TouchPart.Parent = game.Workspace
 
 TouchPart.Touched:connect(stonify)
+]]
 
-for i = 1, 400 do
-&#9;wait()
-&#9;TouchPart.Size = Vector3.new(i, i, i)
+
+function getpartranges(a)
+&#9;if a then
+&#9;&#9;for _,v in pairs(a:GetChildren()) do
+&#9;&#9;&#9;if v and v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;&#9;local dist=RealDistanceFrom(Center,v)
+&#9;&#9;&#9;&#9;if dist&lt;range then
+&#9;&#9;&#9;&#9;&#9;everypart[v]=dist
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;getpartranges(v)
+&#9;&#9;end
+&#9;end
+end
+getpartranges(game.Workspace)
+
+
+for currentrange=1,range*2 do
+&#9;wait(1/30)
+&#9;for i,dist in pairs(everypart) do
+&#9;&#9;if dist&lt;=currentrange then
+&#9;&#9;&#9;stonify(i)
+&#9;&#9;&#9;everypart[i]=nil
+&#9;&#9;end
+&#9;end
+&#9;--[[TouchPart.Size = Vector3.new(i, i, i)
 &#9;TouchPart.CFrame = CFrame.new(Center)
 &#9;AntiGrav.force = Vector3.new(0, 196.2 * TouchPart:GetMass(), 0)
-&#9;TouchPart.Velocity = Vector3.new(math.random(), math.random(), math.random())
+&#9;TouchPart.Velocity = Vector3.new(math.random(), math.random(), math.random())]]
 end
 
-TouchPart:Remove()
+--TouchPart:Remove()
 
 -- After it&apos;s over, set everything back to normal.
 for Mesh, Texture in pairs(FileMeshesAndTextures) do
@@ -679,7 +713,6 @@ script:Remove()
 			</Properties>
 			<Item class="Vector3Value" referent="RBX10">
 				<Properties>
-					<bool name="Archivable">true</bool>
 					<string name="Name">Center</string>
 					<Vector3 name="Value">
 						<X>0</X>
@@ -691,7 +724,6 @@ script:Remove()
 		</Item>
 		<Item class="Camera" referent="RBX11">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
@@ -708,6 +740,7 @@ script:Remove()
 					<R21>-0.096937485</R21>
 					<R22>0.994898677</R22>
 				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
 					<X>25.1140461</X>
 					<Y>4.03141689</Y>
