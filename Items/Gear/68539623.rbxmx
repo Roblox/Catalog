@@ -3,6 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -20,6 +21,7 @@
 			</CoordinateFrame>
 			<string name="Name">KorbloxSwordAndShield</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=68380213</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -34,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>39.9600029</X>
-					<Y>1.12997115</Y>
-					<Z>9.00001144</Z>
-					<R00>-1</R00>
+					<X>1</X>
+					<Y>17</Y>
+					<Z>21</Z>
+					<R00>-0</R00>
 					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
+					<R02>1</R02>
+					<R10>-0</R10>
 					<R11>1</R11>
 					<R12>0</R12>
-					<R20>0</R20>
+					<R20>-1</R20>
 					<R21>0</R21>
-					<R22>-1</R22>
+					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -346,7 +348,7 @@ function onKeyDown(key)
 &#9;if myHumanoid == nil then 
 &#9;&#9;return
 &#9;end
-&#9;if key:lower() == &quot;q&quot; then 
+&#9;if key:lower() == &quot;q&quot; then --Fix implemented by Luckymaxer
 &#9;&#9;if vCharacter:FindFirstChild(&quot;Shield&quot;) then 
 &#9;&#9;&#9;print(&quot;Found Shield&quot;)
 
@@ -362,12 +364,6 @@ function onKeyDown(key)
 
 &#9;&#9;&#9;&#9;shieldWeld.C1 = (shieldWeld.C1 + Vector3.new(-0.3, 0.2, -0.60)) * CFrame.Angles(-math.pi/5, math.pi, math.pi/5)&#9;
 &#9;&#9;&#9;&#9;if Tool.ShieldActive then Tool.ShieldActive.Value = 1 end
-&#9;&#9;&#9;&#9;ratio = myHumanoid.Health/myHumanoid.MaxHealth
-&#9;&#9;&#9;&#9;print(ratio)
-&#9;&#9;&#9;&#9;myHumanoid.MaxHealth = 175&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;wait(0.2)
-&#9;&#9;&#9;&#9;myHumanoid.Health = ratio * 75
-&#9;&#9;&#9;&#9;myHumanoid.WalkSpeed = 16.0
 &#9;&#9;&#9;else
 &#9;&#9;&#9;&#9;shieldWeld = leftArm:FindFirstChild(&quot;ShieldHolder&quot;)
 &#9;&#9;&#9;&#9;if shieldWeld then
@@ -377,12 +373,6 @@ function onKeyDown(key)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;if shieldWalkAnim then shieldWalkAnim:Stop() end
 &#9;&#9;&#9;&#9;if Tool.ShieldActive then Tool.ShieldActive.Value = 0 end
-&#9;&#9;&#9;&#9;if myHumanoid.MaxHealth &gt; 100 then 
-&#9;&#9;&#9;&#9;&#9;ratio = myHumanoid.Health/myHumanoid.MaxHealth 
-&#9;&#9;&#9;&#9;&#9;myHumanoid.Health = ratio * 100
-&#9;&#9;&#9;&#9;&#9;myHumanoid.MaxHealth = 100&#9;
-&#9;&#9;&#9;&#9;&#9;myHumanoid.WalkSpeed = 16.0
-&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end&#9;&#9;&#9;
 &#9;&#9;end
 &#9;end
@@ -492,12 +482,6 @@ function onUnequippedLocal()
 &#9;&#9;&#9;shieldWeld = leftArm:FindFirstChild(&quot;ShieldHolder&quot;)
 &#9;&#9;end
 &#9;&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if myHumanoid then
-&#9;&#9;&#9;ratio = myHumanoid.Health/myHumanoid.MaxHealth
-&#9;&#9;&#9;myHumanoid.Health = ratio * 100
-&#9;&#9;&#9;myHumanoid.MaxHealth = 100
-&#9;&#9;&#9;myHumanoid.WalkSpeed = 16.0
-&#9;&#9;end
 &#9;end
 &#9;if connection then connection:disconnect() end&#9;&#9;
 &#9;if shield then shield:Remove() end
@@ -533,28 +517,65 @@ Tool.Activated:connect(onActivatedLocal)</ProtectedString>
 				<string name="Name">ShieldBash</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX11">
+		<Item class="Script" referent="RBX11">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">HealthScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+
+ShieldActive = Tool:WaitForChild(&quot;ShieldActive&quot;)
+
+LastValue = ShieldActive.Value
+
+ShieldActive.Changed:connect(function()
+&#9;if Humanoid then
+&#9;&#9;if ShieldActive.Value == 0 and Humanoid.MaxHealth &gt; 100 then 
+&#9;&#9;&#9;ratio = Humanoid.Health / Humanoid.MaxHealth 
+&#9;&#9;&#9;Humanoid.Health = ratio * 100
+&#9;&#9;&#9;Humanoid.MaxHealth = 100&#9;
+&#9;&#9;elseif ShieldActive.Value == 1 then
+&#9;&#9;&#9;ratio = Humanoid.Health / Humanoid.MaxHealth
+&#9;&#9;&#9;Humanoid.MaxHealth = 175&#9;&#9;
+&#9;&#9;&#9;wait(0.2)
+&#9;&#9;&#9;Humanoid.Health = Humanoid.Health + (ratio * 75)
+&#9;&#9;end
+&#9;end
+end)
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+end
+
+Tool.Equipped:connect(Equipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX12">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>38.8842392</X>
-					<Y>0.526681781</Y>
-					<Z>2.65944529</Z>
-					<R00>-0.987130344</R00>
-					<R01>-0.00920554157</R01>
-					<R02>-0.15965268</R02>
+					<X>-2.63607931</X>
+					<Y>17.6502285</Y>
+					<Z>20.9979916</Z>
+					<R00>-0.000546493742</R00>
+					<R01>0.112351835</R01>
+					<R02>-0.993668318</R02>
 					<R10>-0</R10>
-					<R11>0.998341799</R11>
-					<R12>-0.0575641878</R12>
-					<R20>0.159917861</R20>
-					<R21>-0.0568233579</R21>
-					<R22>-0.985493481</R22>
+					<R11>0.993668497</R11>
+					<R12>0.11235185</R12>
+					<R20>0.999999881</R20>
+					<R21>6.13995799e-005</R21>
+					<R22>-0.000543033588</R22>
 				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>42.0772934</X>
-					<Y>1.67796552</Y>
-					<Z>22.3693142</Z>
+					<X>-0.946843743</X>
+					<Y>17.4592304</Y>
+					<Z>20.9989147</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
