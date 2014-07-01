@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">true</bool>
+			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>-8.74227801e-009</X>
@@ -19,7 +19,7 @@
 				<R21>0</R21>
 				<R22>0.976163507</R22>
 			</CoordinateFrame>
-			<string name="Name">tigerSkin</string>
+			<string name="Name">TigerSkin</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90124598</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
@@ -27,88 +27,163 @@
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">tigerScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent;
+				<string name="Name">TigerScript</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
 
-enabled = true
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-local hitEnabled= true;
+AnimState = Tool:WaitForChild(&quot;AnimState&quot;)
+AnimState.Value = false
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+HitEnabled = false
+
+LionHat = Instance.new(&quot;Part&quot;)
+LionHat.Name = &quot;LionHat&quot;
+LionHat.Material = Enum.Material.Plastic
+LionHat.Shape = Enum.PartType.Block
+LionHat.FormFactor = Enum.FormFactor.Custom
+LionHat.TopSurface = Enum.SurfaceType.Smooth
+LionHat.BottomSurface = Enum.SurfaceType.Smooth
+LionHat.Size = Vector3.new(1, 1.2, 1)
+LionMesh = Instance.new(&quot;SpecialMesh&quot;)
+LionMesh.MeshType = Enum.MeshType.FileMesh
+LionMesh.MeshId = &quot;http://www.roblox.com/asset/?id=90093552&quot;
+LionMesh.TextureId = &quot;http://www.roblox.com/asset/?id=90093709&quot;
+LionMesh.Scale = Vector3.new(1.5, 1.5, 1.5)
+LionMesh.Parent = LionHat
+LionFire = Instance.new(&quot;Fire&quot;)
+LionFire.Color = Color3.new(255/255, 128/255, 0/255)
+LionFire.SecondaryColor = Color3.new(94/255, 30/255, 5/255)
+LionFire.Heat = 15
+LionFire.Size = 8
+LionFire.Enabled = false
+LionFire.Parent = LionHat
+RoarSound = Instance.new(&quot;Sound&quot;)
+RoarSound.Name = &quot;RoarSound&quot;
+RoarSound.Pitch = 1
+RoarSound.SoundId = &quot;http://www.roblox.com/asset/?id=90110171&quot;
+RoarSound.Volume = 0.5
+RoarSound.Looped = false
+RoarSound.Parent = LionHat
 
 
-function applyRandForce(limb)
-&#9;local tempF= Instance.new(&quot;BodyForce&quot;);
-&#9;tempF.force= Vector3.new((math.random()*500)-250,math.random()*500,(math.random()*500)-250);
-&#9;tempF.Parent=limb;
-
-&#9;wait(1);
-&#9;tempF:Destroy();
-
+function ApplyRandForce(Limb)
+&#9;local TempForce = Instance.new(&quot;BodyForce&quot;)
+&#9;TempForce.force = Vector3.new(((math.random() * 500) - 250), (math.random() * 500), ((math.random() * 500) - 250))
+&#9;Debris:AddItem(TempForce, 1)
+&#9;TempForce.Parent = Limb
 end
 
-function tearApart(hit)
-&#9;local enemy=game.Players:GetPlayerFromCharacter(hit.Parent);
-&#9;if not hitEnabled or not enemy or hit.Parent==Tool.Parent then
-&#9;&#9;return;
-&#9;end
-&#9;hitEnabled=false;
-&#9;local limbs={hit.Parent:FindFirstChild(&quot;Left Arm&quot;),hit.Parent:FindFirstChild(&quot;Right Arm&quot;),
-&#9;&#9;hit.Parent:FindFirstChild(&quot;Left Leg&quot;),hit.Parent:FindFirstChild(&quot;Right Leg&quot;)};
-&#9;local rand=math.random(1,4);
-&#9;
-&#9;if limbs[rand] then
-&#9;&#9;limbs[rand].CanCollide=true;
-&#9;&#9;limbs[rand]:BreakJoints();
-&#9;&#9;Tool.Handle.roarSound:Play();
-&#9;&#9;applyRandForce(limbs[rand]);
-&#9;end
-&#9;wait(2)
-&#9;hitEnabled=true;
-
-end
-
-
-
-function onActivated()
-&#9;if not enabled  then
+function TearApart(Hit)
+&#9;if not Hit or not Hit.Parent or not HitEnabled then
 &#9;&#9;return
 &#9;end
-&#9;enabled = false
-
-&#9;Tool.Handle.Transparency=1;
-&#9;Tool.Handle.roarSound:Play()
-
-&#9;wait(3)
-&#9;local oldSpeed=Tool.Parent.Humanoid.WalkSpeed;
-&#9;Tool.Parent.Humanoid.WalkSpeed=Tool.Parent.Humanoid.WalkSpeed*1.5;
-&#9;Tool.playAni.Value=not Tool.playAni.Value
-&#9;local hitfunc=Tool.Parent.Torso.Touched:connect(tearApart);
-&#9;
-
-&#9;local tHat=Tool.LionHat:Clone();
-&#9;tHat.Handle.Fire.Enabled=true;
-&#9;tHat.Parent=Tool.Parent;
-&#9;tHat.Handle.Anchored=false;
-&#9;tHat.Handle.Transparency=0;
-&#9;wait(10);
-&#9;hitfunc:disconnect();
-&#9;tHat:Destroy();
-&#9;Tool.endAni.Value=not Tool.endAni.Value
-&#9;wait(5);
-&#9;Tool.Parent.Humanoid.WalkSpeed=oldSpeed;
-&#9;Tool.Handle.Transparency=0;
-&#9;enabled = true;
-
+&#9;local humanoid = Hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if humanoid and humanoid ~= Humanoid then
+&#9;&#9;HitEnabled = false
+&#9;&#9;local Limbs = {}
+&#9;&#9;for i, v in pairs(Hit.Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) and (string.find(string.lower(v.Name), &quot;arm&quot;) or string.find(string.lower(v.Name), &quot;leg&quot;)) then
+&#9;&#9;&#9;&#9;table.insert(Limbs, v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if #Limbs &gt; 0 then
+&#9;&#9;local Limb = Limbs[math.random(1, #Limbs)]
+&#9;&#9;&#9;if Limb and Limb.Parent then
+&#9;&#9;&#9;&#9;Limb.CanCollide = true
+&#9;&#9;&#9;&#9;Limb:BreakJoints()
+&#9;&#9;&#9;&#9;if LionHatClone and LionHatClone.Parent then
+&#9;&#9;&#9;&#9;&#9;LionHatClone.RoarSound:Play()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;ApplyRandForce(Limb)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(2)
+&#9;&#9;end
+&#9;&#9;HitEnabled = true
+&#9;end
 end
 
-
-
-script.Parent.Activated:connect(onActivated)
-
-function OnUnequip()
-&#9;--Tool.endAni:Fire();
+function Activated()
+&#9;if Tool.Enabled and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Head and Head.Parent and Torso and Torso.Parent then
+&#9;&#9;Tool.Enabled = false
+&#9;&#9;Handle.Transparency = 1
+&#9;&#9;LionHatClone = LionHat:Clone()
+&#9;&#9;LionHatClone.Parent = Character
+&#9;&#9;local Weld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;Weld.Part0 = Head
+&#9;&#9;Weld.Part1 = LionHatClone
+&#9;&#9;Weld.C0 = CFrame.new(0, 0.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+&#9;&#9;Weld.C1 = CFrame.new(0, 1.5, 0, 0.999999583, 0, -0.000810325146, 0, 1, 0, 0.000810325146, 0, 0.999999583)
+&#9;&#9;Weld.Parent = LionHatClone
+&#9;&#9;LionHatClone.Fire.Enabled = true
+&#9;&#9;LionHatClone.RoarSound:Play()
+&#9;&#9;OldSpeed = Humanoid.WalkSpeed
+&#9;&#9;OldMaxHealth = Humanoid.MaxHealth
+&#9;&#9;OldHealth = Humanoid.Health
+&#9;&#9;Humanoid.WalkSpeed = (Humanoid.WalkSpeed * 1.5)
+&#9;&#9;Humanoid.MaxHealth = (Humanoid.MaxHealth * 1.5)
+&#9;&#9;Humanoid.Health = Humanoid.MaxHealth
+&#9;&#9;AnimState.Value = true
+&#9;&#9;HitEnabled = true
+&#9;&#9;local HitFunction = Torso.Touched:connect(TearApart)
+&#9;&#9;
+&#9;&#9;wait(10)
+&#9;&#9;
+&#9;&#9;if HitFunction then
+&#9;&#9;&#9;HitFunction:disconnect()
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;if LionHatClone and LionHatClone.Parent then
+&#9;&#9;&#9;LionHatClone:Destroy()
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;AnimState.Value = false
+&#9;&#9;
+&#9;&#9;Humanoid.WalkSpeed = OldSpeed
+&#9;&#9;Humanoid.MaxHealth = OldHealth
+&#9;&#9;Handle.Transparency = 0
+&#9;&#9;
+&#9;&#9;wait(5)
+&#9;&#9;
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;
+&#9;end
 end
-script.Parent.Unequipped:connect(OnUnequip)
-</ProtectedString>
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Head = Character:FindFirstChild(&quot;Head&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Head or not Torso then
+&#9;&#9;return
+&#9;end
+end
+
+function Unequipped()
+&#9;if LionHatClone and LionHatClone.Parent then
+&#9;&#9;LionHatClone:Destroy()
+&#9;end
+&#9;if OldSpeed and OldMaxHealth and OldHealth then
+&#9;&#9;Humanoid.WalkSpeed = OldSpeed
+&#9;&#9;Humanoid.MaxHealth = OldMaxHealth
+&#9;&#9;Humanoid.Health = OldHealth
+&#9;end
+&#9;if HitFunction then
+&#9;&#9;HitFunction:disconnect()
+&#9;end
+&#9;Handle.Transparency = 0
+&#9;AnimState.Value = false
+end
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX2">
@@ -163,18 +238,18 @@ Tool.Equipped:connect(onEquippedLocal)
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">1002</int>
 				<CoordinateFrame name="CFrame">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
-					<R00>-0</R00>
-					<R01>0</R01>
-					<R02>1</R02>
-					<R10>-0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>-1</R20>
-					<R21>0</R21>
-					<R22>0</R22>
+					<X>-0.400000572</X>
+					<Y>17.2000008</Y>
+					<Z>21.6000004</Z>
+					<R00>-1</R00>
+					<R01>1.79263893e-009</R01>
+					<R02>4.77406161e-007</R02>
+					<R10>1.79264248e-009</R10>
+					<R11>0.999999762</R11>
+					<R12>1.49011612e-008</R12>
+					<R20>-4.77406161e-007</R20>
+					<R21>1.49011612e-008</R21>
+					<R22>-0.999999762</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -265,205 +340,80 @@ Tool.Equipped:connect(onEquippedLocal)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">local Tool=script.Parent;
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
 
-local AniTrack=nil;
-function startAni()
-&#9;if AniTrack then return; end
-&#9;AniTrack=Tool.Parent.Humanoid:LoadAnimation(Tool.Animation);
-&#9;AniTrack:Play();
-end
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
+Players = game:GetService(&quot;Players&quot;)
 
-function stopAni()
-&#9;if AniTrack then
-&#9;&#9;AniTrack:Stop();
-&#9;&#9;AniTrack=nil;
+Animation = Tool:WaitForChild(&quot;Animation&quot;)
+
+AnimState = Tool:WaitForChild(&quot;AnimState&quot;)
+
+function StartAnim()
+&#9;if Humanoid and Humanoid.Parent then
+&#9;&#9;StopAnim()
+&#9;&#9;AnimTrack = Humanoid:LoadAnimation(Animation)
+&#9;&#9;AnimTrack:Play()
 &#9;end
 end
 
-while not Tool:FindFirstChild(&quot;playAni&quot;) do
- print(&quot;cant find playani&quot;) wait()
-end
-Tool.playAni.Changed:connect(startAni)
-
-while not Tool:FindFirstChild(&quot;endAni&quot;) do
- print(&quot;cant find endani&quot;) wait()
+function StopAnim()
+&#9;if AnimTrack then
+&#9;&#9;AnimTrack:Stop()
+&#9;end
 end
 
-Tool.endAni.Changed:connect(stopAni)
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+end
 
-</ProtectedString>
+AnimState.Changed:connect(function()
+&#9;if AnimState.Value then
+&#9;&#9;StartAnim()
+&#9;else
+&#9;&#9;StopAnim()
+&#9;end
+end)
+
+Tool.Equipped:connect(Equipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Hat" referent="RBX8">
+		<Item class="BoolValue" referent="RBX8">
 			<Properties>
-				<CoordinateFrame name="AttachmentPoint">
-					<X>0</X>
-					<Y>1.5</Y>
-					<Z>0</Z>
-					<R00>0.999999583</R00>
-					<R01>0</R01>
-					<R02>-0.000810325146</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0.000810325146</R20>
-					<R21>0</R21>
-					<R22>0.999999583</R22>
-				</CoordinateFrame>
-				<string name="Name">LionHat</string>
-			</Properties>
-			<Item class="Part" referent="RBX9">
-				<Properties>
-					<bool name="Anchored">true</bool>
-					<float name="BackParamA">-0.5</float>
-					<float name="BackParamB">0.5</float>
-					<token name="BackSurface">0</token>
-					<token name="BackSurfaceInput">0</token>
-					<float name="BottomParamA">-0.5</float>
-					<float name="BottomParamB">0.5</float>
-					<token name="BottomSurface">0</token>
-					<token name="BottomSurfaceInput">0</token>
-					<int name="BrickColor">1002</int>
-					<CoordinateFrame name="CFrame">
-						<X>10</X>
-						<Y>10</Y>
-						<Z>10</Z>
-						<R00>-0.967018247</R00>
-						<R01>0.00077729387</R01>
-						<R02>0.254704624</R02>
-						<R10>0.000795675907</R10>
-						<R11>0.999999642</R11>
-						<R12>-3.08596937e-005</R12>
-						<R20>-0.254704535</R20>
-						<R21>0.000172820495</R21>
-						<R22>-0.967018485</R22>
-					</CoordinateFrame>
-					<bool name="CanCollide">false</bool>
-					<float name="Elasticity">0.5</float>
-					<float name="Friction">0.300000012</float>
-					<float name="FrontParamA">-0.5</float>
-					<float name="FrontParamB">0.5</float>
-					<token name="FrontSurface">0</token>
-					<token name="FrontSurfaceInput">0</token>
-					<float name="LeftParamA">-0.5</float>
-					<float name="LeftParamB">0.5</float>
-					<token name="LeftSurface">0</token>
-					<token name="LeftSurfaceInput">0</token>
-					<bool name="Locked">true</bool>
-					<token name="Material">256</token>
-					<string name="Name">Handle</string>
-					<float name="Reflectance">0</float>
-					<float name="RightParamA">-0.5</float>
-					<float name="RightParamB">0.5</float>
-					<token name="RightSurface">0</token>
-					<token name="RightSurfaceInput">0</token>
-					<Vector3 name="RotVelocity">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-					</Vector3>
-					<float name="TopParamA">-0.5</float>
-					<float name="TopParamB">0.5</float>
-					<token name="TopSurface">0</token>
-					<token name="TopSurfaceInput">0</token>
-					<float name="Transparency">1</float>
-					<Vector3 name="Velocity">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-					</Vector3>
-					<token name="formFactorRaw">2</token>
-					<token name="shape">1</token>
-					<Vector3 name="size">
-						<X>1</X>
-						<Y>1.20000005</Y>
-						<Z>1</Z>
-					</Vector3>
-				</Properties>
-				<Item class="SpecialMesh" referent="RBX10">
-					<Properties>
-						<token name="LODX">2</token>
-						<token name="LODY">2</token>
-						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=90093552</url></Content>
-						<token name="MeshType">5</token>
-						<string name="Name">Mesh</string>
-						<Vector3 name="Offset">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-						</Vector3>
-						<Vector3 name="Scale">
-							<X>1.5</X>
-							<Y>1.5</Y>
-							<Z>1.5</Z>
-						</Vector3>
-						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90093709</url></Content>
-						<Vector3 name="VertexColor">
-							<X>1</X>
-							<Y>1</Y>
-							<Z>1</Z>
-						</Vector3>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX11">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">roarSound</string>
-						<float name="Pitch">1</float>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=90110171</url></Content>
-						<float name="Volume">0.5</float>
-					</Properties>
-				</Item>
-				<Item class="Fire" referent="RBX12">
-					<Properties>
-						<Color3 name="Color">4294934528</Color3>
-						<bool name="Enabled">false</bool>
-						<string name="Name">Fire</string>
-						<Color3 name="SecondaryColor">4284358149</Color3>
-						<float name="heat_xml">15</float>
-						<float name="size_xml">8</float>
-					</Properties>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="BoolValue" referent="RBX13">
-			<Properties>
-				<string name="Name">endAni</string>
+				<string name="Name">AnimState</string>
 				<bool name="Value">false</bool>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX14">
-			<Properties>
-				<string name="Name">playAni</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX15">
+		<Item class="Camera" referent="RBX9">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.47990966</X>
-					<Y>1.47690344</Y>
-					<Z>1.2155726</Z>
-					<R00>0.626810908</R00>
-					<R01>0.291494906</R01>
-					<R02>-0.722591758</R02>
+					<X>0.734784007</X>
+					<Y>18.8263798</Y>
+					<Z>23.093668</Z>
+					<R00>0.821149945</R00>
+					<R01>-0.27493912</R01>
+					<R02>0.500121236</R02>
 					<R10>-0</R10>
-					<R11>0.927384853</R11>
-					<R12>0.374108821</R12>
-					<R20>0.779171467</R20>
-					<R21>-0.234495491</R21>
-					<R22>0.581294894</R22>
+					<R11>0.876310349</R11>
+					<R12>0.481747121</R12>
+					<R20>-0.570712507</R20>
+					<R21>-0.39558661</R21>
+					<R22>0.71958214</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0.0153933465</X>
-					<Y>0.702737331</Y>
-					<Z>0.0126636922</Z>
+					<X>0.0846273899</X>
+					<Y>18.2001095</Y>
+					<Z>22.1582127</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
