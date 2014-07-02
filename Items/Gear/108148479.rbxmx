@@ -6,18 +6,18 @@
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
-				<Y>0</Y>
-				<Z>0</Z>
-				<R00>1</R00>
-				<R01>0</R01>
-				<R02>0</R02>
-				<R10>0</R10>
-				<R11>1</R11>
-				<R12>0</R12>
-				<R20>0</R20>
-				<R21>0</R21>
-				<R22>1</R22>
+				<X>0.01923877</X>
+				<Y>1.19116962</Y>
+				<Z>0.313162446</Z>
+				<R00>0.49999997</R00>
+				<R01>0.707106769</R01>
+				<R02>0.49999997</R02>
+				<R10>0.0564237535</R10>
+				<R11>0.549525201</R11>
+				<R12>-0.833569586</R12>
+				<R20>-0.864185274</R20>
+				<R21>0.444996685</R21>
+				<R22>0.23486498</R22>
 			</CoordinateFrame>
 			<string name="Name">Shamrock Guitar</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=108147115</url></Content>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.100000001</X>
-					<Y>-0.0200000014</Y>
-					<Z>-0.439999908</Z>
-					<R00>0.721499026</R00>
-					<R01>-0.692415476</R01>
-					<R02>6.22726333e-008</R02>
-					<R10>0.692415476</R10>
-					<R11>0.721499026</R11>
-					<R12>-5.96165137e-007</R12>
-					<R20>3.67865056e-007</R20>
-					<R21>4.73251021e-007</R21>
-					<R22>1</R22>
+					<X>-1.07037282</X>
+					<Y>2.67120242</Y>
+					<Z>1.22115541</Z>
+					<R00>-0.640631497</R00>
+					<R01>0.246611208</R01>
+					<R02>0.727168381</R02>
+					<R10>0.71560657</R10>
+					<R11>0.53509897</R11>
+					<R12>0.448972583</R12>
+					<R20>-0.278385401</R20>
+					<R21>0.807992518</R21>
+					<R22>-0.519277871</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -230,7 +230,7 @@ function OnKeyDown(key)
 &#9;elseif key == &apos;0&apos; then --shift pressed!
 &#9;&#9;print(&apos;ShiftDown!&apos;)
 &#9;&#9;ShiftDown=true
-&#9;&#9;MyPlayer:GetMouse().KeyUp:connect(function(nkey)
+&#9;&#9;KeyUpConnection = MyPlayer:GetMouse().KeyUp:connect(function(nkey)
 &#9;&#9;&#9;if&#9;nkey==&apos;0&apos; then
 &#9;&#9;&#9;&#9;ShiftDown=false
 &#9;&#9;&#9;&#9;print(&apos;shift up!&apos;)
@@ -289,11 +289,18 @@ function OnClick()
 
 end
 
-function OnUnequip()
+function OnUnequip() --Fix implemented by Luckymaxer
 &#9;HoldAniTrack:Stop()
+&#9;if KeyDownConnection then
+&#9;&#9;KeyDownConnection:disconnect()
+&#9;end
+&#9;if KeyUpConnection then
+&#9;&#9;KeyUpConnection:disconnect()
+&#9;end
+&#9;if nconnection then
+&#9;&#9;nconnection:disconnect()
+&#9;end
 end
-
-Tool.Unequipped:connect(OnUnequip)
 
 function OnEquip(mouse)
 &#9;MyHumanoid=waitforchild(Tool.Parent,&apos;Humanoid&apos;)
@@ -304,61 +311,7 @@ function OnEquip(mouse)
 end
 
 Tool.Equipped:connect(OnEquip)
-
-function MeltFace(player)
---&#9;
---&#9;waitforchild(player.Character,&apos;Humanoid&apos;).WalkSpeed=0
---&#9;waitforchild(player.Character,&apos;Torso&apos;).Anchored=true
---&#9;local head = player.Character.Head
---&#9;local thead = head:Clone()
---&#9;thead.CanCollide = false
---&#9;thead.Transparency = 1
---&#9;for _, i in pairs(thead:GetChildren()) do
---&#9;&#9;if not (i:IsA(&apos;Decal&apos;) or i:IsA(&apos;Mesh&apos;)) then
---&#9;&#9;&#9;i:Destroy()
---&#9;&#9;elseif i:IsA(&apos;Decal&apos;) then
---&#9;&#9;&#9;head[i.Name]:Destroy()
---&#9;&#9;end
---&#9;end
---&#9;local bodyvel = Instance.new(&apos;BodyVelocity&apos;)
---&#9;thead.Position = head.CFrame.p+head.CFrame.lookVector
---&#9;bodyvel.velocity = Vector3.new(0,-1,0)
---&#9;bodyvel.maxForce=Vector3.new(50000,50000,50000)
---&#9;bodyvel.Parent=thead
---&#9;thead.Parent=Workspace
---&#9;
---&#9;local applauseSound = Instance.new(&apos;Sound&apos;)
---&#9;applauseSound.SoundId = ApplauseID
---&#9;applauseSound.Parent=head
---&#9;applauseSound.Volume=1
---&#9;applauseSound:Play()
---
---&#9;wait(3)
---&#9;player.Character.Humanoid.WalkSpeed=16
---&#9;player.Character.Torso.Anchored=false
-end
-
-function MeltNearFaces()
-&#9;for _,i in pairs(game.Players:GetPlayers()) do
-&#9;&#9;if i ~= MyPlayer and i.Character and i.Character:FindFirstChild(&apos;Head&apos;) and 
-&#9;&#9;&#9;(Handle.CFrame.p-i.Character.Head.CFrame.p).magnitude&lt;MeltDistance then
-&#9;&#9;&#9;Spawn(function() MeltFace(i) end)
-&#9;&#9;end
-&#9;end
-end
-
-while true do
-&#9;if MashMeter&gt;0 then
-&#9;&#9;MashMeter= MashMeter-.1
-&#9;end
-&#9;if MashMeter&gt;9 then
-&#9;&#9;print(&quot;mashscore= &quot; .. MashMeter)
-&#9;&#9;MeltNearFaces()
-&#9;&#9;wait(5)
-&#9;&#9;MashMeter = 0
-&#9;end
-&#9;wait(1/30)
-end</ProtectedString>
+Tool.Unequipped:connect(OnUnequip)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Animation" referent="RBX5">
@@ -447,6 +400,7 @@ Tool.Unequipped:connect(OnUnequip)
 							<YS>1</YS>
 							<YO>-150</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>260</XO>
@@ -476,6 +430,7 @@ Tool.Unequipped:connect(OnUnequip)
 								<YS>0</YS>
 								<YO>-20</YO>
 							</UDim2>
+							<float name="Rotation">0</float>
 							<UDim2 name="Size">
 								<XS>1</XS>
 								<XO>0</XO>
@@ -514,6 +469,7 @@ Tool.Unequipped:connect(OnUnequip)
 								<YS>0</YS>
 								<YO>0</YO>
 							</UDim2>
+							<float name="Rotation">0</float>
 							<UDim2 name="Size">
 								<XS>1</XS>
 								<XO>0</XO>
@@ -552,6 +508,7 @@ Tool.Unequipped:connect(OnUnequip)
 								<YS>0</YS>
 								<YO>0</YO>
 							</UDim2>
+							<float name="Rotation">0</float>
 							<UDim2 name="Size">
 								<XS>1</XS>
 								<XO>0</XO>
@@ -580,24 +537,24 @@ Tool.Unequipped:connect(OnUnequip)
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.014255926</X>
-					<Y>-0.346754074</Y>
-					<Z>-3.20155358</Z>
-					<R00>-0.999390662</R00>
-					<R01>0.00346664758</R01>
-					<R02>0.0347302034</R02>
-					<R10>2.32830616e-010</R10>
-					<R11>0.995055199</R11>
-					<R12>-0.09932293</R12>
-					<R20>-0.0349027887</R20>
-					<R21>-0.0992624089</R21>
-					<R22>-0.99444896</R22>
+					<X>-3.1879065</X>
+					<Y>1.72654569</Y>
+					<Z>2.27899027</Z>
+					<R00>0.535826862</R00>
+					<R01>-0.252486974</R01>
+					<R02>-0.805692196</R02>
+					<R10>-1.49011612e-008</R10>
+					<R11>0.954240859</R11>
+					<R12>-0.299039006</R12>
+					<R20>0.844327867</R20>
+					<R21>0.16023314</R21>
+					<R22>0.511307895</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.100000024</X>
-					<Y>-0.0199999809</Y>
-					<Z>0.0699999928</Z>
+					<X>-2.30164576</X>
+					<Y>2.05548835</Y>
+					<Z>1.71655202</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
