@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.600000024</X>
-					<Y>-1.20000005</Y>
-					<Z>0.100000024</Z>
-					<R00>-0</R00>
+					<X>0</X>
+					<Y>7</Y>
+					<Z>0</Z>
+					<R00>-1</R00>
 					<R01>0</R01>
-					<R02>1</R02>
+					<R02>-0</R02>
 					<R10>-0</R10>
 					<R11>1</R11>
-					<R12>0</R12>
-					<R20>-1</R20>
+					<R12>-0</R12>
+					<R20>-0</R20>
 					<R21>0</R21>
-					<R22>0</R22>
+					<R22>-1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -170,24 +170,12 @@ Tool.Unequipped:connect(onUnequippedLocal)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">BoneScript</string>
-				<ProtectedString name="Source">local function WaitForChild(parent, childName)
-&#9;while parent:FindFirstChild(childName) == nil do 
-&#9;&#9;wait()
-&#9;end 
-&#9;return parent[childName]
-end 
-
-local Tool = script.Parent 
+				<ProtectedString name="Source">local Tool = script.Parent 
 local Blade = Tool.Handle 
 
 local RunService = Game:GetService(&apos;RunService&apos;)
 local DebrisService = Game:GetService(&apos;Debris&apos;)
-
-local Player = Game.Players.LocalPlayer 
-while Player.Character == nil do wait() end 
-local Character = Player.Character
-local Torso = WaitForChild(Character, &apos;Torso&apos;)
-local Humanoid = WaitForChild(Character, &apos;Humanoid&apos;)
+local Players = game:GetService(&quot;Players&quot;)
 
 local SpinAnim 
 local SlashAnim 
@@ -209,8 +197,7 @@ local NumSpinCycles = 168 -- every 42 is 1.05 seconds
 
 local TorsoCFrames_List = {}
 
-local Anims_List = {WaitForChild(Tool, &apos;SlashAnim&apos;), WaitForChild(Tool, &apos;RightSwingFast&apos;), WaitForChild(Tool, &apos;LeftSwingFast&apos;)}
-
+local Anims_List = {Tool:WaitForChild(&apos;SlashAnim&apos;), Tool:WaitForChild(&apos;RightSwingFast&apos;), Tool:WaitForChild(&apos;LeftSwingFast&apos;)}
 
 local function TagHumanoid(humanoid)
 &#9;if humanoid and Player then 
@@ -276,7 +263,7 @@ local function Blow(part, hitPart, damage)
 &#9;&#9;&#9;end 
 &#9;&#9;&#9;CreateBBGui(damage, humanoid.Parent:FindFirstChild(&apos;Head&apos;), critted) 
 &#9;&#9;&#9;humanoid:TakeDamage(damage)
-&#9;&#9;&#9;if hitPart and math.random(0, 1) &lt; ChanceToBreak then 
+&#9;&#9;&#9;if hitPart and not hitPart.Parent:FindFirstChild(&quot;ForceField&quot;) and math.random(0, 1) &lt; ChanceToBreak then --Fix implemented by Luckymaxer
 &#9;&#9;&#9;&#9;hitPart:BreakJoints() 
 &#9;&#9;&#9;&#9;if hitPart.Name == &apos;Head&apos; or hitPart.Name == &apos;Torso&apos; then 
 &#9;&#9;&#9;&#9;&#9;CreateBBGui(9001, humanoid.Parent:FindFirstChild(&apos;Head&apos;), critted)
@@ -292,10 +279,10 @@ local function CreateCloneBlade()
 &#9;&#9;LeftBlade = Blade:Clone()
 &#9;&#9;LeftBlade.Transparency = 1.0
 
-&#9;&#9;local rightArm = WaitForChild(Character, &apos;Right Arm&apos;)
-&#9;&#9;local rightGrip = WaitForChild(rightArm, &apos;RightGrip&apos;)
-&#9;&#9;local leftArm = WaitForChild(Character, &apos;Left Arm&apos;)
-
+&#9;&#9;local rightArm = Character:WaitForChild(&apos;Right Arm&apos;)
+&#9;&#9;local rightGrip = rightArm:WaitForChild(&apos;RightGrip&apos;)
+&#9;&#9;local leftArm = Character:WaitForChild(&apos;Left Arm&apos;)
+&#9;&#9;
 &#9;&#9;local leftGrip = rightGrip:Clone()
 &#9;&#9;leftGrip.Name = &apos;LeftGrip&apos;
 &#9;&#9;leftGrip.Part0 = LeftBlade
@@ -385,6 +372,13 @@ local function OnActivated()
 end 
 
 local function OnEquipped(mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Torso then
+&#9;&#9;return
+&#9;end&#9;
 &#9;mouse.KeyDown:connect(UnleashTheInnerBeast)
 &#9;CreateCloneBlade()
 end 
@@ -431,26 +425,26 @@ Blade.Touched:connect(function(hitPart) Blow(Blade, hitPart, Damage) end)</Prote
 		<Item class="Camera" referent="RBX10">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
+				<token name="CameraType">5</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.632086217</X>
-					<Y>-1.00737107</Y>
-					<Z>4.6958375</Z>
-					<R00>0.999975622</R00>
-					<R01>-0.000292353419</R01>
-					<R02>0.00697528245</R02>
-					<R10>2.91038305e-011</R10>
-					<R11>0.999122798</R11>
-					<R12>0.0418760031</R12>
-					<R20>-0.00698140636</R20>
-					<R21>-0.0418749824</R21>
-					<R22>0.99909848</R22>
+					<X>4.53105116</X>
+					<Y>7.51967478</Y>
+					<Z>0.456839234</Z>
+					<R00>0.0855654031</R00>
+					<R01>-0.0591737069</R01>
+					<R02>0.994573772</R02>
+					<R10>4.65661287e-010</R10>
+					<R11>0.998234749</R11>
+					<R12>0.0593915246</R12>
+					<R20>-0.996332526</R20>
+					<R21>-0.00508185942</R21>
+					<R22>0.0854143575</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0.600000024</X>
-					<Y>-1.20000005</Y>
-					<Z>0.100000024</Z>
+					<X>4.33213329</X>
+					<Y>7.50779629</Y>
+					<Z>0.439756095</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
