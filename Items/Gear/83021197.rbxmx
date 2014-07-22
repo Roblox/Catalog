@@ -371,7 +371,7 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;&#9;&#9;--
 &#9;&#9;&#9;&#9;&#9;local fireScript = script.Parent.TankFireScript:Clone()
 &#9;&#9;&#9;&#9;&#9;fireScript.Origin.Value = origin
-&#9;&#9;&#9;&#9;&#9;fireScript.Target.Value = mouse.Hit.p
+&#9;&#9;&#9;&#9;&#9;fireScript.Target.Value = fireTo
 &#9;&#9;&#9;&#9;&#9;fireScript.Direction.Value = dir
 &#9;&#9;&#9;&#9;&#9;fireScript.Tank.Value = Tank.Model
 &#9;&#9;&#9;&#9;&#9;fireScript.creator.Value = Player
@@ -485,7 +485,6 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;&#9;&#9;--stop being on the ground
 &#9;&#9;&#9;&#9;&#9;IsOnGround = false
 &#9;&#9;&#9;&#9;&#9;Tank.Body.Anchored = false
-&#9;&#9;&#9;&#9;&#9;print(&quot;Fall&quot;)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;LastTimeInAir = t
 &#9;&#9;&#9;&#9;--
@@ -499,7 +498,6 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;&#9;&#9;--start being on the ground
 &#9;&#9;&#9;&#9;&#9;IsOnGround = true
 &#9;&#9;&#9;&#9;&#9;Tank.Body.Anchored = true
-&#9;&#9;&#9;&#9;&#9;print(&quot;Land&quot;)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;--normal code while on the ground
 
@@ -519,6 +517,7 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;&#9;--from the one which is actually pointing at the target, with an inclination dependent on
 &#9;&#9;&#9;&#9;--the distance of the target from the tank, to give the impression of caluclating a trajectory.
 &#9;&#9;&#9;&#9;--aim the turret:
+&#9;&#9;&#9;&#9;local tankSavedPositionHack = Tank.Body.CFrame
 &#9;&#9;&#9;&#9;local turretToHitVec = (mouse.Hit.p-Tank.Turret.Position)
 &#9;&#9;&#9;&#9;local distToHit = turretToHitVec.magnitude
 &#9;&#9;&#9;&#9;local rotAxis = turretToHitVec:Cross(turretToHitVec-Vector3.new(0, turretToHitVec.y, 0)).unit;
@@ -537,6 +536,7 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;&#9;--bodycf*c0 = turretcf*c1 =&gt; C1 = turretCF:inv()*bodycf*c0
 &#9;&#9;&#9;&#9;Tank.TurretAttach.C1 = desiredTurretCF:inverse()*Tank.Body.CFrame*CFrame.new(0,0,0.5)
 &#9;&#9;&#9;&#9;Tank.Turret.CFrame = desiredTurretCF
+&#9;&#9;&#9;&#9;Tank.Body.CFrame = tankSavedPositionHack
 &#9;&#9;&#9;&#9;--aim the cannon:
 &#9;&#9;&#9;&#9;local desiredCannonCF = CFrameFromTopBack((Tank.Turret.CFrame*CFrame.new(0,1,-0.2)).p,
 &#9;&#9;&#9;&#9;&#9;                                      turretToHit,
@@ -552,6 +552,7 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;Tank.CannonAttach.C1 = desiredCannonCF:inverse()*Tank.Turret.CFrame*CFrame.new(0,1,-0.2)
 &#9;&#9;&#9;&#9;Tank.Cannon.CFrame = desiredCannonCF
+&#9;&#9;&#9;&#9;Tank.Body.CFrame = tankSavedPositionHack
 
 &#9;&#9;&#9;&#9;--========== Determine the movement of the tank durring this frame ==========--
 &#9;&#9;&#9;&#9;--get the camera DIR in the x/z plane
@@ -561,20 +562,41 @@ Tool.Equipped:connect(function(mouse)
 
 &#9;&#9;&#9;&#9;--get the total DIR to move
 &#9;&#9;&#9;&#9;local moveDirs = Vector3.new()
+&#9;&#9;&#9;&#9;local function decay(v)
+&#9;&#9;&#9;&#9;&#9;return 1 - math.sqrt(1 - v)
+&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;for key, dir in pairs(MovementKeys) do
 &#9;&#9;&#9;&#9;&#9;if KeyDown[key].state then
 &#9;&#9;&#9;&#9;&#9;&#9;moveDirs = moveDirs + dir
-&#9;&#9;&#9;&#9;&#9;elseif (t-KeyDown[key].lastdown) &lt; 0.8 then
-&#9;&#9;&#9;&#9;&#9;&#9;moveDirs = moveDirs + dir*(0.8-(t-KeyDown[key].lastdown))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;local delay = 0.8
+&#9;&#9;&#9;&#9;&#9;if dir.X ~= 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;delay = 0.4
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;if (t-KeyDown[key].lastdown) &lt; delay then
+&#9;&#9;&#9;&#9;&#9;&#9;moveDirs = moveDirs + dir*decay(delay-(t-KeyDown[key].lastdown))
 &#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
 
+&#9;&#9;&#9;&#9;--[[
 &#9;&#9;&#9;&#9;--now, find the speed and turn factors 
 &#9;&#9;&#9;&#9;local speedFactor = camDir:Dot(DesiredHeading)*moveDirs.y + 
 &#9;&#9;&#9;&#9;                    camPerpDir:Dot(DesiredHeading)*moveDirs.x
-&#9;&#9;&#9;&#9;LastVelocity = math.abs(speedFactor)
 &#9;&#9;&#9;&#9;local turnFactor = -math.abs(camDir:Dot(DesiredHeading))*moveDirs.x +
 &#9;&#9;&#9;&#9;                   camPerpDir:Dot(DesiredHeading)*moveDirs.y
+&#9;&#9;&#9;&#9;]]
+&#9;&#9;&#9;&#9;local keyHeading = camDir*moveDirs.y + camPerpDir*moveDirs.x
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local speedFactor = keyHeading:Dot(DesiredHeading)
+&#9;&#9;&#9;&#9;local turnFactor;
+&#9;&#9;&#9;&#9;if keyHeading.magnitude &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;turnFactor = -keyHeading.unit:Cross(DesiredHeading).y
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;turnFactor = 0
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;-- Save the last velocity for sound and other effects
+&#9;&#9;&#9;&#9;LastVelocity = math.abs(speedFactor)
 
 &#9;&#9;&#9;&#9;--and change the tank&apos;s CFrame
 &#9;&#9;&#9;&#9;local TankLevelCF = CFrameFromTopBack(Tank.Body.Position,
@@ -837,7 +859,12 @@ end)
 &#9;return script[name].Value
 end
 
+local origin = WaitFor(&apos;Origin&apos;)
+local dir = WaitFor(&apos;Direction&apos;)
+local targ = WaitFor(&apos;Target&apos;)
+
 local Proj = Instance.new(&apos;Part&apos;, game.Workspace)
+Proj.CFrame = CFrame.new(origin)
 Proj.FormFactor = &apos;Custom&apos;
 Proj.Anchored = true
 Proj.Shape = &apos;Ball&apos;
@@ -847,17 +874,10 @@ Proj.BottomSurface = &apos;Smooth&apos;
 local ExplodeSound = Instance.new(&apos;Sound&apos;, Proj)
 ExplodeSound.SoundId = &apos;http://www.roblox.com/asset/?id=81116747&apos;
 local BP = Instance.new(&apos;BodyPosition&apos;, Proj)
-BP.maxForce = Vector3.new(10000,10000,10000)
+BP.maxForce = Vector3.new(10000, 10000, 10000)
 BP.P = 30000
 
-local origin = WaitFor(&apos;Origin&apos;)
-
-Proj.CFrame = CFrame.new(script.Origin.Value)
-
-local dir = WaitFor(&apos;Direction&apos;)
-local targ = WaitFor(&apos;Target&apos;)
-
-local totalDist = (targ-origin).magnitude
+local totalDist = (targ - origin).magnitude
 local speed = 80 --studs/sec
 local flightTime = totalDist/speed
 
@@ -868,8 +888,7 @@ local function explode()
 &#9;--explode
 &#9;Proj.Transparency = 1
 &#9;Proj.Anchored = true
-
-&#9;print(&quot;Explode&quot;)
+&#9;
 &#9;local exp = Instance.new(&apos;Explosion&apos;)
 &#9;exp.BlastPressure = 0
 &#9;exp.BlastRadius = 12
@@ -884,7 +903,7 @@ local function explode()
 &#9;&#9;&#9;local tag = script.creator:Clone()
 &#9;&#9;&#9;game.Debris:AddItem(tag, 2)
 &#9;&#9;&#9;tag.Parent = hum
-&#9;&#9;&#9;hum:TakeDamage(30)
+&#9;&#9;&#9;hum:TakeDamage(90)
 &#9;&#9;end
 &#9;end)
 
@@ -909,7 +928,7 @@ Proj.Touched:connect(function(part)
 end)
 
 local aheadVector = dir.unit*totalDist
-local flightVector = targ-origin
+local flightVector = targ - origin
 
 --keep flying
 Proj.Anchored = false
