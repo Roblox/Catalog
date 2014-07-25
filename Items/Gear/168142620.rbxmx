@@ -1,0 +1,594 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX0">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.5</Y>
+				<Z>0.850000024</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">BoxingGloveLauncher</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset?id=166886129</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Fire = Tool:WaitForChild(&quot;Fire&quot;)
+Reload = Tool:WaitForChild(&quot;Reload&quot;)
+
+EquipSound = Handle:WaitForChild(&quot;Equip&quot;)
+ReloadSound = Handle:WaitForChild(&quot;Reload&quot;)
+SwooshSound = Handle:WaitForChild(&quot;Swoosh&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+BoxingGlovePart = Instance.new(&quot;Part&quot;)
+BoxingGlovePart.Name = &quot;BoxingGlove&quot;
+BoxingGlovePart.Material = Enum.Material.Plastic
+BoxingGlovePart.Shape = Enum.PartType.Block
+BoxingGlovePart.TopSurface = Enum.SurfaceType.Smooth
+BoxingGlovePart.BottomSurface = Enum.SurfaceType.Smooth
+BoxingGlovePart.FormFactor = Enum.FormFactor.Custom
+BoxingGlovePart.Size = Vector3.new(0.75, 1, 1)
+BoxingGlovePart.CanCollide = false
+local Mesh = Instance.new(&quot;SpecialMesh&quot;)
+Mesh.MeshType = Enum.MeshType.FileMesh
+Mesh.MeshId = &quot;http://www.roblox.com/asset?id=166886053&quot;
+Mesh.TextureId = &quot;http://www.roblox.com/asset?id=166886089&quot;
+Mesh.Scale = Vector3.new(1, 1, 1)
+Mesh.Parent = BoxingGlovePart
+
+Damage = 20
+
+Active = false
+BoxingGlove = Handle:FindFirstChild(&quot;BoxingGlove&quot;)
+Loaded = ((BoxingGlove and true) or false)
+
+function TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function CreateBoxingGlove()
+&#9;BoxingGlove = Handle:FindFirstChild(&quot;BoxingGlove&quot;)
+&#9;if BoxingGlove then
+&#9;&#9;BoxingGlove:Destroy()
+&#9;end
+&#9;BoxingGlove = BoxingGlovePart:Clone()
+&#9;BoxingGloveWeld = Instance.new(&quot;Weld&quot;)
+&#9;BoxingGloveWeld.Name = &quot;BoxingGloveWeld&quot;
+&#9;BoxingGloveWeld.Part0 = Handle
+&#9;BoxingGloveWeld.Part1 = BoxingGlove
+&#9;BoxingGloveWeld.C1 = CFrame.new(0.075, -0.3, 2.3)
+&#9;BoxingGloveWeld.Parent = BoxingGlove
+&#9;BoxingGlove.Parent = Handle
+end
+
+function GetTotalMass(Parent)
+&#9;local Mass = 0
+&#9;local function GetMass(Parent)
+&#9;&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;&#9;Mass = (Mass + v:GetMass())
+&#9;&#9;&#9;end
+&#9;&#9;&#9;GetMass(v)
+&#9;&#9;end
+&#9;end
+&#9;GetMass(Parent)
+&#9;return Mass
+end
+
+function Activated()
+&#9;if not Humanoid or Humanoid.Health == 0 or Active then
+&#9;&#9;return
+&#9;end
+&#9;Tool.Enabled = false
+&#9;Active = true
+&#9;if Loaded then
+&#9;&#9;Loaded = false
+&#9;&#9;local BoxingGloveProjectile = BoxingGlovePart:Clone()
+&#9;&#9;BoxingGloveProjectile.CanCollide = true
+&#9;&#9;local BoxingGloveCFrame = BoxingGlove.CFrame
+&#9;&#9;if BoxingGlove and BoxingGlove.Parent then
+&#9;&#9;&#9;BoxingGlove:Destroy()
+&#9;&#9;end
+&#9;&#9;BoxingGloveProjectile.CFrame = BoxingGloveCFrame
+&#9;&#9;local Mass = BoxingGloveProjectile:GetMass()
+&#9;&#9;local TargetPoint = Humanoid.TargetPoint
+&#9;&#9;local Direction = CFrame.new(BoxingGloveProjectile.Position, Humanoid.TargetPoint)
+&#9;&#9;local BodyVelocity = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;BodyVelocity.maxForce = Vector3.new((Mass * 196.2), (Mass * 196.2), (Mass * 196.2))
+&#9;&#9;BodyVelocity.velocity = CFrame.new(BoxingGloveProjectile.Position, TargetPoint).lookVector * 50
+&#9;&#9;BodyVelocity.Parent = BoxingGloveProjectile
+&#9;&#9;local BodyGyro = Instance.new(&quot;BodyGyro&quot;)
+&#9;&#9;BodyGyro.maxTorque = Vector3.new((Mass * 196.2), (Mass * 196.2), (Mass * 196.2))
+&#9;&#9;BodyGyro.cframe = Direction
+&#9;&#9;BodyGyro.Parent = BoxingGloveProjectile
+&#9;&#9;local Debounce = false
+&#9;&#9;BoxingGloveProjectile.Touched:connect(function(Hit)
+&#9;&#9;&#9;if Hit and Hit.Parent and Hit.Parent ~= Character and not Debounce then
+&#9;&#9;&#9;&#9;local humanoid = Hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;Debounce = true
+&#9;&#9;&#9;&#9;&#9;UntagHumanoid(humanoid)
+&#9;&#9;&#9;&#9;&#9;TagHumanoid(humanoid, Player)
+&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(Damage)
+&#9;&#9;&#9;&#9;&#9;local Weld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;&#9;&#9;Weld.Part0 = BoxingGloveProjectile
+&#9;&#9;&#9;&#9;&#9;Weld.Part1 = Hit
+&#9;&#9;&#9;&#9;&#9;Weld.C0 = BoxingGloveProjectile.CFrame:inverse()
+&#9;&#9;&#9;&#9;&#9;Weld.C1 = Hit.CFrame:inverse()
+&#9;&#9;&#9;&#9;&#9;Weld.Parent = BoxingGloveProjectile
+&#9;&#9;&#9;&#9;&#9;if BodyVelocity and BodyVelocity.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;BodyVelocity:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;if BodyGyro and BodyGyro.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;BodyGyro:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;local torso = Hit.Parent:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;&#9;if torso then
+&#9;&#9;&#9;&#9;&#9;&#9;local Mass = GetTotalMass(Character)
+&#9;&#9;&#9;&#9;&#9;&#9;local BodyVelocity = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;BodyVelocity.maxForce = Vector3.new((Mass * 196.2 * 2), (Mass * 196.2 * 2), (Mass * 196.2 * 2))
+&#9;&#9;&#9;&#9;&#9;&#9;BodyVelocity.velocity = BoxingGloveProjectile.CFrame.lookVector * 50
+&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(BodyVelocity, 5)
+&#9;&#9;&#9;&#9;&#9;&#9;local BoxingGloveChanged
+&#9;&#9;&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;while BodyVelocity and BodyVelocity.Parent do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;torso.Velocity = BoxingGloveProjectile.CFrame.lookVector * 50
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.1)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;&#9;&#9;BoxingGloveChanged = Weld.Changed:connect(function(Property)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if Property == &quot;Parent&quot; and not BoxingGloveProjectile.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if BodyVelocity and BodyVelocity.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;BodyVelocity:Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;BoxingGloveChanged:disconnect()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;&#9;&#9;Delay(5, function()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if BoxingGloveChanged then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;BoxingGloveChanged:disconnect()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;&#9;&#9;BodyVelocity.Parent = torso
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;Debris:AddItem(BoxingGloveProjectile, 5)
+&#9;&#9;BoxingGloveProjectile.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;BoxingGloveProjectile.CFrame = Direction
+&#9;&#9;FireAnim = Humanoid:LoadAnimation(Fire)
+&#9;&#9;if FireAnim then
+&#9;&#9;&#9;FireAnim:Play(nil, nil, 0.75)
+&#9;&#9;end
+&#9;&#9;wait(2.125)
+&#9;&#9;if FireAnim then
+&#9;&#9;&#9;FireAnim:Stop()
+&#9;&#9;end
+&#9;else
+&#9;&#9;local LeftArm = Character:FindFirstChild(&quot;Left Arm&quot;)
+&#9;&#9;if LeftArm then
+&#9;&#9;&#9;ReloadBoxingGlove = BoxingGlovePart:Clone()
+&#9;&#9;&#9;ReloadBoxingGloveWeld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;ReloadBoxingGloveWeld.Part0 = LeftArm
+&#9;&#9;&#9;ReloadBoxingGloveWeld.Part1 = ReloadBoxingGlove
+&#9;&#9;&#9;ReloadBoxingGloveWeld.C1 = CFrame.new(0, 0, 1.525) * CFrame.Angles((math.pi / 2), 0, 0)
+&#9;&#9;&#9;ReloadBoxingGloveWeld.Parent = ReloadBoxingGlove
+&#9;&#9;&#9;Debris:AddItem(ReloadBoxingGlove, 5)
+&#9;&#9;&#9;ReloadBoxingGlove.Parent = Character
+&#9;&#9;end
+&#9;&#9;ReloadAnim = Humanoid:LoadAnimation(Reload)
+&#9;&#9;if ReloadAnim then
+&#9;&#9;&#9;ReloadAnim:Play(nil, nil, 0.5)
+&#9;&#9;end
+&#9;&#9;wait(1.5)
+&#9;&#9;if ReloadBoxingGlove and ReloadBoxingGlove.Parent then
+&#9;&#9;&#9;ReloadBoxingGlove:Destroy()
+&#9;&#9;end
+&#9;&#9;CreateBoxingGlove()
+&#9;&#9;wait(0.5)
+&#9;&#9;if ReloadAnim then
+&#9;&#9;&#9;ReloadAnim:Stop()
+&#9;&#9;end
+&#9;&#9;Loaded = true
+&#9;end
+&#9;Active = false
+&#9;Tool.Enabled = true
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+end
+
+function Unequipped()
+&#9;for i, v in pairs({FireAnim, ReloadAnim}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:Stop()
+&#9;&#9;end
+&#9;end
+end
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX2">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset?id=166942995</url></Content>
+				<string name="Name">Fire</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX3">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset?id=166944187</url></Content>
+				<string name="Name">Reload</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX4">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX5">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-1.50000012</X>
+					<Y>3.90647626</Y>
+					<Z>1.85986936</Z>
+					<R00>-1</R00>
+					<R01>-1.56878769e-014</R01>
+					<R02>1.44355008e-015</R02>
+					<R10>-1.56545444e-014</R10>
+					<R11>0.999784708</R11>
+					<R12>0.0207507778</R12>
+					<R20>-1.76877515e-015</R20>
+					<R21>0.0207507778</R21>
+					<R22>-0.999784708</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.14999998</X>
+					<Y>1.79999995</Y>
+					<Z>3.75</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX6">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset?id=166886008</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset?id=166886089 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX7">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Swoosh</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds/Rocket whoosh 01.wav</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX8">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Equip</string>
+					<float name="Pitch">1.33000004</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=97103817</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX9">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Reload</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/Asset?ID=94132726</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="Part" referent="RBX10">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>-1.42500007</X>
+						<Y>4.15868473</Y>
+						<Z>4.16559935</Z>
+						<R00>-1</R00>
+						<R01>-1.56878769e-014</R01>
+						<R02>1.44355008e-015</R02>
+						<R10>-1.56545444e-014</R10>
+						<R11>0.999784708</R11>
+						<R12>0.0207507778</R12>
+						<R20>-1.76877515e-015</R20>
+						<R21>0.0207507778</R21>
+						<R22>-0.999784708</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">false</bool>
+					<token name="Material">256</token>
+					<string name="Name">BoxingGlove</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>2.05352139</X>
+						<Y>-2.23072982</Y>
+						<Z>0.177208424</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.75</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBX11">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset?id=166886053</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset?id=166886089</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="Weld" referent="RBX12">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.075000003</X>
+							<Y>-0.300000012</Y>
+							<Z>2.29999995</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<string name="Name">BoxingGloveWeld</string>
+						<Ref name="Part0">RBX5</Ref>
+						<Ref name="Part1">RBX10</Ref>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX13">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-4.2284379</X>
+					<Y>5.71615028</Y>
+					<Z>4.24839687</Z>
+					<R00>0.457100511</R00>
+					<R01>0.34621194</R01>
+					<R02>-0.819265783</R02>
+					<R10>-0</R10>
+					<R11>0.92112875</R11>
+					<R12>0.389257997</R12>
+					<R20>0.889415085</R20>
+					<R21>-0.177930027</R21>
+					<R22>0.421048403</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-2.50798035</X>
+					<Y>4.89870882</Y>
+					<Z>3.36419559</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
