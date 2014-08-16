@@ -204,7 +204,7 @@
 					<R21>0.531954885</R21>
 					<R22>0.428189486</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">true</bool>
+				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -272,104 +272,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX9">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--[[ alexnewtron 2014 ]]--
-script.Parent:WaitForChild(&quot;Handle&quot;);
-
-local gearConfig = {
-&#9;gear = script.Parent,
-&#9;equipped = false,
-&#9;check = true,
-&#9;debris = game:GetService(&quot;Debris&quot;),
-&#9;handle = script.Parent.Handle,
-&#9;effect = script.Parent:WaitForChild(&quot;Effect&quot;),
-&#9;dmg = false,
-&#9;s = false,
-&#9;anims = {
-&#9;&#9;script.Parent:WaitForChild(&quot;Swing&quot;)
-&#9;},
-&#9;sounds = {
-&#9;&#9;script.Parent.Handle:WaitForChild(&quot;Swing&quot;),
-&#9;&#9;script.Parent.Handle:WaitForChild(&quot;Whip&quot;),
-&#9;},
-&#9;readyAnims = {}
-};
-
-gearConfig.gear.Unequipped:connect(function()
-&#9;gearConfig.equipped = false;
-end);
-gearConfig.gear.Equipped:connect(function(m)
-&#9;gearConfig.equipped = true;
-&#9;if (m ~= nil) then
-&#9;&#9;local human=script.Parent.Parent:findFirstChild(&quot;Humanoid&quot;);
-&#9;&#9;local torso=script.Parent.Parent:findFirstChild(&quot;Torso&quot;);
-&#9;&#9;if (#gearConfig.readyAnims == 0) then
-&#9;&#9;&#9;for i=1, #gearConfig.anims do
-&#9;&#9;&#9;&#9;table.insert(gearConfig.readyAnims, human:LoadAnimation(gearConfig.anims[i]));&#9;&#9;
-&#9;&#9;&#9;end
-&#9;&#9;&#9;gearConfig.readyAnims[1].KeyframeReached:connect(function(k)
-&#9;&#9;&#9;&#9;if (k == &quot;straight&quot;) then
-&#9;&#9;&#9;&#9;&#9;gearConfig.effect.Transparency = 1;
-&#9;&#9;&#9;&#9;&#9;gearConfig.handle.Transparency = 0;
-&#9;&#9;&#9;&#9;&#9;gearConfig.dmg = true;
-&#9;&#9;&#9;&#9;&#9;gearConfig.s = false;
-&#9;&#9;&#9;&#9;&#9;wait(.5);
-&#9;&#9;&#9;&#9;&#9;gearConfig.sounds[1]:Play();
-&#9;&#9;&#9;&#9;elseif (k == &quot;done&quot;) then
-&#9;&#9;&#9;&#9;&#9;wait(.5);
-&#9;&#9;&#9;&#9;&#9;gearConfig.readyAnims[1]:Stop();
-&#9;&#9;&#9;&#9;&#9;gearConfig.effect.Transparency = 0;
-&#9;&#9;&#9;&#9;&#9;gearConfig.handle.Transparency = 1;
-&#9;&#9;&#9;&#9;&#9;gearConfig.check = true;
-&#9;&#9;&#9;&#9;&#9;gearConfig.dmg = false;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end);
-&#9;&#9;end
-&#9;&#9;m.Button1Down:connect(function()
-&#9;&#9;&#9;if (gearConfig.check and human.Health &gt; 0) then
-&#9;&#9;&#9;&#9;gearConfig.check = false;
-&#9;&#9;&#9;&#9;gearConfig.effect.Transparency = 0;
-&#9;&#9;&#9;&#9;gearConfig.handle.Transparency = 1;
-&#9;&#9;&#9;&#9;gearConfig.readyAnims[1]:Play();
-&#9;&#9;&#9;&#9;gearConfig.sounds[2]:Play();
-&#9;&#9;&#9;&#9;wait(.5);
-&#9;&#9;&#9;&#9;Spawn(gearConfig.spin);
-&#9;&#9;&#9;end
-&#9;&#9;end);
-&#9;end
-end);
-gearConfig.gear.Handle.Touched:connect(function(p)
-&#9;if (p ~= nil and p.Parent ~= nil and not gearConfig.check and gearConfig.dmg and p.Parent ~= game.Players.LocalPlayer.Character) then
-&#9;&#9;local h = p.Parent:findFirstChild(&quot;Humanoid&quot;);
-&#9;&#9;local t = p.Parent:findFirstChild(&quot;Torso&quot;);
-&#9;&#9;if (h ~= nil and t ~= nil and h.Health &gt; 0) then
-&#9;&#9;&#9;local f = t:findFirstChild(&quot;fireDeath&quot;);
-&#9;&#9;&#9;local cT = h:findFirstChild(&quot;creator&quot;);
-&#9;&#9;&#9;if (cT == nil or cT ~= nil and cT.Value ~= game.Players.LocalPlayer) then
-&#9;&#9;&#9;&#9;for i,v in ipairs(h:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;if v.Name==&quot;creator&quot; then
-&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end&#9;
-&#9;&#9;&#9;&#9;local creator_tag=Instance.new(&quot;ObjectValue&quot;);
-&#9;&#9;&#9;&#9;creator_tag.Value=game.Players.LocalPlayer;
-&#9;&#9;&#9;&#9;creator_tag.Name=&quot;creator&quot;;
-&#9;&#9;&#9;&#9;creator_tag.Parent=h;
-&#9;&#9;&#9;&#9;gearConfig.debris:AddItem(creator_tag, 2);
-&#9;&#9;&#9;&#9;h.Sit = true;
-&#9;&#9;&#9;&#9;h:TakeDamage(50);
-&#9;&#9;&#9;&#9;gearConfig.debris:AddItem(bodyForce, 0.5);
-&#9;&#9;&#9;end&#9;
-&#9;&#9;end
-&#9;end
-end);</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX10">
+		<Item class="Script" referent="RBX9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -468,13 +371,13 @@ Gear.Handle.Touched:connect(function(p)
 &#9;&#9;&#9;&#9;UntagHumanoid(h);
 &#9;&#9;&#9;&#9;TagHumanoid(h,Player);
 &#9;&#9;&#9;&#9;h.Sit = true;
-&#9;&#9;&#9;&#9;h:TakeDamage(50);
+&#9;&#9;&#9;&#9;h:TakeDamage(75);
 &#9;&#9;&#9;end
 &#9;&#9;end
 &#9;end
 end);</ProtectedString>
 			</Properties>
-			<Item class="LocalScript" referent="RBX11">
+			<Item class="LocalScript" referent="RBX10">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -535,12 +438,12 @@ end);
 </ProtectedString>
 				</Properties>
 			</Item>
-			<Item class="RemoteFunction" referent="RBX12">
+			<Item class="RemoteFunction" referent="RBX11">
 				<Properties>
 					<string name="Name">Controller</string>
 				</Properties>
 			</Item>
-			<Item class="ModuleScript" referent="RBX13">
+			<Item class="ModuleScript" referent="RBX12">
 				<Properties>
 					<string name="Name">ClientAgent</string>
 					<ProtectedString name="Source">-- REMOTE FUNCTION CLIENT AGENT 8-10-14 ALEXNEWTRON
@@ -556,7 +459,7 @@ return {
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX14">
+		<Item class="Camera" referent="RBX13">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
