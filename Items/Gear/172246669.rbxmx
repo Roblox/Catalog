@@ -19,7 +19,7 @@
 				<R21>0.00402680412</R21>
 				<R22>0.89441812</R22>
 			</CoordinateFrame>
-			<string name="Name">Paintball Gun</string>
+			<string name="Name">Toon Paintball</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=167579552</url></Content>
 			<string name="ToolTip">Paintball Gun</string>
 		</Properties>
@@ -127,12 +127,54 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Camera" referent="RBX4">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>44.6085205</X>
+					<Y>106.074127</Y>
+					<Z>57.10923</Z>
+					<R00>0.835201085</R00>
+					<R01>0.00579433143</R01>
+					<R02>-0.549914122</R02>
+					<R10>-0</R10>
+					<R11>0.999944389</R11>
+					<R12>0.0105362078</R12>
+					<R20>0.549944699</R20>
+					<R21>-0.00879985187</R21>
+					<R22>0.835154653</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>45.7083473</X>
+					<Y>106.053055</Y>
+					<Z>55.4389229</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Launcher</string>
-				<ProtectedString name="Source">local sp=script.Parent
+				<string name="Name">LauncherFiltered</string>
+				<ProtectedString name="Source">--Stickmasterluke
+
+
+local sp=script.Parent
+
+
+local weaponevent=sp:WaitForChild(&quot;WeaponEvent&quot;)
 local handle=sp:WaitForChild(&quot;Handle&quot;)
 local firesound=handle:WaitForChild(&quot;Fire&quot;)
 local debris=game:GetService(&quot;Debris&quot;)
@@ -140,14 +182,12 @@ firerate=.4
 velocity=200
 loaded=false
 
-local colorsYo = {BrickColor.new(&quot;Lime green&quot;)}
-
 local Pellet = Instance.new(&quot;Part&quot;)
 Pellet.Name=&quot;Paintball&quot;
 Pellet.formFactor=&quot;Custom&quot;
 Pellet.Size=Vector3.new(1,1,1)*.5
 --Pellet.Shape=&quot;Ball&quot;&#9;--can&apos;t be custom size
-Pellet.BrickColor=colorsYo[math.random(1, #colorsYo)];
+Pellet.BrickColor=BrickColor.new(&quot;Lime green&quot;)
 Pellet.Material=Enum.Material.Plastic
 Pellet.Locked=true
 Pellet.CanCollide=false
@@ -180,8 +220,8 @@ sp.Equipped:connect(onEquipped)
 sp.Unequipped:connect(onUnequipped)
 
 
-enabled = true
-function onActivated()
+enabled=true
+function Fire(pos)
 &#9;if enabled and sp and sp.Parent then
 &#9;&#9;enabled=false
 &#9;&#9;local chr=sp.Parent
@@ -193,11 +233,9 @@ function onActivated()
 &#9;&#9;&#9;&#9;gunUp()
 &#9;&#9;&#9;&#9;firesound:Play()
 &#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local target=h.TargetPoint
-&#9;&#9;&#9;&#9;local vec=(target-head.Position).unit
+&#9;&#9;&#9;&#9;local vec=(pos-head.Position).unit
 &#9;&#9;&#9;
 &#9;&#9;&#9;&#9;local missile=Pellet:clone()
-&#9;&#9;&#9;&#9;missile.BrickColor=colorsYo[math.random(1, #colorsYo)];
 &#9;&#9;&#9;&#9;missile.CFrame=CFrame.new(head.Position,head.Position+vec)--*CFrame.new(0,0,-5)
 &#9;&#9;&#9;&#9;missile.Velocity=vec*velocity
 &#9;&#9;&#9;&#9;missile.ProjectileScript.Disabled=false
@@ -224,7 +262,12 @@ function onActivated()
 end
 
 
-sp.Activated:connect(onActivated)
+weaponevent.OnServerEvent:connect(function(plr,...)
+&#9;local tuple={...}
+&#9;if tuple[1]==&quot;Fire&quot; then
+&#9;&#9;Fire(tuple[2])
+&#9;end
+end)
 
 
 
@@ -234,7 +277,7 @@ sp.Activated:connect(onActivated)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX5">
+		<Item class="Script" referent="RBX6">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -252,7 +295,7 @@ local creator=sp:WaitForChild(&quot;creator&quot;)
 damage=62
 local splatted=false
 
-local flakes = {168187887, 168187896, 168187907, 168187916, 168187923, 168187935}
+local flakes = {168187887, 168187896, 168187907, 168187916, 168187923, 168187935}&#9;--Alexnewtron created these splats
 local globs = {168187916, 168187923}
 
 local HitSound=Instance.new(&quot;Sound&quot;)
@@ -345,7 +388,7 @@ function onTouched(hit)
 &#9;end
 end
 
-wait(0.25);
+
 sp.Touched:connect(onTouched)
 debris:AddItem(sp,30)
 
@@ -355,7 +398,7 @@ if sp then
 end</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX6">
+		<Item class="Script" referent="RBX7">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -422,7 +465,7 @@ Tool.Unequipped:connect(Unequip)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX7">
+		<Item class="Script" referent="RBX8">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -459,7 +502,7 @@ script.Parent.Unequipped:connect(Weldnow)
 Weldnow()</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX8">
+		<Item class="Script" referent="RBX9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -497,57 +540,39 @@ script.Parent.Unequipped:connect(Finale)
 Finale()</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX9">
+		<Item class="LocalScript" referent="RBX10">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool=script.Parent
+				<string name="Name">LocalGuiFiltered</string>
+				<ProtectedString name="Source">--Made by Stickmasterluke
+
+
+sp=script.Parent
+
+
+local weaponevent=sp:WaitForChild(&quot;WeaponEvent&quot;)
+
 function onEquippedLocal(mouse)
-&#9;if mouse == nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return 
+&#9;if mouse then
+&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;&#9;mouse.Button1Down:connect(function()
+&#9;&#9;&#9;weaponevent:FireServer(&quot;Fire&quot;,mouse.Hit.p)
+&#9;&#9;end)
 &#9;end
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
 end
 
-Tool.Equipped:connect(onEquippedLocal)</ProtectedString>
+sp.Equipped:connect(onEquippedLocal)
+
+
+
+
+</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="RemoteEvent" referent="RBX11">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>44.6085205</X>
-					<Y>106.074127</Y>
-					<Z>57.10923</Z>
-					<R00>0.835201085</R00>
-					<R01>0.00579433143</R01>
-					<R02>-0.549914122</R02>
-					<R10>-0</R10>
-					<R11>0.999944389</R11>
-					<R12>0.0105362078</R12>
-					<R20>0.549944699</R20>
-					<R21>-0.00879985187</R21>
-					<R22>0.835154653</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>45.7083473</X>
-					<Y>106.053055</Y>
-					<Z>55.4389229</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<string name="Name">WeaponEvent</string>
 			</Properties>
 		</Item>
 	</Item>
