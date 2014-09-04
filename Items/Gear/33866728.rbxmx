@@ -3,6 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>1.5</X>
@@ -14,121 +15,99 @@
 				<R10>0</R10>
 				<R11>0</R11>
 				<R12>-1</R12>
-				<R20>-0</R20>
+				<R20>0</R20>
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
 			<string name="Name">DrumKit</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=33682770</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="LocalScript" referent="RBX1">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">DrumScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local keyDown, keyUp
-local gui = Tool.DrumGui
-local playerGui = nil
-local humanoid = nil
-local head = nil
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
 
-function stopAllSound()
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-	local sounds = Tool.Handle.Sounds:GetChildren()
-	for i =1, #sounds do
-		sounds[i]:Stop()
-	end
+Players = game:GetService(&quot;Players&quot;)
 
+Gui = Tool:WaitForChild(&quot;DrumGui&quot;)
+
+Sounds = {}
+
+for i, v in pairs(Handle:GetChildren()) do
+&#9;if v:IsA(&quot;Sound&quot;) then
+&#9;&#9;Sounds[v.Name] = v
+&#9;end
 end
 
-function onEquipped(newMouse)
-
-	humanoid = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
-	head =  Tool.Parent:FindFirstChild(&quot;Head&quot;)
-
-	wait(0.4)
-	if humanoid and head then
-		humanoid.Sit = true
-		head.Anchored = true
-	end
-
-	keyDown = newMouse.KeyDown:connect(onKeyDown)
-	keyUp =  newMouse.KeyUp:connect(onKeyUp)
-	
-	stopAllSound()
-
-	playerGui = gui:clone()
-	playerGui.Parent = game.Players:GetPlayerFromCharacter(Tool.Parent).PlayerGui
-
+function StopSounds()
+&#9;for i, v in pairs(Sounds) do
+&#9;&#9;v:Stop()
+&#9;end
 end
 
-Tool.Equipped:connect(onEquipped)
-
-function onUnequipped()
-
-	if humanoid and head then
-		humanoid.Sit = false
-		head.Anchored = false
-	end
-
-	keyDown:disconnect()
-	keyUp:disconnect()
-
-	stopAllSound()
-
-	playerGui:remove()
-	playerGui = nil
-
+function SetGui(Key, Enabled)
+&#9;local Frame = GuiClone.Frame:FindFirstChild(Key)
+&#9;if Frame then
+&#9;&#9;Frame.Visible = Enabled
+&#9;end
 end
 
-Tool.Unequipped:connect(onUnequipped)
-
-function onKeyDown(key)
-
-	key:lower()
-	if playerGui.Frame:FindFirstChild(key) ~= nil then
-		playerGui.Frame:FindFirstChild(key).Visible = true
-	end
-	if key == &quot;g&quot; then
-		Tool.Handle.Sounds.HiHat:Play()
-	elseif key == &quot;h&quot; then
-		Tool.Handle.Sounds.Snare:Play()
-	elseif key == &quot;j&quot; then
-		Tool.Handle.Sounds.Tom2:Play()
-	elseif key == &quot;k&quot; then
-		Tool.Handle.Sounds.Tom3:Play()
-	elseif key == &quot;y&quot; then
-		Tool.Handle.Sounds.Crash:Play()
-	elseif key == &quot;u&quot; then
-		Tool.Handle.Sounds.Tom1:Play()
-	elseif key == &quot;t&quot; then
-		Tool.Handle.Sounds.Ride:Play()
-	elseif key == &quot;n&quot; then
-		Tool.Handle.Sounds.Kick:Play()
-	end
-
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not Player or not PlayerGui or not Humanoid or Humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+&#9;GuiClone = Gui:Clone()
+&#9;GuiClone.Parent = PlayerGui
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;Key = Key:lower()
+&#9;&#9;if Key == &quot;g&quot; then
+&#9;&#9;&#9;Sounds.HiHat:Play()
+&#9;&#9;elseif Key == &quot;h&quot; then
+&#9;&#9;&#9;Sounds.Snare:Play()
+&#9;&#9;elseif Key == &quot;j&quot; then
+&#9;&#9;&#9;Sounds.Tom2:Play()
+&#9;&#9;elseif Key == &quot;k&quot; then
+&#9;&#9;&#9;Sounds.Tom3:Play()
+&#9;&#9;elseif Key == &quot;y&quot; then
+&#9;&#9;&#9;Sounds.Crash:Play()
+&#9;&#9;elseif Key == &quot;u&quot; then
+&#9;&#9;&#9;Sounds.Tom1:Play()
+&#9;&#9;elseif Key == &quot;t&quot; then
+&#9;&#9;&#9;Sounds.Ride:Play()
+&#9;&#9;elseif Key == &quot;n&quot; then
+&#9;&#9;&#9;Sounds.Kick:Play()
+&#9;&#9;end
+&#9;&#9;SetGui(Key, true)
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;SetGui(Key, false)
+&#9;end)
 end
 
-function onKeyUp(key)
-
-	key:lower()
-	if playerGui.Frame:FindFirstChild(key) ~= nil then
-		playerGui.Frame:FindFirstChild(key).Visible = false
-	end
-
+function Unequipped()
+&#9;StopSounds()
+&#9;if GuiClone and GuiClone.Parent then
+&#9;&#9;GuiClone:Destroy()
+&#9;end
 end
 
-
-</ProtectedString>
-				<bool name="archivable">true</bool>
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="ScreenGui" referent="RBX2">
 			<Properties>
 				<string name="Name">DrumGui</string>
-				<bool name="archivable">true</bool>
 			</Properties>
 			<Item class="Frame" referent="RBX3">
 				<Properties>
@@ -137,6 +116,8 @@ end
 					<float name="BackgroundTransparency">0.5</float>
 					<Color3 name="BorderColor3">4279970357</Color3>
 					<int name="BorderSizePixel">1</int>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="Draggable">false</bool>
 					<string name="Name">Frame</string>
 					<UDim2 name="Position">
 						<XS>0.699999988</XS>
@@ -144,6 +125,7 @@ end
 						<YS>0.5</YS>
 						<YO>0</YO>
 					</UDim2>
+					<float name="Rotation">0</float>
 					<UDim2 name="Size">
 						<XS>0</XS>
 						<XO>200</XO>
@@ -151,9 +133,9 @@ end
 						<YO>150</YO>
 					</UDim2>
 					<token name="SizeConstraint">0</token>
+					<token name="Style">0</token>
 					<bool name="Visible">true</bool>
 					<int name="ZIndex">1</int>
-					<bool name="archivable">true</bool>
 				</Properties>
 				<Item class="Frame" referent="RBX4">
 					<Properties>
@@ -162,6 +144,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">y</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -169,6 +153,7 @@ end
 							<YS>0</YS>
 							<YO>5</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -176,9 +161,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="ImageLabel" referent="RBX5">
@@ -188,7 +173,19 @@ end
 						<float name="BackgroundTransparency">1</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/asset/?id=31178064</url></Content>
+						<Color3 name="ImageColor3">4294967295</Color3>
+						<Vector2 name="ImageRectOffset">
+							<X>0</X>
+							<Y>0</Y>
+						</Vector2>
+						<Vector2 name="ImageRectSize">
+							<X>0</X>
+							<Y>0</Y>
+						</Vector2>
+						<float name="ImageTransparency">0</float>
 						<string name="Name">ImageLabel</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -196,6 +193,7 @@ end
 							<YS>0</YS>
 							<YO>0</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>1</XS>
 							<XO>0</XO>
@@ -205,7 +203,6 @@ end
 						<token name="SizeConstraint">0</token>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX6">
@@ -215,6 +212,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">g</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -222,6 +221,7 @@ end
 							<YS>0</YS>
 							<YO>45</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -229,9 +229,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX7">
@@ -241,6 +241,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">h</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -248,6 +250,7 @@ end
 							<YS>0</YS>
 							<YO>55</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -255,9 +258,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX8">
@@ -267,6 +270,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">u</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -274,6 +279,7 @@ end
 							<YS>0</YS>
 							<YO>18</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>27</XO>
@@ -281,9 +287,9 @@ end
 							<YO>35</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX9">
@@ -293,6 +299,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">n</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -300,6 +308,7 @@ end
 							<YS>0</YS>
 							<YO>13</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>27</XO>
@@ -307,9 +316,9 @@ end
 							<YO>35</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX10">
@@ -319,6 +328,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">j</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -326,6 +337,7 @@ end
 							<YS>0</YS>
 							<YO>65</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -333,9 +345,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX11">
@@ -345,6 +357,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">k</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -352,6 +366,7 @@ end
 							<YS>0</YS>
 							<YO>105</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -359,9 +374,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX12">
@@ -371,6 +386,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">t</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -378,6 +395,7 @@ end
 							<YS>0</YS>
 							<YO>15</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -385,9 +403,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 				<Item class="Frame" referent="RBX13">
@@ -397,6 +415,8 @@ end
 						<float name="BackgroundTransparency">0.5</float>
 						<Color3 name="BorderColor3">4279970357</Color3>
 						<int name="BorderSizePixel">0</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
 						<string name="Name">y</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -404,6 +424,7 @@ end
 							<YS>0</YS>
 							<YO>15</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>40</XO>
@@ -411,9 +432,9 @@ end
 							<YO>40</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
 						<bool name="Visible">false</bool>
 						<int name="ZIndex">2</int>
-						<bool name="archivable">true</bool>
 					</Properties>
 				</Item>
 			</Item>
@@ -431,23 +452,21 @@ end
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-94.1221085</X>
-					<Y>12.0988197</Y>
-					<Z>-469.546692</Z>
-					<R00>0.961847723</R00>
-					<R01>-0.273584187</R01>
-					<R02>-0.000217848123</R02>
-					<R10>-3.93883294e-021</R10>
-					<R11>-0.000796274282</R11>
-					<R12>0.999999642</R12>
-					<R20>-0.273584247</R20>
-					<R21>-0.961847484</R21>
-					<R22>-0.000765894714</R22>
+					<X>-48.5</X>
+					<Y>12</Y>
+					<Z>1</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>-0</R02>
+					<R10>0</R10>
+					<R11>0</R11>
+					<R12>1</R12>
+					<R20>0</R20>
+					<R21>-1</R21>
+					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">1</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -480,7 +499,7 @@ end
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">1</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>3</X>
@@ -511,115 +530,169 @@ end
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
-			<Item class="Script" referent="RBX16">
+			<Item class="Sound" referent="RBX16">
 				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">Sounds</string>
-					<ProtectedString name="Source">print(&quot;Hello world!&quot;)
-</ProtectedString>
-					<bool name="archivable">true</bool>
+					<bool name="Looped">false</bool>
+					<string name="Name">Crash</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173771</url></Content>
+					<float name="Volume">0.5</float>
 				</Properties>
-				<Item class="Sound" referent="RBX17">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Crash</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">-1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173771</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX18">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">HiHat</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173735</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX19">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Kick</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">-1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173820</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX20">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Ride</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">-1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173898</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX21">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Snare</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173799</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX22">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Tom1</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">-1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173844</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX23">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Tom2</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">-1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173863</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX24">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Tom3</string>
-						<float name="Pitch">1</float>
-						<int name="PlayCount">-1</int>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173881</url></Content>
-						<float name="Volume">0.5</float>
-						<bool name="archivable">true</bool>
-					</Properties>
-				</Item>
 			</Item>
+			<Item class="Sound" referent="RBX17">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">HiHat</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173735</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX18">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Kick</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173820</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX19">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Ride</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173898</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX20">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Snare</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173799</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX21">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Tom1</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173844</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX22">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Tom2</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173863</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX23">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Tom3</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=31173881</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX24">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Head = Character:FindFirstChild(&quot;Head&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Head then
+&#9;&#9;return
+&#9;end
+&#9;Head.Anchored = true
+&#9;ForceSit = Humanoid.Changed:connect(function(Property)
+&#9;&#9;if Property == &quot;Sit&quot; and not Humanoid[Property] then
+&#9;&#9;&#9;Humanoid[Property] = true
+&#9;&#9;end
+&#9;end)
+&#9;Humanoid.Sit = true
+end
+
+function Unequipped()
+&#9;if ForceSit then
+&#9;&#9;ForceSit:disconnect()
+&#9;end
+&#9;if Humanoid and Humanoid.Parent then
+&#9;&#9;Humanoid.Sit = false
+&#9;end
+&#9;if Head and Head.Parent then
+&#9;&#9;Head.Anchored = false
+&#9;end
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX25">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-49.9910889</X>
+					<Y>13.7108288</Y>
+					<Z>-5.47139645</Z>
+					<R00>-0.978144884</R00>
+					<R01>0.0704303011</R01>
+					<R02>-0.195632935</R02>
+					<R10>-0</R10>
+					<R11>0.940883696</R11>
+					<R12>0.338729858</R12>
+					<R20>0.207924694</R20>
+					<R21>0.331326872</R21>
+					<R22>-0.920320511</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-49.599823</X>
+					<Y>13.0333691</Y>
+					<Z>-3.63075542</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
 		</Item>
 	</Item>
 </roblox>
