@@ -19,7 +19,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">ProtectionSphere</string>
+			<string name="Name">AntiBallisticsForceField</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90786628</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.5</X>
-					<Y>0.900000036</Y>
-					<Z>-0.5</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
+					<X>1.09999979</X>
+					<Y>45.9000015</Y>
+					<Z>23.899992</Z>
+					<R00>-8.94069672e-008</R00>
+					<R01>6.4028427e-010</R01>
+					<R02>-0.999999702</R02>
+					<R10>-5.82076609e-011</R10>
+					<R11>0.999999046</R11>
+					<R12>-5.82076609e-010</R12>
+					<R20>0.999995947</R20>
 					<R21>0</R21>
-					<R22>1</R22>
+					<R22>5.96046448e-008</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -60,7 +60,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -77,7 +77,7 @@
 				<float name="TopParamB">0.5</float>
 				<token name="TopSurface">0</token>
 				<token name="TopSurfaceInput">0</token>
-				<float name="Transparency">0.25</float>
+				<float name="Transparency">1</float>
 				<Vector3 name="Velocity">
 					<X>0</X>
 					<Y>0</Y>
@@ -122,189 +122,353 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">ProtectionSphereScript</string>
-				<ProtectedString name="Source">----------- Protection Sphere --------------
--- Waits for the child of the specified parent
-local function WaitForChild(parent, childName)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Mesh = Handle:WaitForChild(&quot;Mesh&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+Sounds = {
+&#9;ShutDown = Tool:WaitForChild(&quot;ShutDown&quot;),
+&#9;PoweringUp = Tool:WaitForChild(&quot;PoweringUp&quot;),
+&#9;Deflect = Tool:WaitForChild(&quot;Deflect&quot;),
+&#9;Pulse = Tool:WaitForChild(&quot;Pulse&quot;)
+}
+
+RemovableClasses = {&quot;TouchTransmitter&quot;, &quot;RocketPropulsion&quot;, &quot;BodyVelocity&quot;, &quot;BodyForce&quot;, &quot;BodyPosition&quot;, &quot;BodyThrust&quot;, &quot;LocalScript&quot;, &quot;Script&quot;}
+
+Duration = 30
+MaxHealDistance = 20
+
+ReadyToActivate = true
+
+Gravity = 196.20
+
+ObjectsAlreadyDeflected = {}
+
+SpherePart = Instance.new(&quot;Part&quot;)
+SpherePart.Material = Enum.Material.Plastic
+SpherePart.Shape = Enum.PartType.Ball
+SpherePart.TopSurface = Enum.SurfaceType.Smooth
+SpherePart.BottomSurface = Enum.SurfaceType.Smooth
+SpherePart.FormFactor = Enum.FormFactor.Custom
+SpherePart.Size = Vector3.new(0.2, 0.2, 0.2)
+SpherePart.CanCollide = false
+SpherePart.Anchored = true
+SpherePart.Locked = true
+SphereMesh = Instance.new(&quot;SpecialMesh&quot;)
+SphereMesh.MeshType = Enum.MeshType.FileMesh
+SphereMesh.MeshId = &quot;http://www.roblox.com/asset/?id=90782182&quot;
+SphereMesh.TextureId = &quot;http://www.roblox.com/asset/?id=90782359&quot;
+SphereMesh.Scale = Vector3.new(1, 1, 1)
+SphereMesh.Parent = SpherePart
+
+local DisplayPart = Tool:FindFirstChild(&quot;DisplayPart&quot;)
+
+if DisplayPart then
+&#9;DisplayPart:Destroy()
+&#9;Handle.Transparency = 0.25
 end
 
-local Tool = script.Parent
-local Handle = WaitForChild(Tool, &apos;Handle&apos;)
+Tool.Enabled = true
 
-local PlayersService = game:GetService(&apos;Players&apos;)
-local DebrisService = game:GetService(&apos;Debris&apos;)
-local ContentService = Game:GetService(&quot;ContentProvider&quot;)
-
-local sphereMeshId = &apos;http://www.roblox.com/asset/?id=90782182&apos;
-local sphereTextureId = &apos;http://www.roblox.com/asset/?id=90782359&apos;
-
------ Sounds ------
-local ShutDown = WaitForChild(Tool, &apos;ShutDown&apos;)
-local PoweringUp = WaitForChild(Tool, &apos;PoweringUp&apos;)
-local Deflect = WaitForChild(Tool, &apos;Deflect&apos;)
-local Pulse = WaitForChild(Tool, &apos;Pulse&apos;)
-
--- Local Character Variables ----
-local MyCharacter
-local MyHumanoid
-local MyTorso
-local MyPlayer
----------------------------------
-
-
-local ReadyToActivate = true
-
-
-local function clamp(input, min_val, max_val)
-&#9;if input &lt; min_val then
-&#9;&#9;input = min_val
-&#9;elseif input &gt; max_val then
-&#9;&#9;input = max_val
+function CheckForClass(Table, Object)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if Object:IsA(v) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
 &#9;end
-&#9;return input
+&#9;return false
 end
 
-local function Nlerp(start, desired, percent)
-&#9;return start:Lerp(desired, percent).unit
+function CheckTable(Table, Object)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if v == Object then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
 end
 
-local function Slerp(start, desired, percent)
-     -- Dot product - the cosine of the angle between 2 vectors.
-     local dot = start:Dot(desired)
-     -- Clamp it to be in the range of Acos()
-     -- This may be unnecessary, but floating point
-     -- precision can be a fickle mistress.
-     clamp(dot, -1.0, 1.0);
-     -- Acos(dot) returns the angle between start and end,
-     -- And multiplying that by percent returns the angle between
-     -- start and the final result.
-     local theta = math.acos(dot) * percent;
-     local RelativeVec = desired - start * dot;
-     RelativeVec = RelativeVec.unit;     -- Orthonormal basis
-     -- The final result.
-     return ((start * math.cos(theta)) + (RelativeVec * math.sin(theta)));
-end
-
-
-
-local function AddSlowDown(sphere)
-&#9;sphere.Touched:connect(function (hit)
-&#9;&#9;local origVelocity = hit.Velocity
-&#9;&#9;hit.Velocity = origVelocity / 3
-&#9;&#9;local origRotVelocity = hit.RotVelocity
-&#9;&#9;hit.RotVelocity = Vector3.new()
-&#9;&#9;hit.TouchEnded:connect(function (untouchedObj) 
-&#9;&#9;&#9;if (untouchedObj == sphere) then
-&#9;&#9;&#9;&#9;hit.Velocity = origVelocity
-&#9;&#9;&#9;&#9;hit.RotVelocity = origRotVelocity
+function CalculateRecursiveMass(RootPart)
+&#9;local Mass = 0
+&#9;local function CalculateMass(Parent)
+&#9;&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;&#9;Mass = (Mass + v:GetMass())
 &#9;&#9;&#9;end
-&#9;&#9;end)
+&#9;&#9;&#9;CalculateMass(v)
+&#9;&#9;end
+&#9;end
+&#9;CalculateMass(RootPart)
+&#9;return Mass
+end
+
+function ReflectVector3(Incoming, Normal)
+&#9;return (2 * ((-1 * Incoming):Dot(Normal)) * Normal + Incoming)
+end
+
+function CleanProjectile(Object)
+&#9;if not Object or not Object.Parent then
+&#9;&#9;return
+&#9;end
+&#9;local ObjectClone = Object:Clone()
+&#9;for i, v in pairs(ObjectClone:GetChildren()) do
+&#9;&#9;if CheckForClass(RemovableClasses, v) then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;Object:Destroy()
+&#9;ObjectClone.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;return ObjectClone
+end
+
+function FindPlayerInDirection(StartPosition, Direction)
+&#9;local Attacker = nil
+&#9;local ClosestAngle = math.huge
+&#9;for i, v in pairs(Players:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;Player&quot;) and v ~= Player and v.Character then
+&#9;&#9;&#9;local torso = v.Character:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;if torso then
+&#9;&#9;&#9;&#9;local AngleBetween = math.abs(math.acos((StartPosition - Torso.CFrame.p).unit:Dot(Direction)))
+&#9;&#9;&#9;&#9;if AngleBetween &lt; (math.pi / 4) then
+&#9;&#9;&#9;&#9;&#9;if (torso.CFrame.p - StartPosition).magnitude &lt; 300 and AngleBetween &lt; ClosestAngle then
+&#9;&#9;&#9;&#9;&#9;&#9;Attacker = v
+&#9;&#9;&#9;&#9;&#9;&#9;ClosestAngle = AngleBetween
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return Attacker
+end
+
+function CreateReflector(OrientationCFrame)
+&#9;local Sphere = SpherePart:Clone()
+&#9;Sphere.Transparency = 0.75
+&#9;Sphere.Size = Vector3.new(3, 3, 3)
+&#9;Sphere.CFrame = OrientationCFrame
+&#9;local SphereMesh = Sphere:FindFirstChild(&quot;Mesh&quot;)
+&#9;SphereMesh.Scale = Vector3.new(0.2, 0.2, 0.2)
+&#9;Debris:AddItem(Sphere, 3)
+&#9;Sphere.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;Spawn(function()
+&#9;&#9;for i = 1, 3, 0.5 do
+&#9;&#9;&#9;if SphereMesh then
+&#9;&#9;&#9;&#9;SphereMesh.Scale = Vector3.new((0.2 * i), (0.2 * i), (0.2 * i)) 
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait(0.05)
+&#9;&#9;end
+&#9;&#9;local MaxScale = SphereMesh.Scale
+&#9;&#9;for j = 1, 0, -0.1 do
+&#9;&#9;&#9;if SphereMesh then
+&#9;&#9;&#9;&#9;SphereMesh.Scale = (MaxScale * i)
+&#9;&#9;&#9;&#9;wait(0.05)
+&#9;&#9;&#9;end
+&#9;&#9;end
 &#9;end)
 end
 
-
-
-
-
-
-
-local function AddHealFeature(sphere)
-&#9;coroutine.resume(coroutine.create(function()
-&#9;&#9;for i = 1, 20 do
-&#9;&#9;&#9;if not sphere then return end
-&#9;&#9;&#9;-- Find players in sphere
-&#9;&#9;&#9;local healedSomebody = false
-&#9;&#9;&#9;if MyPlayer and CheckIfPlayerHasTorso(MyPlayer) and (MyPlayer.Character.Torso.CFrame.p - sphere.CFrame.p).magnitude &lt; 15 then 
-&#9;&#9;&#9;&#9;healedSomebody = true
-&#9;&#9;&#9;&#9;MyPlayer.Character.Humanoid.Health = math.min(MyHumanoid.MaxHealth, MyHumanoid.Health + 10)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if healedSomebody then
-&#9;&#9;&#9;&#9;Pulse:Play()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(1)
-&#9;&#9;end
-&#9;end))
-end
-
-local function TweenScale(sphereMesh, startSize, endSize, duration, steps)
-&#9;local stepSize = duration / steps
-&#9;for i = 0, steps do
-&#9;&#9;local ratio = i / steps
-&#9;&#9;sphereMesh.Scale = (1 - ratio) * startSize + (endSize * ratio) 
-&#9;&#9;wait(stepSize)
+function HandleReflection(Sphere, Part)
+&#9;if not Part or not Part.Parent or Part.Anchored or Part.Parent ~= game:GetService(&quot;Workspace&quot;) or Part.Velocity.magnitude &lt; 5 or CalculateRecursiveMass(Part) &gt; 160 then
+&#9;&#9;return
 &#9;end
-&#9;sphereMesh.Scale = endSize
+&#9;if math.acos((Part.CFrame.p - Sphere.CFrame.p).unit:Dot(Part.Velocity.unit)) &lt; (math.pi / 2) or (Part.CFrame.p - Sphere.CFrame.p).magnitude &lt; 13 then
+&#9;&#9;return
+&#9;end
+&#9;Part = CleanProjectile(Part)
+&#9;if CheckTable(ObjectsAlreadyDeflected, Part) then
+&#9;&#9;return
+&#9;end
+&#9;table.insert(ObjectsAlreadyDeflected, Part)
+&#9;Part.CFrame = (Part.CFrame - Part.Velocity * 0.1)
+&#9;Debris:AddItem(Part, 10)
+&#9;CreateReflector(CFrame.new(Part.Position, Part.Position + ((Sphere.Position - Vector3.new(0, (Sphere.Size.Y / 3), 0)) - Part.Position).unit) * CFrame.Angles(math.rad(90), 0, 0))
+&#9;Part.Anchored = true
+&#9;local SphereMesh = Sphere:FindFirstChild(&quot;Mesh&quot;)
+&#9;if SphereMesh then
+&#9;&#9;SphereMesh.VertexColor = Vector3.new(1, 1, 0)
+&#9;end
+&#9;
+&#9;local Attacker = nil
+&#9;
+&#9;for i, v in pairs(Part:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and string.lower(v.Name) == string.lower(&quot;Creator&quot;) and v.Value and v.Value.Parent and v.Value:IsA(&quot;Player&quot;) then
+&#9;&#9;&#9;Creator = v.Value
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;Attacker = ((not Attacker and FindPlayerInDirection(Part.Position, Part.Velocity.unit)) or Attacker)
+&#9;if Deflect then
+&#9;&#9;Sounds.Deflect:Play()
+&#9;end
+&#9;
+&#9;wait(1)
+&#9;
+&#9;if SphereMesh and SphereMesh.Parent then
+&#9;&#9;SphereMesh.VertexColor = Vector3.new(1, 1, 1)
+&#9;end
+&#9;if not Part or not Part.Parent then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;Part.Anchored = false
+&#9;local DeflectVelocity = Instance.new(&quot;BodyVelocity&quot;)
+&#9;local ReflectDirection = ReflectVector3(Part.Velocity.unit, (Part.CFrame.p - Sphere.CFrame.p).unit).unit
+&#9;DeflectVelocity.velocity = ReflectDirection * Part.Velocity.magnitude
+&#9;DeflectVelocity.Parent = Part
+&#9;Debris:AddItem(DeflectVelocity, 10)
+&#9;-- reorient it so it is facing the direction it is going
+&#9;Part.CFrame = CFrame.new(Part.Position, (Part.Position + DeflectVelocity.velocity.unit))
+&#9;if not Attacker or not Attacker.Parent or not Attacker.Character then
+&#9;&#9;return
+&#9;end
+&#9;local torso = Attacker.Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not torso then
+&#9;&#9;return
+&#9;end
+&#9;if not Part:FindFirstChild(&quot;Fire&quot;) then
+&#9;&#9;local Fire = Instance.new(&quot;Fire&quot;)
+&#9;&#9;Fire.Color = Color3.new((105 / 255), (222 / 255), (214/ 255))
+&#9;&#9;Fire.Enabled = true
+&#9;&#9;Fire.Parent = Part
+&#9;end
+&#9;DeflectVelocity.velocity = (torso.CFrame.p - Part.CFrame.p).unit * Part.Velocity.magnitude * 2
+&#9;Part.Touched:connect(function(OtherPart)
+&#9;&#9;if not OtherPart or not OtherPart.Parent or not Attacker or not Attacker.Parent or not Attacker.Character then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local humanoid = Attacker.Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if not humanoid then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;if OtherPart.Parent == Attacker.Character then
+&#9;&#9;&#9;humanoid:TakeDamage(50)
+&#9;&#9;&#9;if Part and Part.Parent then
+&#9;&#9;&#9;&#9;Part:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
 end
 
-local function OnActivate()
-&#9;wait(0.5)
-&#9;-- Debounce check to make sure isn&apos;t happening too often
+function AddFeatures(Sphere, Range)
+&#9;local HealTick = 0
+&#9;while Sphere and Sphere.Parent do
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;local IgnoreObjects = {Character, Sphere}
+&#9;&#9;&#9;local NegativePartRadius = Vector3.new((Range.X / 2), (Range.Y / 2), (Range.Z / 2))
+&#9;&#9;&#9;local PositivePartRadius = Vector3.new((Range.X / 2), (Range.Y / 2), (Range.Z / 2))
+&#9;&#9;&#9;local Parts = game:GetService(&quot;Workspace&quot;):FindPartsInRegion3WithIgnoreList(Region3.new(Sphere.Position - NegativePartRadius, Sphere.Position + PositivePartRadius), IgnoreObjects, 100)
+&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;HandleReflection(Sphere, v)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if (tick() - HealTick) &gt;= 1 then
+&#9;&#9;&#9;&#9;HealTick = tick()
+&#9;&#9;&#9;&#9;local HealedSomebody = false
+&#9;&#9;&#9;&#9;for i, v in pairs(Players:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;if v:IsA(&quot;Player&quot;) and v.Character then
+&#9;&#9;&#9;&#9;&#9;&#9;local humanoid = v.Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;local torso = v.Character:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;if humanoid and torso and humanoid.Health &gt; 0 and (torso.Position - Sphere.Position).magnitude &lt;= MaxHealDistance then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Humanoid.Health = math.min(Humanoid.MaxHealth, Humanoid.Health + 10)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;HealedSomebody = true
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if HealedSomebody then
+&#9;&#9;&#9;&#9;&#9;Sounds.Pulse:Play()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;wait()
+&#9;end
+end
+
+function TweenScale(SphereMesh, StartSize, EndSize, TweenDuration, Steps)
+&#9;local StepSize = (TweenDuration / Steps)
+&#9;for i = 0, Steps do
+&#9;&#9;local Ratio = (i / Steps)
+&#9;&#9;SphereMesh.Scale = ((1 - Ratio) * StartSize + (EndSize * Ratio))
+&#9;&#9;wait(StepSize)
+&#9;end
+&#9;SphereMesh.Scale = EndSize
+end
+
+function TweenCFrame(Sphere, StartCFrame, EndCFrame, TweenDuration, Steps)
+&#9;local StepSize = (TweenDuration / Steps)
+&#9;for i = 0, Steps do
+&#9;&#9;local Ratio = (i / Steps)
+&#9;&#9;Sphere.CFrame = CFrame.new((1 - Ratio) * StartCFrame.p + (EndCFrame.p * Ratio))
+&#9;&#9;wait(StepSize)
+&#9;end
+&#9;Sphere.CFrame = EndCFrame
+end
+
+function Activated()
 &#9;if not ReadyToActivate then
 &#9;&#9;return
 &#9;end
+&#9;
 &#9;ReadyToActivate = false
 &#9;Tool.Enabled = false
-&#9;TweenScale(Handle:FindFirstChild(&apos;Mesh&apos;), Vector3.new(.1, .1, .1), Vector3.new(4, 4, 4), 0.5, 10)
+&#9;
 &#9;Handle.Transparency = 1
 
-&#9;local sphere = Instance.new(&apos;Part&apos;)
-&#9;sphere.CanCollide = false
-&#9;sphere.Anchored = true
-&#9;sphere.Transparency = 0.5
-&#9;sphere.FormFactor = Enum.FormFactor.Custom
-&#9;sphere.Shape = Enum.PartType.Ball
-&#9;sphere.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;sphere.CFrame = CFrame.new(MyTorso.CFrame.p)
-&#9;sphere.TopSurface = Enum.SurfaceType.Smooth
-&#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
-&#9;sphere.Name = &quot;ProtectionSphere&quot;
-&#9;sphere.Parent = Workspace
-&#9;
-&#9;local sphereMesh = Instance.new(&apos;SpecialMesh&apos;)
-&#9;sphereMesh.MeshId = sphereMeshId
-&#9;sphereMesh.TextureId = sphereTextureId
-&#9;sphereMesh.Scale = Vector3.new(4, 4, 4)
-&#9;sphereMesh.Parent = sphere
-
-&#9;-- charge up
-&#9;if PoweringUp then
-&#9;&#9;PoweringUp:Play()
-&#9;end
-&#9;sphere.Transparency = 1
+&#9;local Sphere = SpherePart:Clone()
+&#9;Sphere.Name = &quot;ProtectionSphere&quot;
+&#9;Sphere.Transparency = 1
+&#9;local SphereMesh = Sphere:FindFirstChild(&quot;Mesh&quot;)
+&#9;Debris:AddItem(Sphere, Duration)
+&#9;Sphere.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;Spawn(function()
+&#9;&#9;TweenScale(SphereMesh, Vector3.new(0.1, 0.1, 0.1), Vector3.new(4, 4, 4), 0.5, 10)
+&#9;end)
+&#9;local TorsoCFrame = CFrame.new(Torso.Position)
+&#9;Spawn(function()
+&#9;&#9;TweenCFrame(Sphere, TorsoCFrame, (TorsoCFrame + Vector3.new(0, 8.5, 0)), 0.5, 10)
+&#9;end)
+&#9;Sounds.PoweringUp:Play()
 &#9;for i = 1, 15 do
-&#9;&#9;sphere.Transparency = math.max(0, sphere.Transparency - 0.05)
+&#9;&#9;Sphere.Transparency = math.max(0, (Sphere.Transparency - 0.05))
 &#9;&#9;wait(0.1)
 &#9;end
-&#9;sphere.Transparency = 0.25
-
-&#9;DebrisService:AddItem(sphere, 20)
-&#9;wait(0.5)
-&#9;--AddSlowDown(sphere)
-&#9;AddHealFeature(sphere)
-&#9;wait(17.5)
+&#9;Sphere.Transparency = 0.25
+&#9;Spawn(function()
+&#9;&#9;AddFeatures(Sphere, Vector3.new(32.5, 25, 32.5))
+&#9;end)
+&#9;wait((Duration - 1.5))
 &#9;Handle.Transparency = 0.25
-&#9;Handle:FindFirstChild(&apos;Mesh&apos;).Scale = Vector3.new(0.1, 0.1, 0.1)
-&#9;--TweenScale(Handle:FindFirstChild(&apos;Mesh&apos;), Vector3.new(4, 4, 4), Vector3.new(.1, .1, .1), 0.5, 10)
-&#9;if ShutDown then
-&#9;&#9;ShutDown:Play()
-&#9;end
+&#9;Sounds.ShutDown:Play()
 &#9;Tool.Enabled = true
 &#9;ReadyToActivate = true
 end
 
-local function OnEquip()
-&#9;MyCharacter = Tool.Parent
-&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
-&#9;MyTorso = WaitForChild(MyCharacter, &apos;Torso&apos;)
-&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
-&#9;ContentService:Preload(sphereMeshId)
-&#9;ContentService:Preload(sphereTextureId)
+function PlayerIsAlive()
+&#9;return (Player.Parent and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso.Parent)
 end
 
-Tool.Equipped:connect(OnEquip)
-Tool.Activated:connect(OnActivate)
-</ProtectedString>
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not PlayerIsAlive() then
+&#9;&#9;return
+&#9;end
+end
+
+function Unequipped()
+&#9;Handle.Transparency = 0
+end
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Sound" referent="RBX4">
@@ -351,295 +515,190 @@ Tool.Activated:connect(OnActivate)
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">-- Waits for the child of the specified parent
-local function WaitForChild(parent, childName)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
-end
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
 
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
 
+Tool = script.Parent
 
-local Tool = script.Parent
-local Handle = WaitForChild(Tool, &apos;Handle&apos;)
+Mouse = nil
 
-local PlayersService = game:GetService(&apos;Players&apos;)
-local DebrisService = game:GetService(&apos;Debris&apos;)
-
------ Sounds ------
-local ShutDown = WaitForChild(Tool, &apos;ShutDown&apos;)
-local PoweringUp = WaitForChild(Tool, &apos;PoweringUp&apos;)
-local Deflect = WaitForChild(Tool, &apos;Deflect&apos;)
-local Pulse = WaitForChild(Tool, &apos;Pulse&apos;)
-
-local sphereMeshId = &apos;http://www.roblox.com/asset/?id=90782182&apos;
-local sphereTextureId = &apos;http://www.roblox.com/asset/?id=90782359&apos;
-
-local ObjectsAlreadyDeflected = {}
-
--- Local Character Variables ----
-local MyCharacter
-local MyHumanoid
-local MyTorso
-local MyPlayer
----------------------------------
-
-local function CleanProjectile(hit)
-&#9;local hitClone = hit:Clone()
-&#9;hitClone.Parent = Workspace
-&#9;print(&apos;Cleaning&apos;)
-&#9;for k, child in pairs(hitClone:GetChildren()) do
-&#9;&#9;if child:IsA(&apos;TouchTransmitter&apos;) or child:IsA(&apos;RocketPropulsion&apos;) or
-&#9;&#9;&#9;&#9;&#9;child:IsA(&apos;BodyVelocity&apos;) or child:IsA(&apos;BodyForce&apos;) or
-&#9;&#9;&#9;&#9;&#9;child:IsA(&apos;BodyPosition&apos;) or child:IsA(&apos;BodyThrust&apos;) or
-&#9;&#9;&#9;&#9;&#9;child:IsA(&apos;LocalScript&apos;) or child:IsA(&apos;Script&apos;) then
-&#9;&#9;&#9;child:Destroy()
-&#9;&#9;end
-&#9;end
-&#9;hit:Destroy()
-&#9;return hitClone
-end
-
---[[
-function OnTouched(hit, sphere)&#9;
-&#9;if hit.Parent ~= Workspace or hit.Velocity.magnitude &lt; 5 or hit:GetMass() &gt; 160 then return end
-&#9;if math.acos((hit.CFrame.p - sphere.CFrame.p).unit:Dot(hit.Velocity.unit)) &lt; (math.pi / 2) or
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;(hit.CFrame.p - sphere.CFrame.p).magnitude &lt; 13 then return end
-&#9;if ObjectsAlreadyDeflected[hit] then return end
-&#9;--if not RaySphereIntersect((sphere.CFrame.p - hit.CFrame.p), hit.Velocity, 30) then print(&apos;Not intersecting&apos;) return end
-&#9;ObjectsAlreadyDeflected[hit] = tick()
-&#9;hit = CleanProjectile(hit)
-&#9;print(&quot;Cleaning Hit&quot;)
-end
-]]
-
--- Todo: improve to use proper tail-call recursion
--- http://weknowmemes.com/wp-content/uploads/2011/11/your-mother-is-so-fat-her-mass-causes-a-stack-overflow.jpg
-function calculateMassRecursive(rootPart)
-&#9;local sum = 0
-&#9;if rootPart:IsA(&apos;Part&apos;) or rootPart:IsA(&apos;WedgePart&apos;) then sum = sum + rootPart:GetMass() end
-&#9;for _, v in pairs(rootPart:GetChildren()) do
-&#9;&#9;sum = sum + calculateMassRecursive(v)
-&#9;end
-&#9;return sum
-end
-
-local function AddTrajectory(object, targetLocation)
-&#9;for k, v in pairs(object:GetChildren()) do
-&#9;&#9;if v:IsA(&apos;BodyForce&apos;) then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-
-&#9;local dirToTarget = targetLocation - object.CFrame.p
-&#9;local outwardDir = object.Velocity + (dirToTarget).unit * 50
-&#9;local timeToTarget = ((outwardDir * dirToTarget.unit).magnitude / dirToTarget.magnitude) / 2
-&#9;local mass = calculateMassRecursive(object)
-&#9;
-&#9;-- Using the freefall equation we can derive that F = M * V0 / -t
-&#9;local comeBackForce = mass * object.Velocity / -timeToTarget
-&#9;local floatingForce = Vector3.new(0, mass * 196.2, 0)
-&#9;--local forwardVel = lookDir * (distance / (2 * timeToTarget))
-&#9;--object.Velocity = object.Velocity + forwardVel
-&#9;object.RotVelocity = Vector3.new(math.rad(math.random(-360, 360)) * 2,
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;math.rad(math.random(-360, 360)) * 2,
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;math.rad(math.random(-360, 360)) * 2)
-&#9;--object.CFrame = CFrame.new(origin, origin + object.Velocity)
-&#9;object.Velocity = outwardDir
-&#9;local counteringForce = Instance.new(&apos;BodyForce&apos;)
-&#9;counteringForce.force = comeBackForce + floatingForce
-&#9;counteringForce.Name = &apos;CounteringForce&apos;
-&#9;counteringForce.Parent = object
-&#9;DebrisService:AddItem(counteringForce, timeToTarget)
-end
-
-local function ReflectVector3(Incoming, Normal)
-&#9;return 2 * ((-1 * Incoming):Dot(Normal)) * Normal + Incoming
-end
-
-local function CheckIfPlayerHasTorso(player)
-&#9;if player and player.Character and player.Character:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;return true
-&#9;end
-&#9;return false
-end
-
-local function FindPlayerInDirection(startPosition, direction)
-&#9;local players = PlayersService:GetPlayers()
-&#9;local attacker = nil
-&#9;local closestAngle = 1000000000000
-&#9;for _, player in pairs(players) do
-&#9;&#9;if CheckIfPlayerHasTorso(player) then
-&#9;&#9;&#9;local angleBetween = math.abs(math.acos((startPosition - player.Character.Torso.CFrame.p).unit:Dot(direction)))
-&#9;&#9;&#9;if angleBetween &lt; (math.pi / 4) then
-&#9;&#9;&#9;&#9;print(&apos;Found player&apos; , player)
-&#9;&#9;&#9;&#9;if (player.Character.Torso.CFrame.p - startPosition).magnitude &lt; 300 and angleBetween &lt; closestAngle then
-&#9;&#9;&#9;&#9;&#9;attacker = player
-&#9;&#9;&#9;&#9;&#9;closestAngle = angleBetween
-&#9;&#9;&#9;&#9;&#9;if player == MyPlayer then 
-&#9;&#9;&#9;&#9;&#9;&#9;attacker = nil
-&#9;&#9;&#9;&#9;&#9;end
-
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return attacker
-end
-
-local function CreateSmallBall(orientationCFrame)
-&#9;local sphere = Instance.new(&apos;Part&apos;)
-&#9;sphere.CanCollide = false
-&#9;sphere.Anchored = true
-&#9;sphere.Transparency = 0.75
-&#9;sphere.Shape = Enum.PartType.Ball
-&#9;sphere.Size = Vector3.new(3, 3, 3)
-&#9;sphere.CFrame = orientationCFrame
-&#9;sphere.TopSurface = Enum.SurfaceType.Smooth
-&#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
-&#9;sphere.Parent = Workspace
-&#9;
-&#9;local sphereMesh = Instance.new(&apos;SpecialMesh&apos;)
-&#9;sphereMesh.MeshId = sphereMeshId
-&#9;sphereMesh.TextureId = sphereTextureId
-&#9;sphereMesh.Scale = Vector3.new(0.2, 0.2, 0.2)
-&#9;sphereMesh.Parent = sphere
-&#9;DebrisService:AddItem(sphere, 3)
-&#9;-- add size wubble
-&#9;coroutine.resume(coroutine.create(function (sphereMesh)
-&#9;&#9;for j = 1, 3, 0.5 do
-&#9;&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;&#9;sphereMesh.Scale = Vector3.new(0.2 * j, 0.2 * j, 0.2 * j) 
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(0.05)
-&#9;&#9;end
-&#9;&#9;local maxScale = sphereMesh.Scale
-&#9;&#9;for j = 1, 0, -0.1 do
-&#9;&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;&#9;sphereMesh.Scale = maxScale * j
-&#9;&#9;&#9;&#9;wait(0.05)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end), sphereMesh)
-end
-
-
-local function AddReflectFeature(sphere)
-&#9;sphere.Touched:connect(function (hit)
-&#9;&#9;if hit.Parent ~= Workspace or hit.Velocity.magnitude &lt; 5 or calculateMassRecursive(hit) &gt; 160 then return end
-&#9;&#9;-- check if it is heading out of the sphere, if so we probably shot it from inside and don&apos;t want to stop it
-
-&#9;&#9;--print(math.acos((hit.CFrame.p - sphere.CFrame.p).unit:Dot(hit.Velocity.unit)))
-&#9;&#9;if math.acos((hit.CFrame.p - sphere.CFrame.p).unit:Dot(hit.Velocity.unit)) &lt; (math.pi / 2) or
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;(hit.CFrame.p - sphere.CFrame.p).magnitude &lt; 13 then return end
-&#9;&#9;if ObjectsAlreadyDeflected[hit] then return end
-&#9;&#9;ObjectsAlreadyDeflected[hit] = tick()
-&#9;&#9;hit.Position = hit.Position - hit.Velocity * 0.1
-&#9;&#9;hit = CleanProjectile(hit)
-&#9;&#9;DebrisService:AddItem(hit, 10)
-&#9;&#9;CreateSmallBall(CFrame.new(
-&#9;&#9;&#9;&#9;hit.CFrame.p,
-&#9;&#9;&#9;&#9;hit.CFrame.p + ((sphere.CFrame.p - Vector3.new(0, sphere.Size.y / 3, 0)) - hit.CFrame.p).unit) * CFrame.Angles(math.rad(90), 0, 0))
-&#9;&#9;hit.Anchored = true
-&#9;&#9;local sphereMesh = sphere:FindFirstChild(&apos;Mesh&apos;)
-&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;sphereMesh.VertexColor = Vector3.new(1, 1, 0)
-&#9;&#9;end
-&#9;&#9;local attacker = FindPlayerInDirection(hit.CFrame.p, hit.Velocity.unit)
-
-&#9;&#9;if Deflect then
-&#9;&#9;&#9;Deflect:Play()
-&#9;&#9;end
-
-&#9;&#9;wait(1)
-&#9;&#9;if sphereMesh then
-&#9;&#9;&#9;sphereMesh.VertexColor = Vector3.new(1, 1, 1)
-&#9;&#9;end
-&#9;&#9;if not hit then return end
-&#9;&#9;hit.Anchored = false
-
-&#9;&#9;local deflectVelocity = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;local reflectDir = ReflectVector3(hit.Velocity.unit, (hit.CFrame.p - sphere.CFrame.p).unit).unit
-
-&#9;&#9;deflectVelocity.velocity = reflectDir * hit.Velocity.magnitude
-&#9;&#9;deflectVelocity.Parent = hit
-&#9;&#9;DebrisService:AddItem(deflectVelocity, 10)
-&#9;&#9;if attacker and CheckIfPlayerHasTorso(attacker) then
-&#9;&#9;&#9;if not hit:FindFirstChild(&apos;Fire&apos;) then Instance.new(&apos;Fire&apos;, hit).Color = Color3.new(105 / 255, 222 / 255, 214/ 255) end
-&#9;&#9;&#9;deflectVelocity.velocity = (attacker.Character.Torso.CFrame.p - hit.CFrame.p).unit * hit.Velocity.magnitude * 2
-
-&#9;&#9;&#9;hit.Touched:connect(function (otherHit)
-&#9;&#9;&#9;&#9;if otherHit.Parent and otherHit.Parent == attacker.Character then
-&#9;&#9;&#9;&#9;&#9;attacker.Character.Humanoid:TakeDamage(50)
-&#9;&#9;&#9;&#9;&#9;hit:Destroy()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;end
-&#9;&#9;-- reorient it so it is facing the direction it is going
-&#9;&#9;hit.CFrame = CFrame.new(hit.CFrame.p, hit.CFrame.p + deflectVelocity.velocity.unit)
-&#9;end)
-end
-
-local function OnActivate()
-
-&#9;if Tool.Enabled then
-&#9;&#9;local sphere = Instance.new(&apos;Part&apos;)
-&#9;&#9;sphere.CanCollide = false
-&#9;&#9;sphere.Anchored = true
-&#9;&#9;sphere.Transparency = 1
-&#9;&#9;sphere.Shape = Enum.PartType.Ball
-&#9;&#9;sphere.Size = Vector3.new(35, 35, 35)
-&#9;&#9;sphere.CFrame = CFrame.new(MyTorso.CFrame.p)
-&#9;&#9;sphere.TopSurface = Enum.SurfaceType.Smooth
-&#9;&#9;sphere.BottomSurface  = Enum.SurfaceType.Smooth
-&#9;&#9;sphere.Name = &quot;ProtectionSphere&quot;
-&#9;&#9;sphere.Parent = Workspace.CurrentCamera
-&#9;
-&#9;&#9;--local conn = sphere.Touched:connect(function(hit) OnTouched(hit, sphere) end)
-
-&#9;&#9;AddReflectFeature(sphere)
-&#9;&#9;DebrisService:AddItem(sphere, 20)
-&#9;&#9;
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
 &#9;end
 end
 
-
-local function OnEquip()
-&#9;MyCharacter = Tool.Parent
-&#9;MyHumanoid = WaitForChild(MyCharacter, &apos;Humanoid&apos;)
-&#9;MyTorso = WaitForChild(MyCharacter, &apos;Torso&apos;)
-&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyCharacter)
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
 end
 
-Tool.Equipped:connect(OnEquip)
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
 
-Tool.Activated:connect(OnActivate)
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX9">
+		<Item class="Part" referent="RBX9">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.406399727</X>
+					<Y>53.3817139</Y>
+					<Z>22.4001198</Z>
+					<R00>-0.434999794</R00>
+					<R01>-0.000796273758</R01>
+					<R02>0.900429964</R02>
+					<R10>-0.000346379267</R10>
+					<R11>0.999999046</R11>
+					<R12>0.000716989452</R12>
+					<R20>-0.900427997</R20>
+					<R21>2.37308194e-011</R21>
+					<R22>-0.43499893</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">DisplayPart</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0.25</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>50</X>
+					<Y>25</Y>
+					<Z>50</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX10">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=90782182</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>4</X>
+						<Y>4</Y>
+						<Z>4</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90782359</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX11">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>-75.0999451</X>
+						<Y>-34.4999924</Y>
+						<Z>6.90000296</Z>
+						<R00>0</R00>
+						<R01>0</R01>
+						<R02>0.999999285</R02>
+						<R10>1.74622983e-010</R10>
+						<R11>0.999999821</R11>
+						<R12>0</R12>
+						<R20>-1</R20>
+						<R21>-1.74622983e-010</R21>
+						<R22>2.98023224e-008</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>68.6324081</X>
+						<Y>-41.9773903</Y>
+						<Z>27.1293297</Z>
+						<R00>-0.434999883</R00>
+						<R01>-0.000346379325</R01>
+						<R02>-0.900429845</R02>
+						<R10>-0.000796274166</R10>
+						<R11>0.999999523</R11>
+						<R12>-9.9998457e-023</R12>
+						<R20>0.900430083</R20>
+						<R21>0.000716989511</R21>
+						<R22>-0.434999794</R22>
+					</CoordinateFrame>
+					<string name="Name">Weld</string>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX9</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX12">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.0767362714</X>
-					<Y>1.53676558</Y>
-					<Z>0.305577278</Z>
-					<R00>0.813101172</R00>
-					<R01>0.420854986</R01>
-					<R02>-0.402178615</R02>
-					<R10>1.49011612e-008</R10>
-					<R11>0.690883219</R11>
-					<R12>0.722966433</R12>
-					<R20>0.582122445</R20>
-					<R21>-0.587844849</R21>
-					<R22>0.561757922</R22>
+					<X>35.1895638</X>
+					<Y>85.6613159</Y>
+					<Z>59.4468231</Z>
+					<R00>0.693786323</R00>
+					<R01>-0.462228596</R01>
+					<R02>0.552272856</R02>
+					<R10>-1.4901163e-008</R10>
+					<R11>0.766852975</R11>
+					<R12>0.641822875</R12>
+					<R20>-0.720180929</R20>
+					<R21>-0.445287943</R21>
+					<R22>0.532032073</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0.500002325</X>
-					<Y>0.500005722</Y>
-					<Z>-0.500003815</Z>
+					<X>34.0850182</X>
+					<Y>84.3776703</Y>
+					<Z>58.3827591</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
