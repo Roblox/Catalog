@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">false</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0.0610000007</X>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-49.7999992</X>
-					<Y>42.8000107</Y>
-					<Z>47.4000015</Z>
+					<X>-0.43900013</X>
+					<Y>26.8585663</Y>
+					<Z>22.2181015</Z>
 					<R00>-1</R00>
-					<R01>0</R01>
-					<R02>-0</R02>
-					<R10>-0</R10>
-					<R11>1</R11>
-					<R12>-0</R12>
-					<R20>-0</R20>
-					<R21>0</R21>
-					<R22>-1</R22>
+					<R01>-1.57117005e-014</R01>
+					<R02>1.47102793e-015</R02>
+					<R10>-1.56819917e-014</R10>
+					<R11>0.999830902</R11>
+					<R12>0.0183893368</R12>
+					<R20>-1.75970735e-015</R20>
+					<R21>0.0183893368</R21>
+					<R22>-0.999830902</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -149,21 +149,190 @@
 Tool = script.Parent
 Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-Anims = {Tool:WaitForChild(&quot;LeftSwing&quot;), Tool:WaitForChild(&quot;RightSwing&quot;)}
+Players = game:GetService(&quot;Players&quot;)
+
+Animations = {}
+Sounds = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ClientControl.OnClientInvoke = (function(Mode, Value)
+&#9;if not Humanoid then
+&#9;&#9;return
+&#9;end
+&#9;if Mode == &quot;PlayAnimation&quot; then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(nil, nil, Value.Speed)
+&#9;elseif Mode == &quot;StopAnimations&quot; then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;Animations = {}
+&#9;elseif Mode == &quot;PlaySound&quot; then
+&#9;&#9;for i, v in pairs(Sounds) do
+&#9;&#9;&#9;if v == Value then
+&#9;&#9;&#9;&#9;table.remove(Sounds, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;table.insert(Sounds, Value)
+&#9;&#9;Value:Play()
+&#9;end
+end)
+
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;ServerControl:InvokeServer(Mode, Value)
+&#9;end)
+end
+
+function TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not Tool.Enabled then
+&#9;&#9;wait(0.5)
+&#9;&#9;Tool.Enabled = true
+&#9;end
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;Click&quot;, true)
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;local Key = Key:lower()
+&#9;&#9;if Key == &quot;q&quot; then
+&#9;&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;&#9;end
+&#9;end)
+end
+
+function Unequipped()
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX8">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=93693205</url></Content>
+				<string name="Name">Taunt</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX9">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Anims = {
+&#9;Tool:WaitForChild(&quot;LeftSwing&quot;),
+&#9;Tool:WaitForChild(&quot;RightSwing&quot;)
+}
+
 TauntAnim = Tool:WaitForChild(&quot;Taunt&quot;)
 
-PlaySound = Tool:WaitForChild(&quot;PlaySound&quot;)
 SlashSound = Handle:WaitForChild(&quot;Slash&quot;)
 
-SpecialEnabled = Tool:WaitForChild(&quot;SpecialEnabled&quot;)
-
-Debris = game:GetService(&quot;Debris&quot;)
 Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
 InsertService = game:GetService(&quot;InsertService&quot;)
 
 OverseerAISpawnRadius = 10
 
 Damage = 8
+
+SpecialReady = true
+SpecialReloadTime = 30
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+Tool.Enabled = true
+
+ServerControl.OnServerInvoke = (function(player, Mode, Value)
+&#9;if Mode == &quot;Click&quot; and Value then
+&#9;&#9;Activated()
+&#9;elseif Mode == &quot;KeyPress&quot; and Value.Key == &quot;q&quot; and Value.Down and SpecialReady then
+&#9;&#9;ActivateSpecial()
+&#9;end
+end)
+
+function InvokeClient(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+end
 
 function TagHumanoid(humanoid, player)
 &#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
@@ -214,13 +383,102 @@ end
 
 function Activated()
 &#9;if Tool.Enabled then
-&#9;&#9;local Animation = Anims[math.random(1, #Anims)]
-&#9;&#9;CurrentAnim = Humanoid:LoadAnimation(Animation)
-&#9;&#9;PlaySound.Value = SlashSound.Name
 &#9;&#9;Tool.Enabled = false
-&#9;&#9;CurrentAnim:Play(nil, nil, 0.8)
+&#9;&#9;InvokeClient(&quot;PlaySound&quot;, SlashSound)
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, {Animation = Anims[math.random(1, #Anims)], Speed = 0.8})
 &#9;&#9;wait(0.5)
 &#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function ActivateSpecial()
+&#9;if Player and Character and Humanoid and Torso and SpecialReady then
+&#9;&#9;SpecialReady = false
+&#9;&#9;Tool.Enabled = false
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, {Animation = TauntAnim, Speed = 0.8})
+&#9;&#9;wait(5)
+&#9;&#9;for i = 1, 5 do
+&#9;&#9;&#9;local OverseerMinionModel = InsertService:LoadAsset(156242272)
+&#9;&#9;&#9;local OverseerMinion = OverseerMinionModel:GetChildren()[1]:Clone()
+&#9;&#9;&#9;OverseerMinionModel:Destroy()
+OverseerMinion=game.lighting[&quot;Overseer Minion&quot;]:Clone()
+&#9;&#9;&#9;OverseerMinion.Creator.Value = Player
+&#9;&#9;&#9;OverseerMinion:FindFirstChild(&quot;Humanoid&quot;).Died:connect(function()
+&#9;&#9;&#9;&#9;wait(1)
+&#9;&#9;&#9;&#9;local Parts = GetAllParts(OverseerMinion)
+&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;v.Anchored = true
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;for i = 1, 100 do
+&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Transparency = v.Transparency + 0.01
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;wait(0.05)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;local Part = Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;Part.Name = &quot;Effect&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;Part.Transparency = 1
+&#9;&#9;&#9;&#9;&#9;&#9;Part.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;&#9;&#9;&#9;Part.Size = Vector3.new(0.2, 0.2, 0.2)
+&#9;&#9;&#9;&#9;&#9;&#9;Part.Anchored = true
+&#9;&#9;&#9;&#9;&#9;&#9;Part.CanCollide = false
+&#9;&#9;&#9;&#9;&#9;&#9;local Smoke = Instance.new(&quot;Fire&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Color = Color3.new(0, 0, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;Smoke.SecondaryColor = Color3.new(0, 1, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Size = 10
+&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Heat = 100
+&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Parent = Part
+&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Part, 2)
+&#9;&#9;&#9;&#9;&#9;&#9;Part.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;Part.CFrame = v.CFrame
+&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;OverseerMinion:Destroy()
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;Debris:AddItem(OverseerMinion, (60 * 1.5))
+&#9;&#9;&#9;OverseerMinion.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;wait()
+&#9;&#9;&#9;OverseerMinion:MakeJoints()
+&#9;&#9;&#9;local OverseerTorso = OverseerMinion:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;OverseerTorso.Anchored = true
+&#9;&#9;&#9;Delay(1, function()
+&#9;&#9;&#9;&#9;OverseerTorso.Anchored = false
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;local SpawnPosition = Vector3.new(Torso.Position.X + math.random(-OverseerAISpawnRadius, OverseerAISpawnRadius), Torso.Position.Y, Torso.Position.Z + math.random(-OverseerAISpawnRadius, OverseerAISpawnRadius))
+&#9;&#9;&#9;OverseerMinion:MoveTo(SpawnPosition)
+&#9;&#9;&#9;local Part = Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;Part.Name = &quot;Effect&quot;
+&#9;&#9;&#9;Part.Transparency = 1
+&#9;&#9;&#9;Part.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;Part.Size = Vector3.new(0.2, 0.2, 0.2)
+&#9;&#9;&#9;Part.Anchored = true
+&#9;&#9;&#9;Part.CanCollide = false
+&#9;&#9;&#9;local Smoke = Instance.new(&quot;Fire&quot;)
+&#9;&#9;&#9;Smoke.Color = Color3.new(0, 0, 0)
+&#9;&#9;&#9;Smoke.SecondaryColor = Color3.new(0, 1, 0)
+&#9;&#9;&#9;Smoke.Size = 10
+&#9;&#9;&#9;Smoke.Heat = 100
+&#9;&#9;&#9;Smoke.Parent = Part
+&#9;&#9;&#9;Debris:AddItem(Part, 2)
+&#9;&#9;&#9;Part.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;Part.CFrame = CFrame.new(SpawnPosition) - Vector3.new(0, ((OverseerMinion:GetModelSize().y / 2) + (Part.Size.Y / 2)), 0)
+&#9;&#9;&#9;Delay(1, function()
+&#9;&#9;&#9;&#9;if Smoke and Smoke.Parent then
+&#9;&#9;&#9;&#9;&#9;Smoke.Enabled = false
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;InvokeClient(&quot;StopAnimations&quot;, nil)
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;wait(SpecialReloadTime)
+&#9;&#9;SpecialReady = true
 &#9;end
 end
 
@@ -229,238 +487,44 @@ function Equipped(Mouse)
 &#9;Player = Players:GetPlayerFromCharacter(Character)
 &#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
 &#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;if not Tool.Enabled then
-&#9;&#9;wait(0.5)
-&#9;&#9;Tool.Enabled = true
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Torso then
+&#9;&#9;return
 &#9;end
-&#9;Mouse.KeyDown:connect(function(Key)
-&#9;&#9;local Key = Key:lower()
-&#9;&#9;if Key == &quot;q&quot; and Tool.Enabled and SpecialEnabled.Value then
-&#9;&#9;&#9;if Player and Character and Humanoid and Torso then
-&#9;&#9;&#9;&#9;SpecialEnabled.Value = false
-&#9;&#9;&#9;&#9;Tool.Enabled = false
-&#9;&#9;&#9;&#9;CurrentAnim = Humanoid:LoadAnimation(TauntAnim)
-&#9;&#9;&#9;&#9;CurrentAnim:Play()
-&#9;&#9;&#9;&#9;wait(5)
-&#9;&#9;&#9;&#9;for i = 1, 5 do
-&#9;&#9;&#9;&#9;&#9;local OverseerMinionModel = InsertService:LoadAsset(156242272)
-&#9;&#9;&#9;&#9;&#9;local OverseerMinion = OverseerMinionModel:GetChildren()[1]:Clone()
-&#9;&#9;&#9;&#9;&#9;OverseerMinionModel:Destroy()
-&#9;&#9;&#9;&#9;&#9;OverseerMinion.Creator.Value = Player
-&#9;&#9;&#9;&#9;&#9;OverseerMinion:FindFirstChild(&quot;Humanoid&quot;).Died:connect(function()
-&#9;&#9;&#9;&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;&#9;&#9;&#9;local Parts = GetAllParts(OverseerMinion)
-&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Anchored = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;for i = 1, 100 do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Transparency = v.Transparency + 0.01
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.05)
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Part = Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Name = &quot;Effect&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Transparency = 1
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.FormFactor = Enum.FormFactor.Custom
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Anchored = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.CanCollide = false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Smoke = Instance.new(&quot;Fire&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Color = Color3.new(0, 0, 0)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.SecondaryColor = Color3.new(0, 1, 0)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Size = 10
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Heat = 100
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Parent = Part
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Part, 2)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.CFrame = v.CFrame
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;OverseerMinion:Destroy()
-&#9;&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;&#9;Debris:AddItem(OverseerMinion, (60 * 2))
-&#9;&#9;&#9;&#9;&#9;OverseerMinion.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;&#9;&#9;OverseerMinion:MakeJoints()
-&#9;&#9;&#9;&#9;&#9;local OverseerTorso = OverseerMinion:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;&#9;OverseerTorso.Anchored = true
-&#9;&#9;&#9;&#9;&#9;Delay(1, function()
-&#9;&#9;&#9;&#9;&#9;&#9;OverseerTorso.Anchored = false
-&#9;&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;&#9;local SpawnPosition = Vector3.new(Torso.Position.X + math.random(-OverseerAISpawnRadius, OverseerAISpawnRadius), Torso.Position.Y, Torso.Position.Z + math.random(-OverseerAISpawnRadius, OverseerAISpawnRadius))
-&#9;&#9;&#9;&#9;&#9;OverseerMinion:MoveTo(SpawnPosition)
-&#9;&#9;&#9;&#9;&#9;local Part = Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;Part.Name = &quot;Effect&quot;
-&#9;&#9;&#9;&#9;&#9;Part.Transparency = 1
-&#9;&#9;&#9;&#9;&#9;Part.FormFactor = Enum.FormFactor.Custom
-&#9;&#9;&#9;&#9;&#9;Part.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;&#9;&#9;&#9;&#9;Part.Anchored = true
-&#9;&#9;&#9;&#9;&#9;Part.CanCollide = false
-&#9;&#9;&#9;&#9;&#9;local Smoke = Instance.new(&quot;Fire&quot;)
-&#9;&#9;&#9;&#9;&#9;Smoke.Color = Color3.new(0, 0, 0)
-&#9;&#9;&#9;&#9;&#9;Smoke.SecondaryColor = Color3.new(0, 1, 0)
-&#9;&#9;&#9;&#9;&#9;Smoke.Size = 10
-&#9;&#9;&#9;&#9;&#9;Smoke.Heat = 100
-&#9;&#9;&#9;&#9;&#9;Smoke.Parent = Part
-&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Part, 2)
-&#9;&#9;&#9;&#9;&#9;Part.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;&#9;&#9;&#9;Part.CFrame = CFrame.new(SpawnPosition) - Vector3.new(0, ((OverseerMinion:GetModelSize().y / 2) + (Part.Size.Y / 2)), 0)
-&#9;&#9;&#9;&#9;&#9;Delay(1, function()
-&#9;&#9;&#9;&#9;&#9;&#9;if Smoke and Smoke.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Smoke.Enabled = false
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;CurrentAnim:Stop()
-&#9;&#9;&#9;&#9;Tool.Enabled = true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
 end
 
 function Unequipped()
-&#9;if CurrentAnim then
-&#9;&#9;CurrentAnim:Stop()
-&#9;end
+&#9;InvokeClient(&quot;StopAnimations&quot;, nil)
 end
 
 Handle.Touched:connect(Blow)
 
-Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX7">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
-Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
-
-Tool = script.Parent
-
-Mouse = nil
-
-function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
-&#9;end
-end
-
-function OnEquipped(ToolMouse)
-&#9;Mouse = ToolMouse
-&#9;UpdateIcon()
-end
-
-function OnChanged(Property)
-&#9;if Property == &quot;Enabled&quot; then
-&#9;&#9;UpdateIcon()
-&#9;end
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX8">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=93693205</url></Content>
-				<string name="Name">Taunt</string>
-			</Properties>
-		</Item>
-		<Item class="StringValue" referent="RBX9">
-			<Properties>
-				<string name="Name">PlaySound</string>
-				<string name="Value"></string>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX10">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SoundManager</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-PlaySound = Tool:WaitForChild(&quot;PlaySound&quot;)
-
-PlaySound.Value = &quot;&quot;
-
-PlaySound.Changed:connect(function()
-&#9;if PlaySound.Value ~= &quot;&quot; then
-&#9;&#9;local Sound = Handle:FindFirstChild(PlaySound.Value)
-&#9;&#9;if Sound then
-&#9;&#9;&#9;Sound:Play()
-&#9;&#9;end
-&#9;&#9;PlaySound.Value = &quot;&quot;
-&#9;end
-end)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX11">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SpecialHandler</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-
-SpecialEnabled = Tool:WaitForChild(&quot;SpecialEnabled&quot;)
-SpecialEnabled.Value = true
-
-SpecialEnabled.Changed:connect(function()
-&#9;if not SpecialEnabled.Value then
-&#9;&#9;wait(30)
-&#9;&#9;SpecialEnabled.Value = true
-&#9;end
-end)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX12">
-			<Properties>
-				<string name="Name">SpecialEnabled</string>
-				<bool name="Value">true</bool>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX13">
+		<Item class="Camera" referent="RBX10">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">5</token>
+				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-47.3892021</X>
-					<Y>42.4063072</Y>
-					<Z>47.7000237</Z>
-					<R00>0.180797905</R00>
-					<R01>0.116407953</R01>
-					<R02>0.976607025</R02>
-					<R10>-0</R10>
-					<R11>0.992971003</R11>
-					<R12>-0.118358463</R12>
-					<R20>-0.983520329</R20>
-					<R21>0.0213989615</R21>
-					<R22>0.179527059</R22>
+					<X>-2.80680799</X>
+					<Y>27.1495399</Y>
+					<Z>22.2395897</Z>
+					<R00>0.0394658707</R00>
+					<R01>0.0682041124</R01>
+					<R02>-0.996890485</R02>
+					<R10>-2.32830644e-010</R10>
+					<R11>0.99766773</R11>
+					<R12>0.0682572946</R12>
+					<R20>0.999220908</R20>
+					<R21>-0.00269383332</R21>
+					<R22>0.03937383</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-49.3424187</X>
-					<Y>42.6430244</Y>
-					<Z>47.3409691</Z>
+					<X>-2.50773931</X>
+					<Y>27.1290627</Y>
+					<Z>22.2277775</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
