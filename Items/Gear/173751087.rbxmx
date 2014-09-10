@@ -19,9 +19,9 @@
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
-			<string name="Name">IceBucket</string>
+			<string name="Name">ALSIceBucketChallenge</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=173634065 </url></Content>
-			<string name="ToolTip">Participate in the Ice Bucket Challenge!</string>
+			<string name="ToolTip">Show support ant participate in the ALS Ice Bucket Challenge!</string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">1002</int>
 				<CoordinateFrame name="CFrame">
-					<X>6.7701149</X>
-					<Y>7.43339825</Y>
-					<Z>28.9178944</Z>
-					<R00>0.998507082</R00>
-					<R01>-0.0516507626</R01>
-					<R02>-0.017775353</R02>
-					<R10>0.0177991092</R10>
-					<R11>-1.56888459e-014</R11>
-					<R12>0.999841571</R12>
-					<R20>-0.0516425781</R20>
-					<R21>-0.998665273</R21>
-					<R22>0.000919337559</R22>
+					<X>-0.5</X>
+					<Y>29.2999992</Y>
+					<Z>21.3999996</Z>
+					<R00>1</R00>
+					<R01>-0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>-0</R11>
+					<R12>1</R12>
+					<R20>0</R20>
+					<R21>-1</R21>
+					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -356,6 +356,8 @@ IceCube.Locked = true
 
 ReloadTime = 5
 
+Gravity = 196.20
+
 ServerControl.OnServerInvoke = (function(player, Mode, Value)
 &#9;if Mode == &quot;Click&quot; and Value and Tool.Enabled then
 &#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Throw.Name)
@@ -391,20 +393,17 @@ function ThrowIce(player)
 &#9;local IceCubeConnections = {}
 &#9;for i = 1, math.random(25, 50) do
 &#9;&#9;local Ice = IceCube:Clone()
-&#9;&#9;Ice.CanCollide = false
+&#9;&#9;Ice.CanCollide = true
 &#9;&#9;table.insert(IceCubes, Ice)
 &#9;&#9;Debris:AddItem(Ice, 10)
 &#9;&#9;Ice.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;local IceCFrame = Handle.CFrame + Vector3.new(math.random(-0.1, 0.1), math.random(-0.1, 0.1), math.random(-0.1, 0.1))
+&#9;&#9;local SpawnRadius = 2
+&#9;&#9;local IceCFrame = Handle.CFrame + (Vector3.new(math.random(-SpawnRadius, SpawnRadius), math.random(-SpawnRadius, SpawnRadius), math.random(-SpawnRadius, SpawnRadius)) * 0.1)
 &#9;&#9;IceCFrame = IceCFrame * CFrame.Angles(0, math.pi, 0)
 &#9;&#9;Ice.CFrame = IceCFrame
 &#9;&#9;local IceVelocity = Ice.CFrame.lookVector * 25
 &#9;&#9;IceVelocity = IceVelocity + Vector3.new(math.random(-10, 10), math.random(-10, 10), math.random(-10, 10))
-&#9;&#9;Ice.Velocity = IceVelocity
-&#9;&#9;Delay(0.1, function()
-&#9;&#9;&#9;Ice.Velocity = (Ice.Velocity / 2.5)
-&#9;&#9;&#9;Ice.CanCollide = true
-&#9;&#9;end)
+&#9;&#9;Ice.Velocity = (IceVelocity / 2)
 &#9;end
 &#9;for i = 1, math.random(50, 75) do
 &#9;&#9;local Ice = IceCube:Clone()
@@ -416,7 +415,8 @@ function ThrowIce(player)
 &#9;&#9;table.insert(IceCubes, Ice)
 &#9;&#9;Debris:AddItem(Ice, 10)
 &#9;&#9;Ice.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;local IceCFrame = Handle.CFrame + Vector3.new(math.random(-0.1, 0.1), math.random(-0.1, 0.1), math.random(-0.1, 0.1))
+&#9;&#9;local SpawnRadius = 2
+&#9;&#9;local IceCFrame = Handle.CFrame + (Vector3.new(math.random(-SpawnRadius, SpawnRadius), math.random(-SpawnRadius, SpawnRadius), math.random(-SpawnRadius, SpawnRadius)) * 0.1)
 &#9;&#9;IceCFrame = IceCFrame * CFrame.Angles(0, math.pi, 0)
 &#9;&#9;Ice.CFrame = IceCFrame
 &#9;&#9;local IceVelocity = Ice.CFrame.lookVector * 25
@@ -432,6 +432,10 @@ function ThrowIce(player)
 &#9;&#9;&#9;end
 &#9;&#9;&#9;local humanoid = Hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;&#9;local PlayerHit = Players:GetPlayerFromCharacter(Hit.Parent)
+&#9;&#9;&#9;local BodyVelocity = v:FindFirstChild(&quot;BodyVelocity&quot;)
+&#9;&#9;&#9;if BodyVelocity then
+&#9;&#9;&#9;&#9;BodyVelocity:Destroy()
+&#9;&#9;&#9;end
 &#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and PlayerHit and ((player and player == Player and PlayerHit == Player) or (not player and PlayerHit ~= Player)) then
 &#9;&#9;&#9;&#9;local PlayerInTable = PlayersHit[PlayerHit]
 &#9;&#9;&#9;&#9;if not PlayerInTable then
@@ -607,14 +611,7 @@ function EndFreeze()
 &#9;&#9;&#9;if type(v) == &quot;table&quot; and v.Object then
 &#9;&#9;&#9;&#9;if v.Object:IsA(&quot;BasePart&quot;) then
 &#9;&#9;&#9;&#9;&#9;v.Object.BrickColor = v.BrickColor
-&#9;&#9;&#9;&#9;elseif v.Object:IsA(&quot;DataModelMesh&quot;) then
-&#9;&#9;&#9;&#9;&#9;if v.Object.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;v.Object:Destroy()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;v.NewObject.Parent = v.Parent
-&#9;&#9;&#9;&#9;elseif v.Object:IsA(&quot;Clothing&quot;) then
-&#9;&#9;&#9;&#9;&#9;v.NewObject.Parent = v.Parent
-&#9;&#9;&#9;&#9;elseif v.Object:IsA(&quot;CharacterMesh&quot;) then
+&#9;&#9;&#9;&#9;elseif v.Object:IsA(&quot;DataModelMesh&quot;) or v.Object:IsA(&quot;Clothing&quot;) or v.Object:IsA(&quot;ShirtGraphic&quot;) or v.Object:IsA(&quot;Decal&quot;) or v.Object:IsA(&quot;CharacterMesh&quot;) then
 &#9;&#9;&#9;&#9;&#9;if v.Object.Parent then
 &#9;&#9;&#9;&#9;&#9;&#9;v.Object:Destroy()
 &#9;&#9;&#9;&#9;&#9;end
@@ -767,26 +764,26 @@ Tool.Changed:connect(OnChanged)
 		<Item class="Camera" referent="RBX14">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">5</token>
+				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>4.99119282</X>
-					<Y>8.03960896</Y>
-					<Z>28.9349766</Z>
-					<R00>-0.0121713309</R00>
-					<R01>0.243612915</R01>
-					<R02>-0.969796181</R02>
+					<X>-2.16338015</X>
+					<Y>29.8794804</Y>
+					<Z>21.7025394</Z>
+					<R00>0.16439034</R00>
+					<R01>0.275418162</R01>
+					<R02>-0.947164476</R02>
 					<R10>-0</R10>
-					<R11>0.969868124</R11>
-					<R12>0.243630946</R12>
-					<R20>0.999925971</R20>
-					<R21>0.00296531292</R21>
-					<R22>-0.0118045835</R22>
+					<R11>0.960228086</R11>
+					<R12>0.279216796</R12>
+					<R20>0.986395419</R20>
+					<R21>-0.045900546</R21>
+					<R22>0.157852203</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>6.9307847</X>
-					<Y>7.55234718</Y>
-					<Z>28.9585857</Z>
+					<X>-0.363767862</X>
+					<Y>29.3489685</Y>
+					<Z>21.4026203</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
