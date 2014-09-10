@@ -19,7 +19,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">LaserGun</string>
+			<string name="Name">HyperlaserGun</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=130093050</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
@@ -36,18 +36,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<X>0.0102424622</X>
+					<Y>29.1512737</Y>
+					<Z>21.9090233</Z>
+					<R00>-0.049071312</R00>
+					<R01>0.0115546715</R01>
+					<R02>-0.998728156</R02>
+					<R10>-0.0121655473</R10>
+					<R11>0.999852002</R11>
+					<R12>0.0121654132</R12>
+					<R20>0.998720765</R20>
+					<R21>0.0127470484</R21>
+					<R22>-0.0489234626</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -143,238 +143,10 @@
 					<bool name="Enabled">true</bool>
 					<string name="Name">PointLight</string>
 					<float name="Range">6</float>
+					<bool name="Shadows">false</bool>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="LocalScript" referent="RBX6">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ToolScript</string>
-				<ProtectedString name="Source">-----------------
---| Constants |--
------------------
-
-local SHOT_SPEED = 100
-local SHOT_TIME = 1
-
-local NOZZLE_OFFSET = Vector3.new(0, 0.4, -1.1)
-
------------------
---| Variables |--
------------------
-
-local PlayersService = Game:GetService(&apos;Players&apos;)
-local DebrisService = Game:GetService(&apos;Debris&apos;)
-
-local Tool = script.Parent
-local Handle = Tool:WaitForChild(&apos;Handle&apos;)
-
-local FireSound = Handle:WaitForChild(&apos;Fire&apos;)
-local ReloadSound = Handle:WaitForChild(&apos;Reload&apos;)
-local HitFadeSound = script:WaitForChild(&apos;HitFade&apos;)
-
-local PointLight = Handle:WaitForChild(&apos;PointLight&apos;)
-
-local Character = nil
-local Humanoid = nil
-local Player = nil
-
-local BaseShot = nil
-
------------------
---| Functions |--
------------------
-
--- Returns a character ancestor and its Humanoid, or nil
-local function FindCharacterAncestor(subject)
-&#9;if subject and subject ~= Workspace then
-&#9;&#9;local humanoid = subject:FindFirstChild(&apos;Humanoid&apos;)
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;return subject, humanoid
-&#9;&#9;else
-&#9;&#9;&#9;return FindCharacterAncestor(subject.Parent)
-&#9;&#9;end
-&#9;end
-&#9;return nil
-end
-
--- Removes any old creator tags and applies new ones to the specified target
-local function ApplyTags(target)
-&#9;while target:FindFirstChild(&apos;creator&apos;) do
-&#9;&#9;target.creator:Destroy()
-&#9;end
-
-&#9;local creatorTag = Instance.new(&apos;ObjectValue&apos;)
-&#9;creatorTag.Value = Player
-&#9;creatorTag.Name = &apos;creator&apos; --NOTE: Must be called &apos;creator&apos; for website stats
-
-&#9;local iconTag = Instance.new(&apos;StringValue&apos;)
-&#9;iconTag.Value = Tool.TextureId
-&#9;iconTag.Name = &apos;icon&apos;
-
-&#9;iconTag.Parent = creatorTag
-&#9;creatorTag.Parent = target
-&#9;DebrisService:AddItem(creatorTag, 4)
-end
-
--- Returns all objects under instance with Transparency
-local function GetTransparentsRecursive(instance, partsTable)
-&#9;local partsTable = partsTable or {}
-&#9;for _, child in pairs(instance:GetChildren()) do
-&#9;&#9;if child:IsA(&apos;BasePart&apos;) or child:IsA(&apos;Decal&apos;) then
-&#9;&#9;&#9;table.insert(partsTable, child)
-&#9;&#9;end
-&#9;&#9;GetTransparentsRecursive(child, partsTable)
-&#9;end
-&#9;return partsTable
-end
-
-local function SelectionBoxify(instance)
-&#9;local selectionBox = Instance.new(&apos;SelectionBox&apos;)
-&#9;selectionBox.Adornee = instance
-&#9;selectionBox.Color = BrickColor.new(&apos;Toothpaste&apos;)
-&#9;selectionBox.Parent = instance
-&#9;return selectionBox
-end
-
-local function Light(instance)
-&#9;local light = PointLight:Clone()
-&#9;light.Range = light.Range + 2
-&#9;light.Parent = instance
-end
-
-local function FadeOutObjects(objectsWithTransparency, fadeIncrement)
-&#9;repeat
-&#9;&#9;local lastObject = nil
-&#9;&#9;for _, object in pairs(objectsWithTransparency) do
-&#9;&#9;&#9;object.Transparency = object.Transparency + fadeIncrement
-&#9;&#9;&#9;lastObject = object
-&#9;&#9;end
-&#9;&#9;wait()
-&#9;until lastObject.Transparency &gt;= 1 or not lastObject
-end
-
-local function Dematerialize(character, humanoid, firstPart)
-&#9;humanoid.WalkSpeed = 0
-
-&#9;local parts = {}
-&#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
-&#9;&#9;&#9;child.Anchored = true
-&#9;&#9;&#9;table.insert(parts, child)
-&#9;&#9;elseif child:IsA(&apos;LocalScript&apos;) or child:IsA(&apos;Script&apos;) then
-&#9;&#9;&#9;child:Destroy()
-&#9;&#9;end
-&#9;end
-
-&#9;local selectionBoxes = {}
-
-&#9;local firstSelectionBox = SelectionBoxify(firstPart)
-&#9;Light(firstPart)
-&#9;wait(0.05)
-
-&#9;for _, part in pairs(parts) do
-&#9;&#9;if part ~= firstPart then
-&#9;&#9;&#9;table.insert(selectionBoxes, SelectionBoxify(part))
-&#9;&#9;&#9;Light(part)
-&#9;&#9;end
-&#9;end
-
-&#9;local objectsWithTransparency = GetTransparentsRecursive(character)
-&#9;FadeOutObjects(objectsWithTransparency, 0.1)
-
-&#9;wait(0.5)
-
-&#9;humanoid.Health = 0
-&#9;DebrisService:AddItem(character, 2)
-
-&#9;local fadeIncrement = 0.05
-&#9;Delay(0.2, function()
-&#9;&#9;FadeOutObjects({firstSelectionBox}, fadeIncrement)
-&#9;&#9;if character then
-&#9;&#9;&#9;character:Destroy()
-&#9;&#9;end
-&#9;end)
-&#9;FadeOutObjects(selectionBoxes, fadeIncrement)
-end
-
-local function OnTouched(shot, otherPart)
-&#9;local character, humanoid = FindCharacterAncestor(otherPart)
-&#9;if character and humanoid and character ~= Character then
-&#9;&#9;ApplyTags(humanoid)
-&#9;&#9;if shot then
-&#9;&#9;&#9;local hitFadeSound = shot:FindFirstChild(HitFadeSound.Name)
-&#9;&#9;&#9;if hitFadeSound then
-&#9;&#9;&#9;&#9;hitFadeSound.Parent = humanoid.Torso
-&#9;&#9;&#9;&#9;hitFadeSound:Play()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;shot:Destroy()
-&#9;&#9;end
-&#9;&#9;Dematerialize(character, humanoid, otherPart)
-&#9;end
-end
-
-local function OnEquipped()
-&#9;Character = Tool.Parent
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Player = PlayersService:GetPlayerFromCharacter(Character)
-end
-
-local function OnActivated()
-&#9;if Tool.Enabled and Humanoid.Health &gt; 0 then
-&#9;&#9;Tool.Enabled = false
-
-&#9;&#9;FireSound:Play()
-
-&#9;&#9;local handleCFrame = Handle.CFrame
-&#9;&#9;local firingPoint = handleCFrame.p + handleCFrame:vectorToWorldSpace(NOZZLE_OFFSET)
-&#9;&#9;local shotCFrame = CFrame.new(firingPoint, Humanoid.TargetPoint)
-
-&#9;&#9;local laserShotClone = BaseShot:Clone()
-&#9;&#9;laserShotClone.CFrame = shotCFrame + (shotCFrame.lookVector * (BaseShot.Size.Z / 2))
-&#9;&#9;local bodyVelocity = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;bodyVelocity.velocity = shotCFrame.lookVector * SHOT_SPEED
-&#9;&#9;bodyVelocity.Parent = laserShotClone
-&#9;&#9;laserShotClone.Touched:connect(function(otherPart)
-&#9;&#9;&#9;OnTouched(laserShotClone, otherPart)
-&#9;&#9;end)
-&#9;&#9;DebrisService:AddItem(laserShotClone, SHOT_TIME)
-&#9;&#9;laserShotClone.Parent = Tool
-
-&#9;&#9;wait(0.6) -- FireSound length
-
-&#9;&#9;ReloadSound:Play()
-&#9;&#9;wait(0.75) -- ReloadSound length
-
-&#9;&#9;Tool.Enabled = true
-&#9;end
-end
-
-local function OnUnequipped()
-&#9;
-end
-
---------------------
---| Script Logic |--
---------------------
-
-BaseShot = Instance.new(&apos;Part&apos;)
-BaseShot.Name = &apos;Effect&apos;
-BaseShot.FormFactor = Enum.FormFactor.Custom
-BaseShot.Size = Vector3.new(0.2, 0.2, 3)
-BaseShot.CanCollide = false
-BaseShot.BrickColor = BrickColor.new(&apos;Toothpaste&apos;)
-SelectionBoxify(BaseShot)
-Light(BaseShot)
-HitFadeSound:Clone().Parent = BaseShot
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-Tool.Activated:connect(OnActivated)
-</ProtectedString>
-			</Properties>
-			<Item class="Sound" referent="RBX7">
+			<Item class="Sound" referent="RBX6">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">HitFade</string>
@@ -384,6 +156,53 @@ Tool.Activated:connect(OnActivated)
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ToolScript</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ClientControl.OnClientInvoke = (function(Mode, Value)
+&#9;if Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;end
+end)
+
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;ServerControl:InvokeServer(Mode, Value)
+&#9;end)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;Click&quot;, true)
+&#9;end)
+end
+
+local function Unequipped()
+&#9;
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX8">
 			<Properties>
@@ -419,29 +238,296 @@ Tool.Changed:connect(OnChanged)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX9">
+		<Item class="Script" referent="RBX9">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+Speed = 100
+Duration = 1
+
+NozzleOffset = Vector3.new(0, 0.4, -1.1)
+
+Sounds = {
+&#9;Fire = Handle:WaitForChild(&quot;Fire&quot;),
+&#9;Reload = Handle:WaitForChild(&quot;Reload&quot;),
+&#9;HitFade = Handle:WaitForChild(&quot;HitFade&quot;)
+}
+
+PointLight = Handle:WaitForChild(&quot;PointLight&quot;)
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+ServerControl.OnServerInvoke = (function(player, Mode, Value)
+&#9;if player ~= Player or Humanoid.Health == 0 or not Tool.Enabled then
+&#9;&#9;return
+&#9;end
+&#9;if Mode == &quot;Click&quot; and Value then
+&#9;&#9;Activated()
+&#9;end
+end)
+
+function InvokeClient(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+end
+
+function TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function FindCharacterAncestor(Parent)
+&#9;if Parent and Parent ~= game:GetService(&quot;Workspace&quot;) then
+&#9;&#9;local humanoid = Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if humanoid then
+&#9;&#9;&#9;return Parent, humanoid
+&#9;&#9;else
+&#9;&#9;&#9;return FindCharacterAncestor(Parent.Parent)
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+function GetTransparentsRecursive(Parent, PartsTable)
+&#9;local PartsTable = (PartsTable or {})
+&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;local TransparencyExists = false
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;local Transparency = v[&quot;Transparency&quot;]
+&#9;&#9;&#9;if Transparency then
+&#9;&#9;&#9;&#9;TransparencyExists = true
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;if TransparencyExists then
+&#9;&#9;&#9;table.insert(PartsTable, v)
+&#9;&#9;end
+&#9;&#9;GetTransparentsRecursive(v, PartsTable)
+&#9;end
+&#9;return PartsTable
+end
+
+function SelectionBoxify(Object)
+&#9;local SelectionBox = Instance.new(&quot;SelectionBox&quot;)
+&#9;SelectionBox.Adornee = Object
+&#9;SelectionBox.Color = BrickColor.new(&quot;Toothpaste&quot;)
+&#9;SelectionBox.Parent = Object
+&#9;return SelectionBox
+end
+
+local function Light(Object)
+&#9;local Light = PointLight:Clone()
+&#9;Light.Range = (Light.Range + 2)
+&#9;Light.Parent = Object
+end
+
+function FadeOutObjects(Objects, FadeIncrement)
+&#9;repeat
+&#9;&#9;local LastObject = nil
+&#9;&#9;for i, v in pairs(Objects) do
+&#9;&#9;&#9;v.Transparency = (v.Transparency + FadeIncrement)
+&#9;&#9;&#9;LastObject = v
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;until LastObject.Transparency &gt;= 1 or not LastObject
+end
+
+function Dematerialize(character, humanoid, FirstPart)
+&#9;if not character or not humanoid then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;humanoid.WalkSpeed = 0
+
+&#9;local Parts = {}
+&#9;
+&#9;for i, v in pairs(character:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;v.Anchored = true
+&#9;&#9;&#9;table.insert(Parts, v)
+&#9;&#9;elseif v:IsA(&quot;LocalScript&quot;) or v:IsA(&quot;Script&quot;) then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+
+&#9;local SelectionBoxes = {}
+
+&#9;local FirstSelectionBox = SelectionBoxify(FirstPart)
+&#9;Light(FirstPart)
+&#9;wait(0.05)
+
+&#9;for i, v in pairs(Parts) do
+&#9;&#9;if v ~= FirstPart then
+&#9;&#9;&#9;table.insert(SelectionBoxes, SelectionBoxify(v))
+&#9;&#9;&#9;Light(v)
+&#9;&#9;end
+&#9;end
+
+&#9;local ObjectsWithTransparency = GetTransparentsRecursive(character)
+&#9;FadeOutObjects(ObjectsWithTransparency, 0.1)
+
+&#9;wait(0.5)
+
+&#9;character:BreakJoints()
+&#9;humanoid.Health = 0
+&#9;
+&#9;Debris:AddItem(character, 2)
+
+&#9;local FadeIncrement = 0.05
+&#9;Delay(0.2, function()
+&#9;&#9;FadeOutObjects({FirstSelectionBox}, FadeIncrement)
+&#9;&#9;if character and character.Parent then
+&#9;&#9;&#9;character:Destroy()
+&#9;&#9;end
+&#9;end)
+&#9;FadeOutObjects(SelectionBoxes, FadeIncrement)
+end
+
+function Touched(Projectile, Hit)
+&#9;if not Hit or not Hit.Parent then
+&#9;&#9;return
+&#9;end
+&#9;local character, humanoid = FindCharacterAncestor(Hit)
+&#9;if character and humanoid and character ~= Character then
+&#9;&#9;local ForceFieldExists = false
+&#9;&#9;for i, v in pairs(character:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;ForceField&quot;) then
+&#9;&#9;&#9;&#9;ForceFieldExists = true
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if not ForceFieldExists then
+&#9;&#9;&#9;if Projectile then
+&#9;&#9;&#9;&#9;local HitFadeSound = Projectile:FindFirstChild(Sounds.HitFade.Name)
+&#9;&#9;&#9;&#9;local torso = humanoid.Torso
+&#9;&#9;&#9;&#9;if HitFadeSound and torso then
+&#9;&#9;&#9;&#9;&#9;HitFadeSound.Parent = torso
+&#9;&#9;&#9;&#9;&#9;HitFadeSound:Play()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Dematerialize(character, humanoid, Hit)
+&#9;&#9;end
+&#9;&#9;if Projectile and Projectile.Parent then
+&#9;&#9;&#9;Projectile:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+end
+
+function Activated()
+&#9;if Tool.Enabled and Humanoid.Health &gt; 0 then
+&#9;&#9;Tool.Enabled = false
+
+&#9;&#9;InvokeClient(&quot;PlaySound&quot;, Sounds.Fire)
+
+&#9;&#9;local HandleCFrame = Handle.CFrame
+&#9;&#9;local FiringPoint = HandleCFrame.p + HandleCFrame:vectorToWorldSpace(NozzleOffset)
+&#9;&#9;local ShotCFrame = CFrame.new(FiringPoint, Humanoid.TargetPoint)
+
+&#9;&#9;local LaserShotClone = BaseShot:Clone()
+&#9;&#9;LaserShotClone.CFrame = ShotCFrame + (ShotCFrame.lookVector * (BaseShot.Size.Z / 2))
+&#9;&#9;local BodyVelocity = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;BodyVelocity.velocity = ShotCFrame.lookVector * Speed
+&#9;&#9;BodyVelocity.Parent = LaserShotClone
+&#9;&#9;LaserShotClone.Touched:connect(function(Hit)
+&#9;&#9;&#9;if not Hit or not Hit.Parent then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Touched(LaserShotClone, Hit)
+&#9;&#9;end)
+&#9;&#9;Debris:AddItem(LaserShotClone, Duration)
+&#9;&#9;LaserShotClone.Parent = game:GetService(&quot;Workspace&quot;)
+
+&#9;&#9;wait(0.6) -- FireSound length
+
+&#9;&#9;InvokeClient(&quot;PlaySound&quot;, Sounds.Reload)
+&#9;&#9;
+&#9;&#9;wait(0.75) -- ReloadSound length
+
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+function Unequipped()
+&#9;
+end
+
+BaseShot = Instance.new(&quot;Part&quot;)
+BaseShot.Name = &quot;Effect&quot;
+BaseShot.BrickColor = BrickColor.new(&quot;Toothpaste&quot;)
+BaseShot.Material = Enum.Material.Plastic
+BaseShot.Shape = Enum.PartType.Block
+BaseShot.TopSurface = Enum.SurfaceType.Smooth
+BaseShot.BottomSurface = Enum.SurfaceType.Smooth
+BaseShot.FormFactor = Enum.FormFactor.Custom
+BaseShot.Size = Vector3.new(0.2, 0.2, 3)
+BaseShot.CanCollide = false
+BaseShot.Locked = true
+SelectionBoxify(BaseShot)
+Light(BaseShot)
+BaseShotSound = Sounds.HitFade:Clone()
+BaseShotSound.Parent = BaseShot
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.0417614</X>
-					<Y>0.432456583</Y>
-					<Z>-1.74758089</Z>
-					<R00>-0.858961225</R00>
-					<R01>0.106460258</R01>
-					<R02>-0.500851214</R02>
-					<R10>-7.45058149e-009</R10>
-					<R11>0.978147268</R11>
-					<R12>0.207913637</R12>
-					<R20>0.512040794</R20>
-					<R21>0.178589746</R21>
-					<R22>-0.840190411</R22>
+					<X>1.25682509</X>
+					<Y>29.8783779</Y>
+					<Z>23.2335987</Z>
+					<R00>0.849326909</R00>
+					<R01>-0.16848962</R01>
+					<R02>0.500255108</R02>
+					<R10>-0</R10>
+					<R11>0.947691023</R11>
+					<R12>0.31918931</R12>
+					<R20>-0.527867377</R20>
+					<R21>-0.271096081</R21>
+					<R22>0.804899335</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
+					<X>0.256312609</X>
+					<Y>29.2399979</Y>
+					<Z>21.6237965</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
