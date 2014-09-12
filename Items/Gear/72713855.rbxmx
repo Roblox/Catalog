@@ -7,23 +7,502 @@
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>-0.100000001</Y>
-				<Z>-0.5</Z>
+				<Y>-3.05227701e-008</Y>
+				<Z>-1.52613865e-007</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
 				<R10>0</R10>
 				<R11>0</R11>
 				<R12>-1</R12>
-				<R20>-0</R20>
+				<R20>0</R20>
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
-			<string name="Name">MonstaPotion</string>
+			<string name="Name">GigantoformPotion</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=72639382 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Script" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ServerScript</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+InsertService = game:GetService(&quot;InsertService&quot;)
+
+Animations = {
+&#9;Drink = Tool:WaitForChild(&quot;Drink&quot;),
+&#9;Rage = Tool:WaitForChild(&quot;Rage&quot;)
+}
+
+Sounds = {
+&#9;Rage = Handle:WaitForChild(&quot;RageSound&quot;)
+}
+
+ReloadTime = 15
+
+ScaleFactor = 2
+
+HulkId = 72648316
+HulkModel = InsertService:LoadAsset(HulkId)
+Hulk = HulkModel:GetChildren()[1]:Clone()
+HulkModel:Destroy()
+
+for i, v in pairs(Hulk:GetChildren()) do
+&#9;if v:IsA(&quot;BaseScript&quot;) or v:IsA(&quot;Humanoid&quot;) then
+&#9;&#9;v:Destroy()
+&#9;end
+end
+
+TransformReady = true
+Morphing = false
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+Tool.Enabled = true
+
+ServerControl.OnServerInvoke = (function(player, Mode, Value)
+&#9;if Mode == &quot;MouseClick&quot; and Value then
+&#9;&#9;Transform()
+&#9;end
+end)
+
+function InvokeClient(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+end
+
+function CheckObjectClass(Classes, Object)
+&#9;for i, v in pairs(Classes) do
+&#9;&#9;if Object:IsA(v) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function GetObjectsByClassName(Parent, Classes)
+&#9;local Objects = {}
+&#9;local function GetAllObjectsByClassName(Parent)
+&#9;&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;&#9;if v.Parent ~= Tool then
+&#9;&#9;&#9;&#9;if CheckObjectClass(Classes, v) then
+&#9;&#9;&#9;&#9;&#9;table.insert(Objects, v)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;GetAllObjectsByClassName(v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;GetAllObjectsByClassName(Parent)
+&#9;return Objects
+end
+
+function CheckTableForInstance(Table, Instance)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if v == Instance then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function CheckTableForString(Table, String)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if string.lower(v) == string.lower(String) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function GripCheck(NewGrip)
+&#9;if NewGrip:IsA(&quot;Weld&quot;) and NewGrip.Name == &quot;RightGrip&quot; then
+&#9;&#9;NewGrip.C0 = NewGrip.C0 + (ScaleFactor - 1) * NewGrip.C0.p
+&#9;&#9;NewGrip.C1 = NewGrip.C1 + (ScaleFactor - 1) * NewGrip.C1.p
+&#9;end
+end
+
+function ResizeTool(NewTool, Shrink, Table)
+&#9;if NewTool:IsA(&quot;Tool&quot;) then
+&#9;&#9;if not Shrink then
+&#9;&#9;&#9;if Table and not CheckTableForInstance(Table, NewTool) then
+&#9;&#9;&#9;&#9;table.insert(Table, NewTool)
+&#9;&#9;&#9;end
+&#9;&#9;elseif Shrink then
+&#9;&#9;&#9;for i, v in pairs(Table) do
+&#9;&#9;&#9;&#9;if v == NewTool then
+&#9;&#9;&#9;&#9;&#9;table.remove(Table, i)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local Handle = NewTool:FindFirstChild(&quot;Handle&quot;)
+&#9;&#9;if Handle then
+&#9;&#9;&#9;for i, v in pairs(Handle:GetChildren()) do
+&#9;&#9;&#9;&#9;if v:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;&#9;&#9;v.Scale = ((not Shrink and (v.Scale * ScaleFactor)) or (Shrink and (v.Scale / ScaleFactor)))
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function SetHumanoid(humanoid, MaxHealth, WalkSpeed)
+&#9;if not humanoid or not humanoid.Parent or humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+&#9;local Ratio = (humanoid.Health / humanoid.MaxHealth)
+&#9;humanoid.WalkSpeed = WalkSpeed
+&#9;humanoid.MaxHealth = MaxHealth
+&#9;humanoid.Health = (Ratio * humanoid.MaxHealth)
+end
+
+function GetRightGrip()
+&#9;local RightArm = nil
+&#9;local RightGrip = nil
+&#9;if CurrentCharacter and CurrentCharacter.Parent then
+&#9;&#9;RightArm = CurrentCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;if RightArm then
+&#9;&#9;&#9;RightGrip = RightArm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;if RightGrip then
+&#9;&#9;&#9;&#9;RightGrip = RightGrip:Clone()
+&#9;&#9;&#9;&#9;CurrentGrip = RightGrip
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return RightArm, RightGrip
+end
+
+function Transform()
+&#9;if not TransformReady or not Character.Parent or Character:FindFirstChild(&quot;GiantMorphed&quot;) or not Humanoid.Parent or Humanoid.Health == 0 or not Torso.Parent or not Tool.Enabled then
+&#9;&#9;return
+&#9;end
+&#9;Tool.Enabled = false
+&#9;TransformReady = false
+&#9;
+&#9;CurrentCharacter = Character
+&#9;CurrentHumanoid = Humanoid
+&#9;CurrentTorso = Torso&#9;
+
+&#9;local GiantMorphed = Instance.new(&quot;StringValue&quot;)
+&#9;GiantMorphed.Name = &quot;GiantMorphed&quot;
+&#9;GiantMorphed.Parent = CurrentCharacter
+&#9;Debris:AddItem(GiantMorphed, (ReloadTime + 5))
+&#9;
+&#9;local Items = {}
+&#9;local HulkItems = {}
+&#9;local OriginalColors = {}&#9;
+&#9;local Tools = {}
+&#9;
+&#9;local Limbs = {}
+&#9;local Motors = {}
+&#9;local HulkMotors = {}
+&#9;
+&#9;InvokeClient(&quot;PlayAnimation&quot;, {Animation = Animations.Drink, Speed = nil})
+&#9;wait(1.25)
+&#9;InvokeClient(&quot;PlayAnimation&quot;, {Animation = Animations.Rage, Speed = nil})
+&#9;wait(0.6)
+&#9;InvokeClient(&quot;PlaySound&quot;, Sounds.Rage)
+&#9;wait(0.5)
+&#9;InvokeClient(&quot;PlayAnimation&quot;, {Animation = Animations.Rage, Speed = nil})
+&#9;
+&#9;if Tool.Parent ~= CurrentCharacter then
+&#9;&#9;Tool.Enabled = true
+&#9;&#9;TransformReady = true
+&#9;&#9;return
+&#9;end&#9;
+&#9;
+&#9;Morphing = true&#9;
+&#9;
+&#9;local RightArm, RightGrip = GetRightGrip()
+&#9;
+&#9;local ItemsTable = GetObjectsByClassName(CurrentCharacter, {&quot;Clothing&quot;, &quot;Decal&quot;, &quot;Texture&quot;, &quot;ShirtGraphic&quot;, &quot;BodyColors&quot;, &quot;Hat&quot;, &quot;CharacterMesh&quot;, &quot;SpecialMesh&quot;})
+&#9;for i, v in pairs(ItemsTable) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;table.insert(Items, {Parent = v.Parent, NewObject = v:Clone()})
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs(Hulk:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;local Part = CurrentCharacter:FindFirstChild(v.Name)
+&#9;&#9;&#9;if Part then
+&#9;&#9;&#9;&#9;table.insert(OriginalColors, {Part = Part, OriginalColor = Part.BrickColor})
+&#9;&#9;&#9;&#9;Part.BrickColor = v.BrickColor
+&#9;&#9;&#9;&#9;local Objects = GetObjectsByClassName(v, {&quot;Clothing&quot;, &quot;Decal&quot;, &quot;Texture&quot;, &quot;ShirtGraphic&quot;, &quot;BodyColors&quot;, &quot;Hat&quot;, &quot;CharacterMesh&quot;, &quot;SpecialMesh&quot;})
+&#9;&#9;&#9;&#9;for ii, vv in pairs(Objects) do
+&#9;&#9;&#9;&#9;&#9;local Object = vv:Clone()
+&#9;&#9;&#9;&#9;&#9;table.insert(HulkItems, Object)
+&#9;&#9;&#9;&#9;&#9;Object.Parent = Part
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;local BodyColors = Instance.new(&quot;BodyColors&quot;) --To counter client sided BrickColor glitch which colors remain the same
+&#9;local Limbs = {&quot;Head&quot;, &quot;Torso&quot;, &quot;Left Arm&quot;, &quot;Right Arm&quot;, &quot;Left Leg&quot;, &quot;Right Leg&quot;}
+&#9;for i, v in pairs(CurrentCharacter:GetChildren()) do
+&#9;&#9;if CheckTableForString(Limbs, v.Name) then
+&#9;&#9;&#9;pcall(function()
+&#9;&#9;&#9;&#9;BodyColors[(string.gsub(v.Name, &quot; &quot;, &quot;&quot;) .. &quot;Color&quot;)] = v.BrickColor
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+&#9;Debris:AddItem(BodyColors, (ReloadTime + 5))
+&#9;BodyColors.Parent = CurrentCharacter
+
+&#9;for i, v in pairs(CurrentCharacter:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;Tool&quot;) then
+&#9;&#9;&#9;ResizeTool(v, false, Tools)
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs(CurrentTorso:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;JointInstance&quot;) and v:IsA(&quot;Motor6D&quot;) and v.Part0 and v.Part1 then
+&#9;&#9;&#9;table.insert(Motors, {Name = v.Name, Object = v:Clone(), Parent = v.Parent, Part0 = v.Part0, Part1 = v.Part1, Part0Size = v.Part0.Size, Part1Size = v.Part1.Size, C0 = v.C0, C1 = v.C1, MaxVelocity = v.MaxVelocity})
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+
+&#9;for i, v in pairs(Hulk:FindFirstChild(&quot;Torso&quot;):GetChildren()) do
+&#9;&#9;if v:IsA(&quot;Motor6D&quot;) and v.Part0 and v.Part0.Parent and v.Part1 and v.Part1.Parent then
+&#9;&#9;&#9;local Part0 = CurrentCharacter:FindFirstChild(v.Part0.Name)
+&#9;&#9;&#9;local Part1 = CurrentCharacter:FindFirstChild(v.Part1.Name)
+&#9;&#9;&#9;if Part0 and Part1 then
+&#9;&#9;&#9;&#9;local NewMotor = Instance.new(&quot;Motor6D&quot;)
+&#9;&#9;&#9;&#9;NewMotor.Name = v.Name
+&#9;&#9;&#9;&#9;NewMotor.Part0 = Part0
+&#9;&#9;&#9;&#9;NewMotor.Part1 = Part1
+&#9;&#9;&#9;&#9;NewMotor.C0 = v.C0
+&#9;&#9;&#9;&#9;NewMotor.C1 = v.C1
+&#9;&#9;&#9;&#9;if not CheckTableForInstance(Limbs, Part0) then
+&#9;&#9;&#9;&#9;&#9;NewMotor.Part0.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;&#9;&#9;NewMotor.Part0.Size = v.Part0.Size
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if not CheckTableForInstance(Limbs, Part1) then
+&#9;&#9;&#9;&#9;&#9;NewMotor.Part1.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;&#9;&#9;NewMotor.Part1.Size = v.Part1.Size
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;table.insert(HulkMotors, NewMotor)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;local HumanoidRootPart = CurrentCharacter:FindFirstChild(&quot;HumanoidRootPart&quot;)
+&#9;if HumanoidRootPart then
+&#9;&#9;for i, v in pairs(HumanoidRootPart:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;JointInstance&quot;) and v:IsA(&quot;Motor6D&quot;) then
+&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;HumanoidRootPart.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;HumanoidRootPart.Size = CurrentTorso.Size
+&#9;&#9;local RootJoint = Instance.new(&quot;Motor6D&quot;)
+&#9;&#9;RootJoint.Name = &quot;RootJoint&quot;
+&#9;&#9;RootJoint.Part0 = HumanoidRootPart
+&#9;&#9;RootJoint.Part1 = CurrentTorso
+&#9;&#9;RootJoint.C0 = CFrame.new(0, 0, 0, -1, -0, -0, 0, 0, 1, 0, 1, 0)
+&#9;&#9;RootJoint.C1 = CFrame.new(0, 0, 0, -1, -0, -0, 0, 0, 1, 0, 1, 0)
+&#9;&#9;RootJoint.Parent = HumanoidRootPart
+&#9;end
+&#9;
+&#9;for i, v in pairs(HulkMotors) do
+&#9;&#9;v.Parent = CurrentTorso
+&#9;end
+&#9;
+&#9;if RightArm and RightArm.Parent and RightGrip then
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;RightGrip.Parent = RightArm
+&#9;&#9;end)
+&#9;&#9;GripCheck(RightGrip)
+&#9;end
+&#9;
+&#9;Morphing = false
+&#9;
+&#9;SetHumanoid(CurrentHumanoid, 500, 24)
+&#9;
+&#9;if RightArm then
+&#9;&#9;ToolGrip = RightArm.ChildAdded:connect(function(Child)
+&#9;&#9;&#9;GripCheck(Child)
+&#9;&#9;end)
+&#9;end
+&#9;
+&#9;ToolAdded = CurrentCharacter.ChildAdded:connect(function(Child)
+&#9;&#9;ResizeTool(Child, false, Tools)
+&#9;end)
+&#9;
+&#9;ToolRemoved = CurrentCharacter.ChildRemoved:connect(function(Child)
+&#9;&#9;ResizeTool(Child, true, Tools)
+&#9;end)
+&#9;
+&#9;wait(ReloadTime)
+&#9;
+&#9;RightArm, RightGrip = GetRightGrip()
+&#9;
+&#9;SetHumanoid(CurrentHumanoid, 100, 16)
+&#9;
+&#9;for i, v in pairs(CurrentTorso:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;JointInstance&quot;) and v:IsA(&quot;Motor6D&quot;) then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;local NewMotors = {}
+&#9;Limbs = {}
+&#9;
+&#9;for i, v in pairs(Motors) do
+&#9;&#9;if not CheckTableForInstance(Limbs, Part0) then
+&#9;&#9;&#9;v.Part0.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;v.Part0.Size = v.Part0Size
+&#9;&#9;end
+&#9;&#9;if not CheckTableForInstance(Limbs, Part1) then
+&#9;&#9;&#9;v.Part1.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;v.Part1.Size = v.Part1Size
+&#9;&#9;end
+&#9;&#9;local Motor = Instance.new(&quot;Motor6D&quot;)
+&#9;&#9;Motor.Name = v.Name
+&#9;&#9;Motor.Part0 = v.Part0
+&#9;&#9;Motor.Part1 = v.Part1
+&#9;&#9;Motor.C0 = v.C0
+&#9;&#9;Motor.C1 = v.C1
+&#9;&#9;Motor.MaxVelocity = v.MaxVelocity
+&#9;&#9;table.insert(NewMotors, Motor)
+&#9;end
+
+&#9;local HumanoidRootPart = CurrentCharacter:FindFirstChild(&quot;HumanoidRootPart&quot;)
+&#9;if HumanoidRootPart then
+&#9;&#9;for i, v in pairs(HumanoidRootPart:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;JointInstance&quot;) and v:IsA(&quot;Motor6D&quot;) then
+&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;HumanoidRootPart.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;HumanoidRootPart.Size = CurrentTorso.Size
+&#9;&#9;local RootJoint = Instance.new(&quot;Motor6D&quot;)
+&#9;&#9;RootJoint.Name = &quot;RootJoint&quot;
+&#9;&#9;RootJoint.Part0 = HumanoidRootPart
+&#9;&#9;RootJoint.Part1 = CurrentTorso
+&#9;&#9;RootJoint.C0 = CFrame.new(0, 0, 0, -1, -0, -0, 0, 0, 1, 0, 1, 0)
+&#9;&#9;RootJoint.C1 = CFrame.new(0, 0, 0, -1, -0, -0, 0, 0, 1, 0, 1, 0)
+&#9;&#9;RootJoint.Parent = HumanoidRootPart
+&#9;end
+&#9;
+&#9;for i, v in pairs(NewMotors) do
+&#9;&#9;v.Parent = CurrentTorso
+&#9;end
+&#9;
+&#9;for i, v in pairs(HulkMotors) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v.Part0 = nil
+&#9;&#9;&#9;v.Part1 = nil
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs(OriginalColors) do
+&#9;&#9;if v and v.Part and v.Part.Parent then
+&#9;&#9;&#9;v.Part.BrickColor = v.OriginalColor
+&#9;&#9;end
+&#9;end&#9;
+&#9;
+&#9;for i, v in pairs(HulkItems) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs(Items) do
+&#9;&#9;if v.Parent then
+&#9;&#9;&#9;v.NewObject.Parent = v.Parent
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs({ToolGrip, ToolAdded, ToolRemoved}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs(Tools) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;ResizeTool(v, true, Tools)
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;if not RightGrip then
+&#9;&#9;RightArm, RightGrip = GetRightGrip()
+&#9;end
+&#9;if RightArm and RightArm.Parent and RightGrip then
+&#9;&#9;if Tool.Parent == CurrentCharacter then
+&#9;&#9;&#9;pcall(function()
+&#9;&#9;&#9;&#9;RightGrip.Parent = RightArm
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;&#9;if RightGrip.Part1 and RightGrip.Part1.Parent and RightGrip.Part1.Parent:IsA(&quot;Tool&quot;) then
+&#9;&#9;&#9;CurrentHumanoid:EquipTool(RightGrip.Part1.Parent)
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs({GiantMorphed, BodyColors}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;for i, v in pairs(CurrentCharacter:GetChildren()) do --Prevents the giant&apos;s BodyColors from showing on the client
+&#9;&#9;if v:IsA(&quot;BodyColors&quot;) then
+&#9;&#9;&#9;local Object = v:Clone()
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;Object.Parent = CurrentCharacter
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;TransformReady = true
+&#9;Tool.Enabled = true
+end
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Torso then
+&#9;&#9;return
+&#9;end
+end
+
+function Unequipped()
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+
+Tool.Changed:connect(function(Property)
+&#9;if Property == &quot;Parent&quot; and Tool.Parent ~= CurrentCharacter then
+&#9;&#9;if CurrentGrip and not Morphing then
+&#9;&#9;&#9;pcall(function()
+&#9;&#9;&#9;&#9;CurrentGrip:Destroy()
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -32,22 +511,22 @@
 				<token name="BackSurfaceInput">0</token>
 				<float name="BottomParamA">-0.5</float>
 				<float name="BottomParamB">0.5</float>
-				<token name="BottomSurface">4</token>
+				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>15.9150734</X>
-					<Y>4.66716385</Y>
-					<Z>-34.0150452</Z>
-					<R00>-0.0404900722</R00>
-					<R01>0.999062061</R01>
-					<R02>0.0153638022</R02>
-					<R10>0.247813821</R10>
-					<R11>-0.0048549315</R11>
-					<R12>0.968795478</R12>
-					<R20>0.967961431</R20>
-					<R21>0.0430340432</R21>
-					<R22>-0.247384518</R22>
+					<X>24.192379</X>
+					<Y>7.45306683</Y>
+					<Z>27.4188042</Z>
+					<R00>0.752917945</R00>
+					<R01>0.657956004</R01>
+					<R02>0.0144351693</R02>
+					<R10>-1.56407785e-014</R10>
+					<R11>-0.0219341367</R11>
+					<R12>0.999759436</R12>
+					<R20>0.658114314</R20>
+					<R21>-0.752736807</R21>
+					<R22>-0.0165146049</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -75,7 +554,7 @@
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
-				<token name="TopSurface">3</token>
+				<token name="TopSurface">0</token>
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
@@ -91,7 +570,17 @@
 					<Z>2.01999927</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="Sound" referent="RBX3">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">RageSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=72664863</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX4">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,410 +605,155 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">RageSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=72664863</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-		</Item>
-		<Item class="LocalScript" referent="RBX4">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool = script.Parent
-
-local stillEquipped = false
-
-function onEquippedLocal(mouse)
-&#9;stillEquipped = true
-&#9;if mouse == nil then 
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return
-&#9;end
-&#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;while Tool.Enabled and stillEquipped do 
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;while not Tool.Enabled and stillEquipped do 
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end&#9;
-&#9;end
-end
-
-
-function onUnequippedLocal()
-&#9;stillEquipped = false
-end
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
-			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">PotionScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent 
-local Potion = Tool.Handle
+				<string name="Name">ClientScript</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
 
-Tool.Enabled = true 
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-local vCharacter 
-local myTorso 
-local myHumanoid 
+Players = game:GetService(&quot;Players&quot;)
 
-local drinkAnim
-local rageAnim 
+Animations = {}
+Sounds = {}
 
-local rageSound 
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
 
-function onActivated()
-&#9;if Tool.Enabled == false then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;if myTorso == nil or myHumanoid == nil then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;Tool.Enabled = false
-
-&#9;drinkAnim = myHumanoid:LoadAnimation(Tool.Drink)
-&#9;if drinkAnim then drinkAnim:Play() end
-
-&#9;wait(1.25)
-
-&#9;rageAnim = myHumanoid:LoadAnimation(Tool.RageAnim)
-&#9;if rageAnim then rageAnim:Play() end
-
-&#9;wait(0.6)
-
-&#9;local monstaTime = Tool:FindFirstChild(&quot;MonstaTime&quot;)
-&#9;if monstaTime and monstaTime.Value == false then print(0.1) monstaTime.Value = true else print(&quot;Wat&quot;) print(monstaTime)end 
-
-&#9;rageSound = Potion:FindFirstChild(&quot;RageSound&quot;)
-&#9;if rageSound then rageSound:Play() end
-
-&#9;wait(0.5) 
-&#9;if rageAnim then rageAnim:Play() end
-
-&#9;wait(5.0)
-&#9;Tool.Enabled = true 
-end 
-
-function onEquipped()
-&#9;vCharacter = Tool.Parent 
-&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-end
-
-function onUnequipped()
-&#9;if drinkAnim then drinkAnim:Stop() end 
-&#9;if rageAnim then rageAnim:Stop() end
-&#9;if rageSound then rageSound:Stop() end
-end
-
-Tool.Activated:connect(onActivated)
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX6">
-			<Properties>
-				<string name="Name">MonstaTime</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX7">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">GrowScript</string>
-				<ProtectedString name="Source">function waitForChild(parent, instance)
-&#9;while parent:FindFirstChild(instance) == nil do 
-&#9;&#9;wait()
-&#9;end 
-end 
-
-local Tool = script.Parent 
-local Potion = Tool.Handle
-
-local healthGui
-local healthScript
-
-local vCharacter 
-local myHumanoid 
-local myTorso 
-local vPlayer 
-local myRightArm
-
-Tool.Enabled = true 
-
-local monstaTime
-
-local storeCharacter 
-local backpack
-
-local items = {}
-
-local scaleFactor = 2
-
-local hulkId = 72648316
-local hulk = game:GetService(&quot;InsertService&quot;):LoadAsset(hulkId):GetChildren()[1]
-
-local toolGrowConn
-local toolGripConn
-local toolShrinkConn
-
-local storeWelds = {}
-
-function gripCheck(newGrip)
-&#9;if newGrip.className == &quot;Weld&quot; and newGrip.Name == &quot;RightGrip&quot; then
-&#9;&#9;newGrip.C0 = newGrip.C0 + (scaleFactor - 1) * newGrip.C0.p
-&#9;&#9;newGrip.C1 = newGrip.C1 + (scaleFactor - 1) * newGrip.C1.p
-&#9;end
-end
-
-function toolGrowCheck(newTool)
-&#9;if newTool.className == &quot;Tool&quot; and newTool:FindFirstChild(&quot;Handle&quot;) and newTool.Handle:FindFirstChild(&quot;Mesh&quot;) then
-&#9;&#9;newTool.Handle.Mesh.Scale = newTool.Handle.Mesh.Scale * scaleFactor
-&#9;&#9;newTool.GripPos = newTool.GripPos * 1.5
-&#9;end
-end
-
-function toolShrinkCheck(newTool)
-&#9;if newTool.className == &quot;Tool&quot; and newTool:FindFirstChild(&quot;Handle&quot;) and newTool.Handle:FindFirstChild(&quot;Mesh&quot;) then
-&#9;&#9;newTool.Handle.Mesh.Scale = newTool.Handle.Mesh.Scale / scaleFactor
-&#9;&#9;newTool.GripPos = newTool.GripPos/1.5
-&#9;end
-end
-
-function onEquipped()
-&#9;vCharacter = Tool.Parent 
-&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-&#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
-&#9;myRightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;storeCharacter = vCharacter 
-&#9;local torsoChildren = myTorso:GetChildren()
-&#9;for i = 1, #torsoChildren do 
-&#9;&#9;if torsoChildren[i]:IsA(&quot;Motor6D&quot;) then 
-&#9;&#9;&#9;table.insert(storeWelds, torsoChildren[i])
-&#9;&#9;end 
-&#9;end 
-&#9;waitForChild(vPlayer, &quot;PlayerGui&quot;)
-&#9;waitForChild(vPlayer.PlayerGui, &quot;HealthGUI&quot;) 
-&#9;healthGui = vPlayer.PlayerGui.HealthGUI:Clone() 
-&#9;print(healthGui)
-&#9;waitForChild(vCharacter, &quot;HealthScript v3.1&quot;)
-&#9;healthScript = vCharacter[&quot;HealthScript v3.1&quot;]
-&#9;
-end 
-
-function onUnequipped()
-end
-
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)
-
-while Tool:FindFirstChild(&quot;MonstaTime&quot;) == nil do 
-&#9;wait()
-end 
-
-monstaTime = Tool.MonstaTime
-
-monstaTime.Changed:connect(function()
-&#9;if monstaTime and monstaTime.Value == true and vPlayer then 
-&#9;&#9;print(1)
-&#9;&#9;items = {}
-&#9;&#9;local myChar = hulk:Clone() 
-&#9;&#9;myChar.Name = vCharacter.Name 
-&#9;&#9;local initPos = myTorso.CFrame
-&#9;&#9;myChar:MoveTo(myTorso.Position)&#9;
-&#9;&#9;backpack = vPlayer:FindFirstChild(&quot;Backpack&quot;)
-&#9;&#9;if backpack then 
-&#9;&#9;&#9;local backpackChildren = backpack:GetChildren()
-&#9;&#9;&#9;for i = 1, #backpackChildren do 
-&#9;&#9;&#9;&#9;if backpackChildren[i]:IsA(&quot;Tool&quot;) then
-&#9;&#9;&#9;&#9;&#9;table.insert(items, backpackChildren[i])
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;end 
-&#9;&#9;end 
-&#9;&#9;vPlayer.Character = myChar 
-&#9;&#9;vCharacter = myChar 
-&#9;&#9;vCharacter.Parent = game.Workspace&#9;&#9;
-&#9;&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)&#9;&#9;
-&#9;&#9;myRightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-
-&#9;&#9;if myHumanoid then 
-&#9;&#9;&#9;local ratio = myHumanoid.Health/myHumanoid.MaxHealth
-&#9;&#9;&#9;myHumanoid.WalkSpeed = 24.0
-&#9;&#9;&#9;while myHumanoid.MaxHealth ~= 500 do 
-&#9;&#9;&#9;&#9;myHumanoid.MaxHealth = 500 
-&#9;&#9;&#9;end&#9;&#9;&#9;
-
-&#9;&#9;&#9;while myHumanoid.Health ~= ratio * myHumanoid.MaxHealth do 
-&#9;&#9;&#9;&#9;myHumanoid.Health = ratio * myHumanoid.MaxHealth
+ClientControl.OnClientInvoke = (function(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
 &#9;&#9;&#9;end
-&#9;&#9;end 
-
-&#9;&#9;if healthScript then  
-&#9;&#9;&#9;healthScript.Disabled = true 
-&#9;&#9;&#9;healthScript.Parent = vCharacter&#9;&#9;&#9;
-&#9;&#9;&#9;waitForChild(vPlayer,  &quot;PlayerGui&quot;)
-&#9;&#9;&#9;if healthGui then 
-&#9;&#9;&#9;&#9;healthGui:Clone().Parent = healthScript 
-&#9;&#9;&#9;else 
-&#9;&#9;&#9;&#9;print(&quot;HealthGui not found&quot;) 
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(nil, nil, Value.Speed)
+&#9;elseif Mode == &quot;PlaySound&quot; then
+&#9;&#9;for i, v in pairs(Sounds) do
+&#9;&#9;&#9;if v == Value then
+&#9;&#9;&#9;&#9;table.remove(Sounds, i)
 &#9;&#9;&#9;end
-&#9;&#9;&#9;healthScript.Disabled = false 
-&#9;&#9;end 
+&#9;&#9;end
+&#9;&#9;table.insert(Sounds, Value)
+&#9;&#9;Value:Play()
+&#9;end
+end)
 
-&#9;&#9;waitForChild(vPlayer, &quot;Backpack&quot;)
-&#9;&#9;backpack = vPlayer.Backpack
-&#9;&#9;for i = 1, #items do 
-&#9;&#9;&#9;items[i].Parent = backpack 
-&#9;&#9;end 
-&#9;
-&#9;&#9;if myTorso then 
-&#9;&#9;&#9;myTorso.CFrame = initPos
-&#9;&#9;end 
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;ServerControl:InvokeServer(Mode, Value)
+&#9;end)
+end
 
-&#9;&#9;if myRightArm then
-&#9;&#9;&#9;toolGripConn = myRightArm.ChildAdded:connect(gripCheck)
-&#9;&#9;&#9;toolGrowConn = vCharacter.ChildAdded:connect(toolGrowCheck)
-&#9;&#9;&#9;toolShrinkConn = vCharacter.ChildRemoved:connect(toolShrinkCheck)&#9;&#9;
-&#9;&#9;end 
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
+&#9;&#9;return
+&#9;end
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, true)
+&#9;end)
+end
 
-&#9;&#9;Potion.CanCollide = true 
-&#9;&#9;Tool.Parent = vCharacter 
+function Unequipped()
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs(Sounds) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:Stop()
+&#9;&#9;end
+&#9;end
+&#9;Animations = {}
+&#9;Sounds = {}
+end
 
-&#9;&#9;coroutine.resume(coroutine.create(function() 
-&#9;&#9;&#9;wait(30.0)
-&#9;&#9;&#9;print(&quot;Resetting&quot;)
-&#9;&#9;&#9;if vPlayer and storeCharacter and myTorso then 
-&#9;&#9;&#9;&#9;items = {}
-&#9;&#9;&#9;&#9;local teleportCFrame = myTorso.CFrame
-&#9;&#9;&#9;&#9;backpack = vPlayer:FindFirstChild(&quot;Backpack&quot;)
-&#9;&#9;&#9;&#9;if backpack then 
-&#9;&#9;&#9;&#9;&#9;local backpackChildren = backpack:GetChildren()
-&#9;&#9;&#9;&#9;&#9;for i = 1, #backpackChildren do 
-&#9;&#9;&#9;&#9;&#9;&#9;if backpackChildren[i]:IsA(&quot;Tool&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(items, backpackChildren[i])
-&#9;&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;end 
-
-&#9;&#9;&#9;&#9;local charChildren = vCharacter:GetChildren()
-&#9;&#9;&#9;&#9;for i = 1, #charChildren do 
-&#9;&#9;&#9;&#9;&#9;if charChildren[i]:IsA(&quot;Tool&quot;) then 
-&#9;&#9;&#9;&#9;&#9;&#9;table.insert(items, charChildren[i])
-&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;vPlayer.Character = storeCharacter
-&#9;&#9;&#9;&#9;vCharacter = storeCharacter 
-&#9;&#9;&#9;&#9;vCharacter.Parent = game.Workspace &#9;
-&#9;&#9;&#9;&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)&#9;&#9;
-&#9;&#9;&#9;&#9;myRightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;&#9;&#9;&#9;if myTorso then 
-&#9;&#9;&#9;&#9;&#9;for i = 1, #storeWelds do 
-&#9;&#9;&#9;&#9;&#9;&#9;storeWelds[i].Parent = myTorso 
-&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;&#9;myTorso.CFrame = teleportCFrame 
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;Potion.CanCollide = true 
-&#9;&#9;&#9;&#9;Tool.Parent = vCharacter 
-&#9;&#9;&#9;&#9;if toolGripConn then toolGripConn:disconnect() end 
-&#9;&#9;&#9;&#9;if toolGrowConn then toolGrowConn:disconnect() end 
-&#9;&#9;&#9;&#9;if toolShrinkConn then toolShrinkConn:disconnect() end 
-&#9;&#9;&#9;&#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
-&#9;&#9;&#9;&#9;if healthScript then  
-&#9;&#9;&#9;&#9;&#9;healthScript.Disabled = true 
-&#9;&#9;&#9;&#9;&#9;healthScript.Parent = vCharacter&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;waitForChild(vPlayer,  &quot;PlayerGui&quot;)
-&#9;&#9;&#9;&#9;&#9;if healthGui then 
-&#9;&#9;&#9;&#9;&#9;&#9;healthGui:Clone().Parent = healthScript 
-&#9;&#9;&#9;&#9;&#9;else 
-&#9;&#9;&#9;&#9;&#9;&#9;print(&quot;HealthGui not found&quot;) 
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;healthScript.Disabled = false 
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;waitForChild(vPlayer, &quot;Backpack&quot;)
-&#9;&#9;&#9;&#9;backpack = vPlayer.Backpack
-&#9;&#9;&#9;&#9;for i = 1, #items do 
-&#9;&#9;&#9;&#9;&#9;items[i].Parent = backpack 
-&#9;&#9;&#9;&#9;end 
-
-&#9;&#9;&#9;&#9;if vCharacter and vCharacter:FindFirstChild(&quot;HealthScript v3.1&quot;) then 
-&#9;&#9;&#9;&#9;&#9;vCharacter[&quot;HealthScript v3.1&quot;].Disabled = false
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;end 
-
-&#9;&#9;&#9;wait(15.0) 
-&#9;&#9;&#9;if monstaTime then monstaTime.Value = false end 
-&#9;&#9;end)) 
-&#9;else 
-&#9;&#9;print(1.3)
-&#9;&#9;print(monstaTime, vPlayer)&#9;&#9;
-&#9;end 
-end) 
-
-
-
-
-</ProtectedString>
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX8">
+		<Item class="Animation" referent="RBX6">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=55306564</url></Content>
 				<string name="Name">Drink</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX9">
+		<Item class="Animation" referent="RBX7">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=72635723</url></Content>
-				<string name="Name">RageAnim</string>
+				<string name="Name">Rage</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="LocalScript" referent="RBX8">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX9">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
+				<token name="CameraType">5</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>15.788106</X>
-					<Y>5.5784955</Y>
-					<Z>-31.6868019</Z>
-					<R00>0.998440444</R00>
-					<R01>0.018910639</R01>
-					<R02>-0.0525265187</R02>
+					<X>23.6247311</X>
+					<Y>7.66299772</Y>
+					<Z>29.6876755</Z>
+					<R00>0.966666341</R00>
+					<R01>0.0266966987</R01>
+					<R02>-0.254643768</R02>
 					<R10>-0</R10>
-					<R11>0.940881133</R11>
-					<R12>0.338736802</R12>
-					<R20>0.0558269396</R20>
-					<R21>-0.338208526</R21>
-					<R22>0.939413846</R22>
+					<R11>0.994549215</R11>
+					<R12>0.104267955</R12>
+					<R20>0.256039351</R20>
+					<R21>-0.100792326</R21>
+					<R22>0.96139729</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>16.8386364</X>
-					<Y>-1.19624043</Y>
-					<Z>-50.4750786</Z>
+					<X>23.9557686</X>
+					<Y>7.52744913</Y>
+					<Z>28.4378567</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
