@@ -1,0 +1,1047 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX259E10984EEC40D2ACFBA2D96B4D6CD1">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0.300000012</X>
+				<Y>-0.5</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">Orange and Black Camo RC Tank</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=177480115 </url></Content>
+			<string name="ToolTip">Orange and Black Camo RC Tank</string>
+		</Properties>
+		<Item class="Script" referent="RBX25ED21AB873C40268B0C1E1C97A761E7">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RCTankGlobal</string>
+				<ProtectedString name="Source">print &apos;Hello world!&apos;
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX9281CD5B59D442A592DC7CE46CD80238">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">RCTankLocal</string>
+				<ProtectedString name="Source">local function Create_PrivImpl(objectType)
+&#9;if type(objectType) ~= &apos;string&apos; then
+&#9;&#9;error(&quot;Argument of Create must be a string&quot;, 2)
+&#9;end
+&#9;return function(dat)
+&#9;&#9;dat = dat or {}
+&#9;&#9;local obj = Instance.new(objectType)
+&#9;&#9;local ctor = nil
+&#9;&#9;for k, v in pairs(dat) do
+&#9;&#9;&#9;if type(k) == &apos;string&apos; then
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;elseif type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;if type(v) ~= &apos;userdata&apos; then
+&#9;&#9;&#9;&#9;&#9;error(&quot;Bad entry in Create body: Numeric keys must be paired with children, got a: &quot;..type(v), 2)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;elseif type(k) == &apos;table&apos; and k.__eventname then
+&#9;&#9;&#9;&#9;if type(v) ~= &apos;function&apos; then
+&#9;&#9;&#9;&#9;&#9;error(&quot;Bad entry in Create body: Key `[Create.E\&apos;&quot;..k.__eventname..&quot;\&apos;]` must have a function value\
+&#9;&#9;&#9;&#9;&#9;       got: &quot;..tostring(v), 2)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;obj[k.__eventname]:connect(v)
+&#9;&#9;&#9;elseif k == Create then
+&#9;&#9;&#9;&#9;if type(v) ~= &apos;function&apos; then
+&#9;&#9;&#9;&#9;&#9;error(&quot;Bad entry in Create body: Key `[Create]` should be paired with a constructor function, \
+&#9;&#9;&#9;&#9;&#9;       got: &quot;..tostring(v), 2)
+&#9;&#9;&#9;&#9;elseif ctor then
+&#9;&#9;&#9;&#9;&#9;error(&quot;Bad entry in Create body: Only one constructor function is allowed&quot;, 2)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;ctor = v
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;error(&quot;Bad entry (&quot;..tostring(k)..&quot; =&gt; &quot;..tostring(v)..&quot;) in Create body&quot;, 2)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if ctor then
+&#9;&#9;&#9;ctor(obj)
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+Create = setmetatable({}, {__call = function(tb, ...) return Create_PrivImpl(...) end})
+Create.E = function(eventName)
+&#9;return {__eventname = eventName}
+end
+
+------------
+
+function topVector(cf) local _,_,_,_,r5,_,_,r8,_,_,r11,_ = cf:components() return Vector3.new(r5,r8,r11) end
+function backVector(cf) local _,_,_,_,_,r6,_,_,r9,_,_,r12 = cf:components() return Vector3.new(r6,r9,r12) end
+function rightVector(cf) local _,_,_,r4,_,_,r7,_,_,r10,_,_ = cf:components() return Vector3.new(r4,r7,r10) end
+function CFrameFromTopBack(at, top, back)
+&#9;local right = top:Cross(back)
+&#9;return CFrame.new(at.x, at.y, at.z,
+&#9;&#9;              right.x, top.x, back.x,
+&#9;&#9;              right.y, top.y, back.y,
+&#9;&#9;              right.z, top.z, back.z)
+end
+
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+
+local Tool = script.Parent
+local Tank = nil
+local Camera = game.Workspace.CurrentCamera
+local Player;
+
+function CreateTank(at, character)
+&#9;local Body = Create&apos;Part&apos;{
+&#9;&#9;Name = &apos;Torso&apos;;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;Size = Vector3.new(2.8, 3.6, 0.3);
+&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;Scale = Vector3.new(2.5, 2, 2.5);
+&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=81616058&apos;;
+&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=177480340&apos;;
+&#9;&#9;};
+&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = &apos;FireSound&apos;;
+&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=81116734&apos;;
+&#9;&#9;};
+&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = &apos;ExplodeSound&apos;;
+&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=81116747&apos;;
+&#9;&#9;};
+&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = &apos;IdleSound&apos;;
+&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=82229695&apos;;
+&#9;&#9;&#9;Looped = true;
+&#9;&#9;&#9;Pitch = 0.6;
+&#9;&#9;&#9;Volume = 0.2;
+&#9;&#9;};
+&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = &apos;StartSound&apos;;
+&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=82229695&apos;;
+&#9;&#9;&#9;Pitch = 0.8;
+&#9;&#9;&#9;Volume = 1.0;
+&#9;&#9;};
+&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;Name = &apos;DriveSound&apos;;
+&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=82229584&apos;;
+&#9;&#9;&#9;Pitch = 1.5;
+&#9;&#9;&#9;Volume = 1.0;
+&#9;&#9;&#9;Looped = true;
+&#9;&#9;};
+&#9;}
+&#9;local Turret = Create&apos;Part&apos;{
+&#9;&#9;Name = &apos;Head&apos;;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;Size = Vector3.new(2.4, 1.6, 0.7);
+&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;Scale = Vector3.new(2.5, 2, 3.5);
+&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=81616087&apos;;
+&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=177480340&apos;;
+&#9;&#9;};
+&#9;}
+&#9;local Cannon = Create&apos;Part&apos;{
+&#9;&#9;Name = &apos;Cannon&apos;;
+&#9;&#9;FormFactor = &apos;Custom&apos;;
+&#9;&#9;Size = Vector3.new(0.4, 0.4, 0.4);
+&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;Scale = Vector3.new(5, 2, 5);
+&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=81616091&apos;;
+&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=177480340&apos;;
+&#9;&#9;};
+&#9;}
+&#9;local Humanoid = Create&apos;Humanoid&apos;{
+
+&#9;}
+&#9;-------
+&#9;local TurretAttach = Create&apos;Weld&apos;{
+&#9;&#9;Name = &apos;Neck&apos;;
+&#9;&#9;Parent = Body;
+&#9;&#9;Part0 = Body;
+&#9;&#9;Part1 = Turret;
+&#9;&#9;C0 = CFrame.new(0,0,0.5);
+&#9;&#9;C1 = CFrame.new(0,0,-0.4)*CFrame.Angles(0,0.1,0.1);
+&#9;} 
+&#9;local CannonAttach = Create&apos;Weld&apos;{
+&#9;&#9;Name = &apos;CannonAttach&apos;;
+&#9;&#9;Parent = Turret;
+&#9;&#9;Part0 = Turret;
+&#9;&#9;Part1 = Cannon;
+&#9;&#9;C0 = CFrame.new(0,1,-0.2);
+&#9;&#9;C1 = CFrame.new(0,0.1,0);
+&#9;}
+&#9;---------
+&#9;local Model = Instance.new(&apos;Model&apos;, character)
+&#9;Model.Name = &apos;Tank&apos;
+&#9;Body.Parent = Model
+&#9;Turret.Parent = Model
+&#9;Cannon.Parent = Model
+&#9;Humanoid.Parent = Model
+&#9;Humanoid.PlatformStand = true
+&#9;Humanoid.MaxHealth = 500
+&#9;Humanoid.Health = 500
+&#9;--------
+&#9;Body.CFrame = CFrameFromTopBack(at, Vector3.new(1,0,0), Vector3.new(0,1,0))
+&#9;---------
+&#9;return {
+&#9;&#9;Model = Model;
+&#9;&#9;Body = Body;
+&#9;&#9;Turret = Turret;
+&#9;&#9;Cannon = Cannon;
+&#9;&#9;TurretAttach = TurretAttach;
+&#9;&#9;CannonAttach = CannonAttach;
+&#9;&#9;Humanoid = Humanoid;
+&#9;}
+end
+
+local CastAheadRight =  CFrame.new(1.2,   2.3,  0.3)
+local CastAheadLeft =   CFrame.new(-1.2,  2.3,  0.3)
+local CastBehindRight = CFrame.new(1.2,   -2.3, 0.3)
+local CastBehindLeft =  CFrame.new(-1.2,  -2.3, 0.3)
+--
+local CastFrontRight =  CFrame.new(1.2,   1.1,  0  )
+local CastFrontLeft =   CFrame.new(-1.2,  1.1,  0  )
+local CastBackRight =   CFrame.new(1.2,   -1.6, 0  )
+local CastBackLeft =    CFrame.new(-1.2,  -1.6, 0  )
+
+local Casts = {
+&#9;CastAheadRight =  {O=CFrame.new(1.2,   2.3,  0.3), D=1.24 };
+&#9;CastAheadLeft =   {O=CFrame.new(-1.2,  2.3,  0.3), D=1.24 };
+&#9;CastBehindRight = {O=CFrame.new(1.2,   -2.3, 0.3), D=1.24 };
+&#9;CastBehindLeft =  {O=CFrame.new(-1.2,  -2.3, 0.3), D=1.24 };
+&#9;CastFrontRight =  {O=CFrame.new(1.2,   1.1,  0  ), D=0.94 };
+&#9;CastFrontLeft =   {O=CFrame.new(-1.2,  1.1,  0  ), D=0.94 };
+&#9;CastBackRight =   {O=CFrame.new(1.2,   -1.6, 0  ), D=0.94 };
+&#9;CastBackLeft =    {O=CFrame.new(-1.2,  -1.6, 0  ), D=0.94 };&#9;
+}
+
+local CastInfo = {
+&#9;{
+&#9;&#9;Name = &apos;FrontRight&apos;;
+&#9;&#9;Ahead = CFrame.new(1.2,   2.3,  0.3);
+&#9;&#9;AheadDesired = 1.24;
+&#9;&#9;Stand = CFrame.new(1.2,   1.1,  0  );
+&#9;&#9;StandDesired = 0.94;
+&#9;};
+&#9;{
+&#9;&#9;Name = &apos;FrontLeft&apos;;
+&#9;&#9;Ahead = CFrame.new(-1.2,  2.3,  0.3);
+&#9;&#9;AheadDesired = 1.24;
+&#9;&#9;Stand = CFrame.new(-1.2,  1.1,  0  );
+&#9;&#9;StandDesired = 0.94;
+&#9;};
+&#9;{
+&#9;&#9;Name = &apos;BackRight&apos;;
+&#9;&#9;Ahead = CFrame.new(1.2,   -2.3, 0.3);
+&#9;&#9;AheadDesired = 1.24;
+&#9;&#9;Stand = CFrame.new(1.2,   -1.6, 0  );
+&#9;&#9;StandDesired = 0.94;
+&#9;};
+&#9;{
+&#9;&#9;Name = &apos;BackLeft&apos;;
+&#9;&#9;Ahead = CFrame.new(-1.2,  -2.3, 0.3);
+&#9;&#9;AheadDesired = 1.24;
+&#9;&#9;Stand = CFrame.new(-1.2,  -1.6, 0  );
+&#9;&#9;StandDesired = 0.94;
+&#9;};
+}
+
+for _, dat in pairs(CastInfo) do
+&#9;dat.LocalAxis = dat.Stand.p:Cross(Vector3.new(0,0,1)).unit
+&#9;dat.AheadLength = dat.Ahead.p.magnitude
+&#9;dat.StandLength = dat.Stand.p.magnitude
+end
+
+local MovementKeys = {
+&#9;w = Vector3.new( 0,  1, 0);
+&#9;a = Vector3.new(-1,  0, 0);
+&#9;s = Vector3.new( 0, -1, 0);
+&#9;d = Vector3.new( 1,  0, 0);
+}
+
+local function DoCastDown(offset, dir)
+&#9;dir = dir or Vector3.new(0,-1,0)
+&#9;local castFrom = (Tank.Body.CFrame*offset).p - dir*2.5
+&#9;--
+&#9;local ray = Ray.new(castFrom, dir*999)
+&#9;local part, at = game.Workspace:FindPartOnRay(ray, Tank.Model)
+&#9;if part and (not part.CanCollide or part.Transparency == 1) then
+&#9;&#9;local parts = {Tank.Body, Tank.Turret, Tank.Cannon}
+&#9;&#9;while part and (not part.CanCollide or part.Transparency == 1) do
+&#9;&#9;&#9;parts[#parts+1] = part
+&#9;&#9;&#9;part, at = game.Workspace:FindPartOnRayWithIgnoreList(ray, parts)
+&#9;&#9;end
+&#9;end
+&#9;--
+&#9;return part, at, (castFrom-at).magnitude-2.5
+end
+
+function clamp(n, min, max)
+&#9;return math.max(math.min(max, n), min)
+end
+function sign(n)
+&#9;return (n &gt;= 0) and 1 or -1
+end
+
+--============ gui ============--
+local noteGui = Create&apos;ScreenGui&apos;{
+&#9;Create&apos;ImageLabel&apos;{
+&#9;&#9;Name = &apos;DriveNote&apos;;
+&#9;&#9;Position = UDim2.new(0.5, -128+8, 1, -200);
+&#9;&#9;Size = UDim2.new(0, 128, 0, 64);
+&#9;&#9;BackgroundTransparency = 1;
+&#9;&#9;Image = &apos;http://www.roblox.com/asset/?id=82229919&apos;;
+&#9;&#9;Visible = false;
+&#9;};
+&#9;Create&apos;ImageLabel&apos;{
+&#9;&#9;Name = &apos;FireNote&apos;;
+&#9;&#9;Position = UDim2.new(0.5, 0-8, 1, -200);
+&#9;&#9;Size = UDim2.new(0, 128, 0, 64);
+&#9;&#9;BackgroundTransparency = 1;
+&#9;&#9;Image = &apos;http://www.roblox.com/asset/?id=82071115&apos;;
+&#9;&#9;Visible = false;
+&#9;};
+&#9;Create&apos;ImageLabel&apos;{
+&#9;&#9;Name = &apos;CreateNote&apos;;
+&#9;&#9;Position = UDim2.new(0.5, -64, 1, -200);
+&#9;&#9;Size = UDim2.new(0, 128, 0, 64);
+&#9;&#9;BackgroundTransparency = 1;
+&#9;&#9;Image = &apos;http://www.roblox.com/asset/?id=82071122&apos;;
+&#9;&#9;Visible = true;
+&#9;};
+}
+
+--========= tank controls =========--
+local DesiredHeading = Vector3.new()
+local DesiredPositionY = 0
+--
+local IsOnGround = false
+--
+local TurnSpeed = 1.8 -- rad / sec
+local MoveSpeed = 11.0 -- stud / sec
+--
+local ReloadTime = 1
+local LastShotTime = 0
+--=================================--
+
+local Equipped = false
+Tool.Equipped:connect(function(mouse)
+&#9;--fix the handle
+&#9;Tool.Handle.Mesh.MeshId = &apos;http://www.roblox.com/asset/?id=81616133&apos;
+&#9;script.Parent.Grip = CFrame.new(-0.191770241, 0.0683477223, -0.607085466, 
+&#9;                                -0.87758249,  0,            -0.479425609, 
+&#9;                                -0.420735568, 0.47942549,    0.770151138, 
+&#9;                                 0.229848862, 0.87758261,   -0.420735419)
+&#9;--
+&#9;Equipped = true
+&#9;Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;noteGui.Parent = Player.PlayerGui
+
+&#9;local KeyDown = {
+&#9;&#9;w = {state = false, lastdown = 0};
+&#9;&#9;a = {state = false, lastdown = 0};
+&#9;&#9;s = {state = false, lastdown = 0};
+&#9;&#9;d = {state = false, lastdown = 0};
+&#9;&#9;q = {state = false, lastdown = 0};
+&#9;}
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;local torso = Player.Character:FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;if Tank then
+&#9;&#9;&#9;if (tick()-LastShotTime) &gt; ReloadTime then
+&#9;&#9;&#9;&#9;local origin = (Tank.Cannon.CFrame*CFrame.new(0,3,0)).p
+&#9;&#9;&#9;&#9;local fireTo = mouse.Hit.p
+&#9;&#9;&#9;&#9;local dir = topVector(Tank.Cannon.CFrame)
+&#9;&#9;&#9;&#9;if (fireTo-origin).magnitude &lt; 140 then
+&#9;&#9;&#9;&#9;&#9;LastShotTime = tick()
+&#9;&#9;&#9;&#9;&#9;Tank.Body.FireSound:Play()
+&#9;&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;&#9;local fireScript = script.Parent.TankFireScript:Clone()
+&#9;&#9;&#9;&#9;&#9;fireScript.Origin.Value = origin
+&#9;&#9;&#9;&#9;&#9;fireScript.Target.Value = fireTo
+&#9;&#9;&#9;&#9;&#9;fireScript.Direction.Value = dir
+&#9;&#9;&#9;&#9;&#9;fireScript.Tank.Value = Tank.Model
+&#9;&#9;&#9;&#9;&#9;fireScript.creator.Value = Player
+&#9;&#9;&#9;&#9;&#9;fireScript.Disabled = false
+&#9;&#9;&#9;&#9;&#9;fireScript.Parent = game.Workspace
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;elseif torso and (torso.Position-mouse.Hit.p).magnitude &lt; 20 then
+&#9;&#9;&#9;Tank = CreateTank(mouse.Hit.p + Vector3.new(0,1.8,0), Player.Character)
+&#9;&#9;&#9;Camera.CameraSubject = Tank.Model
+&#9;&#9;&#9;Camera.CameraType = &apos;Track&apos;
+&#9;&#9;&#9;Delay(0.1, function()
+&#9;&#9;&#9;&#9;Camera.CoordinateFrame = 
+&#9;&#9;&#9;&#9;&#9;CFrame.new((Tank.Turret.CFrame*CFrame.Angles(-0.7,0,0)*CFrame.new(0,-10,0)).p,
+&#9;&#9;&#9;&#9;&#9;           (Camera.Focus).p)
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;--
+&#9;&#9;&#9;noteGui.DriveNote.Visible = true
+&#9;&#9;&#9;noteGui.FireNote.Visible = true
+&#9;&#9;&#9;noteGui.CreateNote.Visible = false
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Tank.Body.IdleSound:Play()
+&#9;&#9;&#9;--
+&#9;&#9;&#9;local HealthFix = Tool.TankHealthFix:Clone()
+&#9;&#9;&#9;HealthFix.Disabled = false
+&#9;&#9;&#9;HealthFix.Parent = Tank.Humanoid
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Player.Character.Humanoid.PlatformStand = true
+&#9;&#9;&#9;Player.Character.Torso.Anchored = true
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Tank.Humanoid.Died:connect(function()
+&#9;&#9;&#9;&#9;--move the camera back, and add the tank to debris
+&#9;&#9;&#9;&#9;game.Debris:AddItem(Tank.Model, 2)
+&#9;&#9;&#9;&#9;Tank.Body.Anchored = false
+&#9;&#9;&#9;&#9;Tank.Turret.Anchored = false
+&#9;&#9;&#9;&#9;Tank.Cannon.Anchored = false
+&#9;&#9;&#9;&#9;Tank.Model:BreakJoints()
+&#9;&#9;&#9;&#9;Tank = nil
+&#9;&#9;&#9;&#9;Camera.CameraType = &apos;Custom&apos;
+&#9;&#9;&#9;&#9;Camera.CameraSubject = Player.Character
+&#9;&#9;&#9;&#9;Delay(0.1, function()
+&#9;&#9;&#9;&#9;&#9;Camera.CoordinateFrame = Player.Character.Head.CFrame*CFrame.Angles(-0.7, 0, 0)
+&#9;&#9;&#9;&#9;&#9;                                                     *CFrame.new(0,0,10)
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;noteGui.DriveNote.Visible = false
+&#9;&#9;&#9;&#9;noteGui.FireNote.Visible = false
+&#9;&#9;&#9;&#9;noteGui.CreateNote.Visible = true
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Player.Character.Humanoid.PlatformStand = false
+&#9;&#9;&#9;&#9;Player.Character.Torso.Anchored = false
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end)
+&#9;local IsPlayingDrive = false
+&#9;local LastDrivingTime = 0
+&#9;mouse.KeyDown:connect(function(key)
+&#9;&#9;if not KeyDown[key:lower()] then
+&#9;&#9;&#9;KeyDown[key:lower()] = {state = true, lastdown = 0}
+&#9;&#9;end
+&#9;&#9;KeyDown[key:lower()].state = true
+&#9;&#9;if Tank then
+&#9;&#9;&#9;if MovementKeys[key] and not IsPlayingDrive then
+&#9;&#9;&#9;&#9;IsPlayingDrive = true
+&#9;&#9;&#9;&#9;Tank.Body.StartSound:Play()
+&#9;&#9;&#9;&#9;Tank.Body.DriveSound:Play()
+&#9;&#9;&#9;&#9;Tank.Body.IdleSound:Stop()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;mouse.KeyUp:connect(function(key)
+&#9;&#9;if KeyDown[key:lower()] then
+&#9;&#9;&#9;KeyDown[key:lower()].state = false
+&#9;&#9;&#9;KeyDown[key:lower()].lastdown = tick()
+&#9;&#9;end
+&#9;&#9;if Tank and IsPlayingDrive then
+&#9;&#9;&#9;local isDriveKeyDown = false
+&#9;&#9;&#9;for k, _ in pairs(MovementKeys) do
+&#9;&#9;&#9;&#9;if KeyDown[k].state then isDriveKeyDown = true; break end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not isDriveKeyDown then
+&#9;&#9;&#9;&#9;IsPlayingDrive = false
+&#9;&#9;&#9;&#9;LastDrivingTime = tick()
+&#9;&#9;&#9;&#9;Tank.Body.DriveSound:Stop()
+&#9;&#9;&#9;&#9;Tank.Body.IdleSound:Play()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+
+&#9;local LastTime = tick()
+&#9;local LastTimeInAir = 0
+&#9;local LastVelocity = 0
+&#9;while Equipped do
+&#9;&#9;wait()
+&#9;&#9;--
+&#9;&#9;local t = tick()
+&#9;&#9;local dt = t-LastTime
+&#9;&#9;LastTime = t
+&#9;&#9;--
+&#9;&#9;if Tank then
+&#9;&#9;&#9;if (Tank.Turret.Position-mouse.Hit.p).magnitude &lt; 140 then
+&#9;&#9;&#9;&#9;mouse.Icon = &apos;http://www.roblox.com/asset/?id=82071097&apos;
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;mouse.Icon = &apos;http://www.roblox.com/asset/?id=82071109&apos;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;--&#9;
+&#9;&#9;&#9;local _, _, distOffGround = DoCastDown(CFrame.new())
+&#9;&#9;&#9;distOffGround = distOffGround - 0.94
+&#9;&#9;&#9;if distOffGround &gt; 3 then
+&#9;&#9;&#9;&#9;if IsOnGround then
+&#9;&#9;&#9;&#9;&#9;--stop being on the ground
+&#9;&#9;&#9;&#9;&#9;IsOnGround = false
+&#9;&#9;&#9;&#9;&#9;Tank.Body.Anchored = false
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;LastTimeInAir = t
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Tank.Body.DriveSound.Pitch = 1.8
+
+&#9;&#9;&#9;elseif (t-LastTimeInAir) &gt; 2 then --we only want to start driving after we&apos;ve been on the ground
+&#9;&#9;&#9;                                  --for a while. We&apos;ll eschew the &quot;getting up&quot; stage.  
+&#9;&#9;&#9;&#9;Tank.Body.DriveSound.Pitch = 1.2 + 0.6*LastVelocity
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if not IsOnGround then
+&#9;&#9;&#9;&#9;&#9;--start being on the ground
+&#9;&#9;&#9;&#9;&#9;IsOnGround = true
+&#9;&#9;&#9;&#9;&#9;Tank.Body.Anchored = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;--normal code while on the ground
+
+&#9;&#9;&#9;&#9;--don&apos;t kill the camera... please?
+&#9;&#9;&#9;&#9;Camera.CameraSubject = nil
+
+&#9;&#9;&#9;&#9;--let weld changes take effect while we move it
+&#9;&#9;&#9;&#9;Tank.Body.Anchored = false
+
+&#9;&#9;&#9;&#9;--first, update the heading
+&#9;&#9;&#9;&#9;local bodyLook = topVector(Tank.Body.CFrame)
+&#9;&#9;&#9;&#9;DesiredHeading = Vector3.new(bodyLook.x, 0, bodyLook.z).unit
+
+
+&#9;&#9;&#9;&#9;--========== do positioning of the tank&apos;s turret and cannon ==========--
+&#9;&#9;&#9;&#9;--the trick in this part of the code is that we need to aim in a vector inclined somewhat
+&#9;&#9;&#9;&#9;--from the one which is actually pointing at the target, with an inclination dependent on
+&#9;&#9;&#9;&#9;--the distance of the target from the tank, to give the impression of caluclating a trajectory.
+&#9;&#9;&#9;&#9;--aim the turret:
+&#9;&#9;&#9;&#9;local tankSavedPositionHack = Tank.Body.CFrame
+&#9;&#9;&#9;&#9;local turretToHitVec = (mouse.Hit.p-Tank.Turret.Position)
+&#9;&#9;&#9;&#9;local distToHit = turretToHitVec.magnitude
+&#9;&#9;&#9;&#9;local rotAxis = turretToHitVec:Cross(turretToHitVec-Vector3.new(0, turretToHitVec.y, 0)).unit;
+&#9;&#9;&#9;&#9;if turretToHitVec.y &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;rotAxis = -rotAxis
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local turretToHit = CFrame.fromAxisAngle(rotAxis, math.min(1,distToHit/140)*math.pi/3.5)*
+&#9;&#9;&#9;&#9;                    turretToHitVec.unit
+&#9;&#9;&#9;&#9;local swivelPlaneNormal = Tank.Body.CFrame.lookVector
+&#9;&#9;&#9;&#9;local turretDir = (turretToHit - swivelPlaneNormal*turretToHit:Dot(swivelPlaneNormal)).unit
+&#9;&#9;&#9;&#9;local desiredTurretCF = CFrameFromTopBack(Tank.Turret.Position,
+&#9;&#9;&#9;&#9;                                          turretDir,
+&#9;&#9;&#9;&#9;                                          -swivelPlaneNormal)*CFrame.Angles(0,0.01,0)
+&#9;&#9;&#9;&#9;                                                                --^ needed to avoid camera
+&#9;&#9;&#9;&#9;                                                                --bug which kills the camera
+&#9;&#9;&#9;&#9;--bodycf*c0 = turretcf*c1 =&gt; C1 = turretCF:inv()*bodycf*c0
+&#9;&#9;&#9;&#9;Tank.TurretAttach.C1 = desiredTurretCF:inverse()*Tank.Body.CFrame*CFrame.new(0,0,0.5)
+&#9;&#9;&#9;&#9;Tank.Turret.CFrame = desiredTurretCF
+&#9;&#9;&#9;&#9;Tank.Body.CFrame = tankSavedPositionHack
+&#9;&#9;&#9;&#9;--aim the cannon:
+&#9;&#9;&#9;&#9;local desiredCannonCF = CFrameFromTopBack((Tank.Turret.CFrame*CFrame.new(0,1,-0.2)).p,
+&#9;&#9;&#9;&#9;&#9;                                      turretToHit,
+&#9;&#9;&#9;&#9;&#9;                                      turretToHit:Cross(rightVector(desiredTurretCF)))
+&#9;&#9;&#9;&#9;--apply the fire anim before updating the weld
+&#9;&#9;&#9;&#9;if (t-LastShotTime) &lt; 1 then
+&#9;&#9;&#9;&#9;&#9;local elapsed = (t-LastShotTime)
+&#9;&#9;&#9;&#9;&#9;if elapsed &lt; 0.1 then
+&#9;&#9;&#9;&#9;&#9;&#9;desiredCannonCF = desiredCannonCF*CFrame.new(0,-(elapsed/0.1)*0.8,0)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;desiredCannonCF = desiredCannonCF*CFrame.new(0,-(1-((elapsed-0.1)/0.9))*0.8,0)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;Tank.CannonAttach.C1 = desiredCannonCF:inverse()*Tank.Turret.CFrame*CFrame.new(0,1,-0.2)
+&#9;&#9;&#9;&#9;Tank.Cannon.CFrame = desiredCannonCF
+&#9;&#9;&#9;&#9;Tank.Body.CFrame = tankSavedPositionHack
+
+&#9;&#9;&#9;&#9;--========== Determine the movement of the tank durring this frame ==========--
+&#9;&#9;&#9;&#9;--get the camera DIR in the x/z plane
+&#9;&#9;&#9;&#9;local camLook = Camera.CoordinateFrame.lookVector
+&#9;&#9;&#9;&#9;local camDir = Vector3.new(camLook.x, 0, camLook.z).unit
+&#9;&#9;&#9;&#9;local camPerpDir = camDir:Cross(Vector3.new(0,1,0))
+
+&#9;&#9;&#9;&#9;--get the total DIR to move
+&#9;&#9;&#9;&#9;local moveDirs = Vector3.new()
+&#9;&#9;&#9;&#9;local function decay(v)
+&#9;&#9;&#9;&#9;&#9;return 1 - math.sqrt(1 - v)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;for key, dir in pairs(MovementKeys) do
+&#9;&#9;&#9;&#9;&#9;if KeyDown[key].state then
+&#9;&#9;&#9;&#9;&#9;&#9;moveDirs = moveDirs + dir
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;local delay = 0.8
+&#9;&#9;&#9;&#9;&#9;if dir.X ~= 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;delay = 0.4
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;if (t-KeyDown[key].lastdown) &lt; delay then
+&#9;&#9;&#9;&#9;&#9;&#9;moveDirs = moveDirs + dir*decay(delay-(t-KeyDown[key].lastdown))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;--[[
+&#9;&#9;&#9;&#9;--now, find the speed and turn factors 
+&#9;&#9;&#9;&#9;local speedFactor = camDir:Dot(DesiredHeading)*moveDirs.y + 
+&#9;&#9;&#9;&#9;                    camPerpDir:Dot(DesiredHeading)*moveDirs.x
+&#9;&#9;&#9;&#9;local turnFactor = -math.abs(camDir:Dot(DesiredHeading))*moveDirs.x +
+&#9;&#9;&#9;&#9;                   camPerpDir:Dot(DesiredHeading)*moveDirs.y
+&#9;&#9;&#9;&#9;]]
+&#9;&#9;&#9;&#9;local keyHeading = camDir*moveDirs.y + camPerpDir*moveDirs.x
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;local speedFactor = keyHeading:Dot(DesiredHeading)
+&#9;&#9;&#9;&#9;local turnFactor;
+&#9;&#9;&#9;&#9;if keyHeading.magnitude &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;turnFactor = -keyHeading.unit:Cross(DesiredHeading).y
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;turnFactor = 0
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;-- Save the last velocity for sound and other effects
+&#9;&#9;&#9;&#9;LastVelocity = math.abs(speedFactor)
+
+&#9;&#9;&#9;&#9;--and change the tank&apos;s CFrame
+&#9;&#9;&#9;&#9;local TankLevelCF = CFrameFromTopBack(Tank.Body.Position,
+&#9;&#9;&#9;&#9;                                      DesiredHeading,
+&#9;&#9;&#9;&#9;                                      Vector3.new(0,1,0))
+&#9;&#9;&#9;&#9;if turnFactor ~= 0 or speedFactor ~= 0 then
+&#9;&#9;&#9;&#9;&#9;Tank.Body.CFrame = TankLevelCF*
+&#9;&#9;&#9;&#9;&#9;                   CFrame.Angles(0, 0, turnFactor*TurnSpeed*dt)*
+&#9;&#9;&#9;&#9;&#9;                   CFrame.new(0, speedFactor*MoveSpeed*dt, 0)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;Tank.Body.CFrame = TankLevelCF
+&#9;&#9;&#9;&#9;end
+
+
+&#9;&#9;&#9;&#9;--========== determine the rotation of the tank ==========--
+&#9;&#9;&#9;&#9;--first, calculate all of the cast heights, and while we&apos;re doing this find out howmuch to
+&#9;&#9;&#9;&#9;--adjust the height by. We want the average excess height to be 0.
+&#9;&#9;&#9;&#9;--however, we also need to account for disps of &gt;3, that is, hanging over an edge. These 
+&#9;&#9;&#9;&#9;--should not be counted in the average, as we can let up o 50% of the tank hang over the edge
+&#9;&#9;&#9;&#9;--and past that point the center of gravity will be over the edge, and the tank will change
+&#9;&#9;&#9;&#9;--over to IsOnGround = false mode.
+&#9;&#9;&#9;&#9;local avrDisp = 0
+&#9;&#9;&#9;&#9;local numDisps = 0
+&#9;&#9;&#9;&#9;for _, cast in pairs(CastInfo) do
+&#9;&#9;&#9;&#9;&#9;local _, _, aheadH = DoCastDown(cast.Ahead)
+&#9;&#9;&#9;&#9;&#9;local _, _, standH = DoCastDown(cast.Stand)
+&#9;&#9;&#9;&#9;&#9;cast.AheadH = aheadH-cast.AheadDesired
+&#9;&#9;&#9;&#9;&#9;cast.StandH = standH-cast.StandDesired
+&#9;&#9;&#9;&#9;&#9;if cast.AheadH &lt; 3 then
+&#9;&#9;&#9;&#9;&#9;&#9;avrDisp = avrDisp + cast.AheadH
+&#9;&#9;&#9;&#9;&#9;&#9;numDisps = numDisps + 1
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;avrDisp = (numDisps&gt;0) and (avrDisp/numDisps) or 0 --we should never have 0 disps, but handle
+&#9;&#9;&#9;&#9;                                                   --anyways just in case.
+
+&#9;&#9;&#9;&#9;--now, we loop through again, to dothe actual rotation work. We will modify the hieghts by the
+&#9;&#9;&#9;&#9;--average number that we got, to take that into account, since we will change the tank&apos;s hieght
+&#9;&#9;&#9;&#9;--by that amount while appling the rotation.
+&#9;&#9;&#9;&#9;--we will use an averaging algorithm wich takes wieghted averages of the rotation axis and
+&#9;&#9;&#9;&#9;--amounts generated by each cast-point. 
+&#9;&#9;&#9;&#9;local tankRot = Tank.Body.CFrame-Tank.Body.CFrame.p
+&#9;&#9;&#9;&#9;local rotAmountX = 0
+&#9;&#9;&#9;&#9;local rotAmountY = 0
+&#9;&#9;&#9;&#9;local numRots = 0
+&#9;&#9;&#9;&#9;for _, cast in pairs(CastInfo) do
+&#9;&#9;&#9;&#9;&#9;--handle the cases of hanging off of an edge
+&#9;&#9;&#9;&#9;&#9;local which = nil
+&#9;&#9;&#9;&#9;&#9;if cast.AheadH &gt; 3 and cast.StandH &gt; 3 then
+&#9;&#9;&#9;&#9;&#9;elseif cast.AheadH &gt; 3 then
+&#9;&#9;&#9;&#9;&#9;&#9;which = true --true =&gt; standH
+&#9;&#9;&#9;&#9;&#9;elseif cast.StandH &gt; 3 then
+&#9;&#9;&#9;&#9;&#9;&#9;which = false --false =&gt; aheadH
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--neither is too large. Take whichever is less
+&#9;&#9;&#9;&#9;&#9;&#9;which = (cast.StandH &lt; cast.AheadH)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;&#9;if which ~= nil then --~= nil is important here because we want both true/false
+&#9;&#9;&#9;&#9;&#9;&#9;--pick the set of stats that we want
+&#9;&#9;&#9;&#9;&#9;&#9;local h, distOut;
+&#9;&#9;&#9;&#9;&#9;&#9;if which then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;h = cast.StandH
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;distOut = cast.StandLength
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;h = cast.AheadH
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;distOut = cast.AheadLength
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;--apply the hieght mod
+&#9;&#9;&#9;&#9;&#9;&#9;h = h - avrDisp
+&#9;&#9;&#9;&#9;&#9;&#9;--find the amount of rotation that we need 
+&#9;&#9;&#9;&#9;&#9;&#9;local theta = -math.atan(h/distOut)
+&#9;&#9;&#9;&#9;&#9;&#9;--now, add this rotation to the totals
+&#9;&#9;&#9;&#9;&#9;&#9;rotAmountX = rotAmountX + theta*cast.LocalAxis.x
+&#9;&#9;&#9;&#9;&#9;&#9;rotAmountY = rotAmountY + theta*cast.LocalAxis.y
+&#9;&#9;&#9;&#9;&#9;&#9;numRots = numRots + 1
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;Tank.Body.CFrame = CFrame.new(0, -avrDisp, 0)*
+&#9;&#9;&#9;&#9;                   Tank.Body.CFrame*
+&#9;&#9;&#9;&#9;                   CFrame.Angles(rotAmountX/numRots*2, 0, 0)*
+&#9;&#9;&#9;&#9;                   CFrame.Angles(0,rotAmountY/numRots*2,0)
+
+&#9;&#9;&#9;&#9;--cast down from the middle of the treads to apply a fudge factor that makes it
+&#9;&#9;&#9;&#9;--not look odd when you drive over a ridge
+&#9;&#9;&#9;&#9;local _, _, rightFudge = DoCastDown(CFrame.new(1.2,0,0))
+&#9;&#9;&#9;&#9;local _, _, leftFudge = DoCastDown(CFrame.new(-1.2,0,0))
+&#9;&#9;&#9;&#9;rightFudge = rightFudge-0.94/math.cos(rotAmountX/numRots*2)
+&#9;&#9;&#9;&#9;leftFudge = leftFudge-0.94/math.cos(rotAmountX/numRots*2)
+&#9;&#9;&#9;&#9;if rightFudge &lt; 1 and leftFudge &lt; 1 then
+&#9;&#9;&#9;&#9;&#9;Tank.Body.CFrame = CFrame.new(0,-0.5*(rightFudge+leftFudge),0)*
+&#9;&#9;&#9;&#9;&#9;                   Tank.Body.CFrame
+&#9;&#9;&#9;&#9;elseif rightFudge &lt; 1 then
+&#9;&#9;&#9;&#9;&#9;Tank.Body.CFrame = CFrame.new(0,-rightFudge,0)*
+&#9;&#9;&#9;&#9;&#9;                   Tank.Body.CFrame
+&#9;&#9;&#9;&#9;elseif leftFudge &lt; 1 then
+&#9;&#9;&#9;&#9;&#9;Tank.Body.CFrame = CFrame.new(0,-leftFudge,0)*
+&#9;&#9;&#9;&#9;&#9;                   Tank.Body.CFrame
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;--========== make the tank unable to drive through things ==========--
+&#9;&#9;&#9;&#9;local desiredLen = 0.6
+&#9;&#9;&#9;&#9;local castDir = topVector(Tank.Body.CFrame)
+&#9;&#9;&#9;&#9;local parta, ata, dista = DoCastDown(CFrame.new(1.2,  1.5, 0.5), castDir)
+&#9;&#9;&#9;&#9;local partb, atb, distb = DoCastDown(CFrame.new(-1.2, 1.5, 0.5), castDir)
+&#9;&#9;&#9;&#9;local smallerGap = math.min(dista, distb)-desiredLen
+&#9;&#9;&#9;&#9;if smallerGap &lt; 0 then
+&#9;&#9;&#9;&#9;&#9;--Tank.Body.Anchored = true
+&#9;&#9;&#9;&#9;&#9;--error()
+&#9;&#9;&#9;&#9;&#9;Tank.Body.CFrame = Tank.Body.CFrame*CFrame.new(0,smallerGap,0)
+&#9;&#9;&#9;&#9;end
+
+&#9;&#9;&#9;&#9;--and anchor it again
+&#9;&#9;&#9;&#9;Tank.Body.Anchored = true
+
+&#9;&#9;&#9;&#9;--camera
+&#9;&#9;&#9;&#9;Camera.CameraSubject = Tank.Model
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;--falling
+&#9;&#9;&#9;end
+&#9;&#9;else
+&#9;&#9;&#9;--no tank, edit the mouse cursor
+&#9;&#9;&#9;local torso = Player.Character:FindFirstChild(&apos;Torso&apos;)
+&#9;&#9;&#9;if torso and (torso.Position-mouse.Hit.p).magnitude &lt; 20 then
+&#9;&#9;&#9;&#9;mouse.Icon = &apos;http://www.roblox.com/asset/?id=82230945&apos;
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;mouse.Icon = &apos;http://www.roblox.com/asset/?id=82071072&apos;
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;noteGui.Parent = nil
+&#9;if Tank then
+&#9;&#9;Tank.Model:Destroy()
+&#9;&#9;Tank = nil
+&#9;&#9;Camera.CameraType = &apos;Custom&apos;
+&#9;&#9;Camera.CameraSubject = Player.Character
+&#9;&#9;Camera.CoordinateFrame = Player.Character.Head.CFrame*CFrame.Angles(-0.7, 0, 0)*CFrame.new(0,0,10)
+&#9;&#9;Player.Character.Humanoid.PlatformStand = false
+&#9;&#9;Player.Character.Torso.Anchored = false
+&#9;&#9;noteGui.DriveNote.Visible = false
+&#9;&#9;noteGui.FireNote.Visible = false
+&#9;&#9;noteGui.CreateNote.Visible = true
+&#9;end
+&#9;Equipped = false
+end)
+
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX48BC098EA76B4A51A4DC6292327B66D9">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-30.9699993</X>
+					<Y>114.459999</Y>
+					<Z>75.9000015</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1.20000005</Y>
+					<Z>6</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBXBB14A34EC10B48979C060309B8B1A15C">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=82934522</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=177480340 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBXCA51A77B261649D3B50936C614B76AAF">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">TankFireScript</string>
+				<ProtectedString name="Source">function WaitFor(name)
+&#9;while not script:FindFirstChild(name) do script.ChildAdded:wait() end
+&#9;if script[name]:IsA(&apos;Vector3Value&apos;) then
+&#9;&#9;while script[name].Value == Vector3.new(0,0,0) do script[name].Changed:wait() end
+&#9;elseif script[name]:IsA(&apos;ObjectValue&apos;) then
+&#9;&#9;while script[name].Value == nil do script[name].Changed:wait() end
+&#9;end
+&#9;return script[name].Value
+end
+
+local origin = WaitFor(&apos;Origin&apos;)
+local dir = WaitFor(&apos;Direction&apos;)
+local targ = WaitFor(&apos;Target&apos;)
+
+local Proj = Instance.new(&apos;Part&apos;, game.Workspace)
+Proj.CFrame = CFrame.new(origin)
+Proj.FormFactor = &apos;Custom&apos;
+Proj.Anchored = true
+Proj.Shape = &apos;Ball&apos;
+Proj.Size = Vector3.new(1,1,1)
+Proj.TopSurface = &apos;Smooth&apos;
+Proj.BottomSurface = &apos;Smooth&apos;
+local ProjMesh = Instance.new(&quot;SpecialMesh&quot;);
+ProjMesh.Parent = Proj;
+ProjMesh.MeshId = &quot;http://www.roblox.com/asset/?id=1158007&quot;;
+ProjMesh.TextureId = &quot;http://www.roblox.com/asset/?id=1158033&quot;
+ProjMesh.Scale = Vector3.new(0.25,0.25,0.25);
+local ExplodeSound = Instance.new(&apos;Sound&apos;, Proj)
+ExplodeSound.SoundId = &apos;http://www.roblox.com/asset/?id=81116747&apos;
+local BP = Instance.new(&apos;BodyPosition&apos;, Proj)
+BP.maxForce = Vector3.new(10000, 10000, 10000)
+BP.P = 30000
+
+local totalDist = (targ - origin).magnitude
+local speed = 80 --studs/sec
+local flightTime = totalDist/speed
+
+local exploded = false
+local function explode()
+&#9;if exploded then return end
+&#9;exploded = true
+&#9;--explode
+&#9;Proj.Transparency = 1
+&#9;Proj.Anchored = true
+&#9;
+&#9;local exp = Instance.new(&apos;Explosion&apos;)
+&#9;exp.BlastPressure = 0
+&#9;exp.BlastRadius = 12
+&#9;exp.Position = Proj.Position
+
+&#9;local hitHums = {}
+&#9;exp.Hit:connect(function(part)
+&#9;&#9;local hum = (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+&#9;&#9;if hum and not hitHums[hum] then
+&#9;&#9;&#9;hitHums[hum] = true
+&#9;&#9;&#9;--
+&#9;&#9;&#9;local tag = script.creator:Clone()
+&#9;&#9;&#9;game.Debris:AddItem(tag, 2)
+&#9;&#9;&#9;tag.Parent = hum
+&#9;&#9;&#9;hum:TakeDamage(90)
+&#9;&#9;end
+&#9;end)
+
+&#9;exp.Parent = game.Workspace
+
+&#9;ExplodeSound:Play()
+&#9;
+&#9;wait(2)
+&#9;Proj:Destroy()
+&#9;script:Destroy()
+&#9;exp:Destroy()
+end
+
+local tank = WaitFor(&apos;Tank&apos;)
+local owner = WaitFor(&apos;creator&apos;)
+
+--set up touched
+Proj.Touched:connect(function(part)
+&#9;if part.Parent ~= tank then
+&#9;&#9;explode()
+&#9;end
+end)
+
+local aheadVector = dir.unit*totalDist
+local flightVector = targ - origin
+
+--keep flying
+Proj.Anchored = false
+for t = 0, flightTime, 0.033 do
+&#9;if exploded then break end
+&#9;local f = t/flightTime
+&#9;--
+&#9;BP.position = origin + (aheadVector*f)*(1-f)+(flightVector*f)*(f)
+&#9;--
+&#9;wait(0.03)
+end
+BP.position = targ
+while (Proj.Position-targ).magnitude &gt; 1 do wait() end
+explode()
+</ProtectedString>
+			</Properties>
+			<Item class="Vector3Value" referent="RBX5533ED6C035242579CA9F4583CABFF50">
+				<Properties>
+					<string name="Name">Origin</string>
+					<Vector3 name="Value">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Vector3Value" referent="RBXE3280F401A5B4154999605DE5EB1EEDB">
+				<Properties>
+					<string name="Name">Direction</string>
+					<Vector3 name="Value">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Vector3Value" referent="RBX6D0B73D6B3F248FE8A095EA17502E744">
+				<Properties>
+					<string name="Name">Target</string>
+					<Vector3 name="Value">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBXF364551FBAC847D18DE6E3D715800760">
+				<Properties>
+					<string name="Name">creator</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBX4CF6F38AB98A4AF7B17610B751BA15A8">
+				<Properties>
+					<string name="Name">Tank</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX476389524A36402DBDE218FC109D0CCD">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">TankHealthFix</string>
+				<ProtectedString name="Source">local hum = script.Parent
+hum.MaxHealth = 500
+while hum.Health ~= hum.MaxHealth do
+&#9;wait()
+&#9;hum.Health = hum.MaxHealth
+end
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX507614D25769432BA2F61F4A3DBFC4C4">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-35.0792694</X>
+					<Y>113.120293</Y>
+					<Z>71.2978363</Z>
+					<R00>-0.567888379</R00>
+					<R01>0.478183478</R01>
+					<R02>-0.669957817</R02>
+					<R10>-0</R10>
+					<R11>0.813939154</R11>
+					<R12>0.58095026</R12>
+					<R20>0.823105693</R20>
+					<R21>0.329914898</R21>
+					<R22>-0.46222651</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-33.7393417</X>
+					<Y>111.958382</Y>
+					<Z>72.2222977</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
