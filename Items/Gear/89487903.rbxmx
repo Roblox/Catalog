@@ -32,140 +32,140 @@
  -- A nice simple axe
 
 function WaitForChild(obj, name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
+	while not obj:FindFirstChild(name) do
+		wait()
+		print("1waiting for " .. name)
+	end
+	return obj:FindFirstChild(name)
 end
 
 local Tool = script.Parent
 local Damage = 25
 
 local Sword = Tool.Handle
-local Hitbox = Sword:FindFirstChild(&quot;stickbox&quot;)
+local Hitbox = Sword:FindFirstChild("stickbox")
 
-local SlashSound = Instance.new(&quot;Sound&quot;)
-SlashSound.SoundId = &quot;rbxasset://sounds\\Swordslash.wav&quot;
+local SlashSound = Instance.new("Sound")
+SlashSound.SoundId = "rbxasset://sounds\\Swordslash.wav"
 SlashSound.Parent = Sword
 SlashSound.Volume = .7
 
-local UnsheathSound = Instance.new(&quot;Sound&quot;)
-UnsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
+local UnsheathSound = Instance.new("Sound")
+UnsheathSound.SoundId = "rbxasset://sounds\\unsheath.wav"
 UnsheathSound.Parent = Sword
 UnsheathSound.Volume = 1
 
 local EquipTime = time()
 
 function AttachAxe(hit)
-&#9;local taxe = script.Parent:FindFirstChild(&quot;Handle&quot;)
-&#9;local axeFrame = taxe.CFrame
-&#9;taxe.Parent = hit
-&#9;local tweld = Instance.new(&quot;Weld&quot;)
-&#9;tweld.Part0 = hit
-&#9;tweld.Part1 = taxe
-&#9;tweld.C0 = CFrame.new()
-&#9;tweld.C1 = axeFrame:inverse() * hit.CFrame
-&#9;tweld.Parent = hit
-&#9;
-&#9;local stickscript = taxe:FindFirstChild(&quot;waitBin&quot;):FindFirstChild(&quot;stickScript&quot;):Clone()
-&#9;stickscript.Parent = taxe
-&#9;stickscript.Disabled = false
-&#9;Sword:FindFirstChild(&quot;axehit&quot;):Play()
+	local taxe = script.Parent:FindFirstChild("Handle")
+	local axeFrame = taxe.CFrame
+	taxe.Parent = hit
+	local tweld = Instance.new("Weld")
+	tweld.Part0 = hit
+	tweld.Part1 = taxe
+	tweld.C0 = CFrame.new()
+	tweld.C1 = axeFrame:inverse() * hit.CFrame
+	tweld.Parent = hit
+	
+	local stickscript = taxe:FindFirstChild("waitBin"):FindFirstChild("stickScript"):Clone()
+	stickscript.Parent = taxe
+	stickscript.Disabled = false
+	Sword:FindFirstChild("axehit"):Play()
 end
 
 local BlowMade = false
 function Blow(hit)
-&#9;if (hit.Parent == nil) or time() - EquipTime&lt;2 then return end -- happens when bullet hits Sword
-&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;local vCharacter = Tool.Parent
-&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
-&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non - nil if Tool held by a character
-&#9;
-&#9;if humanoid ~= nil and humanoid ~= hum and hum ~= nil then
-&#9;&#9;-- final check, make sure Sword is in - hand
-&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;&#9;if (right_arm ~= nil) then
-&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
-&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == Sword or joint.Part1 == Sword)) and not BlowMade then
-&#9;&#9;&#9;&#9;BlowMade = true
-&#9;&#9;&#9;&#9;AttachAxe(hit)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;script.Parent.Parent = Sword
-&#9;&#9;&#9;&#9;TagHumanoid(humanoid, vPlayer)
-&#9;&#9;&#9;&#9;humanoid:TakeDamage(Damage)
-&#9;&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;&#9;UnTagHumanoid(humanoid)
-&#9;&#9;&#9;&#9;BlowMade = false
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if (hit.Parent == nil) or time() - EquipTime&lt;2 then return end -- happens when bullet hits Sword
+	local humanoid = hit.Parent:findFirstChild("Humanoid")
+	local vCharacter = Tool.Parent
+	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+	local hum = vCharacter:findFirstChild("Humanoid") -- non - nil if Tool held by a character
+	
+	if humanoid ~= nil and humanoid ~= hum and hum ~= nil then
+		-- final check, make sure Sword is in - hand
+		local right_arm = vCharacter:FindFirstChild("Right Arm")
+		if (right_arm ~= nil) then
+			local joint = right_arm:FindFirstChild("RightGrip")
+			if (joint ~= nil and (joint.Part0 == Sword or joint.Part1 == Sword)) and not BlowMade then
+				BlowMade = true
+				AttachAxe(hit)
+				
+				script.Parent.Parent = Sword
+				TagHumanoid(humanoid, vPlayer)
+				humanoid:TakeDamage(Damage)
+				wait(1)
+				UnTagHumanoid(humanoid)
+				BlowMade = false
+			end
+		end
+	end
 end
 
 
 function TagHumanoid(humanoid, player)
-&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value = player
-&#9;creator_tag.Name = &quot;creator&quot;
-&#9;creator_tag.Parent = humanoid
+	local creator_tag = Instance.new("ObjectValue")
+	creator_tag.Value = player
+	creator_tag.Name = "creator"
+	creator_tag.Parent = humanoid
 end
 
 function UnTagHumanoid(humanoid)
-&#9;if humanoid ~= nil then
-&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
-&#9;&#9;if tag ~= nil then
-&#9;&#9;&#9;tag.Parent = nil
-&#9;&#9;end
-&#9;end
+	if humanoid ~= nil then
+		local tag = humanoid:findFirstChild("creator")
+		if tag ~= nil then
+			tag.Parent = nil
+		end
+	end
 end
 
 function DoSuperStrike()
-&#9;local bvelocity = Instance.new(&quot;BodyVelocity&quot;)
-&#9;bvelocity.maxForce = Vector3.new(9999999, 99999999, 99999999)
-&#9;local dir = (script.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;).TargetPoint - Sword.CFrame.p).unit
-&#9;bvelocity.velocity = Vector3.new(dir.x * 75, dir.y * 75, dir.z * 75)
-&#9;Tool.Parent = game.Workspace
-&#9;bvelocity.Parent = Sword
-&#9;wait(2)
-&#9;bvelocity:Destroy()
+	local bvelocity = Instance.new("BodyVelocity")
+	bvelocity.maxForce = Vector3.new(9999999, 99999999, 99999999)
+	local dir = (script.Parent.Parent:FindFirstChild("Humanoid").TargetPoint - Sword.CFrame.p).unit
+	bvelocity.velocity = Vector3.new(dir.x * 75, dir.y * 75, dir.z * 75)
+	Tool.Parent = game.Workspace
+	bvelocity.Parent = Sword
+	wait(2)
+	bvelocity:Destroy()
 end
 
 Tool.Enabled = true
 function OnActivated()
-&#9;if Tool.Enabled and time() - EquipTime&gt;2 then
-&#9;&#9;Tool.Enabled = false
-&#9;&#9;local character = Tool.Parent;
-&#9;&#9;local humanoid = WaitForChild(character, &quot;Humanoid&quot;)
-&#9;&#9;if humanoid == nil then
-&#9;&#9;&#9;print(&quot;Humanoid not found&quot;)
-&#9;&#9;&#9;return 
-&#9;&#9;end
-&#9;&#9;SlashSound:play()
-&#9;&#9;if time() - script.Parent:FindFirstChild(&quot;lastSuperStrike&quot;).Value&lt;2 then
-&#9;&#9;&#9;DoSuperStrike()
-&#9;&#9;else
-&#9;&#9;&#9;Tool.doStrike.Value = not Tool.doStrike.Value
-&#9;&#9;&#9;wait(1)
-&#9;&#9;end
-&#9;&#9;Tool.Enabled = true
-&#9;end
+	if Tool.Enabled and time() - EquipTime&gt;2 then
+		Tool.Enabled = false
+		local character = Tool.Parent;
+		local humanoid = WaitForChild(character, "Humanoid")
+		if humanoid == nil then
+			print("Humanoid not found")
+			return 
+		end
+		SlashSound:play()
+		if time() - script.Parent:FindFirstChild("lastSuperStrike").Value&lt;2 then
+			DoSuperStrike()
+		else
+			Tool.doStrike.Value = not Tool.doStrike.Value
+			wait(1)
+		end
+		Tool.Enabled = true
+	end
 end
 
 function ReAttachStickbox()
  -- wait(2)
-&#9;local tweld = Instance.new(&quot;Weld&quot;)
-&#9;Sword:FindFirstChild(&quot;stickbox&quot;).CFrame = CFrame.new(Sword.CFrame * Vector3.new(0, 1, 0), Sword.CFrame.lookVector)
-&#9;tweld.Part0 = Sword -- &gt; part0 has to be the parent 
-&#9;tweld.Part1 = Sword:FindFirstChild(&quot;stickbox&quot;)
-&#9;tweld.C0 = CFrame.new()
-&#9;tweld.C1 = Sword:FindFirstChild(&quot;stickbox&quot;).CFrame:inverse() * Sword.CFrame
-&#9;tweld.Parent = Sword
+	local tweld = Instance.new("Weld")
+	Sword:FindFirstChild("stickbox").CFrame = CFrame.new(Sword.CFrame * Vector3.new(0, 1, 0), Sword.CFrame.lookVector)
+	tweld.Part0 = Sword -- &gt; part0 has to be the parent 
+	tweld.Part1 = Sword:FindFirstChild("stickbox")
+	tweld.C0 = CFrame.new()
+	tweld.C1 = Sword:FindFirstChild("stickbox").CFrame:inverse() * Sword.CFrame
+	tweld.Parent = Sword
 end
 
 function OnEquipped()
-&#9;EquipTime = time()
-&#9;UnsheathSound:play()
-&#9;ReAttachStickbox()
+	EquipTime = time()
+	UnsheathSound:play()
+	ReAttachStickbox()
 end
 
 
@@ -252,7 +252,7 @@ Hitbox.Touched:connect(Blow)</ProtectedString>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
 						<X>0</X>
-						<Y>-1</Y>
+						<Y>0</Y>
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
@@ -293,11 +293,11 @@ Hitbox.Touched:connect(Blow)</ProtectedString>
 						<Content name="LinkedSource"><null></null></Content>
 						<string name="Name">stickScript</string>
 						<ProtectedString name="Source">function waitForChild(obj,name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
+	while not obj:FindFirstChild(name) do
+		wait()
+		print("1waiting for " .. name)
+	end
+	return obj:FindFirstChild(name)
 end
 
 local TimePlaced = time()
@@ -305,55 +305,55 @@ local MyPart = script.Parent
 
 local RipOutDamage = 15
 
-while not MyPart:FindFirstChild(&quot;HorrorAxe&quot;) do 
- -- print(&quot;waiting for horror axe&quot;)
-&#9;wait() 
+while not MyPart:FindFirstChild("HorrorAxe") do 
+ -- print("waiting for horror axe")
+	wait() 
 end
 local DamagePerTick = 2
-local MyTool = MyPart:FindFirstChild(&quot;HorrorAxe&quot;)
+local MyTool = MyPart:FindFirstChild("HorrorAxe")
 local MyHost = MyPart.Parent
 local MyCharacter = MyHost.Parent
-local MyHumanoid = waitForChild(MyCharacter,&quot;Humanoid&quot;)
+local MyHumanoid = waitForChild(MyCharacter,"Humanoid")
  -- WE HAVE TO GO DEEPER
 local TakingAxe = false
 
-script.Parent:FindFirstChild(&quot;screaming&quot;):Play()
+script.Parent:FindFirstChild("screaming"):Play()
 
 function ReAttachStickbox()
-&#9;local tweld = Instance.new(&quot;Weld&quot;)
-&#9;tweld.Part0 = MyPart -- &gt; part0 has to be the parent 
-&#9;tweld.Part1 = MyPart:FindFirstChild(&quot;stickbox&quot;)
-&#9;tweld.C0 = CFrame.new()
-&#9;tweld.C1 = MyPart:FindFirstChild(&quot;stickbox&quot;).CFrame:inverse() * MyPart.CFrame
-&#9;tweld.Parent = MyPart
+	local tweld = Instance.new("Weld")
+	tweld.Part0 = MyPart -- &gt; part0 has to be the parent 
+	tweld.Part1 = MyPart:FindFirstChild("stickbox")
+	tweld.C0 = CFrame.new()
+	tweld.C1 = MyPart:FindFirstChild("stickbox").CFrame:inverse() * MyPart.CFrame
+	tweld.Parent = MyPart
 end
 
 function OnTouch(hit)
-&#9;if (hit.Parent == nil) then return end -- happens when bullet hits sword
-&#9;local vhumanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;local vPlayer = game.Players:playerFromCharacter(hit.Parent)
-&#9;--print(&quot;retreveing axe &quot;..vhumanoid..&quot; &quot;..MyHumanoid)
-&#9;if vhumanoid ~= nil and vhumanoid ~= MyHumanoid and MyHumanoid ~= nil and time() - TimePlaced&gt;2 and not TakingAxe then
-&#9;&#9;TakingAxe = true
-&#9;&#9;print(&quot;it&apos;s a humanoid&quot;)
+	if (hit.Parent == nil) then return end -- happens when bullet hits sword
+	local vhumanoid = hit.Parent:findFirstChild("Humanoid")
+	local vPlayer = game.Players:playerFromCharacter(hit.Parent)
+	--print("retreveing axe "..vhumanoid.." "..MyHumanoid)
+	if vhumanoid ~= nil and vhumanoid ~= MyHumanoid and MyHumanoid ~= nil and time() - TimePlaced&gt;2 and not TakingAxe then
+		TakingAxe = true
+		print("it's a humanoid")
  -- temptool.Parent = game.Workspace
-&#9;&#9;MyHumanoid:TakeDamage(RipOutDamage)
-&#9;&#9;MyTool.Parent = nil
-&#9;&#9;MyPart.Parent = MyTool
-&#9;&#9;MyTool.Parent = game.Workspace
-&#9;&#9;ReAttachStickbox()
-&#9;&#9;script.Parent:FindFirstChild(&quot;screaming&quot;):Stop()
+		MyHumanoid:TakeDamage(RipOutDamage)
+		MyTool.Parent = nil
+		MyPart.Parent = MyTool
+		MyTool.Parent = game.Workspace
+		ReAttachStickbox()
+		script.Parent:FindFirstChild("screaming"):Stop()
  -- vhumanoid:EquipTool(MyTool)
 
-&#9;&#9;script:Destroy()
-&#9;end
+		script:Destroy()
+	end
 end
 script.Parent.Touched:connect(OnTouch)
 
 while script.Parent do
-&#9;MyHumanoid:TakeDamage(DamagePerTick)
-&#9;wait(.5)
-&#9;
+	MyHumanoid:TakeDamage(DamagePerTick)
+	wait(.5)
+	
 end</ProtectedString>
 					</Properties>
 				</Item>
@@ -513,49 +513,49 @@ end</ProtectedString>
 				<ProtectedString name="Source">--Stickmasterluke
 --A nice simple axe
 function waitForChild(obj,name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
+	while not obj:FindFirstChild(name) do
+		wait()
+		print("1waiting for " .. name)
+	end
+	return obj:FindFirstChild(name)
 end
 
 local sp=script.Parent
-local sword=waitForChild(sp,&quot;Handle&quot;)
+local sword=waitForChild(sp,"Handle")
 
 
 enabled=true
 taunting=false
 
 function onButton1Down(mouse)
-&#9;if not enabled then
-&#9;&#9;return
-&#9;end
-&#9;enabled=false
-&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;wait(1.25)
-&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;enabled=true
+	if not enabled then
+		return
+	end
+	enabled=false
+	mouse.Icon="rbxasset://textures\\GunWaitCursor.png"
+	wait(1.25)
+	mouse.Icon="rbxasset://textures\\GunCursor.png"
+	enabled=true
 end
 
 function swordUp()
-&#9;sp.Grip=CFrame.new(0, 0, -1.1, 1, 0, -0, 0, -0, -1, -0, 1, -0)
+	sp.Grip=CFrame.new(0, 0, -1.1, 1, 0, -0, 0, -0, -1, -0, 1, -0)
 end
 
 function swordOut()
-&#9;sp.Grip=CFrame.new(0, 0, -1.1, 1, 0, -0, 0, -0, -1, -0, 1, -0)*CFrame.Angles(math.pi/4,.4,0)
+	sp.Grip=CFrame.new(0, 0, -1.1, 1, 0, -0, 0, -0, -1, -0, 1, -0)*CFrame.Angles(math.pi/4,.4,0)
 end
 
 function onEquippedLocal(mouse)
-&#9;local currentlast=lastequipped
-&#9;if mouse==nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return 
-&#9;end
-&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;mouse.Button1Down:connect(function()
-&#9;&#9;onButton1Down(mouse)
-&#9;end)
+	local currentlast=lastequipped
+	if mouse==nil then
+		print("Mouse not found")
+		return 
+	end
+	mouse.Icon="rbxasset://textures\\GunCursor.png"
+	mouse.Button1Down:connect(function()
+		onButton1Down(mouse)
+	end)
 end
 sp.Equipped:connect(onEquippedLocal)
 
@@ -575,16 +575,16 @@ sp.Equipped:connect(onEquippedLocal)
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">localScript</string>
 				<ProtectedString name="Source">function WaitForChild(obj, name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
+	while not obj:FindFirstChild(name) do
+		wait()
+		print("1waiting for " .. name)
+	end
+	return obj:FindFirstChild(name)
 end
 
 local Tool = script.Parent
-local Sword = WaitForChild(Tool, &quot;Handle&quot;)
-local RunServe = game:service(&quot;RunService&quot;)
+local Sword = WaitForChild(Tool, "Handle")
+local RunServe = game:service("RunService")
  -- time last key was pressed
 local LastWDown = 0
 local LastADown = 0
@@ -594,39 +594,39 @@ local LastSuperStrike = 0
 
 
 function OnKeyDown(key)
-&#9;keytime = RunServe.Stepped:wait()
-&#9;if key:lower() == &quot;w&quot; then
-&#9;&#9;LastWDown = keytime
-&#9;elseif key:lower() == &quot;a&quot; then
-&#9;&#9;LastADown = keytime
-&#9;elseif key:lower() == &quot;d&quot; then
-&#9;&#9;LastDDown = keytime
-&#9;&#9;if LastDDown - LastADown &lt;.4 and LastWDown&gt;LastADown then 
-&#9;&#9;&#9;print(&quot;SUPER STRIKE&quot;) 
-&#9;&#9;&#9;LastSuperStrike = keytime
-&#9;&#9;&#9;script.Parent:FindFirstChild(&quot;lastSuperStrike&quot;).Value = LastSuperStrike
-&#9;&#9;end
-&#9;end
+	keytime = RunServe.Stepped:wait()
+	if key:lower() == "w" then
+		LastWDown = keytime
+	elseif key:lower() == "a" then
+		LastADown = keytime
+	elseif key:lower() == "d" then
+		LastDDown = keytime
+		if LastDDown - LastADown &lt;.4 and LastWDown&gt;LastADown then 
+			print("SUPER STRIKE") 
+			LastSuperStrike = keytime
+			script.Parent:FindFirstChild("lastSuperStrike").Value = LastSuperStrike
+		end
+	end
 end
 
 function OnEquippedLocal(mouse)
-&#9;mouse.KeyDown:connect(OnKeyDown)
+	mouse.KeyDown:connect(OnKeyDown)
 end
 Tool.Equipped:connect(OnEquippedLocal)
 
 
 
-while not Tool:FindFirstChild(&quot;doStrike&quot;) do wait() end
+while not Tool:FindFirstChild("doStrike") do wait() end
 
-print(&quot;got here in localscript&quot;)
+print("got here in localscript")
 Tool.doStrike.Changed:connect(function()
-&#9;local h = WaitForChild(Tool.Parent, &quot;Humanoid&quot;)
-&#9;local t = WaitForChild(Tool.Parent, &quot;Torso&quot;)
-&#9;local anim = WaitForChild(Tool, &quot;AxeSwing&quot;)
-&#9;theanim = h:LoadAnimation(anim)
-&#9;if theanim and h.Health&gt;0 then
-&#9;&#9;theanim:Play()
-&#9;end
+	local h = WaitForChild(Tool.Parent, "Humanoid")
+	local t = WaitForChild(Tool.Parent, "Torso")
+	local anim = WaitForChild(Tool, "AxeSwing")
+	theanim = h:LoadAnimation(anim)
+	if theanim and h.Health&gt;0 then
+		theanim:Play()
+	end
 end)
 </ProtectedString>
 			</Properties>
