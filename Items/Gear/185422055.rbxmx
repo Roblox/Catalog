@@ -1,0 +1,557 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Model" referent="RBX00F8A7C7E8F74F8982D6AE6D0CAC39F5">
+		<Properties>
+			<CoordinateFrame name="ModelInPrimary">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">SuperFreezeRayModel</string>
+			<Ref name="PrimaryPart">null</Ref>
+		</Properties>
+		<Item class="Tool" referent="RBXCEFB241D4B6A43C48479D6818329E2DD">
+			<Properties>
+				<bool name="CanBeDropped">true</bool>
+				<bool name="Enabled">true</bool>
+				<CoordinateFrame name="Grip">
+					<X>0</X>
+					<Y>-0.600000024</Y>
+					<Z>1.39999998</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="ManualActivationOnly">false</bool>
+				<string name="Name">SuperFreezeRay</string>
+				<Content name="TextureId"><url>http://www.roblox.com/asset/?id=183537595  </url></Content>
+				<string name="ToolTip"></string>
+			</Properties>
+			<Item class="LocalScript" referent="RBX78B24531EFBB4E6688E42CACDE6561AA">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Client</string>
+					<ProtectedString name="Source">local Player = game:GetService(&quot;Players&quot;).LocalPlayer
+local Mouse = Player:GetMouse()
+
+local Tool = script.Parent
+local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+
+local CAS = game:GetService(&quot;ContextActionService&quot;)
+local ActionName = &quot;SteampunkBow&quot;
+
+function onAction(actionName, inputState, inputObject)
+&#9;if inputState == Enum.UserInputState.Begin then
+&#9;&#9;Remote:FireServer(&quot;Start&quot;)
+&#9;end
+&#9;
+&#9;if inputState == Enum.UserInputState.End then
+&#9;&#9;Remote:FireServer(&quot;End&quot;, Mouse.Hit.p)
+&#9;end
+end
+
+function onEquipped()
+&#9;--ensure unequip
+&#9;onUnequipped()
+&#9;
+&#9;--bind
+&#9;CAS:BindActionToInputTypes(
+&#9;&#9;ActionName,
+&#9;&#9;onAction,
+&#9;&#9;false,
+&#9;&#9;Enum.UserInputType.MouseButton1,
+&#9;&#9;Enum.UserInputType.Touch
+&#9;)
+end
+
+function onUnequipped()
+&#9;--unbind
+&#9;CAS:UnbindAction(ActionName)
+end
+
+--connect
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="RemoteEvent" referent="RBX72CC3B26306340B8AC79CFC6F00654F3">
+				<Properties>
+					<string name="Name">Remote</string>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX6B5F8EDEECF140B9B7625DC06B31EA9E">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Server</string>
+					<ProtectedString name="Source">local Tool = script.Parent
+local Handle = Tool:WaitForChild(&quot;Handle&quot;)
+local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+
+local TickEvent
+
+local Charging = false
+local Charge = 0
+local ChargeRate = 25
+local ChargeVis
+
+local MinChargeTime = 1.3
+local ChargeNeededToFire = ChargeRate * MinChargeTime
+
+local Damage = 30
+
+local R = math.random
+
+local IceColors = {
+&#9;BrickColor.new(&quot;Bright blue&quot;),
+&#9;BrickColor.new(&quot;Teal&quot;),
+&#9;BrickColor.new(&quot;Deep blue&quot;),
+}
+
+function RP()
+&#9;return R() * math.pi * 2
+end
+
+function iceColor()
+&#9;return IceColors[math.random(1, #IceColors)]
+end
+
+function getPlayer()
+&#9;local char = Tool.Parent
+&#9;local player = game:GetService(&quot;Players&quot;):GetPlayerFromCharacter(char)
+&#9;return player
+end
+
+function lerp(a, b, r)
+&#9;return a + (b - a) * r
+end
+
+function createChargeVis()
+&#9;local part = Instance.new(&quot;Part&quot;)
+&#9;part.FormFactor = &quot;Symmetric&quot;
+&#9;part.Size = Vector3.new(1, 1, 1)
+&#9;part.CanCollide = false
+&#9;part.BrickColor = BrickColor.new(&quot;Bright blue&quot;)
+&#9;part.Transparency = 0.5
+&#9;part.Material = &quot;Ice&quot;
+&#9;part.TopSurface = &quot;Smooth&quot;
+&#9;part.BottomSurface = &quot;Smooth&quot;
+&#9;
+&#9;local mesh = Instance.new(&quot;SpecialMesh&quot;)
+&#9;mesh.MeshType = &quot;Sphere&quot;
+&#9;mesh.Name = &quot;Mesh&quot;
+&#9;mesh.Parent = part
+&#9;
+&#9;local fire = Instance.new(&quot;Fire&quot;)
+&#9;fire.Name = &quot;Fire&quot;
+&#9;fire.Size = 2
+&#9;fire.Color = part.BrickColor.Color
+&#9;fire.SecondaryColor = part.BrickColor.Color
+&#9;fire.Parent = part
+&#9;
+&#9;return part
+end
+
+function visualizeCharge()
+&#9;if Charge &gt; 0 then
+&#9;&#9;if not ChargeVis then
+&#9;&#9;&#9;ChargeVis = createChargeVis()
+&#9;&#9;&#9;ChargeVis.Parent = workspace
+&#9;&#9;&#9;
+&#9;&#9;&#9;local w = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;w.Part0 = Handle
+&#9;&#9;&#9;w.Part1 = ChargeVis
+&#9;&#9;&#9;w.C0 = CFrame.new(0, 0, -Handle.Size.Z / 2)
+&#9;&#9;&#9;w.Parent = w.Part0
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;local size = lerp(0, 5, Charge/100)
+&#9;&#9;ChargeVis.Mesh.Scale = Vector3.new(size, size, size)
+&#9;&#9;ChargeVis.Fire.Size = size
+&#9;else
+&#9;&#9;if ChargeVis then
+&#9;&#9;&#9;ChargeVis.Fire.Enabled = false
+&#9;&#9;&#9;ChargeVis.Transparency = 1
+&#9;&#9;&#9;game:GetService(&quot;Debris&quot;):AddItem(ChargeVis, 1)
+&#9;&#9;&#9;ChargeVis = nil
+&#9;&#9;end
+&#9;end
+end
+
+function onTick(dt)
+&#9;if Charging then
+&#9;&#9;Charge = Charge + ChargeRate * dt
+&#9;else
+&#9;&#9;Charge = Charge - ChargeRate * dt
+&#9;end
+&#9;
+&#9;if Charge &gt; 100 then
+&#9;&#9;Charge = 100
+&#9;elseif Charge &lt; 0 then
+&#9;&#9;Charge = 0
+&#9;end
+&#9;
+&#9;visualizeCharge()
+end
+
+function contains(t, v)
+&#9;for _, val in pairs(t) do
+&#9;&#9;if val == v then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function tagHuman(human)
+&#9;local val = Instance.new(&quot;ObjectValue&quot;)
+&#9;val.Name = &quot;creator&quot;
+&#9;val.Value = getPlayer()
+&#9;val.Parent = human
+&#9;game:GetService(&quot;Debris&quot;):AddItem(val, 1)
+end
+
+function grow(part, totalTime)
+&#9;local startSize = Vector3.new(0, 0, 0)
+&#9;local endSize = part.Size
+&#9;local c = part.CFrame
+&#9;
+&#9;local t = 0
+&#9;local event
+&#9;event = game:GetService(&quot;RunService&quot;).Heartbeat:connect(function(dt)
+&#9;&#9;t = t + dt
+&#9;&#9;local size = lerp(startSize, endSize, t/totalTime)
+&#9;&#9;part.Size = size
+&#9;&#9;
+&#9;&#9;if t &gt;= totalTime then
+&#9;&#9;&#9;event:disconnect()
+&#9;&#9;&#9;part.Size = endSize
+&#9;&#9;&#9;part.Sound:Play()
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;part.CFrame = c
+&#9;end)
+&#9;
+&#9;part.Size = startSize
+&#9;part.CFrame = c
+end
+
+function crystallize(position, size)
+&#9;local victims = {}
+&#9;local humans = {}
+&#9;
+&#9;local anchor = Instance.new(&quot;Part&quot;)
+&#9;anchor.Anchored = true
+&#9;anchor.Transparency = 1
+&#9;anchor.CanCollide = false
+&#9;anchor.Size = Vector3.new(1, 1, 1)
+&#9;anchor.Position = position
+&#9;anchor.Parent = workspace
+&#9;game:GetService(&quot;Debris&quot;):AddItem(anchor, 2 + size)
+&#9;
+&#9;local sound = Handle.IceFormSound:Clone()
+&#9;sound.Pitch = math.random(50, 70)/100
+&#9;sound.Parent = anchor
+&#9;sound:Play()
+&#9;
+&#9;for crystalNumber = 1, 6 + size do
+&#9;&#9;local lower = math.max(0, crystalNumber - 3)
+&#9;&#9;local upper = crystalNumber + 1
+&#9;&#9;local growTime = crystalNumber / 3
+&#9;&#9;
+&#9;&#9;local crystal = Instance.new(&quot;Part&quot;)
+&#9;&#9;crystal.Transparency = 0.5
+&#9;&#9;crystal.FormFactor = &quot;Custom&quot;
+&#9;&#9;crystal.Anchored = true
+&#9;&#9;crystal.CanCollide = false
+&#9;&#9;crystal.TopSurface = &quot;Smooth&quot;
+&#9;&#9;crystal.BottomSurface = &quot;Smooth&quot;
+&#9;&#9;crystal.Material = &quot;Ice&quot;
+&#9;&#9;crystal.BrickColor = iceColor()
+&#9;&#9;crystal.CFrame = CFrame.new(position) * CFrame.Angles(RP(), RP(), RP())
+&#9;&#9;crystal.Size = Vector3.new(R(lower, upper), R(lower, upper), R(lower, upper))
+&#9;&#9;
+&#9;&#9;local sound = Handle.IceFormSound:Clone()
+&#9;&#9;sound.Name = &quot;Sound&quot;
+&#9;&#9;sound.Pitch = math.random(60,140)/100
+&#9;&#9;sound.Parent = crystal
+&#9;&#9;
+&#9;&#9;grow(crystal, growTime)
+&#9;&#9;crystal.Parent = workspace
+&#9;&#9;game:GetService(&quot;Debris&quot;):AddItem(crystal, 2 + size)
+&#9;&#9;&#9;&#9;
+&#9;&#9;crystal.Touched:connect(function(part)
+&#9;&#9;&#9;if contains(victims, part) then return end
+&#9;&#9;&#9;if part.Anchored then return end
+&#9;&#9;&#9;
+&#9;&#9;&#9;table.insert(victims, part)
+&#9;&#9;&#9;
+&#9;&#9;&#9;local w = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;w.Part0 = anchor
+&#9;&#9;&#9;w.Part1 = part
+&#9;&#9;&#9;w.C0 = anchor.CFrame:toObjectSpace(part.CFrame)
+&#9;&#9;&#9;w.Parent = w.Part0
+&#9;&#9;&#9;
+&#9;&#9;&#9;if part.Parent and part.Parent:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;&#9;local human = part.Parent.Humanoid
+&#9;&#9;&#9;&#9;if not contains(humans, human) then
+&#9;&#9;&#9;&#9;&#9;table.insert(humans, human)
+&#9;&#9;&#9;&#9;&#9;tagHuman(human)
+&#9;&#9;&#9;&#9;&#9;human:TakeDamage(Damage)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+function onBulletTouched(part, bullet)
+&#9;if part:IsDescendantOf(Tool.Parent) then return end
+&#9;if part == ChargeVis then return end
+&#9;if part.Transparency == 1 and part.CanCollide == false then return end
+&#9;
+&#9;local position = bullet.Position
+&#9;bullet:Destroy()
+&#9;crystallize(position, bullet.Size.X)
+end
+
+function fire(targetPos)
+&#9;if Charge &lt; ChargeNeededToFire then return end
+&#9;
+&#9;local a = Handle.CFrame:pointToWorldSpace(Vector3.new(0, 0, -Handle.Size.Z/2))
+&#9;local b = targetPos
+&#9;local c = CFrame.new(a, b)
+&#9;
+&#9;local size = math.floor(lerp(1, 4, Charge/100))
+&#9;
+&#9;local lift = Instance.new(&quot;BodyForce&quot;)
+&#9;lift.force = Vector3.new(0, 150, 0)
+&#9;
+&#9;local bullet = createChargeVis()
+&#9;lift.Parent = bullet
+&#9;bullet.Size = Vector3.new(size, size, size)
+&#9;bullet.CFrame = c
+&#9;bullet.Velocity = bullet.CFrame.lookVector * 128
+&#9;bullet.Parent = workspace
+&#9;game:GetService(&quot;Debris&quot;):AddItem(bullet)
+&#9;
+&#9;bullet.Touched:connect(function(part)
+&#9;&#9;onBulletTouched(part, bullet)
+&#9;end)
+&#9;
+&#9;Charge = 0
+&#9;
+&#9;Handle.Fire.Pitch = math.random(90, 110)/100
+&#9;Handle.Fire:Play()
+end
+
+function onEquipped()
+&#9;--ensure unequip
+&#9;onUnequipped()
+&#9;
+&#9;--tick
+&#9;TickEvent = game:GetService(&quot;RunService&quot;).Heartbeat:connect(onTick)
+end
+
+function onUnequipped()
+&#9;--stop tick
+&#9;if TickEvent then
+&#9;&#9;TickEvent:disconnect()
+&#9;end
+&#9;
+&#9;--stop the charge!
+&#9;Charging = false
+&#9;Charge = 0
+&#9;if ChargeVis then
+&#9;&#9;ChargeVis:Destroy()
+&#9;&#9;ChargeVis = nil
+&#9;end
+end
+
+function onRemote(player, func, ...)
+&#9;if player == getPlayer() then
+&#9;&#9;local args = {...}
+&#9;&#9;
+&#9;&#9;if func == &quot;Start&quot; then
+&#9;&#9;&#9;Charging = true
+&#9;&#9;elseif func == &quot;End&quot; then
+&#9;&#9;&#9;Charging = false
+&#9;&#9;&#9;fire(args[1])
+&#9;&#9;end
+&#9;end
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+Remote.OnServerEvent:connect(onRemote)</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Part" referent="RBX00CEBD2AE30B4C65A1210B16F504C8C4">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>20.8000011</X>
+						<Y>30.0999966</Y>
+						<Z>19.8999958</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>0.866025388</R11>
+						<R12>-0.5</R12>
+						<R20>0</R20>
+						<R21>0.5</R21>
+						<R22>0.866025388</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">true</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">false</bool>
+					<token name="Material">256</token>
+					<string name="Name">Handle</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.799999893</X>
+						<Y>1.39999986</Y>
+						<Z>4.19999981</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBX48A3170C2F0548DA835E5C51A44E6940">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=183537459 </url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>0.600000024</X>
+							<Y>0.600000024</Y>
+							<Z>0.600000024</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=183537477 </url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBXF8F674DBBB7F400D9EC94DD42E7D607B">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">IceFormSound</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>rbxassetid://32788850</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBXF57C79D997554155B311276C88DD6A7D">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Fire</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>rbxassetid://32656754</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX8B026CBEFE59492892BD311A434BEA48">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>24.1143456</X>
+					<Y>30.4420376</Y>
+					<Z>22.4569912</Z>
+					<R00>0.610835671</R00>
+					<R01>-0.0644792393</R01>
+					<R02>0.789127469</R02>
+					<R10>3.72529074e-009</R10>
+					<R11>0.996678472</R11>
+					<R12>0.0814381167</R12>
+					<R20>-0.791757464</R20>
+					<R21>-0.0497453026</R21>
+					<R22>0.608806729</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>20.8000011</X>
+					<Y>30.0999966</Y>
+					<Z>19.8999958</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
