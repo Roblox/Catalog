@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX98929F5F81D8427B822A7C46D4AFC17A">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>1</R21>
 				<R22>-0</R22>
 			</CoordinateFrame>
-			<string name="Name">RemoteDetonator</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">RemoteExplosiveDetonator</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=74322561</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX25AAA2A475A24D9A860BD82F850BDC3D">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -91,7 +92,7 @@
 					<Z>1.9799993</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX41997346D961475D8B21CD8B5BAA7784">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,7 +118,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
+		<Item class="LocalScript" referent="RBX459C492321624A73B59675ED593854EA">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -129,16 +130,13 @@ local stillEquipped = false
 function onEquippedLocal(mouse)
 &#9;stillEquipped = true
 &#9;if mouse == nil then 
-&#9;&#9;print(&quot;Mouse not found&quot;)
 &#9;&#9;return
 &#9;end
 &#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
 &#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
 &#9;&#9;while Tool.Enabled and stillEquipped do 
 &#9;&#9;&#9;wait(0.01)
 &#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
 &#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
 &#9;&#9;while not Tool.Enabled and stillEquipped do 
 &#9;&#9;&#9;wait(0.01)
@@ -155,7 +153,7 @@ Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX68203CA643D64B0AA58AF314730CEE8B">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -167,6 +165,8 @@ local vCharacter
 local myTorso 
 local myHumanoid 
 
+local RE = Tool:WaitForChild(&quot;RemoteEvent&quot;)
+
 Tool.Enabled = true 
 
 local c4Clone 
@@ -175,7 +175,7 @@ local exploded
 
 local debris = game:GetService(&quot;Debris&quot;) 
 
-function onActivated()
+function onActivated(targetPos)
 &#9;if Tool.Enabled == false then 
 &#9;&#9;return 
 &#9;end 
@@ -188,7 +188,7 @@ function onActivated()
 
 &#9;if not c4Clone or not c4Clone.Parent or exploded then 
 &#9;&#9;exploded = false 
-&#9;&#9;local target = myHumanoid.TargetPoint 
+&#9;&#9;local target = targetPos
 &#9;&#9;local lookAt = (target - Remote.Position).unit 
 &#9;&#9;
 &#9;&#9;local findPart = game.Workspace:FindPartOnRay(Ray.new(Remote.Position, lookAt * 8.0), vCharacter)
@@ -276,13 +276,19 @@ function onUnequipped()
 &#9;end  &#9;
 end
 
-Tool.Activated:connect(onActivated)
+RE.OnServerEvent:connect(function(player, func, ...)
+&#9;if not player == game:GetService(&quot;Players&quot;):GetPlayerFromCharacter(Tool.Parent) then return end
+&#9;
+&#9;if func == &quot;Activate&quot; then
+&#9;&#9;onActivated(...)
+&#9;end
+end)
 Tool.Equipped:connect(onEquipped)
 Tool.Unequipped:connect(onUnequipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBXF3F46EEBB4F14ED5AE8BA814EF563522">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -297,7 +303,31 @@ local sg
 local frame 
 local genericTextLabel
 
+local CAS = game:GetService(&quot;ContextActionService&quot;)
+local ActionName = &quot;RemoteDetonator&quot;
+
+local RE = Tool:WaitForChild(&quot;RemoteEvent&quot;)
+
+function onAction(actionName, inputState, inputObject)
+&#9;local player = game:GetService(&quot;Players&quot;).LocalPlayer
+&#9;local mouse = player:GetMouse()
+&#9;
+&#9;if inputState == Enum.UserInputState.Begin then
+&#9;&#9;RE:FireServer(&quot;Activate&quot;, mouse.Hit.p)
+&#9;end
+end
+
 function onEquipped()
+&#9;onUnequipped()
+&#9;
+&#9;CAS:BindActionToInputTypes(
+&#9;&#9;ActionName,
+&#9;&#9;onAction,
+&#9;&#9;false,
+&#9;&#9;Enum.UserInputType.MouseButton1,
+&#9;&#9;Enum.UserInputType.Touch
+&#9;)
+&#9;
 &#9;vCharacter = Tool.Parent
 &#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
 &#9;if vPlayer then 
@@ -330,6 +360,7 @@ function onEquipped()
 end 
 
 function onUnequipped()
+&#9;CAS:UnbindAction(ActionName)
 &#9;if sg then sg:Remove() end 
 end 
 
@@ -360,13 +391,13 @@ end)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="IntValue" referent="RBX6">
+		<Item class="IntValue" referent="RBX280ED93E6F46499F83619702B539204E">
 			<Properties>
 				<string name="Name">TooFar</string>
 				<int name="Value">2</int>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="Camera" referent="RBXF12ED27479744F579661A21A530CEC3E">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -389,6 +420,47 @@ end)
 					<X>79.9955673</X>
 					<Y>2.28790712</Y>
 					<Z>-43.0137329</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX43AEC2A675D3405583BCB2F45BBA6F13">
+			<Properties>
+				<string name="Name">RemoteEvent</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX18503B0BEDD34CB4A9738FB01B99257B">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>77.7356796</X>
+					<Y>3.59780931</Y>
+					<Z>-41.3633957</Z>
+					<R00>0.558487713</R00>
+					<R01>0.331713825</R01>
+					<R02>-0.760300875</R02>
+					<R10>-1.49011594e-008</R10>
+					<R11>0.916563153</R11>
+					<R12>0.399889976</R12>
+					<R20>0.829512715</R20>
+					<R21>-0.223333627</R21>
+					<R22>0.511889279</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>79.256279</X>
+					<Y>2.79803061</Y>
+					<Z>-42.3871727</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
