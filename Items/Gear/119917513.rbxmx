@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX098E4E3EB49B4ABD98ED965BBD526138">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">InstantTreehouse</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=119696815</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXA8AFFF4BD06C4F5FAFC1AC82179005EB">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -36,20 +37,20 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.075000003</X>
-					<Y>123.330009</Y>
-					<Z>128.050003</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1.00000012</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1.00000012</R22>
+					<X>19.9291668</X>
+					<Y>3.97054911</Y>
+					<Z>53.3448029</Z>
+					<R00>0.890396833</R00>
+					<R01>-0.00890797842</R01>
+					<R02>0.455097973</R02>
+					<R10>-1.56682698e-014</R10>
+					<R11>0.99980849</R11>
+					<R12>0.0195700116</R12>
+					<R20>-0.455185145</R20>
+					<R21>-0.017425077</R21>
+					<R22>0.890226305</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">true</bool>
+				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -92,169 +93,380 @@
 				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX2">
+		<Item class="LocalScript" referent="RBX6276470A3F7A46938C7369E2A36F698E">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool = script.Parent 
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
 
-local stillEquipped = true
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-function onEquippedLocal(mouse)
-&#9;stillEquipped = true
-&#9;if mouse == nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
+Players = game:GetService(&quot;Players&quot;)
+StarterGui = game:GetService(&quot;StarterGui&quot;)
+ContentProvider = game:GetService(&quot;ContentProvider&quot;)
+
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+
+Animations = {}
+InteractiveConnections = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ClientControl.OnClientInvoke = (function(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;elseif Mode == &quot;Preload&quot; and Value then
+&#9;&#9;ContentProvider:Preload(Value)
+&#9;elseif Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;StopSound&quot; and Value then
+&#9;&#9;Value:Stop()
+&#9;elseif Mode == &quot;MousePosition&quot; then
+&#9;&#9;return PlayerMouse.Hit.p
+&#9;elseif Mode == &quot;DisableJump&quot; then
+&#9;&#9;DisableJump(Value)
+&#9;elseif Mode == &quot;RequestCamera&quot; and Value then
+&#9;&#9;local PropertyValue = nil
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;PropertyValue = Camera[Value]
+&#9;&#9;end)
+&#9;&#9;return PropertyValue
+&#9;elseif Mode == &quot;SetCamera&quot; and Value then
+&#9;&#9;local Success = false
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;Camera[Value.Property] = Value.Value
+&#9;&#9;&#9;Success = true
+&#9;&#9;end)
+&#9;&#9;return Success
+&#9;elseif Mode == &quot;SetCoreGuiEnabled&quot; and Value then
+&#9;&#9;StarterGui:SetCoreGuiEnabled(Value.Enum, Value.Boolean)
+&#9;end
+end)
+
+function InvokeServer(Mode, Value)
+&#9;local ServerReturn = nil
+&#9;pcall(function()
+&#9;&#9;ServerReturn = ServerControl:InvokeServer(Mode, Value)
+&#9;end)
+&#9;return ServerReturn
+end
+
+function DisableJump(Boolean)
+&#9;if PreventJump then
+&#9;&#9;PreventJump:disconnect()
+&#9;end
+&#9;if Boolean then
+&#9;&#9;PreventJump = Humanoid.Changed:connect(function(Property)
+&#9;&#9;&#9;if Property ==  &quot;Jump&quot; then
+&#9;&#9;&#9;&#9;Humanoid.Jump = false
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not CheckIfAlive() then
 &#9;&#9;return
 &#9;end
-&#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;while Tool.Enabled and stillEquipped do
-&#9;&#9;&#9;wait(0.01)
+&#9;for i, v in pairs(InteractiveConnections) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
 &#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;while not Tool.Enabled and stillEquipped do
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end&#9;&#9;
+&#9;end
+&#9;InteractiveConnections = {}
+&#9;PlayerMouse = Player:GetMouse()
+&#9;local Button1Down = Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;Button1Click&quot;, {Down = true})
+&#9;end)
+&#9;local Button1Up = Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;Button1Click&quot;, {Down = false})
+&#9;end)
+&#9;local Button2Down = Mouse.Button2Down:connect(function()
+&#9;&#9;InvokeServer(&quot;Button2Click&quot;, {Down = true})
+&#9;end)
+&#9;local Button2Up = Mouse.Button2Up:connect(function()
+&#9;&#9;InvokeServer(&quot;Button2Click&quot;, {Down = false})
+&#9;end)
+&#9;local KeyDown = Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;local KeyUp = Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+&#9;for i, v in pairs({Button1Down, Button1Up, Button2Down, Button2Up, KeyDown, KeyUp}) do
+&#9;&#9;table.insert(InteractiveConnections, v)
 &#9;end
 end
 
-function onUnequippedLocal()
-&#9;stillEquipped = false
+function Unequipped()
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;if PreventJump then
+&#9;&#9;PreventJump:disconnect()
+&#9;end
+&#9;Animations = {}
 end
 
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBXA372C024B6CC4ECFA00D812B4118B24D">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
+		<Item class="Script" referent="RBXA440BE78B44B42B5880773FB9FFC018C">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">ThrowScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local Handle = Tool:waitForChild(&quot;Handle&quot;)
-local Treehouse = Tool:waitForChild(&quot;Treehouse&quot;)
-local OriginalBoundingBoxToHandleWeld = Treehouse:waitForChild(&quot;BoundingBox&quot;):waitForChild(&quot;WeldToHandle&quot;):clone()
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
 
-local Mouse
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-local LatestTreehouseClone
-local Player
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
 
-local PROJECTILE_SPEED = 100
+ProjectileScript = script:WaitForChild(&quot;ProjectileScript&quot;)
+Remover = script:WaitForChild(&quot;Remover&quot;)
+
+Treehouse = Tool:WaitForChild(&quot;Treehouse&quot;)
+
+BoundingBox = Treehouse:WaitForChild(&quot;BoundingBox&quot;)
+
+ProjectileSpeed = 100
 
 Tool.Enabled = true
 
-function weldInPlace(part0, part1, name)
-&#9;local weld = Instance.new(&quot;ManualWeld&quot;)
-&#9;weld.Part0 = part0
-&#9;weld.Part1 = part1
-&#9;weld.C0 = CFrame.new()
-&#9;weld.C1 = part1.CFrame:inverse() * part0.CFrame
-&#9;if name then
-&#9;&#9;weld.Name = name
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+ServerControl.OnServerInvoke = (function(Player, Mode, Value)
+&#9;if Mode == &quot;Button1Click&quot; and Value.Down then
+&#9;&#9;local MousePosition = InvokeClient(&quot;MousePosition&quot;, nil)
+&#9;&#9;Activated(MousePosition)
 &#9;end
-&#9;weld.Parent = part0
+end)
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
 end
 
-function weldEverythingInPlace(model, part0)
-&#9;local weldCenter = part0
-&#9;for _, child in pairs(model:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;BasePart&quot;) and child ~= weldCenter then
-&#9;&#9;&#9;weldInPlace(weldCenter, child, &quot;WeldTo&quot; .. child.Name)
-&#9;&#9;elseif child:IsA(&quot;Model&quot;) then
-&#9;&#9;&#9;weldEverythingInPlace(child, weldCenter)
+function WeldInPlace(Part0, Part1, Name)
+&#9;local Weld = Instance.new(&quot;ManualWeld&quot;)
+&#9;Weld.Part0 = Part0
+&#9;Weld.Part1 = Part1
+&#9;Weld.C0 = CFrame.new()
+&#9;Weld.C1 = Part1.CFrame:inverse() * Part0.CFrame
+&#9;if Name then
+&#9;&#9;Weld.Name = Name
+&#9;end
+&#9;Weld.Parent = Part0
+end
+
+function WeldEverythingInPlace(Model, Part0)
+&#9;for i, v in pairs(Model:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) and v ~= Part0 then
+&#9;&#9;&#9;WeldInPlace(Part0, v, (&quot;WeldTo&quot; .. v.Name))
+&#9;&#9;elseif v:IsA(&quot;Model&quot;) then
+&#9;&#9;&#9;WeldEverythingInPlace(v, Part0)
 &#9;&#9;end
 &#9;end
 end
 
-function applyToModelParts(func, model, ...)
-&#9;for _, child in pairs(model:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;func(child, ...)
-&#9;&#9;elseif child:IsA(&quot;Model&quot;) then
-&#9;&#9;&#9;applyToModelParts(func, child, ...)
+function ApplyToModelParts(Function, Model, ...)
+&#9;for i, v in pairs(Model:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;Function(v, ...)
+&#9;&#9;elseif v:IsA(&quot;Model&quot;) then
+&#9;&#9;&#9;ApplyToModelParts(Function, v, ...)
 &#9;&#9;end
 &#9;end
 end
 
-local function RemakeWelds()
-&#9;weldEverythingInPlace(Treehouse, Treehouse.BoundingBox)
-&#9;local boundingBoxToHandleWeld = OriginalBoundingBoxToHandleWeld:clone()
-&#9;boundingBoxToHandleWeld.Parent = Treehouse.BoundingBox
+function RemakeWelds()
+&#9;WeldEverythingInPlace(Treehouse, BoundingBox)
 end
 
-
-local function OnActivated()
-&#9;if not Tool.Enabled then 
+function Activated(MousePosition)
+&#9;if not Tool.Enabled or not CheckIfAlive() or not MousePosition then 
 &#9;&#9;return 
 &#9;end
 &#9;
-&#9;if LatestTreehouseClone then LatestTreehouseClone:Destroy() end
-
-&#9;local treehouseClone = Treehouse:Clone()
-&#9;treehouseClone.Name = &quot;TreehouseClone&quot;
-&#9;treehouseClone.Parent = game.Workspace
-
-&#9;-- Get clone out of our way so it doesn&apos;t collide with our hand
-&#9;treehouseClone:TranslateBy(Vector3.new(0,treehouseClone:GetModelSize().y*1.5,0))
-
-&#9;LatestTreehouseClone = treehouseClone
-&#9;
-&#9;local newVelocity
-&#9;if Mouse and Mouse.Hit then
-&#9;&#9;newVelocity = Player.Torso.Velocity + (Mouse.Hit.p - Handle.Position).unit * PROJECTILE_SPEED
-&#9;else
-&#9;&#9;newVelocity = Player.Torso.Velocity + Player.Torso.CFrame.lookVector * PROJECTILE_SPEED
+&#9;while game:GetService(&quot;Workspace&quot;):FindFirstChild(Player.Name .. Treehouse.Name) and Equipped do
+&#9;&#9;local Treehouse = game:GetService(&quot;Workspace&quot;):FindFirstChild(Player.Name .. Treehouse.Name)
+&#9;&#9;if Treehouse then
+&#9;&#9;&#9;Treehouse:Destroy()
+&#9;&#9;end
+&#9;&#9;wait(0.001)
 &#9;end
-&#9;applyToModelParts(function(part) 
-&#9;&#9;&#9;part.Velocity = newVelocity 
-&#9;&#9;&#9;part.CanCollide = true
-&#9;end, treehouseClone)
-&#9;treehouseClone.BoundingBox.CanCollide = false
-&#9;local bodyGyro = Instance.new(&quot;BodyGyro&quot;)
-&#9;bodyGyro.cframe = CFrame.new()
-&#9;bodyGyro.Parent = treehouseClone.BoundingBox
-&#9;local projectileScript = Tool.ProjectileScript:clone()
-&#9;projectileScript.Parent = treehouseClone
-&#9;projectileScript.Disabled = false
+
+&#9;if not Equipped then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;local Direction = CFrame.new(Handle.Position, MousePosition)
+&#9;
+&#9;local TreehouseClone = Treehouse:Clone()
+&#9;TreehouseClone.Name = (Player.Name .. Treehouse.Name)
+
+&#9;local BoundingBoxClone = TreehouseClone:FindFirstChild(&quot;BoundingBox&quot;)
+&#9;if BoundingBoxClone then
+&#9;&#9;for i, v in pairs(BoundingBoxClone:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;JointInstance&quot;) and (v.Part0 == Handle or v.Part1 == Handle) then
+&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local Creator = Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;Creator.Name = &quot;Creator&quot;
+&#9;&#9;Creator.Value = Player
+&#9;&#9;Creator.Parent = TreehouseClone
+&#9;&#9;local RemoverValue = Instance.new(&quot;BoolValue&quot;)
+&#9;&#9;RemoverValue.Value = false
+&#9;&#9;RemoverValue.Name = &quot;Remove&quot;
+&#9;&#9;RemoverValue.Parent = TreehouseClone
+&#9;&#9;TreehouseClone.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;BoundingBoxClone.CFrame = BoundingBoxClone.CFrame + Direction.lookVector * (((BoundingBoxClone.Size.Z / 2) + (Handle.Size.Z / 2)) * 3)
+&#9;&#9;local NewVelocity = Vector3.new(0, 0, 0) + Direction.lookVector * ProjectileSpeed
+&#9;&#9;
+&#9;&#9;ApplyToModelParts(function(Part)
+&#9;&#9;&#9;Part.Velocity = NewVelocity 
+&#9;&#9;&#9;Part.CanCollide = true
+&#9;&#9;end, TreehouseClone)
+&#9;&#9;BoundingBoxClone.CanCollide = false
+&#9;&#9;local BodyGyro = Instance.new(&quot;BodyGyro&quot;)
+&#9;&#9;BodyGyro.maxTorque = Vector3.new(math.huge, math.huge, math.huge)
+&#9;&#9;BodyGyro.cframe = CFrame.new(TreehouseClone:GetModelCFrame().p, Vector3.new(Torso.Position.X, TreehouseClone:GetModelCFrame().p.Y, Torso.Position.Z))
+&#9;&#9;BodyGyro.Parent = BoundingBoxClone
+&#9;&#9;local ProjectileScriptClone = ProjectileScript:Clone()
+&#9;&#9;ProjectileScriptClone.Disabled = false
+&#9;&#9;ProjectileScriptClone.Parent = TreehouseClone
+&#9;&#9;local RemoverClone = Remover:Clone()
+&#9;&#9;RemoverClone.Disabled = false
+&#9;&#9;RemoverClone.Parent = TreehouseClone
+&#9;end
+&#9;
 end
 
-local function OnEquipped(mouse)
-&#9;if mouse then 
-&#9;&#9;Mouse = mouse 
-&#9;end
-&#9;Player = Tool.Parent
-&#9;
+function CheckIfAlive()
+&#9;return (Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent)
+end
+
+function Equipped()
 &#9;-- All welds are destroyed on unequip!
-&#9;RemakeWelds()&#9;
+&#9;RemakeWelds()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;local WeldToHandle = BoundingBox:FindFirstChild(&quot;WeldToHandle&quot;)
+&#9;if WeldToHandle then
+&#9;&#9;WeldToHandle:Destroy()
+&#9;end
+&#9;local Weld = Instance.new(&quot;ManualWeld&quot;)
+&#9;Weld.Part0 = Handle
+&#9;Weld.Part1 = BoundingBox
+&#9;Weld.Name = &quot;WeldToHandle&quot;
+&#9;Weld.Parent = BoundingBox
+&#9;Equipped = true
 end
 
+function Unequipped()
+&#9;Equipped = false
+end
 
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Activated:connect(OnActivated)
-
-
-</ProtectedString>
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+Tool.Activated:connect(Activated)</ProtectedString>
 			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX4">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ProjectileScript</string>
-				<ProtectedString name="Source">local LatestTouchedPart
+			<Item class="Script" referent="RBX56FA57C474AC46D794175EEBF9AA8E0C">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">ProjectileScript</string>
+					<ProtectedString name="Source">local LatestTouchedPart
 local TicksWithoutMoving = 0
 local AlreadyGrew = false
 local HaltGrowing = false
 
 local Treehouse = script.Parent
+local Creator = Treehouse:FindFirstChild(&quot;Creator&quot;)
+local Remove = Treehouse:FindFirstChild(&quot;Remove&quot;)
 local BoundingBox = Treehouse.BoundingBox
+local BodyGyro = BoundingBox:FindFirstChild(&quot;BodyGyro&quot;)
 
 local SLOW_SPEED = 5
 local MAX_SCALE = 4.0
@@ -420,14 +632,34 @@ end
 
 -- Actual script:
 
-BoundingBox.Touched:connect(function(touchedPart)
+BoundingBox.Touched:connect(function(Hit) --Fixed by Luckymaxer
+&#9;if not Hit or not Hit.Parent then
+&#9;&#9;return
+&#9;end
+&#9;local Character = Hit.Parent
+&#9;if Character:IsA(&quot;Tool&quot;) or Character:IsA(&quot;Hat&quot;) then
+&#9;&#9;Character = Character.Parent
+&#9;end
+&#9;local Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if Humanoid then
+&#9;&#9;return
+&#9;end
 &#9;if AlreadyGrew then
 &#9;&#9;HaltGrowing = true
 &#9;else
-&#9;&#9;LatestTouchedPart = touchedPart
+&#9;&#9;LatestTouchedPart = Hit
 &#9;end
 end)
 
+function RemoveVelocity(Parent)
+&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;v.Velocity = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;v.RotVelocity = Vector3.new(0, 0, 0)
+&#9;&#9;end
+&#9;&#9;RemoveVelocity(v)
+&#9;end
+end
 
 while not AlreadyGrew do
 &#9;if LatestTouchedPart then 
@@ -455,12 +687,87 @@ while not AlreadyGrew do
 &#9;&#9;end, Treehouse)
 &#9;end
 &#9;
+&#9;if Creator and Creator.Value and Creator.Value.Parent and Creator.Value:IsA(&quot;Player&quot;) then
+&#9;&#9;local Character = Creator.Value.Character
+&#9;&#9;if Character and Character.Parent then
+&#9;&#9;&#9;local Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;&#9;if Torso then
+&#9;&#9;&#9;&#9;if BodyGyro and BodyGyro.Parent then
+&#9;&#9;&#9;&#9;&#9;BodyGyro.cframe = CFrame.new(Treehouse:GetModelCFrame().p, Vector3.new(Torso.Position.X, Treehouse:GetModelCFrame().p.Y, Torso.Position.Z))
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
 &#9;wait(TICK_LENGTH)
 end
-</ProtectedString>
-			</Properties>
+
+RemoveVelocity(Treehouse)
+
+BoundingBox = Treehouse:FindFirstChild(&quot;BoundingBox&quot;)
+WeldToHouseMeshPart = BoundingBox:FindFirstChild(&quot;WeldToHouseMeshPart&quot;)
+WeldToTreeMeshPart = BoundingBox:FindFirstChild(&quot;WeldToTreeMeshPart&quot;)
+if not WeldToHouseMeshPart or not WeldToTreeMeshPart then
+&#9;if Remove and Remove.Parent then
+&#9;&#9;Remove.Value = true
+&#9;end
+&#9;return
+end
+
+for i, v in pairs({WeldToHouseMeshPart, WeldToTreeMeshPart}) do
+&#9;if v and v.Parent then
+&#9;&#9;v.Changed:connect(function()
+&#9;&#9;&#9;if not v.Parent or not v.Part0 or not v.Part0.Parent or not v.Part1 or not v.Part1.Parent then
+&#9;&#9;&#9;&#9;if Remove and Remove.Parent then
+&#9;&#9;&#9;&#9;&#9;Remove.Value = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX49450FBD5E704B1DA39A74A1CF246FA5">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Remover</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+Model = script.Parent
+
+Debris = game:GetService(&quot;Debris&quot;)
+
+Creator = Model:FindFirstChild(&quot;Creator&quot;)
+Remove = Model:FindFirstChild(&quot;Remove&quot;)
+
+function DestroyModel(Duration)
+&#9;Debris:AddItem(Model, ((not Duration and 2) or Duration))
+end
+
+if not Creator or not Creator.Value or not Creator.Value:IsA(&quot;Player&quot;) or not Creator.Value.Parent or not Remove then
+&#9;DestroyModel()
+&#9;return
+end
+
+Creator = Creator.Value
+
+Creator.Changed:connect(function(Property)
+&#9;if Property == &quot;Parent&quot; and not Creator.Parent then
+&#9;&#9;DestroyModel()
+&#9;end
+end)
+
+Remove.Changed:connect(function()
+&#9;if Remove.Value then
+&#9;&#9;Model:BreakJoints()
+&#9;&#9;DestroyModel(10)
+&#9;end
+end)</ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Model" referent="RBX5">
+		<Item class="Model" referent="RBXA4424D7686A64727870747775D225707">
 			<Properties>
 				<CoordinateFrame name="ModelInPrimary">
 					<X>0</X>
@@ -479,7 +786,7 @@ end
 				<string name="Name">Treehouse</string>
 				<Ref name="PrimaryPart">null</Ref>
 			</Properties>
-			<Item class="Model" referent="RBX6">
+			<Item class="Model" referent="RBX47E5D7AD95FF4EE284B2B8B0F5BA429F">
 				<Properties>
 					<CoordinateFrame name="ModelInPrimary">
 						<X>0</X>
@@ -498,7 +805,7 @@ end
 					<string name="Name">Ladder</string>
 					<Ref name="PrimaryPart">null</Ref>
 				</Properties>
-				<Item class="Part" referent="RBX7">
+				<Item class="Part" referent="RBX398BAC36C4DA475784EE735E65C39351">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -511,18 +818,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.242207646</X>
-							<Y>122.97139</Y>
-							<Z>127.493698</Z>
-							<R00>-0.0199261289</R00>
-							<R01>0.979350626</R01>
-							<R02>-0.201171324</R02>
-							<R10>-0.993640721</R10>
-							<R11>-0.0416950323</R11>
-							<R12>-0.104554139</R12>
-							<R20>-0.110783488</R20>
-							<R21>0.197808966</R21>
-							<R22>0.973957062</R22>
+							<X>19.5303135</X>
+							<Y>3.60112023</Y>
+							<Z>52.9319267</Z>
+							<R00>-0.0593081787</R00>
+							<R01>0.96240443</R01>
+							<R02>0.26505512</R02>
+							<R10>-0.995618761</R10>
+							<R11>-0.0378159396</R11>
+							<R12>-0.0854737759</R12>
+							<R20>-0.0722380579</R20>
+							<R21>-0.26896441</R21>
+							<R22>0.960434496</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -566,7 +873,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX8">
+					<Item class="Vector3Value" referent="RBX065E4E8E56834489985E35970034EDA3">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -577,7 +884,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX9">
+				<Item class="Part" referent="RBXF0754AAF5FF24B02A92586E979CFA46A">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -590,18 +897,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.10276413</X>
-							<Y>122.972557</Y>
-							<Z>127.50647</Z>
-							<R00>-0.00747907488</R00>
-							<R01>0.998108566</R01>
-							<R02>-0.0610203259</R02>
-							<R10>-0.997426331</R10>
-							<R11>-0.0117977522</R11>
-							<R12>-0.0707241297</R12>
-							<R20>-0.071310252</R20>
-							<R21>0.060334336</R21>
-							<R22>0.99562794</R22>
+							<X>19.6602688</X>
+							<Y>3.60252929</Y>
+							<Z>52.8797989</Z>
+							<R00>-0.0302274488</R00>
+							<R01>0.91627562</R01>
+							<R02>0.399406075</R02>
+							<R10>-0.99863106</R10>
+							<R11>-0.0106147509</R11>
+							<R12>-0.0512261428</R12>
+							<R20>-0.0426976755</R20>
+							<R21>-0.400407284</R21>
+							<R22>0.915342331</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -645,7 +952,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX10">
+					<Item class="Vector3Value" referent="RBXED80FDD1BDE941A0A983338167ADAB51">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -656,7 +963,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX11">
+				<Item class="Part" referent="RBXAC0FBA6400EF488FA6B331FB758F884D">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -669,18 +976,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.177805066</X>
-							<Y>122.721695</Y>
-							<Z>127.474434</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.5811081</X>
+							<Y>3.35108948</Y>
+							<Z>52.8898048</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -724,7 +1031,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX12">
+					<Item class="Vector3Value" referent="RBX5D1656839E4B4DB3A63A725153C68635">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -735,7 +1042,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX13">
+				<Item class="Part" referent="RBX2B3E784D558C45FF8E31C69D1763065A">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -748,18 +1055,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.177056774</X>
-							<Y>122.818726</Y>
-							<Z>127.481934</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.5843201</X>
+							<Y>3.44824171</Y>
+							<Z>52.8944473</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -803,7 +1110,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX14">
+					<Item class="Vector3Value" referent="RBX135528858F724B1AAAF3534B7D6E7F5F">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -814,7 +1121,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX15">
+				<Item class="Part" referent="RBXC253FBFD0D26424F9D9D9E2CD677C09C">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -827,18 +1134,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.173040256</X>
-							<Y>122.930931</Y>
-							<Z>127.50132</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.5957203</X>
+							<Y>3.56080675</Y>
+							<Z>52.9079208</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -882,7 +1189,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX16">
+					<Item class="Vector3Value" referent="RBX4D4E574D266F49A88853E429E9037C81">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -893,7 +1200,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX17">
+				<Item class="Part" referent="RBX9904DBE91E65461782CF696E20A436BE">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -906,18 +1213,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.171423703</X>
-							<Y>123.060982</Y>
-							<Z>127.509735</Z>
-							<R00>0.9925524</R00>
-							<R01>-0.0866880342</R01>
-							<R02>-0.0855863392</R02>
-							<R10>0.0870367363</R10>
-							<R11>0.996205211</R11>
-							<R12>0.00034406039</R12>
-							<R20>0.0852317289</R20>
-							<R21>-0.0077906521</R21>
-							<R22>0.996330917</R22>
+							<X>19.5998325</X>
+							<Y>3.69099855</Y>
+							<Z>52.9124146</Z>
+							<R00>0.921778738</R00>
+							<R01>-0.0896064341</R01>
+							<R02>0.377219468</R02>
+							<R10>0.088688083</R10>
+							<R11>0.995862246</R11>
+							<R12>0.0198422093</R12>
+							<R20>-0.377436042</R20>
+							<R21>0.0151646938</R21>
+							<R22>0.925911903</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -961,7 +1268,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX18">
+					<Item class="Vector3Value" referent="RBXE2894DBA662347ECA763469A60BB4B46">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -972,7 +1279,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX19">
+				<Item class="Part" referent="RBXA0466DD02686458FA1A46DA31ECD5DB7">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -985,18 +1292,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.169923708</X>
-							<Y>123.153221</Y>
-							<Z>127.515862</Z>
-							<R00>0.992369175</R00>
-							<R01>0.0887596384</R01>
-							<R02>-0.085587211</R02>
-							<R10>-0.0890573561</R10>
-							<R11>0.996026576</R11>
-							<R12>0.000341214269</R12>
-							<R20>0.0852774158</R20>
-							<R21>0.00728355814</R21>
-							<R22>0.996330857</R22>
+							<X>19.603138</X>
+							<Y>3.78333855</Y>
+							<Z>52.9155884</Z>
+							<R00>0.923205078</R00>
+							<R01>0.0734734312</R01>
+							<R02>0.377218664</R02>
+							<R10>-0.0873714536</R10>
+							<R11>0.995978534</R11>
+							<R12>0.0198393576</R12>
+							<R20>-0.374243557</R20>
+							<R21>-0.0512738824</R21>
+							<R22>0.925912201</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1040,7 +1347,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX20">
+					<Item class="Vector3Value" referent="RBX1041CC20154E4264A4BCAE8AC2944E76">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1051,7 +1358,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX21">
+				<Item class="Part" referent="RBX32F26AE56CBC482AA539FBC3F3F2423A">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1064,18 +1371,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.167170137</X>
-							<Y>123.27845</Y>
-							<Z>127.526802</Z>
-							<R00>0.982978165</R00>
-							<R01>-0.0753066167</R01>
-							<R02>-0.167579219</R02>
-							<R10>0.077693522</R10>
-							<R11>0.996947587</R11>
-							<R12>0.00772348139</R12>
-							<R20>0.166486055</R20>
-							<R21>-0.0206118356</R21>
-							<R22>0.985828578</R22>
+							<X>19.6094475</X>
+							<Y>3.90876269</Y>
+							<Z>52.9218788</Z>
+							<R00>0.950315833</R00>
+							<R01>-0.0853139535</R01>
+							<R02>0.299367964</R02>
+							<R10>0.0809368044</R10>
+							<R11>0.996353626</R11>
+							<R12>0.0270146839</R12>
+							<R20>-0.300580412</R20>
+							<R21>-0.00144265592</R21>
+							<R22>0.953755796</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1119,7 +1426,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX22">
+					<Item class="Vector3Value" referent="RBX5571F1B252994FB6BF3DBC79BBB94EBB">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1130,7 +1437,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX23">
+				<Item class="Part" referent="RBX0C7F729A35C441339B41B37533DF0520">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1143,18 +1450,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.177856028</X>
-							<Y>122.674812</Y>
-							<Z>127.469101</Z>
-							<R00>0.99610275</R00>
-							<R01>-0.0213150643</R01>
-							<R02>-0.0855865553</R02>
-							<R10>0.0214229804</R10>
-							<R11>0.999770641</R11>
-							<R12>0.000342503219</R12>
-							<R20>0.0855596364</R20>
-							<R21>-0.00217468315</R21>
-							<R22>0.996330917</R22>
+							<X>19.579052</X>
+							<Y>3.30411077</Y>
+							<Z>52.8859062</Z>
+							<R00>0.925673664</R00>
+							<R01>-0.0288744941</R01>
+							<R02>0.37721929</R02>
+							<R10>0.0230932869</R10>
+							<R11>0.999536932</R11>
+							<R12>0.0198406521</R12>
+							<R20>-0.377616882</R20>
+							<R21>-0.00965474732</R21>
+							<R22>0.925912023</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1198,7 +1505,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX24">
+					<Item class="Vector3Value" referent="RBXF584C49038074043913F594AA3FA7599">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1209,7 +1516,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX25">
+				<Item class="Part" referent="RBX4E1901B6F59B44E38510003DA941BA79">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1222,18 +1529,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.175554931</X>
-							<Y>122.773605</Y>
-							<Z>127.477043</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.5838394</X>
+							<Y>3.40304232</Y>
+							<Z>52.8902054</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1277,7 +1584,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX26">
+					<Item class="Vector3Value" referent="RBX512776B78D4740779420ADCFAAEFEE9B">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1288,7 +1595,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX27">
+				<Item class="Part" referent="RBXA956794B66604113A45A6FBD88A70940">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1301,18 +1608,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.175539941</X>
-							<Y>122.87513</Y>
-							<Z>127.491028</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.5893097</X>
+							<Y>3.5048182</Y>
+							<Z>52.9008789</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1356,7 +1663,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX28">
+					<Item class="Vector3Value" referent="RBXF42BF99666B649ED8751997316B5F209">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1367,7 +1674,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX29">
+				<Item class="Part" referent="RBXEAC24B1E3F534AAD94936F5E30AC0295">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1380,18 +1687,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.172848135</X>
-							<Y>122.992188</Y>
-							<Z>127.504555</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.5968227</X>
+							<Y>3.62211895</Y>
+							<Z>52.9096603</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1435,7 +1742,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX30">
+					<Item class="Vector3Value" referent="RBX620A282DA4854DD89B064C9F262A6FD3">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1446,7 +1753,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX31">
+				<Item class="Part" referent="RBXE20B25B5D2824B0081CE1DFE2C6326AF">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1459,18 +1766,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.171446085</X>
-							<Y>123.110977</Y>
-							<Z>127.515648</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.6020603</X>
+							<Y>3.74110126</Y>
+							<Z>52.9168167</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1514,7 +1821,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX32">
+					<Item class="Vector3Value" referent="RBX3C6ABA00E0984A3C9B010A9E7359CFA7">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1525,7 +1832,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX33">
+				<Item class="Part" referent="RBX8891C12EC84B4EE3A9E849A3D9EA0C1A">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1538,18 +1845,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.167240217</X>
-							<Y>123.218788</Y>
-							<Z>127.52066</Z>
-							<R00>0.996254146</R00>
-							<R01>-0.0123565346</R01>
-							<R02>-0.0855871439</R02>
-							<R10>0.012431588</R10>
-							<R11>0.999922872</R11>
-							<R12>0.000343959808</R12>
-							<R20>0.0855762884</R20>
-							<R21>-0.00140665111</R21>
-							<R22>0.996330857</R22>
+							<X>19.6071243</X>
+							<Y>3.84899402</Y>
+							<Z>52.9174881</Z>
+							<R00>0.925896227</R00>
+							<R01>-0.0205496717</R01>
+							<R02>0.377218693</R02>
+							<R10>0.0141039407</R10>
+							<R11>0.999704123</R11>
+							<R12>0.0198421031</R12>
+							<R20>-0.377514303</R20>
+							<R21>-0.0130514661</R21>
+							<R22>0.925912142</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1593,7 +1900,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX34">
+					<Item class="Vector3Value" referent="RBX97645D26BE654398B9309E1689A8FE99">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1604,7 +1911,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX35">
+				<Item class="Part" referent="RBX5B9623AE909A4661B1D05AEF2A82BEB6">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1617,18 +1924,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.181299523</X>
-							<Y>122.622993</Y>
-							<Z>127.468643</Z>
-							<R00>0.99610275</R00>
-							<R01>-0.0213150643</R01>
-							<R02>-0.0855865553</R02>
-							<R10>0.0214229804</R10>
-							<R11>0.999770641</R11>
-							<R12>0.000342503219</R12>
-							<R20>0.0855596364</R20>
-							<R21>-0.00217468315</R21>
-							<R22>0.996330917</R22>
+							<X>19.5762405</X>
+							<Y>3.25229049</Y>
+							<Z>52.8879662</Z>
+							<R00>0.925673664</R00>
+							<R01>-0.0288744941</R01>
+							<R02>0.37721929</R02>
+							<R10>0.0230932869</R10>
+							<R11>0.999536932</R11>
+							<R12>0.0198406521</R12>
+							<R20>-0.377616882</R20>
+							<R21>-0.00965474732</R21>
+							<R22>0.925912023</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1672,7 +1979,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX36">
+					<Item class="Vector3Value" referent="RBX396AC64C34D94990AA06DCB3EE306463">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1684,7 +1991,7 @@ end
 					</Item>
 				</Item>
 			</Item>
-			<Item class="Model" referent="RBX37">
+			<Item class="Model" referent="RBXA1EFC31ED0AB4DF3B7C352EF65C80703">
 				<Properties>
 					<CoordinateFrame name="ModelInPrimary">
 						<X>0</X>
@@ -1703,7 +2010,7 @@ end
 					<string name="Name">House</string>
 					<Ref name="PrimaryPart">null</Ref>
 				</Properties>
-				<Item class="Part" referent="RBX38">
+				<Item class="Part" referent="RBX83FA600B57FA478687C8E28988C9B574">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1716,18 +2023,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.328952193</X>
-							<Y>123.279152</Y>
-							<Z>127.858154</Z>
-							<R00>0.999858499</R00>
-							<R01>-0.0123568568</R01>
-							<R02>-0.0111520439</R02>
-							<R10>0.0123704365</R10>
-							<R11>0.999918103</R11>
-							<R12>0.00127160561</R12>
-							<R20>0.0111355782</R20>
-							<R21>-0.00140900176</R21>
-							<R22>0.999932349</R22>
+							<X>19.6161938</X>
+							<Y>3.91594791</Y>
+							<Z>53.290493</Z>
+							<R00>0.895228207</R00>
+							<R01>-0.0205509886</R01>
+							<R02>0.445126235</R02>
+							<R10>0.012585992</R10>
+							<R11>0.999699235</R11>
+							<R12>0.0208400562</R12>
+							<R20>-0.445423037</R20>
+							<R21>-0.0130533287</R21>
+							<R22>0.895220459</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1771,7 +2078,7 @@ end
 							<Z>0.658499837</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX39">
+					<Item class="Vector3Value" referent="RBXB35940048D894561A12EFF5D4C2AA56D">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1782,7 +2089,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX40">
+				<Item class="Part" referent="RBX37435AC83B0D403AB2516BD0405A9F60">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1795,18 +2102,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.0855352879</X>
-							<Y>123.280708</Y>
-							<Z>127.897682</Z>
-							<R00>0.987941802</R00>
-							<R01>-0.0123569695</R01>
-							<R02>-0.154311135</R02>
-							<R10>0.0124251088</R10>
-							<R11>0.999917865</R11>
-							<R12>-0.000514123647</R12>
-							<R20>0.154305354</R20>
-							<R21>-0.00140893098</R21>
-							<R22>0.988016844</R22>
+							<X>19.8509026</X>
+							<Y>3.91827703</Y>
+							<Z>53.214859</Z>
+							<R00>0.949773431</R00>
+							<R01>-0.0205510538</R01>
+							<R02>0.312251061</R02>
+							<R10>0.0154424906</R10>
+							<R11>0.999698997</R11>
+							<R12>0.0188214798</R12>
+							<R20>-0.312546134</R20>
+							<R21>-0.0130532114</R21>
+							<R22>0.949807942</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1850,7 +2157,7 @@ end
 							<Z>0.686249852</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX41">
+					<Item class="Vector3Value" referent="RBX362522D7CC5549A898F987DEB7CD592B">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1861,7 +2168,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX42">
+				<Item class="Part" referent="RBX50C130EC0A16425D9F96C6215D72964B">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1874,18 +2181,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.0143422484</X>
-							<Y>123.425446</Y>
-							<Z>127.975082</Z>
-							<R00>-0.113238923</R00>
-							<R01>0.968139946</R01>
-							<R02>-0.223329261</R02>
-							<R10>-0.993395627</R10>
-							<R11>-0.114440441</R11>
-							<R12>0.0076045515</R12>
-							<R20>-0.0181961935</R20>
-							<R21>0.222716421</R21>
-							<R22>0.974707782</R22>
+							<X>19.9482288</X>
+							<Y>4.06450415</Y>
+							<Z>53.2488365</Z>
+							<R00>-0.100259461</R00>
+							<R01>0.964405775</R01>
+							<R02>0.244668275</R02>
+							<R10>-0.993561685</R10>
+							<R11>-0.110059984</R11>
+							<R12>0.0266781449</R12>
+							<R20>0.052655939</R20>
+							<R21>-0.240420595</R21>
+							<R22>0.969234347</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -1929,7 +2236,7 @@ end
 							<Z>0.418749273</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX43">
+					<Item class="Vector3Value" referent="RBX93BA9638E5E440DBA2435903AC62275A">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -1940,7 +2247,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX44">
+				<Item class="Part" referent="RBXD269289B227147B290D1326663A06F89">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -1953,18 +2260,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.435247064</X>
-							<Y>123.482841</Y>
-							<Z>127.938332</Z>
-							<R00>0.118869096</R00>
-							<R01>0.991414964</R01>
-							<R02>0.0544033647</R02>
-							<R10>-0.991921782</R10>
-							<R11>0.116136327</R11>
-							<R12>0.0508797131</R12>
-							<R20>0.0441243686</R20>
-							<R21>-0.0600125119</R21>
-							<R22>0.997216344</R22>
+							<X>19.5562267</X>
+							<Y>4.12116051</Y>
+							<Z>53.4067039</Z>
+							<R00>0.134757578</R00>
+							<R01>0.854406297</R01>
+							<R02>0.501818657</R02>
+							<R10>-0.990868568</R10>
+							<R11>0.114939675</R11>
+							<R12>0.0703855306</R12>
+							<R20>0.00245757028</R20>
+							<R21>-0.506725669</R21>
+							<R22>0.862098217</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2008,7 +2315,7 @@ end
 							<Z>0.436249316</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX45">
+					<Item class="Vector3Value" referent="RBX34436E41D17B448D8B8B806259CED15F">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2019,7 +2326,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX46">
+				<Item class="Part" referent="RBX8696771E80E84C5BA6608687BBA58ED7">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2032,18 +2339,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.367261708</X>
-							<Y>123.714844</Y>
-							<Z>127.935799</Z>
-							<R00>-0.831341386</R00>
-							<R01>0.550425947</R01>
-							<R02>-0.0767706037</R02>
-							<R10>-0.546384633</R10>
-							<R11>-0.834746897</R11>
-							<R12>-0.068164289</R12>
-							<R20>-0.101604298</R20>
-							<R21>-0.0147214513</R21>
-							<R22>0.994706571</R22>
+							<X>19.6135387</X>
+							<Y>4.35306644</Y>
+							<Z>53.3694611</Z>
+							<R00>-0.781596363</R00>
+							<R01>0.49083361</R01>
+							<R02>0.384939969</R02>
+							<R10>-0.548268497</R10>
+							<R11>-0.834875345</R11>
+							<R12>-0.048684828</R12>
+							<R20>0.29748413</R20>
+							<R21>-0.249105558</R21>
+							<R22>0.921646774</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2087,7 +2394,7 @@ end
 							<Z>0.605749488</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX47">
+					<Item class="Vector3Value" referent="RBX98464D1269094282AA236E42ED5A964E">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2098,7 +2405,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX48">
+				<Item class="Part" referent="RBX94A28F80625F4172B5453F08AD5D9C31">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2111,18 +2418,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.0763632953</X>
-							<Y>123.718918</Y>
-							<Z>127.973373</Z>
-							<R00>-0.823450863</R00>
-							<R01>-0.550899923</R01>
-							<R02>-0.135772452</R02>
-							<R10>0.558949411</R10>
-							<R11>-0.828747571</R11>
-							<R12>-0.0273185484</R12>
-							<R20>-0.0974711403</R20>
-							<R21>-0.0983852446</R21>
-							<R22>0.990361691</R22>
+							<X>19.8896141</X>
+							<Y>4.35787678</Y>
+							<Z>53.2704277</Z>
+							<R00>-0.782535851</R00>
+							<R01>-0.527911901</R01>
+							<R02>0.33006376</R02>
+							<R10>0.556934953</R10>
+							<R11>-0.830514371</R11>
+							<R12>-0.00793192722</R12>
+							<R20>0.278311402</R20>
+							<R21>0.177617252</R21>
+							<R22>0.94392395</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2166,7 +2473,7 @@ end
 							<Z>0.620249569</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX49">
+					<Item class="Vector3Value" referent="RBX7303CB49EF0E4FC5A80A878CF02D9772">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2177,7 +2484,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="WedgePart" referent="RBX50">
+				<Item class="WedgePart" referent="RBX980F808DFB7C41B5A61A08F317D2BBC4">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2190,18 +2497,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.364803851</X>
-							<Y>123.68866</Y>
-							<Z>128.176193</Z>
-							<R00>0.0959822014</R00>
-							<R01>-0.0125537571</R01>
-							<R02>0.995295763</R02>
-							<R10>-0.0617069863</R10>
-							<R11>0.99791342</R11>
-							<R12>0.0185347218</R12>
-							<R20>-0.993463099</R20>
-							<R21>-0.0631967485</R21>
-							<R22>0.0950075537</R22>
+							<X>19.7253647</X>
+							<Y>4.33159065</Y>
+							<Z>53.582798</Z>
+							<R00>-0.366111249</R00>
+							<R01>-0.0488279313</R01>
+							<R02>0.929280579</R02>
+							<R10>-0.0811372697</R10>
+							<R11>0.996485889</R11>
+							<R12>0.0203904733</R12>
+							<R20>-0.927021623</R20>
+							<R21>-0.0679338574</R21>
+							<R22>-0.368788451</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2244,7 +2551,7 @@ end
 							<Z>0.285749942</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX51">
+					<Item class="Vector3Value" referent="RBXA3DC3F567AAD47B9AF6644ED280B3220">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2255,7 +2562,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="WedgePart" referent="RBX52">
+				<Item class="WedgePart" referent="RBX83500436EB1D4E2687EF49A60D0D0A6D">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2268,18 +2575,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.085810408</X>
-							<Y>123.690041</Y>
-							<Z>128.207382</Z>
-							<R00>-0.0947948173</R00>
-							<R01>-0.0189906359</R01>
-							<R02>-0.995308399</R02>
-							<R10>-0.00617714319</R10>
-							<R11>0.999801338</R11>
-							<R12>-0.0184852518</R12>
-							<R20>0.995473564</R20>
-							<R21>0.00439579831</R21>
-							<R22>-0.0948934481</R22>
+							<X>19.9879551</X>
+							<Y>4.33357811</Y>
+							<Z>53.483551</Z>
+							<R00>0.368688107</R00>
+							<R01>-0.0238148924</R01>
+							<R02>-0.929240406</R02>
+							<R10>0.0133054703</R10>
+							<R11>0.999696195</R11>
+							<R12>-0.0203387812</R12>
+							<R20>0.92945379</R20>
+							<R21>-0.00486411108</R21>
+							<R22>0.368894935</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2322,7 +2629,7 @@ end
 							<Z>0.285749942</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX53">
+					<Item class="Vector3Value" referent="RBXFEF22859BD5443288F986B3AAAA57A89">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2333,7 +2640,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX54">
+				<Item class="Part" referent="RBXC627741CE3E7464AABCC674E3D5C5B52">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2346,18 +2653,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.241305634</X>
-							<Y>123.452026</Y>
-							<Z>128.172989</Z>
-							<R00>0.993410826</R00>
-							<R01>-0.107176729</R01>
-							<R02>0.0405023769</R02>
-							<R10>0.0269765519</R10>
-							<R11>-0.124738887</R11>
-							<R12>-0.991817594</R12>
-							<R20>0.111350626</R20>
-							<R21>0.986381352</R21>
-							<R22>-0.121026561</R22>
+							<X>19.8359699</X>
+							<Y>4.09495115</Y>
+							<Z>53.5278587</Z>
+							<R00>0.934964716</R00>
+							<R01>0.354581654</R01>
+							<R02>-0.0101806857</R02>
+							<R10>0.0291505251</R10>
+							<R11>-0.10541153</R11>
+							<R12>-0.993996322</R12>
+							<R20>-0.353528529</R20>
+							<R21>0.929061651</R21>
+							<R22>-0.108894631</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2401,7 +2708,7 @@ end
 							<Z>0.293500096</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX55">
+					<Item class="Vector3Value" referent="RBXD19C659FE06E4378B0766873AA11A458">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2412,7 +2719,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="WedgePart" referent="RBX56">
+				<Item class="WedgePart" referent="RBX7FB3028821F94AEBA2CF38271BC087F9">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2425,18 +2732,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.0517864488</X>
-							<Y>123.720795</Y>
-							<Z>127.731728</Z>
-							<R00>-0.126267701</R00>
-							<R01>-1.45906733e-006</R01>
-							<R02>-0.991991699</R02>
-							<R10>0.0596956424</R10>
-							<R11>0.99818027</R11>
-							<R12>-0.00759730721</R12>
-							<R20>0.990194023</R20>
-							<R21>-0.0601776913</R21>
-							<R22>-0.126037315</R22>
+							<X>19.8015079</X>
+							<Y>4.35502577</Y>
+							<Z>53.0440903</Z>
+							<R00>0.337675333</R00>
+							<R01>-0.0362798199</R01>
+							<R02>-0.940557778</R02>
+							<R10>0.0790623352</R10>
+							<R11>0.996811688</R11>
+							<R12>-0.0100624068</R12>
+							<R20>0.937932014</R20>
+							<R21>-0.0709644854</R21>
+							<R22>0.339470416</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2479,7 +2786,7 @@ end
 							<Z>0.280500174</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX57">
+					<Item class="Vector3Value" referent="RBX27720DDF342B4D2BA8B6E4B518BC543F">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2490,7 +2797,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="WedgePart" referent="RBX58">
+				<Item class="WedgePart" referent="RBX6AD371FFD6F7491585048842FD693407">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2503,18 +2810,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.339930058</X>
-							<Y>123.721497</Y>
-							<Z>127.703819</Z>
-							<R00>0.0754906833</R00>
-							<R01>-1.45906733e-006</R01>
-							<R02>0.997141719</R02>
-							<R10>-0.0600055009</R10>
-							<R11>0.99818027</R11>
-							<R12>0.0045416737</R12>
-							<R20>-0.995334625</R20>
-							<R21>-0.0601776913</R21>
-							<R22>0.0753523335</R22>
+							<X>19.5322456</X>
+							<Y>4.35517693</Y>
+							<Z>53.1503944</Z>
+							<R00>-0.385223716</R00>
+							<R01>-0.0362798199</R01>
+							<R02>0.922103822</R02>
+							<R10>-0.0794727355</R10>
+							<R11>0.996811688</R11>
+							<R12>0.00601545116</R12>
+							<R20>-0.919389963</R20>
+							<R21>-0.0709644854</R21>
+							<R22>-0.386882424</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2557,7 +2864,7 @@ end
 							<Z>0.300250351</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX59">
+					<Item class="Vector3Value" referent="RBXE36B953B0A294F3189831575BA8BE333">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2568,7 +2875,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX60">
+				<Item class="Part" referent="RBXBF42546BBD9F42278E0A7CB47D1E0068">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2581,18 +2888,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.0315460265</X>
-							<Y>123.457253</Y>
-							<Z>127.762901</Z>
-							<R00>-0.0148140583</R00>
-							<R01>0.111013457</R01>
-							<R02>0.993703902</R02>
-							<R10>-0.997395217</R10>
-							<R11>-0.0716992617</R11>
-							<R12>-0.00686170207</R12>
-							<R20>0.0704870149</R20>
-							<R21>-0.991224945</R21>
-							<R22>0.111785784</R22>
+							<X>19.836071</X>
+							<Y>4.09214449</Y>
+							<Z>53.0672264</Z>
+							<R00>0.0277728941</R00>
+							<R01>-0.351619869</R01>
+							<R02>0.935725272</R02>
+							<R10>-0.995824993</R10>
+							<R11>-0.0910838321</R11>
+							<R12>-0.00467274152</R12>
+							<R20>0.0868722349</R20>
+							<R21>-0.931697071</R21>
+							<R22>-0.352684915</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2636,7 +2943,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX61">
+					<Item class="Vector3Value" referent="RBX2A35FDA29F5A431A8BC404749FA2F49C">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2647,7 +2954,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX62">
+				<Item class="Part" referent="RBXA389DCE8BF204FA380C32B5D693D8050">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2660,18 +2967,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.359281361</X>
-							<Y>123.456444</Y>
-							<Z>127.722733</Z>
-							<R00>-0.0133847855</R00>
-							<R01>0.0958433077</R01>
-							<R02>0.995302022</R02>
-							<R10>-0.997722268</R10>
-							<R11>-0.0669901296</R11>
-							<R12>-0.00696912361</R12>
-							<R20>0.066008307</R20>
-							<R21>-0.993136764</R21>
-							<R22>0.0965204388</R22>
+							<X>19.5259876</X>
+							<Y>4.09055471</Y>
+							<Z>53.1806602</Z>
+							<R00>0.0270101782</R00>
+							<R01>-0.366039336</R01>
+							<R02>0.930201948</R02>
+							<R10>-0.996239543</R10>
+							<R11>-0.0864130259</R11>
+							<R12>-0.00507888477</R12>
+							<R20>0.0822402984</R20>
+							<R21>-0.92657584</R21>
+							<R22>-0.367000133</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2715,7 +3022,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX63">
+					<Item class="Vector3Value" referent="RBXA959228DB8B6480A9C3F487583743DFD">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2726,7 +3033,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX64">
+				<Item class="Part" referent="RBX53F76702FBDF40A6B1442503AE23CC04">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -2739,18 +3046,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.187056407</X>
-							<Y>123.565186</Y>
-							<Z>127.730255</Z>
-							<R00>0.995150983</R00>
-							<R01>0.0983237624</R01>
-							<R02>-1.45813613e-006</R02>
-							<R10>0.0059157135</R10>
-							<R11>-0.0598857179</R11>
-							<R12>0.99818033</R12>
-							<R20>0.0981440619</R20>
-							<R21>-0.993347406</R21>
-							<R22>-0.060177695</R22>
+							<X>19.6817856</X>
+							<Y>4.19941521</Y>
+							<Z>53.1070747</Z>
+							<R00>0.93069154</R00>
+							<R01>-0.36398989</R01>
+							<R02>-0.0362798274</R02>
+							<R10>0.00783526152</R10>
+							<R11>-0.0793140903</R11>
+							<R12>0.996811748</R12>
+							<R20>-0.365710497</R20>
+							<R21>-0.928016186</R21>
+							<R22>-0.0709645003</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -2794,7 +3101,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX65">
+					<Item class="Vector3Value" referent="RBXAE81DFC718D0470C8B589AB80B0C854C">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -2806,7 +3113,7 @@ end
 					</Item>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX66">
+			<Item class="Part" referent="RBX52D2DF5C8A044906A381456A7C694B46">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -2819,18 +3126,18 @@ end
 					<token name="BottomSurfaceInput">0</token>
 					<int name="BrickColor">194</int>
 					<CoordinateFrame name="CFrame">
-						<X>-0.0749067068</X>
-						<Y>123.327385</Y>
-						<Z>127.985321</Z>
-						<R00>0.97860074</R00>
-						<R01>-0.0123567004</R01>
-						<R02>-0.205394253</R02>
-						<R10>0.0123827029</R10>
-						<R11>0.999922693</R11>
-						<R12>-0.00115876284</R12>
-						<R20>0.205392629</R20>
-						<R21>-0.00140937429</R21>
-						<R22>0.978678405</R22>
+						<X>19.8998375</X>
+						<Y>3.96665859</Y>
+						<Z>53.28722</Z>
+						<R00>0.964706242</R00>
+						<R01>-0.0205510594</R01>
+						<R02>0.262522638</R02>
+						<R10>0.0163998716</R10>
+						<R11>0.999703825</R11>
+						<R12>0.0179942101</R12>
+						<R20>-0.262814224</R20>
+						<R21>-0.0130538139</R21>
+						<R22>0.964758098</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<float name="Elasticity">0.5</float>
@@ -2874,7 +3181,7 @@ end
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="SpecialMesh" referent="RBX67">
+				<Item class="SpecialMesh" referent="RBXEC9E7F2C9DD349449C6454A6ACA240C5">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -2899,7 +3206,7 @@ end
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="Vector3Value" referent="RBX68">
+				<Item class="Vector3Value" referent="RBX85DF6D9F759D49E88E301DDAFB7CCEFB">
 					<Properties>
 						<string name="Name">TrueSize</string>
 						<Vector3 name="Value">
@@ -2910,7 +3217,7 @@ end
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX69">
+			<Item class="Part" referent="RBXAA386A5C4142413685965A5ECA821F7B">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -2923,18 +3230,18 @@ end
 					<token name="BottomSurfaceInput">0</token>
 					<int name="BrickColor">194</int>
 					<CoordinateFrame name="CFrame">
-						<X>-0.230963424</X>
-						<Y>123.225586</Y>
-						<Z>127.857521</Z>
-						<R00>0.978596568</R00>
-						<R01>-0.0123579586</R01>
-						<R02>-0.205394119</R02>
-						<R10>0.0123812938</R10>
-						<R11>0.999915242</R11>
-						<R12>-0.00115865481</R12>
-						<R20>0.205391005</R20>
-						<R21>-0.00140952703</R21>
-						<R22>0.978674233</R22>
+						<X>19.7036343</X>
+						<Y>3.86238384</Y>
+						<Z>53.2462616</Z>
+						<R00>0.964701831</R00>
+						<R01>-0.0205521844</R01>
+						<R02>0.26252085</R02>
+						<R10>0.0163984299</R10>
+						<R11>0.999696374</R11>
+						<R12>0.0179942362</R12>
+						<R20>-0.262813777</R20>
+						<R21>-0.013053244</R21>
+						<R22>0.964754283</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<float name="Elasticity">0.5</float>
@@ -2978,7 +3285,7 @@ end
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="SpecialMesh" referent="RBX70">
+				<Item class="SpecialMesh" referent="RBXECD9388F82FE4AC3B4683128D1C94834">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -3003,7 +3310,7 @@ end
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="Vector3Value" referent="RBX71">
+				<Item class="Vector3Value" referent="RBXB1FEA90E6AB64398A71C054983DCBBD7">
 					<Properties>
 						<string name="Name">TrueSize</string>
 						<Vector3 name="Value">
@@ -3014,7 +3321,7 @@ end
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Model" referent="RBX72">
+			<Item class="Model" referent="RBX18BEB81EFEF04F3391B279AA874DCE6A">
 				<Properties>
 					<CoordinateFrame name="ModelInPrimary">
 						<X>0</X>
@@ -3033,7 +3340,7 @@ end
 					<string name="Name">Tree</string>
 					<Ref name="PrimaryPart">null</Ref>
 				</Properties>
-				<Item class="Part" referent="RBX73">
+				<Item class="Part" referent="RBX483C3A9A27404DE4B95F9BC39951E522">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -3046,18 +3353,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">194</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.23342827</X>
-							<Y>122.925163</Y>
-							<Z>127.93808</Z>
-							<R00>0.973651767</R00>
-							<R01>-0.00972411036</R01>
-							<R02>-0.227833703</R02>
-							<R10>0.0137231881</R10>
-							<R11>0.999778509</R11>
-							<R12>0.0159750227</R12>
-							<R20>0.227627859</R20>
-							<R21>-0.0186806861</R21>
-							<R22>0.973569512</R22>
+							<X>19.7407742</X>
+							<Y>3.56358957</Y>
+							<Z>53.3243332</Z>
+							<R00>0.970407009</R00>
+							<R01>-0.0260658674</R01>
+							<R02>0.240064934</R02>
+							<R10>0.0181752462</R10>
+							<R11>0.999221742</R11>
+							<R12>0.0350247398</R12>
+							<R20>-0.240790486</R20>
+							<R21>-0.0296249948</R21>
+							<R22>0.970125556</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -3101,7 +3408,7 @@ end
 							<Z>0.531250179</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX74">
+					<Item class="Vector3Value" referent="RBX5261947B9F1C4504B7060A55A016AD39">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -3113,7 +3420,7 @@ end
 					</Item>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX75">
+			<Item class="Part" referent="RBX2B281630BC2B4690A65D3F045EAAEDEC">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -3126,18 +3433,18 @@ end
 					<token name="BottomSurfaceInput">0</token>
 					<int name="BrickColor">194</int>
 					<CoordinateFrame name="CFrame">
-						<X>-0.075000003</X>
-						<Y>123.330009</Y>
-						<Z>128.050003</Z>
-						<R00>1</R00>
-						<R01>0</R01>
-						<R02>0</R02>
-						<R10>0</R10>
-						<R11>1.00000012</R11>
-						<R12>0</R12>
-						<R20>0</R20>
-						<R21>0</R21>
-						<R22>1.00000012</R22>
+						<X>19.9291668</X>
+						<Y>3.97054911</Y>
+						<Z>53.3448029</Z>
+						<R00>0.890396833</R00>
+						<R01>-0.00890797842</R01>
+						<R02>0.455097973</R02>
+						<R10>-1.56682698e-014</R10>
+						<R11>0.99980849</R11>
+						<R12>0.0195700116</R12>
+						<R20>-0.455185145</R20>
+						<R21>-0.017425077</R21>
+						<R22>0.890226305</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<float name="Elasticity">0.5</float>
@@ -3181,7 +3488,7 @@ end
 						<Z>1.34724951</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Vector3Value" referent="RBX76">
+				<Item class="Vector3Value" referent="RBX1BF5AE1875EF433CB04948A376FF713C">
 					<Properties>
 						<string name="Name">TrueSize</string>
 						<Vector3 name="Value">
@@ -3191,7 +3498,7 @@ end
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX77">
+				<Item class="ManualWeld" referent="RBX0C89157629424790A9540562BE4FE167">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3208,27 +3515,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.421300888</X>
-							<Y>0.258846283</Y>
-							<Z>0.470685959</Z>
-							<R00>-0.0199261289</R00>
-							<R01>-0.993640602</R01>
-							<R02>-0.110783473</R02>
-							<R10>0.979350626</R10>
-							<R11>-0.0416950285</R11>
-							<R12>0.197808936</R12>
-							<R20>-0.201171324</R20>
-							<R21>-0.104554124</R21>
-							<R22>0.973956943</R22>
+							<X>-0.197975159</X>
+							<Y>0.0856170654</Y>
+							<Z>-0.00793814659</Z>
+							<R00>-0.991855145</R00>
+							<R01>-0.00104860216</R01>
+							<R02>-0.127358764</R02>
+							<R10>0.127193362</R10>
+							<R11>-0.0597443543</R11>
+							<R12>-0.990075886</R12>
+							<R20>-0.00657077134</R20>
+							<R21>-0.998213589</R21>
+							<R22>0.0593913756</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRightLadderSide</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX7</Ref>
+						<string name="Name">WeldToBackFloor</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX4CFEF123B4924A9CA7D0B19F275252D2</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX78">
+				<Item class="ManualWeld" referent="RBX1F246AD69ACE4B089A378F1B11F8D7A7">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3245,27 +3552,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.395499229</X>
-							<Y>0.0562882423</Y>
-							<Z>0.514183044</Z>
-							<R00>-0.00747907488</R00>
-							<R01>-0.997426212</R01>
-							<R02>-0.0713102445</R02>
-							<R10>0.998108566</R10>
-							<R11>-0.0117977504</R11>
-							<R12>0.0603343286</R12>
-							<R20>-0.0610203259</R20>
-							<R21>-0.0707241222</R21>
-							<R22>0.99562782</R22>
+							<X>-0.155185699</X>
+							<Y>0.00931167603</Y>
+							<Z>0.313757181</Z>
+							<R00>-0.996310711</R00>
+							<R01>0.00145365763</R01>
+							<R02>-0.0857959986</R02>
+							<R10>0.0855562091</R10>
+							<R11>-0.0597355179</R11>
+							<R12>-0.994539976</R12>
+							<R20>-0.00657078438</R20>
+							<R21>-0.998213589</R21>
+							<R22>0.0593910217</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToLeftLadderSide</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX9</Ref>
+						<string name="Name">WeldToBackCeiling</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX462AD362F5184ECAA93F00F2E55C0544</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX79">
+				<Item class="ManualWeld" referent="RBX9BD9034494EC438DA3127DCD8E92703A">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3282,27 +3589,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>0.159237385</X>
-							<Y>0.606184006</Y>
-							<Z>0.564868927</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
+							<X>-0.16119957</X>
+							<Y>-0.172779083</Y>
+							<Z>0.314615726</Z>
+							<R00>-0.992904365</R00>
+							<R01>-0.000538673252</R01>
+							<R02>-0.118907988</R02>
+							<R10>0.118727446</R10>
+							<R11>-0.0597482175</R11>
+							<R12>-0.991126657</R12>
+							<R20>-0.00657064654</R20>
+							<R21>-0.998213768</R21>
+							<R22>0.0593884587</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRung1</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX11</Ref>
+						<string name="Name">WeldToFrontCeiling</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXE03E9A0143154EAE93280E8E7BB7A4B7</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX80">
+				<Item class="ManualWeld" referent="RBX693F6B7506BC4A44825A35C8A757A174">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3319,27 +3626,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>0.156643867</X>
-							<Y>0.509187698</Y>
-							<Z>0.557426453</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
+							<X>-0.153530121</X>
+							<Y>-0.0128326416</Y>
+							<Z>-0.00747871399</Z>
+							<R00>-0.991855145</R00>
+							<R01>-0.00104860216</R01>
+							<R02>-0.127358764</R02>
+							<R10>0.127193362</R10>
+							<R11>-0.0597443543</R11>
+							<R12>-0.990075886</R12>
+							<R20>-0.00657077134</R20>
+							<R21>-0.998213589</R21>
+							<R22>0.0593913756</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRung2</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX13</Ref>
+						<string name="Name">WeldToCenterFloor</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX77BD515F7AAF4CB49A98608E46E5CE09</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX81">
+				<Item class="ManualWeld" referent="RBXE2911A5F1BDA4073AF7D224C4BF3466B">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3356,27 +3663,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>0.149588585</X>
-							<Y>0.397065163</Y>
-							<Z>0.538417816</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
+							<X>-0.153100967</X>
+							<Y>-0.178222656</Y>
+							<Z>-0.00737786293</Z>
+							<R00>-0.996370316</R00>
+							<R01>0.00149532687</R01>
+							<R02>-0.0851030648</R02>
+							<R10>0.0848621726</R10>
+							<R11>-0.0597323105</R11>
+							<R12>-0.9945997</R12>
+							<R20>-0.00657065213</R20>
+							<R21>-0.998213768</R21>
+							<R22>0.0593888313</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRung3</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX15</Ref>
+						<string name="Name">WeldToFrontFloor</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX051C1690BC0F4DCB91D264C3BB42B923</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX82">
+				<Item class="ManualWeld" referent="RBX45AFAEC120464265AFC1427E6971E90C">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3393,27 +3700,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>0.165169239</X>
-							<Y>0.255440712</Y>
-							<Z>0.530128479</Z>
-							<R00>0.9925524</R00>
-							<R01>0.0870367289</R01>
-							<R02>0.0852317214</R02>
-							<R10>-0.0866880342</R10>
-							<R11>0.996205091</R11>
-							<R12>-0.00779065117</R12>
-							<R20>-0.0855863392</R20>
-							<R21>0.000344060361</R21>
-							<R22>0.996330798</R22>
+							<X>-0.158246994</X>
+							<Y>-0.250952005</Y>
+							<Z>-0.271575928</Z>
+							<R00>-0.992848277</R00>
+							<R01>-0.000576781575</R01>
+							<R02>-0.119380385</R02>
+							<R10>0.00656039827</R10>
+							<R11>0.998214304</R11>
+							<R12>-0.0593836457</R12>
+							<R20>0.119201273</R20>
+							<R21>-0.0597421154</R21>
+							<R22>-0.991071343</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRung4</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX17</Ref>
+						<string name="Name">WeldToCenterFrontWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXB2C328E2A70849A9BA2E6EF0F70F00BE</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX83">
+				<Item class="ManualWeld" referent="RBXE5B9FCAA0D6D4A8389CDC6AAE2022754">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -3430,1100 +3737,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>0.124004841</X>
-							<Y>0.188403606</Y>
-							<Z>0.524114609</Z>
-							<R00>0.992369175</R00>
-							<R01>-0.0890573487</R01>
-							<R02>0.0852774084</R02>
-							<R10>0.0887596384</R10>
-							<R11>0.996026456</R11>
-							<R12>0.00728355721</R12>
-							<R20>-0.085587211</R20>
-							<R21>0.00034121424</R21>
-							<R22>0.996330738</R22>
+							<X>-0.281692505</X>
+							<Y>-0.152000666</Y>
+							<Z>-0.284908295</Z>
+							<R00>-0.998108745</R00>
+							<R01>-0.00369892782</R01>
+							<R02>-0.0613552928</R02>
+							<R10>0</R10>
+							<R11>0.998188078</R11>
+							<R12>-0.0601777583</R12>
+							<R20>0.0614666939</R20>
+							<R21>-0.0600639656</R21>
+							<R22>-0.996300519</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRung5</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX19</Ref>
+						<string name="Name">WeldToRightFrontWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX320E37F8E732424F9CB796B6004B8ECC</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX84">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.181713104</X>
-							<Y>0.0336747169</Y>
-							<Z>0.500741959</Z>
-							<R00>0.982978165</R00>
-							<R01>0.0776935145</R01>
-							<R02>0.16648604</R02>
-							<R10>-0.0753066167</R10>
-							<R11>0.996947467</R11>
-							<R12>-0.0206118338</R12>
-							<R20>-0.167579219</R20>
-							<R21>0.00772348046</R21>
-							<R22>0.985828459</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRung6</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX21</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX85">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.166193008</X>
-							<Y>0.65158844</Y>
-							<Z>0.57019043</Z>
-							<R00>0.99610275</R00>
-							<R01>0.0214229785</R01>
-							<R02>0.0855596289</R02>
-							<R10>-0.0213150643</R10>
-							<R11>0.999770522</R11>
-							<R12>-0.00217468292</R12>
-							<R20>-0.0855865553</R20>
-							<R21>0.00034250319</R21>
-							<R22>0.996330798</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung1</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX23</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX86">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.156126976</X>
-							<Y>0.554309845</Y>
-							<Z>0.56244278</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung2</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX25</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX87">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.153653145</X>
-							<Y>0.452814102</Y>
-							<Z>0.548475266</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung3</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX27</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX88">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.148358345</X>
-							<Y>0.335817337</Y>
-							<Z>0.53518486</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung4</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX29</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX89">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.144536018</X>
-							<Y>0.217071533</Y>
-							<Z>0.524217606</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung5</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX31</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX90">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.138576508</X>
-							<Y>0.109324932</Y>
-							<Z>0.519544601</Z>
-							<R00>0.996254146</R00>
-							<R01>0.0124315862</R01>
-							<R02>0.085576281</R02>
-							<R10>-0.0123565346</R10>
-							<R11>0.999922752</R11>
-							<R12>-0.00140665099</R12>
-							<R20>-0.0855871439</R20>
-							<R21>0.000343959779</R21>
-							<R22>0.996330738</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung6</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX33</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX91">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.170772552</X>
-							<Y>0.703321457</Y>
-							<Z>0.570371628</Z>
-							<R00>0.99610275</R00>
-							<R01>0.0214229785</R01>
-							<R02>0.0855596289</R02>
-							<R10>-0.0213150643</R10>
-							<R11>0.999770522</R11>
-							<R12>-0.00217468292</R12>
-							<R20>-0.0855865553</R20>
-							<R21>0.00034250319</R21>
-							<R22>0.996330798</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToExtraRung0</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX35</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX92">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.25668335</X>
-							<Y>0.0474457741</Y>
-							<Z>0.189072132</Z>
-							<R00>0.999858499</R00>
-							<R01>0.0123704346</R01>
-							<R02>0.0111355772</R02>
-							<R10>-0.0123568568</R10>
-							<R11>0.999917984</R11>
-							<R12>-0.00140900165</R12>
-							<R20>-0.0111520439</R20>
-							<R21>0.00127160549</R21>
-							<R22>0.99993223</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightFloor</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX38</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX93">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.0345252752</X>
-							<Y>0.048953414</Y>
-							<Z>0.148847103</Z>
-							<R00>0.987941802</R00>
-							<R01>0.012425107</R01>
-							<R02>0.154305339</R02>
-							<R10>-0.0123569695</R10>
-							<R11>0.999917746</R11>
-							<R12>-0.00140893087</R12>
-							<R20>-0.154311135</R20>
-							<R21>-0.000514123589</R21>
-							<R22>0.988016725</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftFloor</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX40</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX94">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.100315809</X>
-							<Y>-0.0311180353</Y>
-							<Z>0.0858440399</Z>
-							<R00>-0.113238923</R00>
-							<R01>-0.993395507</R01>
-							<R02>-0.0181961916</R02>
-							<R10>0.968139946</R10>
-							<R11>-0.114440426</R11>
-							<R12>0.222716391</R12>
-							<R20>-0.223329261</R20>
-							<R21>0.00760455057</R21>
-							<R22>0.974707663</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX42</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX95">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.199346542</X>
-							<Y>0.332705498</Y>
-							<Z>0.123185158</Z>
-							<R00>0.118869096</R00>
-							<R01>-0.991921663</R01>
-							<R02>0.0441243649</R02>
-							<R10>0.991414964</R10>
-							<R11>0.116136312</R11>
-							<R12>-0.0600125045</R12>
-							<R20>0.0544033647</R20>
-							<R21>0.0508797057</R21>
-							<R22>0.997216225</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX44</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX96">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>-0.0443031788</X>
-							<Y>0.480434418</Y>
-							<Z>0.117400646</Z>
-							<R00>-0.831341386</R00>
-							<R01>-0.546384573</R01>
-							<R02>-0.101604283</R02>
-							<R10>0.550425947</R10>
-							<R11>-0.834746778</R11>
-							<R12>-0.0147214495</R12>
-							<R20>-0.0767706037</R20>
-							<R21>-0.0681642815</R21>
-							<R22>0.994706452</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightRoof</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX46</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX97">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>-0.225972176</X>
-							<Y>0.314017296</Y>
-							<Z>0.0863325596</Z>
-							<R00>-0.823450863</R00>
-							<R01>0.558949351</R01>
-							<R02>-0.0974711254</R02>
-							<R10>-0.550899923</R10>
-							<R11>-0.828747451</R11>
-							<R12>-0.0983852297</R12>
-							<R20>-0.135772452</R20>
-							<R21>-0.0273185447</R21>
-							<R22>0.990361571</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftRoof</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX48</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX98">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.175309658</X>
-							<Y>-0.353572845</Y>
-							<Z>0.269807816</Z>
-							<R00>0.0959822014</R00>
-							<R01>-0.0617069788</R01>
-							<R02>-0.99346298</R02>
-							<R10>-0.0125537571</R10>
-							<R11>0.997913301</R11>
-							<R12>-0.063196741</R12>
-							<R20>0.995295763</R20>
-							<R21>0.0185347199</R21>
-							<R22>0.0950075388</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightBackTop</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX50</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX99">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>-0.155468941</X>
-							<Y>-0.360861778</Y>
-							<Z>0.010831058</Z>
-							<R00>-0.0947948173</R00>
-							<R01>-0.00617714226</R01>
-							<R02>0.995473444</R02>
-							<R10>-0.0189906359</R10>
-							<R11>0.999801219</R11>
-							<R12>0.00439579785</R12>
-							<R20>-0.995308399</R20>
-							<R21>-0.01848525</R21>
-							<R22>-0.0948934332</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftBackTop</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX52</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX100">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.148224831</X>
-							<Y>-0.123909473</Y>
-							<Z>0.142640114</Z>
-							<R00>0.993410826</R00>
-							<R01>0.0269765481</R01>
-							<R02>0.111350611</R02>
-							<R10>-0.107176729</R10>
-							<R11>-0.124738872</R11>
-							<R12>0.986381233</R12>
-							<R20>0.0405023769</R20>
-							<R21>-0.991817474</R21>
-							<R22>-0.121026546</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToBackBottom</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX54</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX101">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.294758797</X>
-							<Y>-0.409235954</Y>
-							<Z>-0.0141174197</Z>
-							<R00>-0.126267701</R00>
-							<R01>0.059695635</R01>
-							<R02>0.990193903</R02>
-							<R10>-1.45906733e-006</R10>
-							<R11>0.998180151</R11>
-							<R12>-0.0601776838</R12>
-							<R20>-0.991991699</R20>
-							<R21>-0.00759730628</R21>
-							<R22>-0.1260373</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftFrontTop</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX56</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX102">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>-0.301078796</X>
-							<Y>-0.411613464</Y>
-							<Z>0.288482666</Z>
-							<R00>0.0754906833</R00>
-							<R01>-0.0600054935</R01>
-							<R02>-0.995334506</R02>
-							<R10>-1.45906733e-006</R10>
-							<R11>0.998180151</R11>
-							<R12>-0.0601776838</R12>
-							<R20>0.997141719</R20>
-							<R21>0.00454167323</R21>
-							<R22>0.075352326</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightFrontTop</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX58</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX103">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.14779377</X>
-							<Y>-0.280284882</Y>
-							<Z>-0.0102134645</Z>
-							<R00>-0.0148140583</R00>
-							<R01>-0.997395098</R01>
-							<R02>0.0704870075</R02>
-							<R10>0.111013457</R10>
-							<R11>-0.0716992542</R11>
-							<R12>-0.991224825</R12>
-							<R20>0.993703902</R20>
-							<R21>-0.00686170114</R21>
-							<R22>0.111785769</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftFrontBottom</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX60</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX104">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.143947124</X>
-							<Y>-0.289309502</Y>
-							<Z>0.315418243</Z>
-							<R00>-0.0133847855</R00>
-							<R01>-0.997722149</R01>
-							<R02>0.0660082996</R02>
-							<R10>0.0958433077</R10>
-							<R11>-0.0669901222</R11>
-							<R12>-0.993136644</R12>
-							<R20>0.995302022</R20>
-							<R21>-0.00696912268</R21>
-							<R22>0.0965204239</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightFrontBottom</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX62</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX105">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.141503811</X>
-							<Y>-0.292519569</Y>
-							<Z>-0.253991127</Z>
-							<R00>0.995150983</R00>
-							<R01>0.00591571257</R01>
-							<R02>0.098144047</R02>
-							<R10>0.0983237624</R10>
-							<R11>-0.0598857105</R11>
-							<R12>-0.993347287</R12>
-							<R20>-1.45813613e-006</R20>
-							<R21>0.998180211</R21>
-							<R22>-0.0601776876</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToFrontCenter</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX64</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX106">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.0132271051</X>
-							<Y>0.00253419578</Y>
-							<Z>0.0633223057</Z>
-							<R00>0.97860074</R00>
-							<R01>0.012382701</R01>
-							<R02>0.205392599</R02>
-							<R10>-0.0123567004</R10>
-							<R11>0.999922574</R11>
-							<R12>-0.00140937418</R12>
-							<R20>-0.205394253</R20>
-							<R21>-0.00115876272</R21>
-							<R22>0.978678286</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToTreeMeshPart</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX66</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX107">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.193455219</X>
-							<Y>0.102214336</Y>
-							<Z>0.156226635</Z>
-							<R00>0.978596568</R00>
-							<R01>0.0123812919</R01>
-							<R02>0.205390975</R02>
-							<R10>-0.0123579586</R10>
-							<R11>0.999915123</R11>
-							<R12>-0.00140952691</R12>
-							<R20>-0.205394119</R20>
-							<R21>-0.00115865469</R21>
-							<R22>0.978674114</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToHouseMeshPart</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX69</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX108">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.185286045</X>
-							<Y>0.401124001</Y>
-							<Z>0.0793352127</Z>
-							<R00>0.973651767</R00>
-							<R01>0.0137231862</R01>
-							<R02>0.227627829</R02>
-							<R10>-0.00972411036</R10>
-							<R11>0.99977839</R11>
-							<R12>-0.0186806843</R12>
-							<R20>-0.227833703</R20>
-							<R21>0.0159750208</R21>
-							<R22>0.973569393</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToTrunk</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX73</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX109">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.0958983898</X>
-							<Y>-0.149374485</Y>
-							<Z>-0.00457000732</Z>
-							<R00>0.908541024</R00>
-							<R01>-0.0251419451</R01>
-							<R02>-0.417037666</R02>
-							<R10>0</R10>
-							<R11>0.998187721</R11>
-							<R12>-0.0601777323</R12>
-							<R20>0.417794824</R20>
-							<R21>0.0546739399</R21>
-							<R22>0.906894505</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftBackWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX110</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX111">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.191687107</X>
-							<Y>-0.15412569</Y>
-							<Z>-0.181112766</Z>
-							<R00>0.853563488</R00>
-							<R01>0.0313518345</R01>
-							<R02>0.520043135</R02>
-							<R10>0</R10>
-							<R11>0.998187721</R11>
-							<R12>-0.0601777323</R12>
-							<R20>-0.520987332</R20>
-							<R21>0.0513655134</R21>
-							<R22>0.852016568</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightBackWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX112</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX113">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.156158447</X>
-							<Y>-0.152375221</Y>
-							<Z>-0.320979118</Z>
-							<R00>0.0307188444</R00>
-							<R01>0.0601492822</R01>
-							<R02>0.997715771</R02>
-							<R10>0</R10>
-							<R11>0.998187721</R11>
-							<R12>-0.0601777323</R12>
-							<R20>-0.999527216</R20>
-							<R21>0.00184859044</R21>
-							<R22>0.0306631736</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToRightWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX114</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX115">
-					<Properties>
-						<CoordinateFrame name="C0">
-							<X>0</X>
-							<Y>0</Y>
-							<Z>0</Z>
-							<R00>1</R00>
-							<R01>0</R01>
-							<R02>0</R02>
-							<R10>0</R10>
-							<R11>1</R11>
-							<R12>0</R12>
-							<R20>0</R20>
-							<R21>0</R21>
-							<R22>1</R22>
-						</CoordinateFrame>
-						<CoordinateFrame name="C1">
-							<X>0.13754034</X>
-							<Y>-0.151126385</Y>
-							<Z>0.017621994</Z>
-							<R00>-0.229766488</R00>
-							<R01>0.058567673</R01>
-							<R02>0.971481085</R02>
-							<R10>0</R10>
-							<R11>0.998187721</R11>
-							<R12>-0.0601777323</R12>
-							<R20>-0.973244905</R20>
-							<R21>-0.0138268266</R21>
-							<R22>-0.22935009</R22>
-						</CoordinateFrame>
-						<string name="Name">WeldToLeftWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX116</Ref>
-						<int name="Surface0">-1</int>
-						<int name="Surface1">-1</int>
-					</Properties>
-				</Item>
-				<Item class="ManualWeld" referent="RBX117">
+				<Item class="ManualWeld" referent="RBX5641ADFC54AE41BE873A2C173A40257A">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4541,26 +3775,26 @@ end
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
 							<X>-0.0298671722</X>
-							<Y>-0.151500225</Y>
-							<Z>-0.267701149</Z>
-							<R00>-0.987721443</R00>
-							<R01>-0.00940114446</R01>
-							<R02>-0.155939847</R02>
+							<Y>-0.15149951</Y>
+							<Z>-0.26770401</Z>
+							<R00>-0.987721264</R00>
+							<R01>-0.00940114725</R01>
+							<R02>-0.155939907</R02>
 							<R10>0</R10>
-							<R11>0.998187721</R11>
-							<R12>-0.0601777323</R12>
-							<R20>0.156222969</R20>
-							<R21>-0.0594388358</R21>
-							<R22>-0.985931396</R22>
+							<R11>0.998188078</R11>
+							<R12>-0.0601777583</R12>
+							<R20>0.156222939</R20>
+							<R21>-0.0594388619</R21>
+							<R22>-0.985931814</R22>
 						</CoordinateFrame>
 						<string name="Name">WeldToLeftFrontWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX118</Ref>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX9F76931664944B9BBA58F949DD684EBE</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX119">
+				<Item class="ManualWeld" referent="RBXB730F9FC0C084A40B4817DCCC55AC00F">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4577,27 +3811,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.281693459</X>
-							<Y>-0.152000427</Y>
-							<Z>-0.28490448</Z>
-							<R00>-0.998108983</R00>
-							<R01>-0.00369892595</R01>
-							<R02>-0.0613552965</R02>
+							<X>0.137535095</X>
+							<Y>-0.151129007</Y>
+							<Z>0.0176181793</Z>
+							<R00>-0.229766443</R00>
+							<R01>0.058567699</R01>
+							<R02>0.971481442</R02>
 							<R10>0</R10>
-							<R11>0.998187721</R11>
-							<R12>-0.0601777323</R12>
-							<R20>0.0614666902</R20>
-							<R21>-0.0600639358</R21>
-							<R22>-0.996300101</R22>
+							<R11>0.998188078</R11>
+							<R12>-0.0601777583</R12>
+							<R20>-0.973244667</R20>
+							<R21>-0.0138268322</R21>
+							<R22>-0.229350165</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToRightFrontWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX120</Ref>
+						<string name="Name">WeldToLeftWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX90E270C1DECF4603AF308BBECF4C72D2</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX121">
+				<Item class="ManualWeld" referent="RBXF40F6477831D4C71A0DBD16DB84ADD08">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4614,27 +3848,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.158245564</X>
-							<Y>-0.25094986</Y>
-							<Z>-0.27157402</Z>
-							<R00>-0.992848516</R00>
-							<R01>-0.000576781109</R01>
-							<R02>-0.119380347</R02>
-							<R10>0.00656040153</R10>
-							<R11>0.998213887</R11>
-							<R12>-0.0593836196</R12>
-							<R20>0.119201295</R20>
-							<R21>-0.0597420931</R21>
-							<R22>-0.991070926</R22>
+							<X>0.156154633</X>
+							<Y>-0.152374268</Y>
+							<Z>-0.320978165</Z>
+							<R00>0.0307188332</R00>
+							<R01>0.060149312</R01>
+							<R02>0.997716129</R02>
+							<R10>0</R10>
+							<R11>0.998188078</R11>
+							<R12>-0.0601777583</R12>
+							<R20>-0.999526978</R20>
+							<R21>0.00184859149</R21>
+							<R22>0.0306631923</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToCenterFrontWall</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX122</Ref>
+						<string name="Name">WeldToRightWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXEBB255D0A6F246F4BFB9EA9A25C3957F</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX123">
+				<Item class="ManualWeld" referent="RBX4C04B73ACCC544F3A0D99616014AB23F">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4651,27 +3885,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.153099537</X>
-							<Y>-0.178226471</Y>
-							<Z>-0.00737780333</Z>
-							<R00>-0.996370554</R00>
-							<R01>0.0014953264</R01>
-							<R02>-0.0851030722</R02>
-							<R10>0.0848621354</R10>
-							<R11>-0.0597322807</R11>
-							<R12>-0.994599283</R12>
-							<R20>-0.00657065306</R20>
-							<R21>-0.998213351</R21>
-							<R22>0.0593888052</R22>
+							<X>0.191684723</X>
+							<Y>-0.154125452</Y>
+							<Z>-0.181110382</Z>
+							<R00>0.853563249</R00>
+							<R01>0.0313518457</R01>
+							<R02>0.520043314</R02>
+							<R10>0</R10>
+							<R11>0.998188078</R11>
+							<R12>-0.0601777583</R12>
+							<R20>-0.520987213</R20>
+							<R21>0.051365532</R21>
+							<R22>0.852016926</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToFrontFloor</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX124</Ref>
+						<string name="Name">WeldToRightBackWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXE685B6A598B64B9CB4BF7BED999AF6B0</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX125">
+				<Item class="ManualWeld" referent="RBXFE04F0FE95BC48469E0B69EF48B7C045">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4688,27 +3922,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.153529644</X>
-							<Y>-0.0128334165</Y>
-							<Z>-0.00747805834</Z>
-							<R00>-0.991855383</R00>
-							<R01>-0.0010486017</R01>
-							<R02>-0.127358735</R02>
-							<R10>0.127193391</R10>
-							<R11>-0.0597443283</R11>
-							<R12>-0.990075469</R12>
-							<R20>-0.00657077087</R20>
-							<R21>-0.998213172</R21>
-							<R22>0.0593913496</R22>
+							<X>0.0959014893</X>
+							<Y>-0.149374008</Y>
+							<Z>-0.00456619263</Z>
+							<R00>0.908540845</R00>
+							<R01>-0.0251419526</R01>
+							<R02>-0.417037785</R02>
+							<R10>0</R10>
+							<R11>0.998188078</R11>
+							<R12>-0.0601777583</R12>
+							<R20>0.417794764</R20>
+							<R21>0.0546739511</R21>
+							<R22>0.906894803</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToCenterFloor</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX126</Ref>
+						<string name="Name">WeldToLeftBackWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX233C129797D44B27971DE11D6E87A204</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX127">
+				<Item class="ManualWeld" referent="RBXB6E2883AB79C45DB829E6A050451DC88">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4725,27 +3959,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.161200523</X>
-							<Y>-0.172781944</Y>
-							<Z>0.314614296</Z>
-							<R00>-0.992904603</R00>
-							<R01>-0.000538672786</R01>
-							<R02>-0.118907951</R02>
-							<R10>0.118727453</R10>
-							<R11>-0.0597481914</R11>
-							<R12>-0.991126239</R12>
-							<R20>-0.00657064468</R20>
-							<R21>-0.998213351</R21>
-							<R22>0.0593884289</R22>
+							<X>-0.421294212</X>
+							<Y>0.258841515</Y>
+							<Z>0.470684052</Z>
+							<R00>-0.019926127</R00>
+							<R01>-0.993641019</R01>
+							<R02>-0.110783517</R02>
+							<R10>0.979350448</R10>
+							<R11>-0.0416950472</R11>
+							<R12>0.197809026</R12>
+							<R20>-0.201171264</R20>
+							<R21>-0.104554154</R21>
+							<R22>0.97395736</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToFrontCeiling</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX128</Ref>
+						<string name="Name">WeldToRightLadderSide</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX398BAC36C4DA475784EE735E65C39351</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX129">
+				<Item class="ManualWeld" referent="RBX5160405301524AB0A44316F52B4360D8">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4762,27 +3996,27 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.155186653</X>
-							<Y>0.00931406021</Y>
-							<Z>0.313757896</Z>
-							<R00>-0.996310949</R00>
-							<R01>0.00145365577</R01>
-							<R02>-0.0857959166</R02>
-							<R10>0.0855562091</R10>
-							<R11>-0.0597354956</R11>
-							<R12>-0.994539559</R12>
-							<R20>-0.00657078251</R20>
-							<R21>-0.998213172</R21>
-							<R22>0.0593909919</R22>
+							<X>-0.395498276</X>
+							<Y>0.0562877655</Y>
+							<Z>0.514183044</Z>
+							<R00>-0.00747907534</R00>
+							<R01>-0.997426569</R01>
+							<R02>-0.0713102669</R02>
+							<R10>0.998108387</R10>
+							<R11>-0.0117977541</R11>
+							<R12>0.0603343546</R12>
+							<R20>-0.0610203445</R20>
+							<R21>-0.0707241446</R21>
+							<R22>0.995628238</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToBackCeiling</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX130</Ref>
+						<string name="Name">WeldToLeftLadderSide</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXF0754AAF5FF24B02A92586E979CFA46A</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX131">
+				<Item class="ManualWeld" referent="RBXA1912C7DEA634664B7A7A1EC84FCF0F2">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4799,27 +4033,1100 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<CoordinateFrame name="C1">
-							<X>-0.197975636</X>
-							<Y>0.0856170654</Y>
-							<Z>-0.00793892145</Z>
-							<R00>-0.991855383</R00>
-							<R01>-0.0010486017</R01>
-							<R02>-0.127358735</R02>
-							<R10>0.127193391</R10>
-							<R11>-0.0597443283</R11>
-							<R12>-0.990075469</R12>
-							<R20>-0.00657077087</R20>
-							<R21>-0.998213172</R21>
-							<R22>0.0593913496</R22>
+							<X>0.159235001</X>
+							<Y>0.606184721</Y>
+							<Z>0.564872742</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
 						</CoordinateFrame>
-						<string name="Name">WeldToBackFloor</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX132</Ref>
+						<string name="Name">WeldToRung1</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXAC0FBA6400EF488FA6B331FB758F884D</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
-				<Item class="ManualWeld" referent="RBX133">
+				<Item class="ManualWeld" referent="RBXBFEC846EBBAF4D80A6354470F9877AC6">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.156642914</X>
+							<Y>0.509188175</Y>
+							<Z>0.557434082</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRung2</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX2B3E784D558C45FF8E31C69D1763065A</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXBB538C1430FB43B4BD0516F5F244BE34">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.149587631</X>
+							<Y>0.397066593</Y>
+							<Z>0.538425446</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRung3</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXC253FBFD0D26424F9D9D9E2CD677C09C</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXF95C1AEE1AFF499ABB26090BFB93FC69">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.165166855</X>
+							<Y>0.255440235</Y>
+							<Z>0.530132294</Z>
+							<R00>0.992552161</R00>
+							<R01>0.0870367661</R01>
+							<R02>0.085231781</R02>
+							<R10>-0.0866880193</R10>
+							<R11>0.996205509</R11>
+							<R12>-0.00779065676</R12>
+							<R20>-0.0855863392</R20>
+							<R21>0.000344061293</R21>
+							<R22>0.996331215</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRung4</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX9904DBE91E65461782CF696E20A436BE</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXE0201F59D96D438B9D316C8CDED8F065">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.124004364</X>
+							<Y>0.18840456</Y>
+							<Z>0.524112701</Z>
+							<R00>0.992368937</R00>
+							<R01>-0.0890573859</R01>
+							<R02>0.0852774084</R02>
+							<R10>0.088759616</R10>
+							<R11>0.996026754</R11>
+							<R12>0.00728356093</R12>
+							<R20>-0.0855872035</R20>
+							<R21>0.000341212377</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRung5</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXA0466DD02686458FA1A46DA31ECD5DB7</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX9E115E291F3945ABBAF131653A7DAC26">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.181713104</X>
+							<Y>0.0336744785</Y>
+							<Z>0.500747681</Z>
+							<R00>0.982977867</R00>
+							<R01>0.0776935443</R01>
+							<R02>0.166486144</R02>
+							<R10>-0.0753066018</R10>
+							<R11>0.996947885</R11>
+							<R12>-0.0206118468</R12>
+							<R20>-0.167579174</R20>
+							<R21>0.00772348139</R21>
+							<R22>0.985828876</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRung6</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX32F26AE56CBC482AA539FBC3F3F2423A</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX795C28FCBAE547ECBE454169F332A895">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.166194916</X>
+							<Y>0.651589155</Y>
+							<Z>0.57019043</Z>
+							<R00>0.996102452</R00>
+							<R01>0.0214229859</R01>
+							<R02>0.0855596662</R02>
+							<R10>-0.0213150606</R10>
+							<R11>0.999770939</R11>
+							<R12>-0.00217468431</R12>
+							<R20>-0.0855865479</R20>
+							<R21>0.00034250319</R21>
+							<R22>0.996331215</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung1</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX0C7F729A35C441339B41B37533DF0520</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXF81A63422A4743499BA1791E74748C25">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.156124115</X>
+							<Y>0.554308891</Y>
+							<Z>0.56244278</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung2</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX4E1901B6F59B44E38510003DA941BA79</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXEED5C83D4A2547AEB32D5EBC537D773B">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.153652191</X>
+							<Y>0.452814817</Y>
+							<Z>0.548477173</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung3</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXA956794B66604113A45A6FBD88A70940</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXD313363F80D74858AFEE9A5C6B19290C">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.148357391</X>
+							<Y>0.335817814</Y>
+							<Z>0.535182953</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung4</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXEAC24B1E3F534AAD94936F5E30AC0295</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXB84039F338844D07A96D20282983ED64">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.144533157</X>
+							<Y>0.21707201</Y>
+							<Z>0.524219513</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung5</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXE20B25B5D2824B0081CE1DFE2C6326AF</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX03102F0C394A4072B1107A97ABFA1E2E">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.1385746</X>
+							<Y>0.109323978</Y>
+							<Z>0.519546509</Z>
+							<R00>0.996253967</R00>
+							<R01>0.0124315908</R01>
+							<R02>0.0855763555</R02>
+							<R10>-0.0123565309</R10>
+							<R11>0.99992317</R11>
+							<R12>-0.00140665099</R12>
+							<R20>-0.0855871439</R20>
+							<R21>0.000343958847</R21>
+							<R22>0.996331096</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung6</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX8891C12EC84B4EE3A9E849A3D9EA0C1A</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX5BA7BC2D22A34D049E1FA52F945573CE">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.170772552</X>
+							<Y>0.70332408</Y>
+							<Z>0.57036972</Z>
+							<R00>0.996102452</R00>
+							<R01>0.0214229859</R01>
+							<R02>0.0855596662</R02>
+							<R10>-0.0213150606</R10>
+							<R11>0.999770939</R11>
+							<R12>-0.00217468431</R12>
+							<R20>-0.0855865479</R20>
+							<R21>0.00034250319</R21>
+							<R22>0.996331215</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToExtraRung0</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX5B9623AE909A4661B1D05AEF2A82BEB6</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXE5AAD060BD684594916ABE2B247FD6B1">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.256679535</X>
+							<Y>0.047444582</Y>
+							<Z>0.189071655</Z>
+							<R00>0.99985826</R00>
+							<R01>0.0123704383</R01>
+							<R02>0.0111355484</R02>
+							<R10>-0.012356854</R10>
+							<R11>0.999918342</R11>
+							<R12>-0.00140900258</R12>
+							<R20>-0.0111520588</R20>
+							<R21>0.00127160735</R21>
+							<R22>0.999932647</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRightFloor</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX83FA600B57FA478687C8E28988C9B574</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX4BA590A6927D434DA150A9BD2C46D058">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.034526825</X>
+							<Y>0.0489521027</Y>
+							<Z>0.148845673</Z>
+							<R00>0.987941563</R00>
+							<R01>0.0124251116</R01>
+							<R02>0.154305398</R02>
+							<R10>-0.0123569649</R10>
+							<R11>0.999918103</R11>
+							<R12>-0.0014089318</R12>
+							<R20>-0.154311091</R20>
+							<R21>-0.00051412452</R21>
+							<R22>0.988017142</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToLeftFloor</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX37435AC83B0D403AB2516BD0405A9F60</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXF8B46FDD16FA4CC7AE9F96AB3A976947">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.100315809</X>
+							<Y>-0.0311155319</Y>
+							<Z>0.0858459473</Z>
+							<R00>-0.113238901</R00>
+							<R01>-0.993395865</R01>
+							<R02>-0.0181961916</R02>
+							<R10>0.968139708</R10>
+							<R11>-0.114440471</R11>
+							<R12>0.22271648</R12>
+							<R20>-0.223329201</R20>
+							<R21>0.0076045543</R21>
+							<R22>0.974708021</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToLeftWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX50C130EC0A16425D9F96C6215D72964B</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX59B5EDFB5B32478FB1F82FEE03A79021">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.199342608</X>
+							<Y>0.332700729</Y>
+							<Z>0.123184204</Z>
+							<R00>0.118869066</R00>
+							<R01>-0.991922021</R01>
+							<R02>0.0441243835</R02>
+							<R10>0.991414666</R10>
+							<R11>0.116136365</R11>
+							<R12>-0.060012579</R12>
+							<R20>0.0544033945</R20>
+							<R21>0.0508797318</R21>
+							<R22>0.997216582</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRightWall</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXD269289B227147B290D1326663A06F89</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXD8BB8E57BE6F42CFB79158EC1E8F4866">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-0.0443067551</X>
+							<Y>0.48042345</Y>
+							<Z>0.117397308</Z>
+							<R00>-0.831341267</R00>
+							<R01>-0.546384752</R01>
+							<R02>-0.101604342</R02>
+							<R10>0.550425828</R10>
+							<R11>-0.834747076</R11>
+							<R12>-0.0147214681</R12>
+							<R20>-0.0767706037</R20>
+							<R21>-0.0681643039</R21>
+							<R22>0.99470681</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRightRoof</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX8696771E80E84C5BA6608687BBA58ED7</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX5105D635DB2E492D91213457F1C9F368">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-0.225970268</X>
+							<Y>0.314012527</Y>
+							<Z>0.0863304138</Z>
+							<R00>-0.823450625</R00>
+							<R01>0.55894953</R01>
+							<R02>-0.0974711329</R02>
+							<R10>-0.550899804</R10>
+							<R11>-0.82874769</R11>
+							<R12>-0.0983852744</R12>
+							<R20>-0.135772437</R20>
+							<R21>-0.0273185559</R21>
+							<R22>0.990362048</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToLeftRoof</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX94A28F80625F4172B5453F08AD5D9C31</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX6239F4F981ED4B8F923029B9CFA7F53D">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.175308228</X>
+							<Y>-0.353561163</Y>
+							<Z>0.269800186</Z>
+							<R00>0.0959821939</R00>
+							<R01>-0.0617069975</R01>
+							<R02>-0.993463397</R02>
+							<R10>-0.0125537533</R10>
+							<R11>0.997913718</R11>
+							<R12>-0.0631967634</R12>
+							<R20>0.995295465</R20>
+							<R21>0.0185347255</R21>
+							<R22>0.0950075388</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRightBackTop</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX980F808DFB7C41B5A61A08F317D2BBC4</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXCA64B32832AD4517BE3765DBAB759DBE">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-0.155464172</X>
+							<Y>-0.360849619</Y>
+							<Z>0.0108299255</Z>
+							<R00>-0.0947948098</R00>
+							<R01>-0.00617714599</R01>
+							<R02>0.995473802</R02>
+							<R10>-0.0189906321</R10>
+							<R11>0.999801636</R11>
+							<R12>0.00439579785</R12>
+							<R20>-0.995308161</R20>
+							<R21>-0.0184852555</R21>
+							<R22>-0.0948934555</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToLeftBackTop</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX83500436EB1D4E2687EF49A60D0D0A6D</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX764A4C84A4274C04932235173336D43C">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.148225784</X>
+							<Y>-0.123912811</Y>
+							<Z>0.142641068</Z>
+							<R00>0.993410528</R00>
+							<R01>0.0269765593</R01>
+							<R02>0.111350626</R02>
+							<R10>-0.107176691</R10>
+							<R11>-0.124738917</R11>
+							<R12>0.98638159</R12>
+							<R20>0.0405023694</R20>
+							<R21>-0.991817772</R21>
+							<R22>-0.121026598</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToBackBottom</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXC627741CE3E7464AABCC674E3D5C5B52</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXC91573F4BD5A4959B87A3D64B110BB23">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.294757843</X>
+							<Y>-0.409227848</Y>
+							<Z>-0.0141181946</Z>
+							<R00>-0.126267672</R00>
+							<R01>0.0596956536</R01>
+							<R02>0.990194321</R02>
+							<R10>-1.45658851e-006</R10>
+							<R11>0.998180509</R11>
+							<R12>-0.0601777062</R12>
+							<R20>-0.99199152</R20>
+							<R21>-0.00759730861</R21>
+							<R22>-0.126037359</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToLeftFrontTop</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX7FB3028821F94AEBA2CF38271BC087F9</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX67721DCB60714889B19D43370188991F">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-0.301074982</X>
+							<Y>-0.411602736</Y>
+							<Z>0.288478851</Z>
+							<R00>0.0754906833</R00>
+							<R01>-0.0600055084</R01>
+							<R02>-0.995334923</R02>
+							<R10>-1.45658851e-006</R10>
+							<R11>0.998180509</R11>
+							<R12>-0.0601777062</R12>
+							<R20>0.99714148</R20>
+							<R21>0.00454167416</R21>
+							<R22>0.0753523707</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRightFrontTop</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX6AD371FFD6F7491585048842FD693407</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX6017953D4E8044F78428499EF9F6E0C9">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.147788763</X>
+							<Y>-0.280277252</Y>
+							<Z>-0.0102157593</Z>
+							<R00>-0.0148140546</R00>
+							<R01>-0.997395456</R01>
+							<R02>0.0704870299</R02>
+							<R10>0.111013442</R10>
+							<R11>-0.0716992766</R11>
+							<R12>-0.991225183</R12>
+							<R20>0.993703723</R20>
+							<R21>-0.0068617058</R21>
+							<R22>0.111785829</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToLeftFrontBottom</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXBF42546BBD9F42278E0A7CB47D1E0068</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXD29FCE81F2C54197B07D4CF148FF2023">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.143944502</X>
+							<Y>-0.289302826</Y>
+							<Z>0.315410614</Z>
+							<R00>-0.0133847836</R00>
+							<R01>-0.997722447</R01>
+							<R02>0.0660083294</R02>
+							<R10>0.0958432853</R10>
+							<R11>-0.066990152</R11>
+							<R12>-0.993137002</R12>
+							<R20>0.995301843</R20>
+							<R21>-0.00696912594</R21>
+							<R22>0.0965204537</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToRightFrontBottom</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXA389DCE8BF204FA380C32B5D693D8050</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXE8D05638C40047919796BA256BB19B56">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.14150238</X>
+							<Y>-0.292510986</Y>
+							<Z>-0.253984928</Z>
+							<R00>0.995150745</R00>
+							<R01>0.00591571443</R01>
+							<R02>0.0981440544</R02>
+							<R10>0.0983237326</R10>
+							<R11>-0.0598857366</R11>
+							<R12>-0.993347645</R12>
+							<R20>-1.45658851e-006</R20>
+							<R21>0.998180568</R21>
+							<R22>-0.0601777211</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToFrontCenter</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX53F76702FBDF40A6B1442503AE23CC04</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXA7855F76563F480A8C92F923DA41A702">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.0132246017</X>
+							<Y>0.00253486633</Y>
+							<Z>0.0633239746</Z>
+							<R00>0.978600502</R00>
+							<R01>0.0123827066</R01>
+							<R02>0.205392659</R02>
+							<R10>-0.0123566967</R10>
+							<R11>0.999922931</R11>
+							<R12>-0.00140937697</R12>
+							<R20>-0.205394223</R20>
+							<R21>-0.00115876459</R21>
+							<R22>0.978678703</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToTreeMeshPart</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX52D2DF5C8A044906A381456A7C694B46</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBX2793C94F42FC4569B33F9EFA5CBB0487">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.19344902</X>
+							<Y>0.102212906</Y>
+							<Z>0.156223297</Z>
+							<R00>0.97859633</R00>
+							<R01>0.0123812966</R01>
+							<R02>0.20539099</R02>
+							<R10>-0.0123579558</R10>
+							<R11>0.999915481</R11>
+							<R12>-0.00140952785</R12>
+							<R20>-0.205394089</R20>
+							<R21>-0.00115865655</R21>
+							<R22>0.978674471</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToHouseMeshPart</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBXAA386A5C4142413685965A5ECA821F7B</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXA04D523C82214958B30458D8DA466643">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+							<R00>1</R00>
+							<R01>0</R01>
+							<R02>0</R02>
+							<R10>0</R10>
+							<R11>1</R11>
+							<R12>0</R12>
+							<R20>0</R20>
+							<R21>0</R21>
+							<R22>1</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.185285568</X>
+							<Y>0.401125312</Y>
+							<Z>0.0793380737</Z>
+							<R00>0.973651528</R00>
+							<R01>0.0137231927</R01>
+							<R02>0.227627918</R02>
+							<R10>-0.00972410757</R10>
+							<R11>0.999778748</R11>
+							<R12>-0.0186806917</R12>
+							<R20>-0.227833658</R20>
+							<R21>0.0159750246</R21>
+							<R22>0.973569751</R22>
+						</CoordinateFrame>
+						<string name="Name">WeldToTrunk</string>
+						<Ref name="Part0">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
+						<Ref name="Part1">RBX483C3A9A27404DE4B95F9BC39951E522</Ref>
+						<int name="Surface0">-1</int>
+						<int name="Surface1">-1</int>
+					</Properties>
+				</Item>
+				<Item class="ManualWeld" referent="RBXB96B2FC635954A69BE1BB7FDD514D71C">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -4850,14 +5157,14 @@ end
 							<R22>1</R22>
 						</CoordinateFrame>
 						<string name="Name">WeldToHandle</string>
-						<Ref name="Part0">RBX75</Ref>
-						<Ref name="Part1">RBX1</Ref>
+						<Ref name="Part0">RBXA8AFFF4BD06C4F5FAFC1AC82179005EB</Ref>
+						<Ref name="Part1">RBX2B281630BC2B4690A65D3F045EAAEDEC</Ref>
 						<int name="Surface0">-1</int>
 						<int name="Surface1">-1</int>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Model" referent="RBX134">
+			<Item class="Model" referent="RBXA97D3B52468644D88E0A4D0B53F6D138">
 				<Properties>
 					<CoordinateFrame name="ModelInPrimary">
 						<X>0</X>
@@ -4876,7 +5183,7 @@ end
 					<string name="Name">HouseInterior</string>
 					<Ref name="PrimaryPart">null</Ref>
 				</Properties>
-				<Item class="Part" referent="RBX110">
+				<Item class="Part" referent="RBX233C129797D44B27971DE11D6E87A204">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -4889,18 +5196,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.160218298</X>
-							<Y>123.481773</Y>
-							<Z>128.085159</Z>
-							<R00>0.908541024</R00>
-							<R01>0</R01>
-							<R02>0.417794824</R02>
-							<R10>-0.0251419488</R10>
-							<R11>0.99818784</R11>
-							<R12>0.0546739474</R12>
-							<R20>-0.417037725</R20>
-							<R21>-0.0601777397</R21>
-							<R22>0.906894624</R22>
+							<X>19.8679276</X>
+							<Y>4.12297201</Y>
+							<Z>53.4122391</Z>
+							<R00>0.619392753</R00>
+							<R01>-0.0362786129</R01>
+							<R02>0.784242094</R02>
+							<R10>-0.0332985707</R10>
+							<R11>0.996819258</R11>
+							<R12>0.072411418</R12>
+							<R20>-0.784374237</R20>
+							<R21>-0.0709653273</R21>
+							<R22>0.616214991</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -4944,7 +5251,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX135">
+					<Item class="Vector3Value" referent="RBX611EFCF633BE40FDA07E338CD1119D8A">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -4955,7 +5262,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX112">
+				<Item class="Part" referent="RBXE685B6A598B64B9CB4BF7BED999AF6B0">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -4968,18 +5275,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.332974553</X>
-							<Y>123.487152</Y>
-							<Z>128.095352</Z>
-							<R00>0.853563488</R00>
-							<R01>0</R01>
-							<R02>-0.520987332</R02>
-							<R10>0.0313518383</R10>
-							<R11>0.99818784</R11>
-							<R12>0.0513655208</R12>
-							<R20>0.520043194</R20>
-							<R21>-0.0601777397</R21>
-							<R22>0.852016687</R22>
+							<X>19.718708</X>
+							<Y>4.12854576</Y>
+							<Z>53.4998627</Z>
+							<R00>0.99640137</R00>
+							<R01>-0.0362786129</R01>
+							<R02>-0.0765917599</R02>
+							<R10>0.0415230952</R10>
+							<R11>0.996819258</R11>
+							<R12>0.0680296719</R12>
+							<R20>0.0738806427</R20>
+							<R21>-0.0709653273</R21>
+							<R22>0.99473846</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5023,7 +5330,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX136">
+					<Item class="Vector3Value" referent="RBXFED5594B7F0540A892288957A760FD06">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5034,7 +5341,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX114">
+				<Item class="Part" referent="RBXEBB255D0A6F246F4BFB9EA9A25C3957F">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5047,18 +5354,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.400624394</X>
-							<Y>123.473312</Y>
-							<Z>127.894875</Z>
-							<R00>0.0307188444</R00>
-							<R01>0</R01>
-							<R02>-0.999527216</R02>
-							<R10>0.0601492897</R10>
-							<R11>0.99818784</R11>
-							<R12>0.00184859068</R12>
-							<R20>0.99771589</R20>
-							<R21>-0.0601777397</R21>
-							<R22>0.0306631774</R22>
+							<X>19.5673599</X>
+							<Y>4.11078501</Y>
+							<Z>53.3524284</Z>
+							<R00>0.480874717</R00>
+							<R01>-0.0362786129</R01>
+							<R02>-0.876037359</R02>
+							<R10>0.0796631128</R10>
+							<R11>0.996819258</R11>
+							<R12>0.00244831643</R12>
+							<R20>0.87316227</R20>
+							<R21>-0.0709653273</R21>
+							<R22>0.482234776</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5102,7 +5409,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX137">
+					<Item class="Vector3Value" referent="RBX2835C04992D34DBC9EB491C74BD4D739">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5113,7 +5420,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX116">
+				<Item class="Part" referent="RBX90E270C1DECF4603AF308BBECF4C72D2">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5126,18 +5433,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.02624733</X>
-							<Y>123.473053</Y>
-							<Z>127.911331</Z>
-							<R00>-0.229766488</R00>
-							<R01>0</R01>
-							<R02>-0.973244905</R02>
-							<R10>0.0585676804</R10>
-							<R11>0.99818784</R11>
-							<R12>-0.0138268284</R12>
-							<R20>0.971481204</R20>
-							<R21>-0.0601777397</R21>
-							<R22>-0.22935012</R22>
+							<X>19.9081898</X>
+							<Y>4.11085176</Y>
+							<Z>53.1966782</Z>
+							<R00>0.237014204</R00>
+							<R01>-0.0362786129</R01>
+							<R02>-0.970827639</R02>
+							<R10>0.077568382</R10>
+							<R11>0.996819258</R11>
+							<R12>-0.0183125697</R12>
+							<R20>0.968404114</R20>
+							<R21>-0.0709653273</R21>
+							<R22>0.239073887</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5181,7 +5488,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX138">
+					<Item class="Vector3Value" referent="RBXDA9BE5AA459F4E1DA04DDD42F4E8D2E1">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5192,7 +5499,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX118">
+				<Item class="Part" referent="RBX9F76931664944B9BBA58F949DD684EBE">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5205,18 +5512,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.0626793802</X>
-							<Y>123.465042</Y>
-							<Z>127.772293</Z>
-							<R00>-0.987721443</R00>
-							<R01>0</R01>
-							<R02>0.156222969</R02>
-							<R10>-0.00940114539</R10>
-							<R11>0.99818784</R11>
-							<R12>-0.0594388433</R12>
-							<R20>-0.155939862</R20>
-							<R21>-0.0601777397</R21>
-							<R22>-0.985931516</R22>
+							<X>19.8125477</X>
+							<Y>4.10012054</Y>
+							<Z>53.0896149</Z>
+							<R00>-0.950348079</R00>
+							<R01>-0.0362786129</R01>
+							<R02>-0.30906567</R02>
+							<R10>-0.0124510927</R10>
+							<R11>0.996819258</R11>
+							<R12>-0.0787221789</R12>
+							<R20>0.31093806</R20>
+							<R21>-0.0709653273</R21>
+							<R22>-0.947777033</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5260,7 +5567,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX139">
+					<Item class="Vector3Value" referent="RBXB5CB3B406F984118ABBBBB97606219B6">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5271,7 +5578,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX120">
+				<Item class="Part" referent="RBX320E37F8E732424F9CB796B6004B8ECC">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5284,18 +5591,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.338648617</X>
-							<Y>123.463577</Y>
-							<Z>127.739723</Z>
-							<R00>-0.998108983</R00>
-							<R01>0</R01>
-							<R02>0.0614666902</R02>
-							<R10>-0.00369892642</R10>
-							<R11>0.99818784</R11>
-							<R12>-0.0600639433</R12>
-							<R20>-0.061355304</R20>
-							<R21>-0.0601777397</R21>
-							<R22>-0.99630022</R22>
+							<X>19.5520153</X>
+							<Y>4.09802198</Y>
+							<Z>53.1862602</Z>
+							<R00>-0.916602612</R00>
+							<R01>-0.0362786129</R01>
+							<R02>-0.39814955</R02>
+							<R10>-0.00489894347</R10>
+							<R11>0.996819258</R11>
+							<R12>-0.0795500726</R12>
+							<R20>0.399768651</R20>
+							<R21>-0.0709653273</R21>
+							<R22>-0.91386503</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5339,7 +5646,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX140">
+					<Item class="Vector3Value" referent="RBX060481F33FAF454499F614ADC643B1FA">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5350,7 +5657,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX122">
+				<Item class="Part" referent="RBXB2C328E2A70849A9BA2E6EF0F70F00BE">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5363,18 +5670,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.198095575</X>
-							<Y>123.564194</Y>
-							<Z>127.747063</Z>
-							<R00>-0.992848516</R00>
-							<R01>0.00656040153</R01>
-							<R02>0.119201295</R02>
-							<R10>-0.000576781167</R10>
-							<R11>0.998214006</R11>
-							<R12>-0.0597421005</R12>
-							<R20>-0.119380362</R20>
-							<R21>-0.059383627</R21>
-							<R22>-0.991071045</R22>
+							<X>19.6796055</X>
+							<Y>4.19876385</Y>
+							<Z>53.1270638</Z>
+							<R00>-0.938353598</R00>
+							<R01>-0.0300760902</R01>
+							<R02>-0.344365925</R02>
+							<R10>-0.00291294651</R10>
+							<R11>0.996861041</R11>
+							<R12>-0.0791259557</R12>
+							<R20>0.345664263</R20>
+							<R21>-0.0732450411</R21>
+							<R22>-0.935495436</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5418,7 +5725,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX141">
+					<Item class="Vector3Value" referent="RBX568D4A36AEA04C8E8B5C5DE78CCA4989">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5429,7 +5736,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX124">
+				<Item class="Part" referent="RBX051C1690BC0F4DCB91D264C3BB42B923">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5442,18 +5749,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.21246767</X>
-							<Y>123.312225</Y>
-							<Z>127.860146</Z>
-							<R00>-0.996370554</R00>
-							<R01>0.0848621354</R01>
-							<R02>-0.00657065306</R02>
-							<R10>0.00149532664</R10>
-							<R11>-0.0597322881</R11>
-							<R12>-0.99821347</R12>
-							<R20>-0.0851030797</R20>
-							<R21>-0.994599402</R21>
-							<R22>0.0593888126</R22>
+							<X>19.7205219</X>
+							<Y>3.94905567</Y>
+							<Z>53.2386742</Z>
+							<R00>-0.925908446</R00>
+							<R01>-0.376547188</R01>
+							<R02>0.0300693158</R02>
+							<R10>-0.000170427491</R10>
+							<R11>-0.0791851953</R11>
+							<R12>-0.996860385</R12>
+							<R20>0.377745926</R20>
+							<R21>-0.923005998</R21>
+							<R22>0.073254317</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5497,7 +5804,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX142">
+					<Item class="Vector3Value" referent="RBXC051E69764FD45049552C0A1599D8483">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5508,7 +5815,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX126">
+				<Item class="Part" referent="RBX77BD515F7AAF4CB49A98608E46E5CE09">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5521,18 +5828,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.225696012</X>
-							<Y>123.321617</Y>
-							<Z>128.018188</Z>
-							<R00>-0.991855383</R00>
-							<R01>0.127193391</R01>
-							<R02>-0.00657077087</R02>
-							<R10>-0.00104860181</R10>
-							<R11>-0.0597443357</R11>
-							<R12>-0.998213291</R12>
-							<R20>-0.12735875</R20>
-							<R21>-0.990075588</R21>
-							<R22>0.059391357</R22>
+							<X>19.7805824</X>
+							<Y>3.96153498</Y>
+							<Z>53.3852234</Z>
+							<R00>-0.941096008</R00>
+							<R01>-0.336796761</R01>
+							<R02>0.0300703645</R02>
+							<R10>-0.00354081392</R10>
+							<R11>-0.0791087151</R11>
+							<R12>-0.996860147</R12>
+							<R20>0.338117898</R20>
+							<R21>-0.938247085</R21>
+							<R22>0.0732566267</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5576,7 +5883,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX143">
+					<Item class="Vector3Value" referent="RBX37382FAFD1DB47629FB6CBDEA3CA175A">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5587,7 +5894,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX128">
+				<Item class="Part" referent="RBXE03E9A0143154EAE93280E8E7BB7A4B7">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5600,18 +5907,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.212475568</X>
-							<Y>123.633652</Y>
-							<Z>127.840904</Z>
-							<R00>-0.992904603</R00>
-							<R01>0.118727453</R01>
-							<R02>-0.00657064468</R02>
-							<R10>-0.000538672844</R10>
-							<R11>-0.0597481988</R11>
-							<R12>-0.99821347</R12>
-							<R20>-0.118907966</R20>
-							<R21>-0.991126359</R21>
-							<R22>0.0593884364</R22>
+							<X>19.7088947</X>
+							<Y>4.27004242</Y>
+							<Z>53.2159424</Z>
+							<R00>-0.938188851</R00>
+							<R01>-0.344812959</R01>
+							<R02>0.0300691519</R02>
+							<R10>-0.00286560087</R10>
+							<R11>-0.0791331381</R11>
+							<R12>-0.996860385</R12>
+							<R20>0.346109688</R20>
+							<R21>-0.935328841</R21>
+							<R22>0.0732539818</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5655,7 +5962,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX144">
+					<Item class="Vector3Value" referent="RBX70B743F612224041A76E6D45C6CFA7D8">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5666,7 +5973,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX130">
+				<Item class="Part" referent="RBX462AD362F5184ECAA93F00F2E55C0544">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5679,18 +5986,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.228349403</X>
-							<Y>123.64399</Y>
-							<Z>128.027313</Z>
-							<R00>-0.996310949</R00>
-							<R01>0.0855562091</R01>
-							<R02>-0.00657078251</R02>
-							<R10>0.00145365589</R10>
-							<R11>-0.059735503</R11>
-							<R12>-0.998213291</R12>
-							<R20>-0.0857959241</R20>
-							<R21>-0.994539678</R21>
-							<R22>0.0593909994</R22>
+							<X>19.7795048</X>
+							<Y>4.28402328</Y>
+							<Z>53.3889351</Z>
+							<R00>-0.926170409</R00>
+							<R01>-0.375902027</R01>
+							<R02>0.0300701931</R02>
+							<R10>-0.000225649448</R10>
+							<R11>-0.0791872367</R11>
+							<R12>-0.996860147</R12>
+							<R20>0.377102673</R20>
+							<R21>-0.923268676</R21>
+							<R22>0.0732563213</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5734,7 +6041,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX145">
+					<Item class="Vector3Value" referent="RBX7D188665F6674674A0F5322C4C1193A0">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5745,7 +6052,7 @@ end
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="Part" referent="RBX132">
+				<Item class="Part" referent="RBX4CFEF123B4924A9CA7D0B19F275252D2">
 					<Properties>
 						<bool name="Anchored">false</bool>
 						<float name="BackParamA">-0.5</float>
@@ -5758,18 +6065,18 @@ end
 						<token name="BottomSurfaceInput">0</token>
 						<int name="BrickColor">125</int>
 						<CoordinateFrame name="CFrame">
-							<X>-0.2823053</X>
-							<Y>123.326996</Y>
-							<Z>128.110031</Z>
-							<R00>-0.991855383</R00>
-							<R01>0.127193391</R01>
-							<R02>-0.00657077087</R02>
-							<R10>-0.00104860181</R10>
-							<R11>-0.0597443357</R11>
-							<R12>-0.998213291</R12>
-							<R20>-0.12735875</R20>
-							<R21>-0.990075588</R21>
-							<R22>0.059391357</R22>
+							<X>19.7719269</X>
+							<Y>3.96870804</Y>
+							<Z>53.4926529</Z>
+							<R00>-0.941096008</R00>
+							<R01>-0.336796761</R01>
+							<R02>0.0300703645</R02>
+							<R10>-0.00354081392</R10>
+							<R11>-0.0791087151</R11>
+							<R12>-0.996860147</R12>
+							<R20>0.338117898</R20>
+							<R21>-0.938247085</R21>
+							<R22>0.0732566267</R22>
 						</CoordinateFrame>
 						<bool name="CanCollide">false</bool>
 						<float name="Elasticity">0.5</float>
@@ -5813,7 +6120,7 @@ end
 							<Z>0.200000003</Z>
 						</Vector3>
 					</Properties>
-					<Item class="Vector3Value" referent="RBX146">
+					<Item class="Vector3Value" referent="RBXDA64D698D97040F18EDC91FEB787BB6F">
 						<Properties>
 							<string name="Name">TrueSize</string>
 							<Vector3 name="Value">
@@ -5826,29 +6133,29 @@ end
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX147">
+		<Item class="Camera" referent="RBX19CC73646C624773A9A747A45091D37C">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.608416021</X>
-					<Y>123.700691</Y>
-					<Z>126.192146</Z>
-					<R00>-0.937268078</R00>
-					<R01>-0.0689013302</R01>
-					<R02>0.341732681</R02>
-					<R10>-7.4505806e-009</R10>
-					<R11>0.980273426</R11>
-					<R12>0.197646111</R12>
-					<R20>-0.348609567</R20>
-					<R21>0.185247391</R21>
-					<R22>-0.918778956</R22>
+					<X>19.7828503</X>
+					<Y>4.68624401</Y>
+					<Z>51.4966621</Z>
+					<R00>-0.994567394</R00>
+					<R01>0.0421965532</R01>
+					<R02>-0.0951591581</R02>
+					<R10>-0</R10>
+					<R11>0.914155006</R11>
+					<R12>0.405364901</R12>
+					<R20>0.104095228</R20>
+					<R21>0.403162718</R21>
+					<R22>-0.909188628</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.0749999881</X>
-					<Y>123.305428</Y>
-					<Z>128.029572</Z>
+					<X>19.9826851</X>
+					<Y>3.83497524</Y>
+					<Z>53.4059639</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
