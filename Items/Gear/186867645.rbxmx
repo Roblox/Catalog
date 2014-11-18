@@ -1,10 +1,10 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX48385521C3154B249A257B98D547D97C">
+	<Item class="Tool" referent="RBXFAF32DA47FCA4824A7A635F5CF93A1FF">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
-			<bool name="Enabled">false</bool>
+			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
 				<Y>0</Y>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=186495170</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX404056C12C6840369B0E80EEFEA0FEAC">
+		<Item class="Part" referent="RBX4896EB2468BD4483A97CAD65DDA34027">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -37,20 +37,20 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>2.9000001</X>
-					<Y>2.39999962</Y>
-					<Z>-0.100000381</Z>
-					<R00>-0</R00>
-					<R01>0</R01>
-					<R02>1</R02>
-					<R10>-0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>-1</R20>
-					<R21>0</R21>
-					<R22>0</R22>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>-1</R00>
+					<R01>-1.45273096e-014</R01>
+					<R02>2.15828018e-015</R02>
+					<R10>-1.44793963e-014</R10>
+					<R11>0.999784708</R11>
+					<R12>0.0207507778</R12>
+					<R20>-2.45926911e-015</R20>
+					<R21>0.0207507778</R21>
+					<R22>-0.999784708</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -92,7 +92,7 @@
 					<Z>0.25</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXA2B9FC0F82C543A8981297737C1C71D3">
+			<Item class="SpecialMesh" referent="RBX41882FD7EE094786829E6886DD5083FA">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,14 +117,14 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sparkles" referent="RBXBFD6B267D16D44BA8D621AF2C5E93CC2">
+			<Item class="Sparkles" referent="RBXCFEAE32E84A049A5B9241A65B09F72DA">
 				<Properties>
 					<bool name="Enabled">false</bool>
 					<string name="Name">Sparkles</string>
 					<Color3 name="SparkleColor">4289374720</Color3>
 				</Properties>
 			</Item>
-			<Item class="PointLight" referent="RBX0547AA1C8A464852950E5431A6A68907">
+			<Item class="PointLight" referent="RBX04090C107AC94347980DE124F264C557">
 				<Properties>
 					<float name="Brightness">50</float>
 					<Color3 name="Color">4289374720</Color3>
@@ -135,7 +135,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX21A5364A46D7404B9B4DBA36CCBA0F62">
+		<Item class="LocalScript" referent="RBX4163693654BB416CA7438423F66DA893">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -254,7 +254,7 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX047BF4A639A948E8BE583D0DD83E25DA">
+		<Item class="Script" referent="RBX8648B26C47C548CC9C822151E7FACD5A">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -269,18 +269,19 @@ PointLight = Handle:WaitForChild(&quot;PointLight&quot;)
 Players = game:GetService(&quot;Players&quot;)
 Debris = game:GetService(&quot;Debris&quot;)
 
+Module = require(187430232)
+
 Animations = {
 &#9;Activate = {Animation = Tool:WaitForChild(&quot;Activate&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = 2}
 }
+
 Sounds = {}
 
-GlowingParts = {
-&#9;Objects = {},
-&#9;Welds = {},
-&#9;Model = nil
-}
+AttemptingActivation = false
 
 Duration = 30
+
+DefaultColor = BrickColor.new(&quot;Lime green&quot;).Color
 
 ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
 ClientControl.Name = &quot;ClientControl&quot;
@@ -310,231 +311,260 @@ function InvokeClient(Mode, Value)
 &#9;return ClientReturn
 end
 
-function CheckTableForInstance(Table, Instance)
+function CheckTableForString(Table, String)
 &#9;for i, v in pairs(Table) do
-&#9;&#9;if v == Instance then
+&#9;&#9;if string.lower(v) == string.lower(String) then
 &#9;&#9;&#9;return true
 &#9;&#9;end
 &#9;end
 &#9;return false
 end
 
-function Glow(character, Color)
-&#9;if character == Tool then
-&#9;&#9;return
-&#9;end
-&#9;local Parts = {character:FindFirstChild(&quot;Head&quot;), character:FindFirstChild(&quot;HumanoidRootPart&quot;)}
-&#9;local GlowingBricks = {}
-&#9;local Meshes = {}
-&#9;local function GlowParts(Parent)
+function GetAllObjects(Parent)
+&#9;local Objects = {}
+&#9;local function GetObjects(Parent)
 &#9;&#9;for i, v in pairs(Parent:GetChildren()) do
-&#9;&#9;&#9;if v ~= Tool and v.Name ~= &quot;GlowingModel&quot; then
-&#9;&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;&#9;&#9;local Part = v:Clone()
-&#9;&#9;&#9;&#9;&#9;Part.Name = &quot;GlowingPart&quot;
-&#9;&#9;&#9;&#9;&#9;Part.BrickColor = BrickColor.new(Color)
-&#9;&#9;&#9;&#9;&#9;Part.Transparency = 0.5
-&#9;&#9;&#9;&#9;&#9;Part.Material = Enum.Material.Plastic
-&#9;&#9;&#9;&#9;&#9;Part.CanCollide = false
-&#9;&#9;&#9;&#9;&#9;Part.Locked = true
-&#9;&#9;&#9;&#9;&#9;Part.Anchored = false
-&#9;&#9;&#9;&#9;&#9;local Surfaces = {Enum.NormalId.Top, Enum.NormalId.Bottom, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right}
-&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Surfaces) do
-&#9;&#9;&#9;&#9;&#9;&#9;pcall(function()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part[v.Name .. &quot;Surface&quot;] = Enum.SurfaceType.Smooth
-&#9;&#9;&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;table.insert(Objects, v)
+&#9;&#9;&#9;GetObjects(v)
+&#9;&#9;end
+&#9;end
+&#9;GetObjects(Parent)
+&#9;return Objects
+end
+
+function GlowPart(Object)
+&#9;local Part, Weld, Meshes, Sparkles, Light = nil, nil, {}, nil, nil
+&#9;local Parts = {&quot;Head&quot;, &quot;HumanoidRootPart&quot;}
+&#9;if Object.Parent ~= Tool and not Object.Parent:IsA(&quot;Tool&quot;) and Object.Parent.Name ~= &quot;GlowingModel&quot; then
+&#9;&#9;if Object:IsA(&quot;JointInstance&quot;) and Object.Name == &quot;GlowWeld&quot; then
+&#9;&#9;&#9;Object:Destroy()
+&#9;&#9;elseif Object:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;Part = Object:Clone()
+&#9;&#9;&#9;Part.Name = &quot;GlowingPart&quot;
+&#9;&#9;&#9;Part.Transparency = 0.5
+&#9;&#9;&#9;Part.Material = Enum.Material.Plastic
+&#9;&#9;&#9;Part.CanCollide = false
+&#9;&#9;&#9;Part.Locked = true
+&#9;&#9;&#9;Part.Anchored = false
+&#9;&#9;&#9;Light = Instance.new(&quot;PointLight&quot;)
+&#9;&#9;&#9;Light.Brightness = 50
+&#9;&#9;&#9;Light.Range = 6
+&#9;&#9;&#9;Light.Shadows = false
+&#9;&#9;&#9;Light.Enabled = false
+&#9;&#9;&#9;local Surfaces = {Enum.NormalId.Top, Enum.NormalId.Bottom, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right}
+&#9;&#9;&#9;for i, v in pairs(Surfaces) do
+&#9;&#9;&#9;&#9;pcall(function()
+&#9;&#9;&#9;&#9;&#9;Part[Object.Name .. &quot;Surface&quot;] = Enum.SurfaceType.Smooth
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Part.FormFactor = Enum.FormFactor.Custom
+&#9;&#9;&#9;Part.Size = Vector3.new(0.2, 0.2, 0.2)
+&#9;&#9;&#9;Weld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;Weld.Name = &quot;GlowWeld&quot;
+&#9;&#9;&#9;Weld.Part0 = Object
+&#9;&#9;&#9;Weld.Part1 = Part
+&#9;&#9;&#9;Weld.C0 = CFrame.new(0, 0, 0)
+&#9;&#9;&#9;local PartUsable = false
+&#9;&#9;&#9;if not CheckTableForString(Parts, Object.Name) then
+&#9;&#9;&#9;&#9;if Object.Name == &quot;Torso&quot; then
+&#9;&#9;&#9;&#9;&#9;Sparkles = Instance.new(&quot;Sparkles&quot;)
+&#9;&#9;&#9;&#9;&#9;Sparkles.Enabled = false
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local HasCharacterMesh = false
+&#9;&#9;&#9;&#9;for ii, vv in pairs(Object.Parent:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;if vv:IsA(&quot;CharacterMesh&quot;) and vv.BodyPart.Name == string.gsub(Object.Name, &quot; &quot;, &quot;&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;Weld.C0 = CFrame.new(0, 0.075, 0)
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh = Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshId = (&quot;http://www.roblox.com/asset?id=&quot; .. vv.MeshId)
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.TextureId = &quot;null&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = Vector3.new(1.1, 1.1, 1.1)
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Parent = Part
+&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, Mesh)
+&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
+&#9;&#9;&#9;&#9;&#9;&#9;HasCharacterMesh = true
 &#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;Part.FormFactor = Enum.FormFactor.Custom
-&#9;&#9;&#9;&#9;&#9;Part.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;&#9;&#9;&#9;&#9;local Weld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;&#9;Weld.Name = &quot;GlowWeld&quot;
-&#9;&#9;&#9;&#9;&#9;Weld.Part0 = v
-&#9;&#9;&#9;&#9;&#9;Weld.Part1 = Part
-&#9;&#9;&#9;&#9;&#9;Weld.C0 = CFrame.new(0, 0, 0)
-&#9;&#9;&#9;&#9;&#9;Weld.Parent = v
-&#9;&#9;&#9;&#9;&#9;table.insert(GlowingParts.Welds, Weld)
-&#9;&#9;&#9;&#9;&#9;local PartUsable = false
-&#9;&#9;&#9;&#9;&#9;if not CheckTableForInstance(Parts, v) and not CheckTableForInstance(GlowingBricks, v) then
-&#9;&#9;&#9;&#9;&#9;&#9;if v.Name == &quot;Torso&quot; then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Sparkles = Instance.new(&quot;Sparkles&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Sparkles.SparkleColor = BrickColor.new(Color).Color
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Sparkles.Enabled = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Sparkles.Parent = Part
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;local HasCharacterMesh = false
-&#9;&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(Parent:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if vv:IsA(&quot;CharacterMesh&quot;) and vv.BodyPart.Name == string.gsub(v.Name, &quot; &quot;, &quot;&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Weld.C0 = CFrame.new(0, 0.075, 0)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshId = (&quot;http://www.roblox.com/asset?id=&quot; .. vv.MeshId)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.TextureId = &quot;null&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = Vector3.new(1.1, 1.1, 1.1)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, Mesh)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local PartColor = Part.BrickColor.Color
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.VertexColor = Vector3.new((PartColor.r / 1), (PartColor.g / 1), (PartColor.b / 1))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Parent = Part
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;HasCharacterMesh = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;if HasCharacterMesh then
-&#9;&#9;&#9;&#9;&#9;&#9;elseif v.Parent and v.Parent:IsA(&quot;Hat&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(Part:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if vv:IsA(&quot;DataModelMesh&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Scale = Vector3.new((vv.Scale.X + 0.025), (vv.Scale.Y + 0.025), (vv.Scale.Z + 0.025))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if vv.MeshType == Enum.MeshType.FileMesh then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.TextureId = &quot;http://www.roblox.com/asset?id=&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, vv)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshId = &quot;http://www.roblox.com/Asset/?id=9856898&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.TextureId = &quot;http://www.roblox.com/asset/?ID=1361097&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = ((v.Size * 2) + Vector3.new(0.1, 0.1, 0.1))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, Mesh)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Parent = Part
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;elseif v.Name == &quot;Head&quot; then
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if not HasCharacterMesh then
+&#9;&#9;&#9;&#9;&#9;if Object.Parent and Object.Parent:IsA(&quot;Hat&quot;) then
 &#9;&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(Part:GetChildren()) do
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;if vv:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Scale = Vector3.new((vv.Scale.X + 0.05), (vv.Scale.Y + 0.05), (vv.Scale.Z + 0.05))
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if vv.MeshType == Enum.MeshType.FileMesh then
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.TextureId = &quot;http://www.roblox.com/asset?id=&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Scale = Vector3.new((vv.Scale.X + 0.1), (vv.Scale.Y + 0.1), (vv.Scale.Z + 0.1))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Scale = ((vv.Scale + Vector3.new(0.1, 0.1, 0.1)) * 5)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, vv)
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
 &#9;&#9;&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshId = &quot;http://www.roblox.com/Asset/?id=9856898&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.TextureId = &quot;http://www.roblox.com/asset/?ID=1361097&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = ((Object.Size * 2) + Vector3.new(0.1, 0.1, 0.1))
+&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Parent = Part
+&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, Mesh)
+&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
 &#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;if PartUsable then
-&#9;&#9;&#9;&#9;&#9;&#9;table.insert(GlowingBricks, Part)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;elseif Object.Name == &quot;Head&quot; then
+&#9;&#9;&#9;&#9;for ii, vv in pairs(Part:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;if vv:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;if vv.MeshType == Enum.MeshType.FileMesh then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.TextureId = &quot;http://www.roblox.com/asset?id=&quot;
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Scale = Vector3.new((vv.Scale.X + 0.1), (vv.Scale.Y + 0.1), (vv.Scale.Z + 0.1))
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Scale = ((vv.Scale + Vector3.new(0.1, 0.1, 0.1)) * 5)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Meshes, vv)
+&#9;&#9;&#9;&#9;&#9;&#9;PartUsable = true
 &#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;table.insert(Parts, v)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;GlowParts(v)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;GlowParts(character)
-&#9;local GlowModel = Instance.new(&quot;Model&quot;)
-&#9;GlowModel.Name = &quot;GlowingModel&quot;
-&#9;for i, v in pairs(GlowingBricks) do
-&#9;&#9;if v then
-&#9;&#9;&#9;for ii, vv in pairs(v:GetChildren()) do
-&#9;&#9;&#9;&#9;if not (vv:IsA(&quot;DataModelMesh&quot;) or (vv:IsA(&quot;JointInstance&quot;) and vv.Name == &quot;GlowWeld&quot;) or vv:IsA(&quot;Sparkles&quot;)) then
-&#9;&#9;&#9;&#9;&#9;vv:Destroy()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local PointLight = Instance.new(&quot;PointLight&quot;)
-&#9;&#9;&#9;PointLight.Brightness = 50
-&#9;&#9;&#9;PointLight.Color = BrickColor.new(Color).Color
-&#9;&#9;&#9;PointLight.Range = 6
-&#9;&#9;&#9;PointLight.Shadows = false
-&#9;&#9;&#9;PointLight.Enabled = true
-&#9;&#9;&#9;PointLight.Parent = v
-&#9;&#9;&#9;v.Parent = GlowModel
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs(Meshes) do
-&#9;&#9;local PartColor = BrickColor.new(Color).Color
-&#9;&#9;v.VertexColor = Vector3.new(PartColor.r, PartColor.g, PartColor.b)
-&#9;end
-&#9;if Players:GetPlayerFromCharacter(character) then
-&#9;&#9;Debris:AddItem(GlowModel, Duration)
-&#9;&#9;GlowModel.Parent = character
-&#9;end
-&#9;for i, v in pairs({Parts, GlowingBricks, Meshes}) do
-&#9;&#9;if type(v) == &quot;table&quot; then
-&#9;&#9;&#9;for ii, vv in pairs(v) do
-&#9;&#9;&#9;&#9;if not CheckTableForInstance(GlowingParts.Objects, vv) then
-&#9;&#9;&#9;&#9;&#9;table.insert(GlowingParts.Objects, vv)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
 &#9;&#9;end
-&#9;end
-&#9;return GlowModel
+&#9;end&#9;
+&#9;return ((Part and Weld and {Object = Object, Part = Part, Weld = Weld, Meshes = Meshes, Sparkles = Sparkles, Light = Light}) or nil)
 end
 
-function GlowCharacter()
-&#9;if GlowingParts.Model and GlowingParts.Model.Parent then
-&#9;&#9;GlowingParts.Model:Destroy()
+function Glow(character, Color)
+&#9;if character == Tool then
+&#9;&#9;return
 &#9;end
-&#9;Color = &quot;Lime green&quot;
-&#9;GlowingParts.Model = Glow(Character, Color)
-&#9;for i, v in pairs({ObjectAdded, ObjectRemoved}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
+&#9;
+&#9;GlowingModel = Instance.new(&quot;Model&quot;)
+&#9;GlowingModel.Name = &quot;GlowingModel&quot;
+&#9;
+&#9;if GlowingModel and GlowingModel.Parent then
+&#9;&#9;GlowingModel:Destroy()
 &#9;end
-&#9;ObjectAdded = Character.ChildAdded:connect(function(Child)
-&#9;&#9;if Child == Tool then
-&#9;&#9;&#9;return
-&#9;&#9;end
-&#9;&#9;wait()
-&#9;&#9;if Child.Name == &quot;GlowingModel&quot; then
-&#9;&#9;&#9;return
-&#9;&#9;end
-&#9;&#9;local GlowReturn = Glow(Child, Color)
-&#9;&#9;for i, v in pairs(GlowReturn:GetChildren()) do
-&#9;&#9;&#9;v.Parent = GlowingParts.Model
-&#9;&#9;end
-&#9;end)
-&#9;ObjectRemoved = Character.ChildRemoved:connect(function(Child)
-&#9;&#9;local function GetAllObjects(Parent)
-&#9;&#9;&#9;local Objects = {}
-&#9;&#9;&#9;local function GetObjects(Parent)
-&#9;&#9;&#9;&#9;for i, v in pairs(Parent:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;table.insert(Objects, v)
-&#9;&#9;&#9;&#9;&#9;GetObjects(v)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;GetObjects(Parent)
-&#9;&#9;&#9;return Objects
-&#9;&#9;end
-&#9;&#9;local Objects = GetAllObjects(Child)
-&#9;&#9;for i, v in pairs(Objects) do
-&#9;&#9;&#9;for ii, vv in pairs(GlowingParts.Objects) do
-&#9;&#9;&#9;&#9;if v:IsA(&quot;JointInstance&quot;) and v.Part1 and v.Part1.Parent and v.Part1.Name == &quot;GlowingPart&quot; and v.Part1 == vv then
-&#9;&#9;&#9;&#9;&#9;vv:Destroy()
-&#9;&#9;&#9;&#9;&#9;table.remove(GlowingParts, ii)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-&#9;local Color = Color3.new(0, 1, 0)
-&#9;while GlowingParts.Model and GlowingParts.Model.Parent do
-&#9;&#9;for i = 1, 20 do
-&#9;&#9;&#9;local Interval = (0.05 * ((i &lt; 11 and 1) or -1))
-&#9;&#9;&#9;Color = Color3.new((Color.r + Interval), Color.g, Color.b)
-&#9;&#9;&#9;for ii, vv in pairs(GlowingParts.Objects) do
-&#9;&#9;&#9;&#9;if vv:IsA(&quot;DataModelMesh&quot;) then
-&#9;&#9;&#9;&#9;&#9;vv.VertexColor = Vector3.new(Color.r, Color.g, Color.b)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(0.05)
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs(GlowingParts.Welds) do
-&#9;&#9;if v and v.Parent then
+&#9;
+&#9;for i, v in pairs(character:GetChildren()) do
+&#9;&#9;if v.Name == GlowingModel.Name then
 &#9;&#9;&#9;v:Destroy()
 &#9;&#9;end
 &#9;end
-&#9;for i, v in pairs({GlowingParts.Objects, GlowingParts.Welds}) do
-&#9;&#9;GlowingParts[i] = {}
-&#9;end
+&#9;
 &#9;for i, v in pairs({ObjectAdded, ObjectRemoved}) do
 &#9;&#9;if v then
 &#9;&#9;&#9;v:disconnect()
 &#9;&#9;end
 &#9;end
+&#9;
+&#9;local GlowData = {}
+&#9;
+&#9;local function SetUpGlow(Table)
+&#9;&#9;Table.Part.BrickColor = BrickColor.new(Color)
+&#9;&#9;for ii, vv in pairs(Table.Part:GetChildren()) do
+&#9;&#9;&#9;if not vv:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;&#9;vv:Destroy()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for ii, vv in pairs({Table.Sparkles, Table.Light}) do
+&#9;&#9;&#9;if vv then
+&#9;&#9;&#9;&#9;pcall(function()
+&#9;&#9;&#9;&#9;&#9;vv[((vv:IsA(&quot;Sparkles&quot;) and &quot;SparkleColor&quot;) or (vv:IsA(&quot;Light&quot;) and &quot;Color&quot;))] = Color
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;vv.Enabled = true
+&#9;&#9;&#9;&#9;vv.Parent = Table.Part
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for ii, vv in pairs(Table.Meshes) do
+&#9;&#9;&#9;if vv:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;&#9;vv.VertexColor = Vector3.new(Color.r, Color.g, Color.b)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;Table.Weld.Parent = Table.Part
+&#9;&#9;Table.Part.Parent = GlowingModel
+&#9;end
+&#9;
+&#9;local function GlowParts(Parent)
+&#9;&#9;for i, v in pairs(Parent:GetChildren()) do
+&#9;&#9;&#9;local GlowTable = GlowPart(v)
+&#9;&#9;&#9;if GlowTable then
+&#9;&#9;&#9;&#9;local ObjectAlreadyUsed = false
+&#9;&#9;&#9;&#9;for ii, vv in pairs(GlowData) do
+&#9;&#9;&#9;&#9;&#9;if vv.Object and vv.Object and vv.Object == GlowTable.Object then
+&#9;&#9;&#9;&#9;&#9;&#9;ObjectAlreadyUsed = true
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if not ObjectAlreadyUsed then
+&#9;&#9;&#9;&#9;&#9;SetUpGlow(GlowTable)
+&#9;&#9;&#9;&#9;&#9;table.insert(GlowData, GlowTable)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;GlowParts(v)
+&#9;&#9;end
+&#9;end
+
+&#9;GlowParts(character)
+&#9;if Players:GetPlayerFromCharacter(character) then
+&#9;&#9;Debris:AddItem(GlowingModel, Duration)
+&#9;&#9;GlowingModel.Parent = character
+&#9;&#9;
+&#9;&#9;ObjectAdded = character.ChildAdded:connect(function(Child)
+&#9;&#9;&#9;if Child == Tool then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait()
+&#9;&#9;&#9;if not Child or not Child.Parent or Child.Name == GlowingModel.Name then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;GlowParts(Child)
+&#9;&#9;end)
+&#9;&#9;
+&#9;&#9;ObjectRemoved = character.ChildRemoved:connect(function(Child)
+&#9;&#9;&#9;if Child == Tool then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;wait()
+&#9;&#9;&#9;if not Child or not Child.Parent or Child.Name == GlowingModel.Name then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local Objects = GetAllObjects(Child)
+&#9;&#9;&#9;for i, v in pairs(Objects) do
+&#9;&#9;&#9;&#9;for ii, vv in pairs(GlowData) do
+&#9;&#9;&#9;&#9;&#9;if v == vv.Object then
+&#9;&#9;&#9;&#9;&#9;&#9;if vv.Part and vv.Part.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Part:Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;table.remove(GlowData, ii)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;local VertexColor = Color
+&#9;&#9;&#9;while GlowingModel and GlowingModel.Parent do
+&#9;&#9;&#9;&#9;for i = 1, 20 do
+&#9;&#9;&#9;&#9;&#9;local Interval = (0.05 * ((i &lt; 11 and 1) or -1))
+&#9;&#9;&#9;&#9;&#9;VertexColor = Color3.new((VertexColor.r + Interval), VertexColor.g, VertexColor.b)
+&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(GlowData) do
+&#9;&#9;&#9;&#9;&#9;&#9;for iii, vvv in pairs(vv.Meshes) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if vvv:IsA(&quot;DataModelMesh&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vvv.VertexColor = Vector3.new(VertexColor.r, VertexColor.g, VertexColor.b)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;if vv.Sparkles and vv.Sparkles.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv.Sparkles.SparkleColor = Color3.new(VertexColor.r, VertexColor.g, VertexColor.b)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;wait(0.05)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;
+&#9;&#9;&#9;for i, v in pairs({ObjectAdded, ObjectRemoved}) do
+&#9;&#9;&#9;&#9;if v then
+&#9;&#9;&#9;&#9;&#9;v:disconnect()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;
+&#9;&#9;end)
+&#9;&#9;
+&#9;end
+&#9;
+&#9;return GlowingModel
 end
 
 function SetHealth(humanoid, MaxHealth)
@@ -547,26 +577,40 @@ function SetHealth(humanoid, MaxHealth)
 end
 
 function Activated()
-&#9;if not Tool.Enabled or not CheckIfAlive() then
+&#9;if not Tool.Enabled or AttemptingActivation or not CheckIfAlive() then
 &#9;&#9;return
 &#9;end
-&#9;Tool.Enabled = false
+&#9;AttemptingActivation = true
 &#9;local Animation = Animations.Activate
 &#9;InvokeClient(&quot;PlayAnimation&quot;, Animation)
 &#9;Sparkles.Enabled = true
 &#9;PointLight.Enabled = true
+&#9;local CurrentlyEquipped = true
+&#9;if ToolUnequipped then
+&#9;&#9;ToolUnequipped:disconnect()
+&#9;end
+&#9;ToolUnequipped = Tool.Unequipped:connect(function()
+&#9;&#9;CurrentlyEquipped = false
+&#9;end)
 &#9;wait(Animation.Duration)
+&#9;if not CurrentlyEquipped then
+&#9;&#9;return
+&#9;end
+&#9;Tool.Enabled = false
+&#9;AttemptingActivation = false
 &#9;Sparkles.Enabled = false
 &#9;PointLight.Enabled = false
 &#9;SetHealth(Humanoid, 200)
 &#9;Spawn(function()
-&#9;&#9;GlowCharacter()
+&#9;&#9;Color = ((ColorBox and ColorBox.Parent and ColorBox.BackgroundColor3) or DefaultColor)
+&#9;&#9;Glow(Character, Color)
 &#9;end)
 &#9;wait(Duration)
-&#9;if GlowingParts.Model and GlowingParts.Model.Parent then
-&#9;&#9;GlowingParts.Model:Destroy()
+&#9;if GlowingModel and GlowingModel.Parent then
+&#9;&#9;GlowingModel:Destroy()
 &#9;end
 &#9;SetHealth(Humanoid, 100)
+&#9;wait((Duration / 2))
 &#9;Tool.Enabled = true
 end
 
@@ -575,23 +619,39 @@ function CheckIfAlive()
 end
 
 function Equipped(Mouse)
-&#9;Equipped = true
 &#9;Character = Tool.Parent
 &#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
 &#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
 &#9;if not CheckIfAlive() then
 &#9;&#9;return
 &#9;end
+&#9;if PlayerGui then
+&#9;&#9;local PlayerReturnTable = Module.GetTable({Key = "NATMTablet", Player = Player})
+&#9;&#9;if PlayerReturnTable then
+&#9;&#9;&#9;ColorGui = PlayerReturnTable.ColorGui(DefaultColor)
+&#9;&#9;&#9;ColorBox = ColorGui:FindFirstChild(&quot;Frame&quot;):FindFirstChild(&quot;Border&quot;):FindFirstChild(&quot;ColorBox&quot;)
+&#9;&#9;&#9;ColorGui.Parent = PlayerGui
+&#9;&#9;end
+&#9;end
 end
 
 function Unequipped()
-&#9;Equipped = false
+&#9;AttemptingActivation = false
+&#9;Sparkles.Enabled = false
+&#9;PointLight.Enabled = false
+&#9;if ToolUnequipped then
+&#9;&#9;ToolUnequipped:disconnect()
+&#9;end
 &#9;for i, v in pairs(Sounds) do
 &#9;&#9;InvokeClient(&quot;StopSound&quot;, v)
 &#9;&#9;v:Stop()
 &#9;end
 &#9;for i, v in pairs(Animations) do
 &#9;&#9;InvokeClient(&quot;StopAnimation&quot;, v)
+&#9;end
+&#9;if ColorGui and ColorGui.Parent then
+&#9;&#9;ColorGui:Destroy()
 &#9;end
 end
 
@@ -600,35 +660,70 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX331C64B956A649CC89A43AA7D25F692C">
+		<Item class="Animation" referent="RBX4698BF64A7B6488AA62D98A4DBBF29B7">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset?id=186673959</url></Content>
 				<string name="Name">Activate</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBXFEA534CF3D3D4E46B76BB1C7CA29D729">
+		<Item class="LocalScript" referent="RBX331A8030C69D491E93A0604993F8A31B">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXF66ECB2CE3404CDA8F219D3C167C1160">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>1.04140759</X>
-					<Y>2.69836354</Y>
-					<Z>-0.513887405</Z>
-					<R00>-0.109106384</R00>
-					<R01>0.087756969</R01>
-					<R02>-0.990148783</R02>
-					<R10>-0</R10>
-					<R11>0.996095419</R11>
-					<R12>0.0882840231</R12>
-					<R20>0.994030058</R20>
-					<R21>0.00963235088</R21>
-					<R22>-0.108680367</R22>
+					<X>-0.109476656</X>
+					<Y>0.1479972</Y>
+					<Z>2.04545593</Z>
+					<R00>0.999902606</R00>
+					<R01>0.000657601457</R01>
+					<R02>-0.0139465481</R02>
+					<R10>5.82076679e-011</R10>
+					<R11>0.998890281</R11>
+					<R12>0.0470992289</R12>
+					<R20>0.0139620444</R20>
+					<R21>-0.0470946431</R21>
+					<R22>0.998792827</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>3.02170491</X>
-					<Y>2.52179551</Y>
-					<Z>-0.2965267</Z>
+					<X>-0.0815835595</X>
+					<Y>0.0537987426</Y>
+					<Z>0.0478702784</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
