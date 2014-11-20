@@ -1,10 +1,10 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXFAF32DA47FCA4824A7A635F5CF93A1FF">
+	<Item class="Tool" referent="RBX856D4C4D6B63498ABE11065D01F3D668">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
-			<bool name="Enabled">true</bool>
+			<bool name="Enabled">false</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
 				<Y>0</Y>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=186495170</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX4896EB2468BD4483A97CAD65DDA34027">
+		<Item class="Part" referent="RBX8A82BA745E2148D5B3C0F2D7223869AC">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -40,15 +40,15 @@
 					<X>0</X>
 					<Y>0</Y>
 					<Z>0</Z>
-					<R00>-1</R00>
-					<R01>-1.45273096e-014</R01>
-					<R02>2.15828018e-015</R02>
-					<R10>-1.44793963e-014</R10>
-					<R11>0.999784708</R11>
-					<R12>0.0207507778</R12>
-					<R20>-2.45926911e-015</R20>
-					<R21>0.0207507778</R21>
-					<R22>-0.999784708</R22>
+					<R00>-0.946649849</R00>
+					<R01>-0.00592634128</R01>
+					<R02>0.322207659</R02>
+					<R10>-1.49722018e-014</R10>
+					<R11>0.999830842</R11>
+					<R12>0.0183898136</R12>
+					<R20>-0.322262138</R20>
+					<R21>0.0174087156</R21>
+					<R22>-0.946489811</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -92,7 +92,7 @@
 					<Z>0.25</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX41882FD7EE094786829E6886DD5083FA">
+			<Item class="SpecialMesh" referent="RBX26038E56547340A38FF1C2931603DC2D">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,14 +117,14 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sparkles" referent="RBXCFEAE32E84A049A5B9241A65B09F72DA">
+			<Item class="Sparkles" referent="RBX02248D4191584061A05E6560EDF8D5E6">
 				<Properties>
 					<bool name="Enabled">false</bool>
 					<string name="Name">Sparkles</string>
 					<Color3 name="SparkleColor">4289374720</Color3>
 				</Properties>
 			</Item>
-			<Item class="PointLight" referent="RBX04090C107AC94347980DE124F264C557">
+			<Item class="PointLight" referent="RBX9566ABA7AF4844228675E25B7B3C8112">
 				<Properties>
 					<float name="Brightness">50</float>
 					<Color3 name="Color">4289374720</Color3>
@@ -135,7 +135,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4163693654BB416CA7438423F66DA893">
+		<Item class="LocalScript" referent="RBX6A3C926A655741E9BA454E7381C5EF59">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -254,7 +254,7 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX8648B26C47C548CC9C822151E7FACD5A">
+		<Item class="Script" referent="RBXD244CBF7AEC844FC90949221AC84913E">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -567,15 +567,6 @@ function Glow(character, Color)
 &#9;return GlowingModel
 end
 
-function SetHealth(humanoid, MaxHealth)
-&#9;if not humanoid or not humanoid.Parent or humanoid.Health == 0 then
-&#9;&#9;return
-&#9;end
-&#9;local Ratio = (humanoid.Health / humanoid.MaxHealth)
-&#9;humanoid.MaxHealth = MaxHealth
-&#9;humanoid.Health = (Ratio * humanoid.MaxHealth)
-end
-
 function Activated()
 &#9;if not Tool.Enabled or AttemptingActivation or not CheckIfAlive() then
 &#9;&#9;return
@@ -600,7 +591,8 @@ function Activated()
 &#9;AttemptingActivation = false
 &#9;Sparkles.Enabled = false
 &#9;PointLight.Enabled = false
-&#9;SetHealth(Humanoid, 200)
+&#9;local humanoid = Humanoid --Prevents glitching if the tool is dropped.
+&#9;humanoid.WalkSpeed = 24
 &#9;Spawn(function()
 &#9;&#9;Color = ((ColorBox and ColorBox.Parent and ColorBox.BackgroundColor3) or DefaultColor)
 &#9;&#9;Glow(Character, Color)
@@ -609,7 +601,7 @@ function Activated()
 &#9;if GlowingModel and GlowingModel.Parent then
 &#9;&#9;GlowingModel:Destroy()
 &#9;end
-&#9;SetHealth(Humanoid, 100)
+&#9;humanoid.WalkSpeed = 16
 &#9;wait((Duration / 2))
 &#9;Tool.Enabled = true
 end
@@ -627,7 +619,7 @@ function Equipped(Mouse)
 &#9;&#9;return
 &#9;end
 &#9;if PlayerGui then
-&#9;&#9;local PlayerReturnTable = Module.GetTable({Key = "NATMTablet", Player = Player})
+&#9;&#9;local PlayerReturnTable = Module.GetTable({Key = &quot;NATMTablet&quot;, Player = Player})
 &#9;&#9;if PlayerReturnTable then
 &#9;&#9;&#9;ColorGui = PlayerReturnTable.ColorGui(DefaultColor)
 &#9;&#9;&#9;ColorBox = ColorGui:FindFirstChild(&quot;Frame&quot;):FindFirstChild(&quot;Border&quot;):FindFirstChild(&quot;ColorBox&quot;)
@@ -660,13 +652,13 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX4698BF64A7B6488AA62D98A4DBBF29B7">
+		<Item class="Animation" referent="RBX3DC551FFDA8D46D08280658A9C5C971F">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset?id=186673959</url></Content>
 				<string name="Name">Activate</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX331A8030C69D491E93A0604993F8A31B">
+		<Item class="LocalScript" referent="RBX8E04841C6C7D4C28A3E8AB16432CA9AD">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -701,29 +693,29 @@ Tool.Equipped:connect(OnEquipped)
 Tool.Changed:connect(OnChanged)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBXF66ECB2CE3404CDA8F219D3C167C1160">
+		<Item class="Camera" referent="RBX5505AB07F54B425785D7E23D208416ED">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.109476656</X>
-					<Y>0.1479972</Y>
-					<Z>2.04545593</Z>
-					<R00>0.999902606</R00>
-					<R01>0.000657601457</R01>
-					<R02>-0.0139465481</R02>
-					<R10>5.82076679e-011</R10>
-					<R11>0.998890281</R11>
-					<R12>0.0470992289</R12>
-					<R20>0.0139620444</R20>
-					<R21>-0.0470946431</R21>
-					<R22>0.998792827</R22>
+					<X>-0.736759186</X>
+					<Y>0.0879090279</Y>
+					<Z>1.87588906</Z>
+					<R00>0.947891772</R00>
+					<R01>0.0107951257</R01>
+					<R02>-0.318409532</R02>
+					<R10>-0</R10>
+					<R11>0.999425709</R11>
+					<R12>0.0338838026</R12>
+					<R20>0.318592519</R20>
+					<R21>-0.0321181789</R21>
+					<R22>0.947347462</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.0815835595</X>
-					<Y>0.0537987426</Y>
-					<Z>0.0478702784</Z>
+					<X>-0.0999401212</X>
+					<Y>0.0201414227</Y>
+					<Z>-0.0188058615</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
