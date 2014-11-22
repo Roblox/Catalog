@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXF1DCC4B978164856AFDA43D236A18F6E">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">DualVenomshanks</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id= 158070595 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX1">
+		<Item class="LocalScript" referent="RBXBEA7F1C0A6C24C03A1409EB26DA8D832">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -50,13 +51,14 @@ SkeletonAssets = {
 
 PoisonScript = script:WaitForChild(&quot;PoisonScript&quot;)
 
+DualEquip = Tool:WaitForChild(&quot;DualEquip&quot;) --Animations and very negligable stat fixes by EC2
+DualSlash = Tool:WaitForChild(&quot;DualSlash&quot;)
+DualLunge = Tool:WaitForChild(&quot;DualLunge&quot;)
 SpinAnimation = Tool:WaitForChild(&quot;Spin&quot;)
 
 SlashSound = Handle:WaitForChild(&quot;SlashSound&quot;)
 LungeSound = Handle:WaitForChild(&quot;LungeSound&quot;)
 UnsheathSound = Handle:WaitForChild(&quot;UnsheathSound&quot;)
-
-NewAnimate = script:WaitForChild(&quot;NewAnimate&quot;)
 
 Base_Damage = 5
 Slash_Damage = 10
@@ -89,6 +91,7 @@ StayUpright.cframe = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 
 Force = Instance.new(&quot;BodyVelocity&quot;)
 Force.velocity = Vector3.new(0, 10, 0)
+Force.maxForce = Vector3.new(0, 4000, 0)
 
 BasePart = Instance.new(&quot;Part&quot;)
 BasePart.Name = &quot;Part&quot;
@@ -378,7 +381,7 @@ function Spin()
 &#9;&#9;&#9;&#9;StopSpin()
 &#9;&#9;&#9;&#9;SpinCount = 0
 &#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;Delay(3, function()
+&#9;&#9;&#9;&#9;delay(3, function()
 &#9;&#9;&#9;&#9;&#9;if SpinCount &gt; 0 then
 &#9;&#9;&#9;&#9;&#9;&#9;SpinCount = SpinCount - 1
 &#9;&#9;&#9;&#9;&#9;end
@@ -418,11 +421,14 @@ function Attack()
 &#9;if not SpinDebounce then
 &#9;&#9;Damage = Slash_Damage
 &#9;&#9;SlashSound:Play()
-&#9;&#9;local Anim = Instance.new(&quot;StringValue&quot;)
+&#9;&#9;slashA:Play()
+&#9;&#9;
+&#9;&#9;--[[local Anim = Instance.new(&quot;StringValue&quot;)
 &#9;&#9;Anim.Name = &quot;toolanim&quot;
 &#9;&#9;Anim.Value = &quot;Slash&quot;
-&#9;&#9;Anim.Parent = Tool
-&#9;&#9;Delay(1, function()
+&#9;&#9;Anim.Parent = Tool]]
+&#9;&#9;
+&#9;&#9;delay(1, function()
 &#9;&#9;&#9;Damage = Base_Damage
 &#9;&#9;end)
 &#9;end
@@ -433,16 +439,20 @@ function Lunge()
 &#9;&#9;MiniDebounce = true
 &#9;&#9;LungeSound:Play()
 &#9;&#9;Damage = Lunge_Damage
-&#9;&#9;local NewAttack = Instance.new(&quot;StringValue&quot;)
+&#9;&#9;lungeA:Play()
+&#9;&#9;
+&#9;&#9;--[[local NewAttack = Instance.new(&quot;StringValue&quot;)
 &#9;&#9;NewAttack.Name = &quot;toolanim&quot;
 &#9;&#9;NewAttack.Value = &quot;Lunge&quot;
 &#9;&#9;NewAttack.Parent = Tool
-&#9;&#9;Force.Parent = Torso
+&#9;&#9;Force.Parent = Torso]]
+&#9;&#9;
 &#9;&#9;wait(0.25)
 &#9;&#9;if not SpinDebounce then
 &#9;&#9;&#9;SwordOut()
 &#9;&#9;&#9;wait(0.25)
 &#9;&#9;&#9;Force.Parent = nil
+&#9;&#9;&#9;lungeA:Stop()
 &#9;&#9;&#9;wait(0.5)
 &#9;&#9;&#9;if not SpinDebounce then
 &#9;&#9;&#9;&#9;SwordUp()
@@ -466,7 +476,7 @@ function Activated()
 &#9;if Tool.Enabled then
 &#9;&#9;Tool.Enabled = false
 &#9;&#9;local Time = RunService.Stepped:wait()
-&#9;&#9;if (Time - Last_Attack) &lt; 0.2 then
+&#9;&#9;if (Time - Last_Attack) &lt; 1 then
 &#9;&#9;&#9;Lunge()
 &#9;&#9;else
 &#9;&#9;&#9;Attack()
@@ -498,30 +508,23 @@ function Equipped(Mouse)
 &#9;
 &#9;Mouse.KeyDown:connect(KeyDown)&#9;
 &#9;
+&#9;idleA = Humanoid:LoadAnimation(DualEquip)
+&#9;slashA = Humanoid:LoadAnimation(DualSlash)
+&#9;lungeA = Humanoid:LoadAnimation(DualLunge)
 &#9;SpinTrack = Humanoid:LoadAnimation(SpinAnimation)
-&#9;
-&#9;OldAnimate = Character:FindFirstChild(&quot;Animate&quot;)
-&#9;if OldAnimate then
-&#9;&#9;OldAnimate.Disabled = true
-&#9;end
-&#9;
-&#9;NewAnimateClone = NewAnimate:Clone()
-&#9;NewAnimateClone.Disabled = false
-&#9;NewAnimateClone.Parent = Character
 
 &#9;UnsheathSound:Play()
 &#9;
+&#9;idleA:Play(0)
 end
 
 function Unequipped()
 &#9;Equipped = false
 &#9;LeftSword:Destroy()
-&#9;if NewAnimateClone and NewAnimateClone.Parent then
-&#9;&#9;NewAnimateClone:Destroy()
-&#9;end
-&#9;if OldAnimate and OldAnimate.Parent then
-&#9;&#9;OldAnimate.Disabled = false
-&#9;end
+&#9;
+&#9;idleA:Stop()
+&#9;slashA:Stop()
+&#9;lungeA:Stop()
 &#9;StopSpin()
 end
 
@@ -532,7 +535,7 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)
 </ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX2">
+			<Item class="Script" referent="RBXBFA2926D11FD45E6A454A98D0ABA09F5">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -597,262 +600,8 @@ end
 script:Destroy()</ProtectedString>
 				</Properties>
 			</Item>
-			<Item class="LocalScript" referent="RBX3">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">NewAnimate</string>
-					<ProtectedString name="Source">function waitForChild(parent, childName)
-&#9;local child = parent:findFirstChild(childName)
-&#9;if child then return child end
-&#9;while true do
-&#9;&#9;child = parent.ChildAdded:wait()
-&#9;&#9;if child.Name==childName then return child end
-&#9;end
-end
-
--- ANIMATION
-
--- declarations
-
-local Figure = script.Parent
-local Torso = waitForChild(Figure, &quot;Torso&quot;)
-local RightShoulder = waitForChild(Torso, &quot;Right Shoulder&quot;)
-local LeftShoulder = waitForChild(Torso, &quot;Left Shoulder&quot;)
-local RightHip = waitForChild(Torso, &quot;Right Hip&quot;)
-local LeftHip = waitForChild(Torso, &quot;Left Hip&quot;)
-local Neck = waitForChild(Torso, &quot;Neck&quot;)
-local Humanoid = waitForChild(Figure, &quot;Humanoid&quot;)
-local pose = &quot;Standing&quot;
-
-local toolAnim = &quot;None&quot;
-local toolAnimTime = 0
-
--- functions
-
-function onRunning(speed)
-&#9;if speed&gt;0 then
-&#9;&#9;pose = &quot;Running&quot;
-&#9;else
-&#9;&#9;pose = &quot;Standing&quot;
-&#9;end
-end
-
-function onDied()
-&#9;pose = &quot;Dead&quot;
-end
-
-function onJumping()
-&#9;pose = &quot;Jumping&quot;
-end
-
-function onClimbing()
-&#9;pose = &quot;Climbing&quot;
-end
-
-function onGettingUp()
-&#9;pose = &quot;GettingUp&quot;
-end
-
-function onFreeFall()
-&#9;pose = &quot;FreeFall&quot;
-end
-
-function onFallingDown()
-&#9;pose = &quot;FallingDown&quot;
-end
-
-function onSeated()
-&#9;pose = &quot;Seated&quot;
-end
-
-function onPlatformStanding()
-&#9;pose = &quot;PlatformStanding&quot;
-end
-
-function onSwimming(speed)
-&#9;if speed&gt;0 then
-&#9;&#9;pose = &quot;Running&quot;
-&#9;else
-&#9;&#9;pose = &quot;Standing&quot;
-&#9;end
-end
-
-function moveJump()
-&#9;RightShoulder.MaxVelocity = 0.5
-&#9;LeftShoulder.MaxVelocity = 0.5
-  RightShoulder:SetDesiredAngle(3.14)
-&#9;LeftShoulder:SetDesiredAngle(-3.14)
-&#9;RightHip:SetDesiredAngle(0)
-&#9;LeftHip:SetDesiredAngle(0)
-end
-
-
--- same as jump for now
-
-function moveFreeFall()
-&#9;RightShoulder.MaxVelocity = 0.5
-&#9;LeftShoulder.MaxVelocity = 0.5
-&#9;RightShoulder:SetDesiredAngle(3.14)
-&#9;LeftShoulder:SetDesiredAngle(-3.14)
-&#9;RightHip:SetDesiredAngle(0)
-&#9;LeftHip:SetDesiredAngle(0)
-end
-
-function moveSit()
-&#9;RightShoulder.MaxVelocity = 0.15
-&#9;LeftShoulder.MaxVelocity = 0.15
-&#9;RightShoulder:SetDesiredAngle(3.14 /2)
-&#9;LeftShoulder:SetDesiredAngle(-3.14 /2)
-&#9;RightHip:SetDesiredAngle(3.14 /2)
-&#9;LeftHip:SetDesiredAngle(-3.14 /2)
-end
-
-function getTool()&#9;
-&#9;for _, kid in ipairs(Figure:GetChildren()) do
-&#9;&#9;if kid.className == &quot;Tool&quot; then return kid end
-&#9;end
-&#9;return nil
-end
-
-function getToolAnim(tool)
-&#9;for _, c in ipairs(tool:GetChildren()) do
-&#9;&#9;if c.Name == &quot;toolanim&quot; and c.className == &quot;StringValue&quot; then
-&#9;&#9;&#9;return c
-&#9;&#9;end
-&#9;end
-&#9;return nil
-end
-
-function animateTool()
-&#9;
-&#9;if (toolAnim == &quot;None&quot;) then
-&#9;&#9;RightShoulder:SetDesiredAngle(1.57)
-&#9;&#9;LeftShoulder:SetDesiredAngle(-1.57)
-&#9;&#9;return
-&#9;end
-
-&#9;if (toolAnim == &quot;Slash&quot;) then
-&#9;&#9;RightShoulder.MaxVelocity = 0.5
-&#9;&#9;RightShoulder:SetDesiredAngle(0)
-
-&#9;&#9;LeftShoulder.MaxVelocity = 0.5
-&#9;&#9;LeftShoulder:SetDesiredAngle(0)
-&#9;&#9;return
-&#9;end
-
-&#9;if (toolAnim == &quot;Lunge&quot;) then
-&#9;&#9;RightShoulder.MaxVelocity = 0.5
-&#9;&#9;LeftShoulder.MaxVelocity = 0.5
-&#9;&#9;RightHip.MaxVelocity = 0.5
-&#9;&#9;LeftHip.MaxVelocity = 0.5
-&#9;&#9;RightShoulder:SetDesiredAngle(1.57)
-&#9;&#9;--LeftShoulder:SetDesiredAngle(1.0)
-&#9;&#9;LeftShoulder:SetDesiredAngle(-1.57)
-&#9;&#9;RightHip:SetDesiredAngle(1.57)
-&#9;&#9;LeftHip:SetDesiredAngle(1.0)
-&#9;&#9;return
-&#9;end
-end
-
-function move(time)
-&#9;local amplitude
-&#9;local frequency
-  
-&#9;if (pose == &quot;Jumping&quot;) then
-&#9;&#9;moveJump()
-&#9;&#9;return
-&#9;end
-
-&#9;if (pose == &quot;FreeFall&quot;) then
-&#9;&#9;moveFreeFall()
-&#9;&#9;return
-&#9;end
- 
-&#9;if (pose == &quot;Seated&quot;) then
-&#9;&#9;moveSit()
-&#9;&#9;return
-&#9;end
-
-&#9;local climbFudge = 0
-&#9;
-&#9;if (pose == &quot;Running&quot;) then
-&#9;&#9;RightShoulder.MaxVelocity = 0.15
-&#9;&#9;LeftShoulder.MaxVelocity = 0.15
-&#9;&#9;amplitude = 1
-&#9;&#9;frequency = 9
-&#9;elseif (pose == &quot;Climbing&quot;) then
-&#9;&#9;RightShoulder.MaxVelocity = 0.5 
-&#9;&#9;LeftShoulder.MaxVelocity = 0.5
-&#9;&#9;amplitude = 1
-&#9;&#9;frequency = 9
-&#9;&#9;climbFudge = 3.14
-&#9;else
-&#9;&#9;amplitude = 0.1
-&#9;&#9;frequency = 1
-&#9;end
-
-&#9;desiredAngle = amplitude * math.sin(time*frequency)
-
-&#9;RightShoulder:SetDesiredAngle(desiredAngle + climbFudge)
-&#9;LeftShoulder:SetDesiredAngle(desiredAngle - climbFudge)
-&#9;RightHip:SetDesiredAngle(-desiredAngle)
-&#9;LeftHip:SetDesiredAngle(-desiredAngle)
-
-
-&#9;local tool = getTool()
-
-&#9;if tool then
-&#9;
-&#9;&#9;animStringValueObject = getToolAnim(tool)
-
-&#9;&#9;if animStringValueObject then
-&#9;&#9;&#9;toolAnim = animStringValueObject.Value
-&#9;&#9;&#9;-- message recieved, delete StringValue
-&#9;&#9;&#9;animStringValueObject.Parent = nil
-&#9;&#9;&#9;toolAnimTime = time + .3
-&#9;&#9;end
-
-&#9;&#9;if time &gt; toolAnimTime then
-&#9;&#9;&#9;toolAnimTime = 0
-&#9;&#9;&#9;toolAnim = &quot;None&quot;
-&#9;&#9;end
-
-&#9;&#9;animateTool()
-
-&#9;&#9;
-&#9;else
-&#9;&#9;toolAnim = &quot;None&quot;
-&#9;&#9;toolAnimTime = 0
-&#9;end
-end
-
-
--- connect events
-
-Humanoid.Died:connect(onDied)
-Humanoid.Running:connect(onRunning)
-Humanoid.Jumping:connect(onJumping)
-Humanoid.Climbing:connect(onClimbing)
-Humanoid.GettingUp:connect(onGettingUp)
-Humanoid.FreeFalling:connect(onFreeFall)
-Humanoid.FallingDown:connect(onFallingDown)
-Humanoid.Seated:connect(onSeated)
-Humanoid.PlatformStanding:connect(onPlatformStanding)
-Humanoid.Swimming:connect(onSwimming)
--- main program
-
-local runService = game:service(&quot;RunService&quot;);
-
-while Figure.Parent~=nil do
-&#9;local _, time = wait(0.1)
-&#9;move(time)
-end
-</ProtectedString>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX47A268857D73417DA0E15B5BFC2E53E2">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -865,7 +614,7 @@ FakeHandle = Tool:WaitForChild(&quot;FakeHandleDisplay&quot;)
 FakeHandle:Destroy()</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX5">
+		<Item class="Part" referent="RBX58951D49F4534EA99D0B19E5F735017C">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -878,15 +627,15 @@ FakeHandle:Destroy()</ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-12.4231548</X>
-					<Y>4.64011383</Y>
+					<X>-13.9306068</X>
+					<Y>3.39776611</Y>
 					<Z>45.9922562</Z>
-					<R00>0.684714258</R00>
-					<R01>0.141936719</R01>
-					<R02>0.714855909</R02>
-					<R10>-0.722167075</R10>
-					<R11>-2.15606626e-008</R11>
-					<R12>0.691718102</R12>
+					<R00>-0.722167075</R00>
+					<R01>-2.56704915e-008</R01>
+					<R02>0.691718102</R02>
+					<R10>-0.684714258</R10>
+					<R11>-0.141936719</R11>
+					<R12>-0.714855969</R12>
 					<R20>0.0981802195</R20>
 					<R21>-0.98987484</R21>
 					<R22>0.10250254</R22>
@@ -933,7 +682,7 @@ FakeHandle:Destroy()</ProtectedString>
 					<Z>6</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBX6">
+			<Item class="Sound" referent="RBXCFE68BD6940D4EB496126EF18EE5ECB6">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">UnsheathSound</string>
@@ -943,7 +692,7 @@ FakeHandle:Destroy()</ProtectedString>
 					<float name="Volume">0.600000024</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX7">
+			<Item class="Sound" referent="RBX21FEBA12310440B2BF0385431265EF32">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">LungeSound</string>
@@ -953,7 +702,7 @@ FakeHandle:Destroy()</ProtectedString>
 					<float name="Volume">0.600000024</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX8">
+			<Item class="Sound" referent="RBXE493AD0956C44345906E5157881182F1">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">SlashSound</string>
@@ -963,7 +712,7 @@ FakeHandle:Destroy()</ProtectedString>
 					<float name="Volume">0.699999988</float>
 				</Properties>
 			</Item>
-			<Item class="SpecialMesh" referent="RBX9">
+			<Item class="SpecialMesh" referent="RBX762BCF8609284BEDA3C3063D3C655360">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -989,13 +738,13 @@ FakeHandle:Destroy()</ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX10">
+		<Item class="Animation" referent="RBX8D8D3FCD81FF4986A29D637E71E0AF1B">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=157568994</url></Content>
 				<string name="Name">Spin</string>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX11">
+		<Item class="Part" referent="RBXA22693B90A6649609E56821FAD9BC09F">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -1008,15 +757,15 @@ FakeHandle:Destroy()</ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-15.6929998</X>
-					<Y>2.58215165</Y>
+					<X>-15.9885693</X>
+					<Y>6.6676116</Y>
 					<Z>48.5540771</Z>
-					<R00>0.715400934</R00>
-					<R01>0.141936719</R01>
-					<R02>-0.684144914</R02>
-					<R10>0.691142857</R10>
-					<R11>-1.07913305e-008</R11>
-					<R12>0.722717702</R12>
+					<R00>0.691142857</R00>
+					<R01>-1.49011612e-008</R01>
+					<R02>0.722717702</R02>
+					<R10>-0.715400994</R10>
+					<R11>-0.141936719</R11>
+					<R12>0.684144914</R12>
 					<R20>0.102580689</R20>
 					<R21>-0.989874959</R21>
 					<R22>-0.0980985761</R22>
@@ -1063,7 +812,7 @@ FakeHandle:Destroy()</ProtectedString>
 					<Z>6</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX12">
+			<Item class="SpecialMesh" referent="RBXB1916FFD7A5F4758A3AE7ABF2B390999">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -1088,7 +837,7 @@ FakeHandle:Destroy()</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX13">
+			<Item class="Weld" referent="RBX64A08B992B2642F3BADEB46E7C008503">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0</X>
@@ -1119,34 +868,34 @@ FakeHandle:Destroy()</ProtectedString>
 						<R22>-0.159290969</R22>
 					</CoordinateFrame>
 					<string name="Name">DisplayWeld</string>
-					<Ref name="Part0">RBX5</Ref>
-					<Ref name="Part1">RBX11</Ref>
+					<Ref name="Part0">RBX58951D49F4534EA99D0B19E5F735017C</Ref>
+					<Ref name="Part1">RBXA22693B90A6649609E56821FAD9BC09F</Ref>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX14">
+		<Item class="Camera" referent="RBXE43AACFE154F4166A1A7854FE69073DD">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-10.0315552</X>
-					<Y>5.77852869</Y>
-					<Z>37.8350258</Z>
-					<R00>-0.944907963</R00>
-					<R01>-0.0361678526</R01>
-					<R02>0.325332075</R02>
-					<R10>-3.72529074e-009</R10>
-					<R11>0.993877113</R11>
-					<R12>0.110491395</R12>
-					<R20>-0.327336341</R20>
-					<R21>0.104404196</R21>
-					<R22>-0.93912226</R22>
+					<X>-18.4890137</X>
+					<Y>9.92533588</Y>
+					<Z>51.4541283</Z>
+					<R00>0.757358313</R00>
+					<R01>0.423135102</R01>
+					<R02>-0.497358203</R02>
+					<R10>-0</R10>
+					<R11>0.761651635</R11>
+					<R12>0.64798671</R12>
+					<R20>0.65299964</R20>
+					<R21>-0.490758121</R21>
+					<R22>0.576843143</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-13.3369484</X>
-					<Y>4.65592957</Y>
-					<Z>47.376564</Z>
+					<X>-17.494297</X>
+					<Y>8.62936211</Y>
+					<Z>50.3004417</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -1158,6 +907,24 @@ FakeHandle:Destroy()</ProtectedString>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX211F940AA13C460BA63F0A9EA2436550">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=185824714</url></Content>
+				<string name="Name">DualEquip</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXE24C468C99594BE2869177B18DCB8500">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=186002834</url></Content>
+				<string name="Name">DualLunge</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX0E7F609B308A4187B08FA635825B498E">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=186001341</url></Content>
+				<string name="Name">DualSlash</string>
 			</Properties>
 		</Item>
 	</Item>
