@@ -19,6 +19,7 @@
 				<R21>-0.816496551</R21>
 				<R22>0.364948362</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">CartoonNetworkSkateboard</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=164012675</url></Content>
 			<string name="ToolTip"></string>
@@ -36,18 +37,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.0125217438</X>
-					<Y>20.7971706</Y>
-					<Z>22.3571281</Z>
-					<R00>-0.727658689</R00>
-					<R01>0.0222423412</R01>
-					<R02>-0.685578287</R02>
-					<R10>-0.620497525</R10>
-					<R11>0.404702187</R11>
-					<R12>0.671713233</R12>
-					<R20>0.292395592</R20>
-					<R21>0.914177835</R21>
-					<R22>-0.280683845</R22>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>0.433012664</R00>
+					<R01>0.749999702</R01>
+					<R02>0.499999613</R02>
+					<R10>-0.465625077</R10>
+					<R11>-0.288848042</R11>
+					<R12>0.836515844</R12>
+					<R20>0.771811247</R20>
+					<R21>-0.595034838</R21>
+					<R22>0.224143788</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -127,142 +128,316 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="LocalScript" referent="RBXC7E8E801587948BDA6D0D9154A4B808B">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">InsertBoard</string>
+				<string name="Name">LocalScript</string>
 				<ProtectedString name="Source">--Made by Luckymaxer
 
 Tool = script.Parent
 Handle = Tool:WaitForChild(&quot;Handle&quot;)
-Mesh = Handle:WaitForChild(&quot;Mesh&quot;)
-
-Drop = Handle:WaitForChild(&quot;Drop&quot;)
 
 Players = game:GetService(&quot;Players&quot;)
-InsertService = game:GetService(&quot;InsertService&quot;)
 
-SkateboardId = 160740096
+RemoteControl = Tool:WaitForChild(&quot;RemoteControl&quot;)
 
-SkateboardModel = InsertService:LoadAsset(SkateboardId)
+ServerControl = RemoteControl:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = RemoteControl:WaitForChild(&quot;ClientControl&quot;)
 
-Skateboard = SkateboardModel:GetChildren()[1]:Clone()
-Skateboard:WaitForChild(&quot;SkateboardPlatform&quot;):WaitForChild(&quot;Mesh&quot;).TextureId = Mesh.TextureId
+ToolEquipped = false
+MouseControls = {}
 
-SkateboardModel:Destroy()
-
-ToolData = Skateboard:WaitForChild(&quot;SkateboardPlatform&quot;):WaitForChild(&quot;Tool&quot;)
-
-ToolName = Instance.new(&quot;StringValue&quot;)
-ToolName.Name = &quot;ToolName&quot;
-ToolName.Value = Tool.Name
-ToolName.Parent = ToolData
-
-ToolIcon = Instance.new(&quot;StringValue&quot;)
-ToolIcon.Name = &quot;ToolIcon&quot;
-ToolIcon.Value = Tool.TextureId
-ToolIcon.Parent = ToolData
-
-ToolTip = Instance.new(&quot;StringValue&quot;)
-ToolTip.Name = &quot;ToolTip&quot;
-ToolTip.Value = Tool.ToolTip
-ToolTip.Parent = ToolData
-
-ToolGrip = Instance.new(&quot;CFrameValue&quot;)
-ToolGrip.Name = &quot;ToolGrip&quot;
-ToolGrip.Value = Tool.Grip
-ToolGrip.Parent = ToolData
-
-ToolTexture = Instance.new(&quot;StringValue&quot;)
-ToolTexture.Name = &quot;ToolTexture&quot;
-ToolTexture.Value = Mesh.TextureId
-ToolTexture.Parent = ToolData
-
-function TransformModel(Parent, NewCFrame)
-&#9;Parent:MoveTo(NewCFrame.p)
-&#9;local Origins = {}
-&#9;for i, v in pairs(Parent:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;Origins[v] = Parent:GetModelCFrame():toObjectSpace(v.CFrame)
-&#9;&#9;end
+ClientControl.OnClientInvoke = (function(Mode, Value)
+&#9;if Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;MousePosition&quot; then
+&#9;&#9;return PlayerMouse.Hit.p
 &#9;end
-&#9;for i, v in pairs(Origins) do
-&#9;&#9;i.CFrame = NewCFrame:toWorldSpace(v)
-&#9;end
+end)
+
+function InvokeServer(Mode, Value)
+&#9;local ServerReturn = nil
+&#9;pcall(function()
+&#9;&#9;ServerReturn = ServerControl:InvokeServer(Mode, Value)
+&#9;end)
+&#9;return ServerReturn
 end
 
-function DropSkateboard()
-&#9;Drop:Play()
-&#9;
-&#9;for i, v in pairs(Skateboard:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;v.Anchored = true
-&#9;&#9;end
-&#9;end
-&#9;
-&#9;InsertService:Insert(Skateboard)
-&#9;
-&#9;local SkateboardCFrame = Torso.CFrame + Torso.CFrame.lookVector * (((Torso.Size.Z / 2) + (Skateboard:GetModelSize().Z / 2)) * 1.5)
-&#9;local SkateboardAngle = CFrame.Angles(0, 0, 0)
-&#9;TransformModel(Skateboard, SkateboardCFrame * SkateboardAngle)
-&#9;Skateboard:MakeJoints()
-&#9;
-&#9;for i, v in pairs(Skateboard:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;v.Velocity = Vector3.new(0, 0, 0)
-&#9;&#9;&#9;v.RotVelocity = Vector3.new(0, 0, 0)
-&#9;&#9;&#9;v.Anchored = false
-&#9;&#9;end
-&#9;end
-&#9;
-&#9;Tool:Destroy()&#9;
-&#9;
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
 end
 
 function Equipped(Mouse)
 &#9;Character = Tool.Parent
 &#9;Player = Players:GetPlayerFromCharacter(Character)
 &#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;if not Character or not Humanoid or Humanoid.Health == 0 or not Torso then
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
 &#9;&#9;return
 &#9;end
-&#9;Mouse.Icon = &quot;http://www.roblox.com/asset/?id=22858207&quot;
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;if Humanoid and Humanoid.Health &gt; 0 and Torso then
-&#9;&#9;&#9;Mouse.Icon = &quot;&quot;
-&#9;&#9;&#9;DropSkateboard()
+&#9;PlayerMouse = Mouse
+&#9;for i, v in pairs(MouseControls) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
 &#9;&#9;end
+&#9;end
+&#9;MouseControls = {}
+&#9;MouseDown = PlayerMouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;MouseUp = PlayerMouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
 &#9;end)
 end
 
-Tool.Equipped:connect(Equipped)</ProtectedString>
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;for i, v in pairs(MouseControls) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;MouseControls = {}
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX5">
+		<Item class="LocalScript" referent="RBX56DCDD3615A1417F9376D1167A1B61EB">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Configuration" referent="RBX3CCCF5366A23448E969D88F3C57D8B7B">
+			<Properties>
+				<string name="Name">RemoteControl</string>
+			</Properties>
+			<Item class="RemoteFunction" referent="RBX5326CB44643A41C68E409C0263F876F6">
+				<Properties>
+					<string name="Name">ServerControl</string>
+				</Properties>
+			</Item>
+			<Item class="RemoteFunction" referent="RBX18BFB62C3AD14BA7821AFEE1FF2B7115">
+				<Properties>
+					<string name="Name">ClientControl</string>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX278B7762F0D4465BAA357258E25D0030">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Mesh = Handle:WaitForChild(&quot;Mesh&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+RemoteControl = Tool:WaitForChild(&quot;RemoteControl&quot;)
+
+ServerControl = (RemoteControl:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = RemoteControl
+
+ClientControl = (RemoteControl:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = RemoteControl
+
+SkateboardModule = require(199238756)
+SkateboardFunctions = SkateboardModule.SkateboardFunctions
+Functions = SkateboardModule.Functions
+
+Skateboard = SkateboardFunctions.GetSkateboard(&quot;Classic&quot;)
+SkateboardFunctions.CreateConfiguration(Tool, Skateboard)
+SkateboardPlatform = SkateboardFunctions.GetSkateboardPlatform(Skateboard)
+
+Sounds = {
+&#9;Drop = Handle:WaitForChild(&quot;Drop&quot;)
+}
+
+ToolEquipped = false
+ToolEnabled = true
+
+Tool.Enabled = true
+
+ServerControl.OnServerInvoke = (function(player, Mode, Value)
+end)
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+function DropSkateboard()
+&#9;
+&#9;local MousePosition = InvokeClient(&quot;MousePosition&quot;)
+&#9;
+&#9;local DesiredAngle = (math.acos((MousePosition - Handle.Position).unit:Dot(Torso.CFrame.lookVector)))
+&#9;if DesiredAngle &gt; (math.pi / 2) then --Prevents spawning behind character.
+&#9;&#9;--return
+&#9;end
+&#9;
+&#9;local SkateboardSize = Skateboard:GetModelSize()&#9;
+&#9;
+&#9;local Direction = CFrame.new(Torso.Position, Vector3.new(MousePosition.X, Torso.Position.Y, MousePosition.Z))
+&#9;local SkateboardCFrame = Direction + Direction.lookVector * (((Torso.Size.Z / 2) + (SkateboardSize.Z / 2)) * 1.5)
+&#9;local SkateboardAngle = CFrame.Angles(0, 0, 0)
+&#9;
+&#9;local RayOffset = Vector3.new(-1.5, 0, -1.5)
+&#9;
+&#9;local RayPoints = { --Border points and center of skateboard used for casting rays.
+&#9;&#9;Center = Functions.PositionPart(SkateboardCFrame, 0, 0, 0),
+&#9;&#9;BackLeft = Functions.PositionPart(SkateboardCFrame, -((SkateboardSize.X / 2) + RayOffset.X), RayOffset.Y, -((SkateboardSize.Z / 2) + RayOffset.Z)),
+&#9;&#9;BackRight = Functions.PositionPart(SkateboardCFrame, ((SkateboardSize.X / 2) + RayOffset.X), RayOffset.Y, -((SkateboardSize.Z / 2) + RayOffset.Z)),
+&#9;&#9;FrontLeft = Functions.PositionPart(SkateboardCFrame, -((SkateboardSize.X / 2) + RayOffset.X), RayOffset.Y, ((SkateboardSize.Z / 2) + RayOffset.Z)),
+&#9;&#9;FrontRight = Functions.PositionPart(SkateboardCFrame, ((SkateboardSize.X / 2) + RayOffset.X), RayOffset.Y, ((SkateboardSize.Z / 2) + RayOffset.Z)),
+&#9;}
+&#9;
+&#9;local RayData = {
+&#9;&#9;Area = { --Cast ray to determine if skateboard will spawn inside something.
+&#9;&#9;&#9;Offset = Vector3.new(0, (SkateboardSize.Y / 2), 0),
+&#9;&#9;&#9;Direction = Vector3.new(0, 1, 0),
+&#9;&#9;&#9;Distance = SkateboardSize.Y
+&#9;&#9;},
+&#9;&#9;Ground = { --Cast ray to determine if the skateboard can spawn on the ground.
+&#9;&#9;&#9;Direction = Vector3.new(0, -1, 0),
+&#9;&#9;&#9;Distance = (SkateboardSize.Y * 4)
+&#9;&#9;}
+&#9;}
+&#9;
+&#9;local Ignore = {Character, Skateboard}
+&#9;
+&#9;local HighestGroundRayHit, HighestGroundRayPos --Get the highest point of elevation to spawn the skateboard.
+&#9;for i, v in pairs(RayPoints) do
+&#9;&#9;local GroundRayHit, GroundRayPos = Functions.RayCast(v.p, RayData.Ground.Direction, RayData.Ground.Distance, Ignore)
+&#9;&#9;if not HighestGroundRayPos or GroundRayPos.Y &gt; HighestGroundRayPos.Y then
+&#9;&#9;&#9;HighestGroundRayHit, HighestGroundRayPos = GroundRayHit, GroundRayPos
+&#9;&#9;end
+&#9;end&#9;
+&#9;
+&#9;local FullAreaIsEmpty = true --Ensure entire area is empty.
+&#9;for i, v in pairs(RayPoints) do
+&#9;&#9;local AreaIsEmpty = Functions.RegionEmpty((v.p - RayData.Area.Offset), {Min = Vector3.new(0, 0, 0), Max = (RayData.Area.Direction * RayData.Area.Distance)}, Ignore)
+&#9;&#9;if not AreaIsEmpty then
+&#9;&#9;&#9;FullAreaIsEmpty = false
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;if not FullAreaIsEmpty or not HighestGroundRayHit then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;ToolEnabled = false
+&#9;
+&#9;local PosX, PosY, PosZ, R00, R01, R02, R10, R11, R12, R20, R21, R22 = SkateboardCFrame:components()
+&#9;SkateboardCFrame = CFrame.new(PosX, (HighestGroundRayPos.Y + (SkateboardSize.Y / 2)), PosZ, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+&#9;
+&#9;InvokeClient(&quot;PlaySound&quot;, Sounds.Drop)
+&#9;
+&#9;Tool.Parent = nil
+&#9;
+&#9;SkateboardFunctions.SpawnSkateboard(Skateboard, (SkateboardCFrame * SkateboardAngle))
+
+&#9;Debris:AddItem(Tool, 0)&#9;
+&#9;Tool:Destroy()
+&#9;
+end
+
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent) and true) or false)
+end
+
+function Activated()
+&#9;if not ToolEquipped or not ToolEnabled or not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;DropSkateboard()
+end
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;ToolEquipped = true
+end
+
+function Unequipped()
+&#9;ToolEquipped = false
+end
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX29D98460F8C9476AB2F818A062FF96B6">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.79394871</X>
-					<Y>18.7391205</Y>
-					<Z>18.4510174</Z>
-					<R00>-0.987135291</R00>
-					<R01>-0.0709899738</R01>
-					<R02>-0.143263385</R02>
+					<X>-3.41120958</X>
+					<Y>1.84917688</Y>
+					<Z>3.29073143</Z>
+					<R00>0.694659233</R00>
+					<R01>0.271670729</R01>
+					<R02>-0.666065753</R02>
 					<R10>-0</R10>
-					<R11>0.89602685</R11>
-					<R12>-0.443999827</R12>
-					<R20>0.159887388</R20>
-					<R21>-0.438287884</R21>
-					<R22>-0.884499669</R22>
+					<R11>0.925941408</R11>
+					<R12>0.377667189</R12>
+					<R20>0.719338953</R20>
+					<R21>-0.262349993</R21>
+					<R22>0.643213749</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.736643672</X>
-					<Y>18.9167194</Y>
-					<Z>18.8048153</Z>
+					<X>-2.34550548</X>
+					<Y>1.24491</Y>
+					<Z>2.26159048</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
