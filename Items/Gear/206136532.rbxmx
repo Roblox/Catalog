@@ -1,0 +1,426 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBXE7ABEA88677D4738AB75FA9B356476B0">
+		<Properties>
+			<bool name="CanBeDropped">false</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-1.5</X>
+				<Y>3.1500001</Y>
+				<Z>1.25</Z>
+				<R00>-1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>-1</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">GiantDinoFeet</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=200903025  </url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBXC2CEE5BFC65E4AFB9D71374ABD8E9D60">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Server</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+local Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Handle.Transparency = 1
+
+local Equipping = false
+
+local Feet = {}
+local FootFrame = CFrame.new(0, -0.8, 0) * CFrame.Angles(0, math.pi, 0)
+local WalkAnim
+local WalkId
+
+local Slow = 8
+local SlowedHuman
+
+local AttackRange = 3
+local AttackDamage = 10
+
+function getPlayer()
+&#9;local char = Tool.Parent
+&#9;return game:GetService(&quot;Players&quot;):GetPlayerFromCharacter(char)
+end
+
+function contains(t, v)
+&#9;for _, val in pairs(t) do
+&#9;&#9;if val == v then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function tagHuman(human)
+&#9;local tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;tag.Value = getPlayer()
+&#9;tag.Name = &quot;creator&quot;
+&#9;tag.Parent = human
+&#9;game:GetService(&quot;Debris&quot;):AddItem(tag)
+end
+
+function stop(human)
+&#9;local delta = human.WalkSpeed
+&#9;human.WalkSpeed = human.WalkSpeed - delta
+&#9;delay(0.1, function()
+&#9;&#9;human.WalkSpeed = human.WalkSpeed + delta
+&#9;end)
+end
+
+function tryHit(part)
+&#9;local victims = {}
+&#9;local pos = part.Position
+&#9;local a = pos - Vector3.new(AttackRange, AttackRange, AttackRange)
+&#9;local b = pos + Vector3.new(AttackRange, AttackRange, AttackRange)
+&#9;local region = Region3.new(a, b)
+&#9;for _, part in pairs(workspace:FindPartsInRegion3(region)) do
+&#9;&#9;if not part:IsDescendantOf(Tool.Parent) then
+&#9;&#9;&#9;if part.Parent and part.Parent:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;&#9;local human = part.Parent.Humanoid
+&#9;&#9;&#9;&#9;if not contains(victims, human) then
+&#9;&#9;&#9;&#9;&#9;table.insert(victims, human)
+&#9;&#9;&#9;&#9;&#9;tagHuman(human)
+&#9;&#9;&#9;&#9;&#9;human:TakeDamage(AttackDamage)
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;local root = human.Parent:FindFirstChild(&quot;HumanoidRootPart&quot;)
+&#9;&#9;&#9;&#9;&#9;if root then
+&#9;&#9;&#9;&#9;&#9;&#9;root.Velocity = Vector3.new(0, 128, 0)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function onFootTouched(foot, part)
+&#9;if part:IsDescendantOf(Tool.Parent) then return end
+&#9;if foot:FindFirstChild(&quot;Cooldown&quot;) then return end
+&#9;
+&#9;local cd = Instance.new(&quot;BoolValue&quot;)
+&#9;cd.Name = &quot;Cooldown&quot;
+&#9;cd.Parent = foot
+&#9;game:GetService(&quot;Debris&quot;):AddItem(cd, 0.4)
+&#9;
+&#9;local sound = Tool.Handle.Stomp:Clone()
+&#9;sound.PlayOnRemove = true
+&#9;sound.Pitch = math.random(90, 110)/100
+&#9;sound.Volume = 0.25
+&#9;sound.Parent = foot
+&#9;game:GetService(&quot;Debris&quot;):AddItem(sound, 0)
+&#9;
+&#9;tryHit(foot)
+end
+
+function onEquip()
+&#9;if Equipping then return end
+&#9;
+&#9;Equipping = true
+&#9;
+&#9;--attach the feet
+&#9;local foot = Handle:Clone()
+&#9;foot.Mesh.MeshId = &quot;http://www.roblox.com/asset/?id=200902905&quot;
+&#9;foot.Transparency = 0
+&#9;foot.CanCollide = false
+&#9;
+&#9;local char = Tool.Parent
+&#9;if char then
+&#9;&#9;local lleg = char:FindFirstChild(&quot;Left Leg&quot;)
+&#9;&#9;if lleg then
+&#9;&#9;&#9;local left = foot:Clone()
+&#9;&#9;&#9;left.Parent = char
+&#9;&#9;&#9;
+&#9;&#9;&#9;local weld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;weld.Part0 = lleg
+&#9;&#9;&#9;weld.Part1 = left
+&#9;&#9;&#9;weld.C0 = FootFrame
+&#9;&#9;&#9;weld.Parent = weld.Part0
+&#9;&#9;&#9;
+&#9;&#9;&#9;left.Touched:connect(function(part)
+&#9;&#9;&#9;&#9;onFootTouched(left, part)
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;
+&#9;&#9;&#9;table.insert(Feet, left)
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;local rleg = char:FindFirstChild(&quot;Right Leg&quot;)
+&#9;&#9;if rleg then
+&#9;&#9;&#9;local right = foot:Clone()
+&#9;&#9;&#9;right.Parent = char
+&#9;&#9;&#9;
+&#9;&#9;&#9;local weld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;&#9;weld.Part0 = rleg
+&#9;&#9;&#9;weld.Part1 = right
+&#9;&#9;&#9;weld.C0 = FootFrame
+&#9;&#9;&#9;weld.Parent = weld.Part0
+&#9;&#9;&#9;
+&#9;&#9;&#9;right.Touched:connect(function(part)
+&#9;&#9;&#9;&#9;onFootTouched(right, part)
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;
+&#9;&#9;&#9;table.insert(Feet, right)
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;--change the animation
+&#9;WalkAnim = Tool.Parent:FindFirstChild(&quot;WalkAnim&quot;, true)
+&#9;if WalkAnim then
+&#9;&#9;WalkId = WalkAnim.AnimationId
+&#9;&#9;WalkAnim.AnimationId = Tool.Walk.AnimationId
+&#9;end
+&#9;
+&#9;--change the walk speed
+&#9;SlowedHuman = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if SlowedHuman then
+&#9;&#9;SlowedHuman.WalkSpeed = SlowedHuman.WalkSpeed - Slow
+&#9;&#9;stop(SlowedHuman)
+&#9;end
+&#9;
+&#9;Equipping = false
+end
+
+function onUnequip()
+&#9;--feet
+&#9;for _, foot in pairs(Feet) do
+&#9;&#9;foot:Destroy()
+&#9;end
+&#9;Feet = {}
+&#9;
+&#9;--animation
+&#9;if WalkAnim then
+&#9;&#9;WalkAnim.AnimationId = WalkId
+&#9;&#9;WalkAnim = nil
+&#9;&#9;WalkId = nil
+&#9;end
+&#9;
+&#9;--speed
+&#9;if SlowedHuman then
+&#9;&#9;SlowedHuman.WalkSpeed = SlowedHuman.WalkSpeed + Slow
+&#9;&#9;stop(SlowedHuman)
+&#9;&#9;SlowedHuman = nil
+&#9;end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2BBEEB24700E4380A5952B6D856B1EF5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Client</string>
+				<ProtectedString name="Source">local Player = game:GetService(&quot;Players&quot;).LocalPlayer
+local UIS = game:GetService(&quot;UserInputService&quot;)
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+function playAnimation(animName, ...)
+&#9;if Tracks[animName] then
+&#9;&#9;Tracks[animName]:Play()
+&#9;else
+&#9;&#9;local anim = Tool:FindFirstChild(animName)
+&#9;&#9;if anim and Tool.Parent and Tool.Parent:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+&#9;&#9;&#9;playAnimation(animName, ...)
+&#9;&#9;end
+&#9;end
+end
+
+function stopAnimation(animName)
+&#9;if Tracks[animName] then
+&#9;&#9;Tracks[animName]:Stop()
+&#9;end
+end
+
+function inputBegan(input)
+&#9;if input.UserInputType == InputType.MouseButton1 then
+&#9;&#9;Remote:FireServer(&quot;LeftDown&quot;)
+&#9;end
+end
+
+function inputEnded(input)
+&#9;if input.UserInputType == InputType.MouseButton1 then
+&#9;&#9;Remote:FireServer(&quot;LeftUp&quot;)
+&#9;end
+end
+
+function onRemote(func, ...)
+&#9;if func == &quot;PlayAnimation&quot; then
+&#9;&#9;playAnimation(...)
+&#9;elseif func == &quot;StopAnimation&quot; then
+&#9;&#9;stopAnimation(...)
+&#9;end
+end
+
+UIS.InputBegan:connect(inputBegan)
+UIS.InputEnded:connect(inputEnded)
+Remote.OnClientEvent:connect(onRemote)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX7443434AB1F14D8C84A91FFF04D7E18A">
+			<Properties>
+				<string name="Name">Remote</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXE0A59FBD36B2474DBCA2CD79AFF24BBC">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.899990857</X>
+					<Y>18.6999989</Y>
+					<Z>-28.7000084</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>2.5999999</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Sound" referent="RBX0294C448B37246EBA766DC0FC4436E29">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Stomp</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=66868084</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBX21352E74018C43348DE95D159BDC9ECE">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=200902945  </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=200902986 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX92C9E42FCB1F434EA36902BF7EC0F8BB">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=204328711</url></Content>
+				<string name="Name">Walk</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX09CC59FBDB644FD8B0C41911CAF3F39A">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-3.64892101</X>
+					<Y>20.1693916</Y>
+					<Z>-25.969759</Z>
+					<R00>0.704691768</R00>
+					<R01>0.34501037</R01>
+					<R02>-0.619981706</R02>
+					<R10>-1.49011594e-008</R10>
+					<R11>0.873812318</R11>
+					<R12>0.486263245</R12>
+					<R20>0.709513545</R20>
+					<R21>-0.342665702</R21>
+					<R22>0.615768373</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-2.40895748</X>
+					<Y>19.1968651</Y>
+					<Z>-27.2012959</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
