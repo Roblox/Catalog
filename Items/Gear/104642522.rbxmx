@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX5033B6A0D71044F3A6ACE43CA544BAFF">
 		<Properties>
 			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>3.9340253e-007</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">RoPed</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=104557291</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXCD433DAC29E1498ABC1CCE67FEBF7DE5">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -39,12 +40,12 @@
 					<X>-3.00867438</X>
 					<Y>71.0350037</Y>
 					<Z>18.9708214</Z>
-					<R00>-0</R00>
+					<R00>0</R00>
 					<R01>0</R01>
 					<R02>1</R02>
-					<R10>-0</R10>
+					<R10>0</R10>
 					<R11>1</R11>
-					<R12>0</R12>
+					<R12>-0</R12>
 					<R20>-1</R20>
 					<R21>0</R21>
 					<R22>0</R22>
@@ -91,7 +92,7 @@
 					<Z>7.91000128</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX8F1FAC570A0F4FE090D230E9AC132262">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,7 +117,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX5A7DB0F3A19E45F6918B29D3870DE2AE">
 				<Properties>
 					<bool name="Looped">true</bool>
 					<string name="Name">Running</string>
@@ -127,272 +128,13 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX4">
+		<Item class="Animation" referent="RBX07B569520E2948AEB53E7A97B3AD0898">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=104506550</url></Content>
 				<string name="Name">holdAni</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">continuumScript</string>
-				<ProtectedString name="Source">function WaitForChild(parent,child)
-&#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
-&#9;return parent[child]
-end
-
-local handle = WaitForChild(script.Parent,&apos;Handle&apos;)
-
-local EngineSound = WaitForChild(handle,&apos;Running&apos;)
-
-local HoldAni = WaitForChild(script.Parent,&apos;holdAni&apos;)
-
-local left=false
-local right=false
-local up=false
-local down=false
-local mouse
-local Character
-local key_down_connect
-local key_up_connect
-
-local thrustForce
-local thrustMagnitude
-local thrustDirection
-local RotationForce
-local TurnGyro
-
-local HoldAniTrack
-
-local torsoWeld
-
-local SmokePart = Instance.new(&apos;Part&apos;)
-SmokePart.Transparency = 1
-SmokePart.Size = Vector3.new(0,0,0)
-local ExhaustSmoke = Instance.new(&apos;Smoke&apos;)
-ExhaustSmoke.Parent = SmokePart
-ExhaustSmoke.Size = .1
-ExhaustSmoke.RiseVelocity = .01
-ExhaustSmoke.Color = Color3.new(.5,.5,.5)
-
-local acceleration = 10
-local deceleration = 10
-local turnAlpha = .5
-local alphaDampening = .2
-
-local Equipped = false
-
-local LastPosition = nil
-local ActualVelocity = Vector3.new(0,0,0)
-
-local CurrentSpeed=0
-local turnSpeed=0
-local turnSpeedAim=5
-function ThrustUpdater()
-&#9;while Equipped do
-&#9;&#9;local direction = Character:FindFirstChild(&quot;Torso&quot;).CFrame.lookVector
-&#9;&#9;direction = Vector3.new(direction.x,0,direction.z).unit
-&#9;&#9;thrustForce.velocity = direction*(CurrentSpeed)
-&#9;&#9;EngineSound.Pitch =&#9;1+(math.abs(CurrentSpeed/50)*1)
-&#9;&#9;
-&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, turnSpeed, 0)
-&#9;&#9;if math.abs(turnSpeed)&gt;alphaDampening&#9; then
-&#9;&#9;&#9;turnSpeed= turnSpeed-((alphaDampening)*(math.abs(turnSpeed)/turnSpeed))
-&#9;&#9;else 
-&#9;&#9;&#9;turnSpeed = 0&#9;&#9;
-&#9;&#9;end
-&#9;&#9;local leanAmount= -turnSpeed*(math.pi/6)/8
-&#9;&#9;
-&#9;&#9;local xzAngle = math.atan2(Character.Torso.CFrame.lookVector.z,0, Character.Torso.CFrame.lookVector.x)
-&#9;&#9;TurnGyro.cframe=CFrame.Angles(leanAmount*direction.x,0,leanAmount*direction.z)
-&#9;&#9;ExhaustSmoke.Opacity = (math.min(math.abs(CurrentSpeed),10)/10)*.5
-&#9;&#9;wait(1/30)
-&#9;&#9;if LastPosition then
-&#9;&#9;&#9;local npos = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
-&#9;&#9;&#9;local velocityDifference = math.abs(((npos-LastPosition).magnitude - (thrustForce.velocity.magnitude/30)))
-&#9;&#9;&#9;if velocityDifference&gt; 1 then
-&#9;&#9;&#9;&#9;print(&apos;stopping&apos;)
-&#9;&#9;&#9;&#9;--CurrentSpeed=0
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;end
-&#9;&#9;LastPosition = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
-&#9;end
-&#9;
-end
-
-
-function onEquipped(nmouse)
-&#9;print(&apos;got to equipped&apos;)
-&#9;Spawn(function()
-&#9;&#9;if Equipped then
-&#9;&#9;&#9;onUnequipped()
-&#9;&#9;end
-&#9;&#9;--
-&#9;&#9;&#9;script.Parent.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 1, -3.9340253e-007, 0, 3.9340253e-007, 1)
-&#9;
-&#9;&#9;&#9;handle.Size = Vector3.new(0.2, 4.89, 6.08)
-&#9;&#9;&#9;CurrentSpeed=0
-&#9;&#9;&#9;turnSpeed=0
-&#9;&#9;&#9;print(&apos;got in if&apos;)
-&#9;&#9;&#9;mouse=nmouse
-&#9;&#9;&#9;Equipped = true
-&#9;&#9;&#9;Character=script.Parent.Parent
-&#9;&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
-&#9;&#9;&#9;handle.CFrame = myTorso.CFrame
-&#9;&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = true
-&#9;&#9;&#9;
-&#9;&#9;&#9;if RotationForce then RotationForce:Destroy() end
-&#9;&#9;&#9;RotationForce = Instance.new(&apos;BodyAngularVelocity&apos;)
-&#9;&#9;&#9;RotationForce.maxTorque = Vector3.new(0, math.huge, 0)
-&#9;&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, 0, 0)
-&#9;&#9;&#9;RotationForce.Parent = myTorso
-&#9;&#9;&#9;
-&#9;&#9;&#9;if thrustForce then thrustForce:Destroy() end
-&#9;&#9;&#9;thrustForce = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;&#9;thrustForce.maxForce = Vector3.new(math.huge,0,math.huge)
-&#9;&#9;&#9;thrustForce.velocity = Vector3.new(0,0,0)
-&#9;&#9;&#9;thrustForce.Parent = handle--myTorso
-&#9;&#9;&#9;
-&#9;&#9;&#9;if TurnGyro then TurnGyro:Destroy() end
-&#9;&#9;&#9;TurnGyro = Instance.new(&apos;BodyGyro&apos;)
-&#9;&#9;&#9;TurnGyro.maxTorque = Vector3.new(math.huge,0,math.huge)
-&#9;&#9;&#9;TurnGyro.Parent = myTorso
-&#9;&#9;&#9;
-&#9;&#9;&#9;Spawn(ThrustUpdater)
-&#9;&#9;&#9;if HoldAniTrack then HoldAniTrack:Stop() end
-&#9;&#9;&#9;HoldAniTrack = WaitForChild(Character,&apos;Humanoid&apos;):LoadAnimation(HoldAni)
-&#9;&#9;&#9;HoldAniTrack:Play()
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;myTorso.Anchored = true
-&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;if torsoWeld then torsoWeld:Destroy() end
-&#9;&#9;&#9;&#9;torsoWeld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;&#9;torsoWeld.C0 = CFrame.new(0, -1.49999988, -0.200000003, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-&#9;&#9;&#9;&#9;torsoWeld.Part0 = myTorso
-&#9;&#9;&#9;&#9;torsoWeld.Part1 = handle
-&#9;&#9;&#9;&#9;torsoWeld.Parent = myTorso 
-&#9;&#9;&#9;&#9;handle.CanCollide = true
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;wait(.1)
-&#9;&#9;&#9;&#9;handle.CanCollide = true
-&#9;&#9;&#9;&#9;myTorso.Anchored = false
-&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
-&#9;&#9;&#9;&#9;WaitForChild(WaitForChild(Character,&apos;Right Arm&apos;),&apos;RightGrip&apos;):Destroy()
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;
-&#9;&#9;&#9;if key_down_connect then
-&#9;&#9;&#9;&#9;key_down_connect:disconnect()
-&#9;&#9;&#9;&#9;key_up_connect:disconnect()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;key_down_connect=mouse.KeyDown:connect(keyDownFunc)
-&#9;&#9;&#9;key_up_connect=mouse.KeyUp:connect(keyUpFunc)
-&#9;&#9;
-&#9;&#9;&#9;SmokePart.Parent = handle
-&#9;&#9;&#9;if not SmokePart:FindFirstChild(&apos;Weld&apos;) then
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;local tweld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;&#9;tweld.C0 = CFrame.new(0.600000024, 1.10000014, -2.20000005, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-&#9;&#9;&#9;&#9;tweld.Part0 = SmokePart
-&#9;&#9;&#9;&#9;tweld.Part1 = handle
-&#9;&#9;&#9;&#9;tweld.Parent = SmokePart
-&#9;&#9;&#9;end
-&#9;&#9;&#9;EngineSound:Play()
-&#9;&#9;&#9;Character.Humanoid.WalkSpeed = 0
-&#9;&#9;--end
-&#9;end)
-end
-
-
-function onUnequipped()
-&#9;Equipped = false
-&#9;wait(.3)
-&#9;handle.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;forwards = false
-&#9;left = false
-&#9;back = false
-&#9;right = false&#9;
-&#9;RotationForce:Destroy()
-&#9;RotationForce=nil
-&#9;thrustForce:Destroy()
-&#9;thrustForce=nil
-&#9;TurnGyro:Destroy()
-&#9;TurnGyro=nil
-&#9;HoldAniTrack:Stop()
-&#9;torsoWeld:Destroy()
-&#9;key_down_connect:disconnect()
-&#9;key_down_connect=nil
-&#9;key_up_connect:disconnect()
-&#9;key_up_connect=nil
-&#9;torsoWeld=nil
-&#9;EngineSound:Stop()
-&#9;Character.Humanoid.WalkSpeed = 16
-&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = false
-&#9;print(&quot;I unequipped!&quot;)
-end
-
-
-
-
-function keyUpFunc(key)&#9;
-&#9;if key == nil then return end
-&#9;local key = key:lower()
-&#9;if key == &quot;w&quot; then
-&#9;&#9;forwards = false
-&#9;elseif key == &quot;a&quot; then
-&#9;&#9;left = false
-&#9;elseif key == &quot;s&quot; then
-&#9;&#9;back = false
-&#9;elseif key == &quot;d&quot; then
-&#9;&#9;right = false&#9;
-&#9;end
-end
-
-function keyDownFunc(key)&#9;
-&#9;if key == nil then return end
-&#9;if inIntro then return end
-&#9;local key = key:lower()
-&#9;if key == &quot;w&quot; then
-&#9;&#9;forwards = true
-&#9;&#9;while forwards do
-&#9;&#9;&#9;CurrentSpeed = math.min(50,CurrentSpeed+(acceleration*(1/30)))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &quot;a&quot; then
-&#9;&#9;left = true
-&#9;&#9;while left do
-&#9;&#9;&#9;turnSpeed= math.min(8,turnSpeed+(turnAlpha))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &quot;s&quot; then
-&#9;&#9;back = true
-&#9;&#9;while back do
-&#9;&#9;&#9;CurrentSpeed = math.max(-50,CurrentSpeed-(deceleration*(1/30)))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &quot;d&quot; then
-&#9;&#9;right = true
-
-&#9;&#9;while right do
-&#9;&#9;&#9;turnSpeed= math.max(-8,turnSpeed-(turnAlpha))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;&#9;&#9;
-&#9;end
-end
-
-script.Parent.Unequipped:connect(onUnequipped)
-script.Parent.Equipped:connect(onEquipped)
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX6">
+		<Item class="Script" referent="RBX44E9007A845449F1A414300744B9FAE2">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -409,7 +151,7 @@ script.Parent.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 
 handle.Size = Vector3.new(0.2, 4.89, 6.08)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="Camera" referent="RBX28EF3948D91D45EBAFFC86F11B816B89">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -443,6 +185,331 @@ handle.Size = Vector3.new(0.2, 4.89, 6.08)</ProtectedString>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXC3C37A90426A43839FE897D4182E7C91">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">if workspace.FilteringEnabled then
+&#9;require(script.Parent:WaitForChild&apos;RopedModule&apos;)(script.Parent, true)
+end</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX1916B1B01CAB4EE69DDA6C43552E89A4">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">local useLocalControls = workspace.FilteringEnabled == false
+if useLocalControls then
+&#9;require(script.Parent:WaitForChild&apos;RopedModule&apos;)(script.Parent, false)
+end
+
+script.Parent.Equipped:connect(function(mouse)
+&#9;if not useLocalControls then
+&#9;&#9;mouse.KeyUp:connect(function(...) script.Parent.KeyUp:FireServer(...) end)
+&#9;&#9;mouse.KeyDown:connect(function(...) script.Parent.KeyDown:FireServer(...) end)
+&#9;else
+&#9;&#9;mouse.KeyUp:connect(function(...) script.Parent.KeyUpLocal:Fire(...) end)
+&#9;&#9;mouse.KeyDown:connect(function(...) script.Parent.KeyDownLocal:Fire(...) end)
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX458F3AEE4C674BE38E963A9022E07BE2">
+			<Properties>
+				<string name="Name">KeyUp</string>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX31DC68C4A18F4710B9E34EE6BEB33FC7">
+			<Properties>
+				<string name="Name">KeyDown</string>
+			</Properties>
+		</Item>
+		<Item class="ModuleScript" referent="RBX37401F748D31477793BD6D06CAE4E5EB">
+			<Properties>
+				<string name="Name">RopedModule</string>
+				<ProtectedString name="Source">return function(Tool, server)
+&#9;function WaitForChild(parent,child)
+&#9;&#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
+&#9;&#9;return parent[child]
+&#9;end
+&#9;
+&#9;local handle = WaitForChild(Tool,&apos;Handle&apos;)
+&#9;
+&#9;local EngineSound = WaitForChild(handle,&apos;Running&apos;)
+&#9;
+&#9;local HoldAni = WaitForChild(Tool,&apos;holdAni&apos;)
+&#9;
+&#9;local left=false
+&#9;local right=false
+&#9;local up=false
+&#9;local down=false
+&#9;local Character
+&#9;local key_down_connect
+&#9;local key_up_connect
+&#9;
+&#9;local thrustForce
+&#9;local thrustMagnitude
+&#9;local thrustDirection
+&#9;local RotationForce
+&#9;local TurnGyro
+&#9;
+&#9;local HoldAniTrack
+&#9;
+&#9;local torsoWeld
+&#9;
+&#9;local SmokePart = Instance.new(&apos;Part&apos;)
+&#9;SmokePart.Transparency = 1
+&#9;SmokePart.Size = Vector3.new(0,0,0)
+&#9;local ExhaustSmoke = Instance.new(&apos;Smoke&apos;)
+&#9;ExhaustSmoke.Parent = SmokePart
+&#9;ExhaustSmoke.Size = .1
+&#9;ExhaustSmoke.RiseVelocity = .01
+&#9;ExhaustSmoke.Color = Color3.new(.5,.5,.5)
+&#9;
+&#9;local acceleration = 10
+&#9;local deceleration = 10
+&#9;local turnAlpha = .5
+&#9;local alphaDampening = .2
+&#9;
+&#9;local Equipped = false
+&#9;
+&#9;local LastPosition = nil
+&#9;local ActualVelocity = Vector3.new(0,0,0)
+&#9;
+&#9;local CurrentSpeed=0
+&#9;local turnSpeed=0
+&#9;local turnSpeedAim=5
+&#9;function ThrustUpdater()
+&#9;&#9;while Equipped do
+&#9;&#9;&#9;local direction = Character:FindFirstChild(&quot;Torso&quot;).CFrame.lookVector
+&#9;&#9;&#9;direction = Vector3.new(direction.x,0,direction.z).unit
+&#9;&#9;&#9;thrustForce.velocity = direction*(CurrentSpeed)
+&#9;&#9;&#9;EngineSound.Pitch =&#9;1+(math.abs(CurrentSpeed/50)*1)
+&#9;&#9;&#9;
+&#9;&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, turnSpeed, 0)
+&#9;&#9;&#9;if math.abs(turnSpeed)&gt;alphaDampening&#9; then
+&#9;&#9;&#9;&#9;turnSpeed= turnSpeed-((alphaDampening)*(math.abs(turnSpeed)/turnSpeed))
+&#9;&#9;&#9;else 
+&#9;&#9;&#9;&#9;turnSpeed = 0&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local leanAmount= -turnSpeed*(math.pi/6)/8
+&#9;&#9;&#9;
+&#9;&#9;&#9;local xzAngle = math.atan2(Character.Torso.CFrame.lookVector.z,0, Character.Torso.CFrame.lookVector.x)
+&#9;&#9;&#9;TurnGyro.cframe=CFrame.Angles(leanAmount*direction.x,0,leanAmount*direction.z)
+&#9;&#9;&#9;ExhaustSmoke.Opacity = (math.min(math.abs(CurrentSpeed),10)/10)*.5
+&#9;&#9;&#9;wait(1/30)
+&#9;&#9;&#9;if LastPosition then
+&#9;&#9;&#9;&#9;local npos = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
+&#9;&#9;&#9;&#9;local velocityDifference = math.abs(((npos-LastPosition).magnitude - (thrustForce.velocity.magnitude/30)))
+&#9;&#9;&#9;&#9;if velocityDifference&gt; 1 then
+&#9;&#9;&#9;&#9;&#9;print(&apos;stopping&apos;)
+&#9;&#9;&#9;&#9;&#9;--CurrentSpeed=0
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;LastPosition = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
+&#9;&#9;end
+&#9;&#9;
+&#9;end
+&#9;
+&#9;
+&#9;function onEquipped()
+&#9;&#9;print(&apos;got to equipped&apos;)
+&#9;&#9;local LocalPlayer = game:GetService&apos;Players&apos;:GetPlayerFromCharacter(Tool.Parent)
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;if Equipped then
+&#9;&#9;&#9;&#9;onUnequipped()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;Tool.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 1, -3.9340253e-007, 0, 3.9340253e-007, 1)
+&#9;&#9;
+&#9;&#9;&#9;&#9;handle.Size = Vector3.new(0.2, 4.89, 6.08)
+&#9;&#9;&#9;&#9;CurrentSpeed=0
+&#9;&#9;&#9;&#9;turnSpeed=0
+&#9;&#9;&#9;&#9;print(&apos;got in if&apos;)
+&#9;&#9;&#9;&#9;Equipped = true
+&#9;&#9;&#9;&#9;Character=Tool.Parent
+&#9;&#9;&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
+&#9;&#9;&#9;&#9;handle.CFrame = myTorso.CFrame
+&#9;&#9;&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = true
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if RotationForce then RotationForce:Destroy() end
+&#9;&#9;&#9;&#9;RotationForce = Instance.new(&apos;BodyAngularVelocity&apos;)
+&#9;&#9;&#9;&#9;RotationForce.maxTorque = Vector3.new(0, math.huge, 0)
+&#9;&#9;&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, 0, 0)
+&#9;&#9;&#9;&#9;RotationForce.Parent = myTorso
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if thrustForce then thrustForce:Destroy() end
+&#9;&#9;&#9;&#9;thrustForce = Instance.new(&apos;BodyVelocity&apos;)
+&#9;&#9;&#9;&#9;thrustForce.maxForce = Vector3.new(math.huge,0,math.huge)
+&#9;&#9;&#9;&#9;thrustForce.velocity = Vector3.new(0,0,0)
+&#9;&#9;&#9;&#9;thrustForce.Parent = handle--myTorso
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if TurnGyro then TurnGyro:Destroy() end
+&#9;&#9;&#9;&#9;TurnGyro = Instance.new(&apos;BodyGyro&apos;)
+&#9;&#9;&#9;&#9;TurnGyro.maxTorque = Vector3.new(math.huge,0,math.huge)
+&#9;&#9;&#9;&#9;TurnGyro.Parent = myTorso
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;Spawn(ThrustUpdater)
+&#9;&#9;&#9;&#9;if HoldAniTrack then HoldAniTrack:Stop() end
+&#9;&#9;&#9;&#9;HoldAniTrack = WaitForChild(Character,&apos;Humanoid&apos;):LoadAnimation(HoldAni)
+&#9;&#9;&#9;&#9;HoldAniTrack:Play()
+&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
+&#9;&#9;&#9;&#9;&#9;myTorso.Velocity = Vector3.new()
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;if torsoWeld then torsoWeld:Destroy() end
+&#9;&#9;&#9;&#9;&#9;torsoWeld=Instance.new(&apos;Weld&apos;)
+&#9;&#9;&#9;&#9;&#9;torsoWeld.C0 = CFrame.new(0, -1.49999988, -0.200000003, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+&#9;&#9;&#9;&#9;&#9;torsoWeld.Part0 = myTorso
+&#9;&#9;&#9;&#9;&#9;torsoWeld.Part1 = handle
+&#9;&#9;&#9;&#9;&#9;torsoWeld.Parent = myTorso 
+&#9;&#9;&#9;&#9;&#9;handle.CanCollide = true
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;--wait(.1)
+&#9;&#9;&#9;&#9;&#9;handle.CanCollide = true
+&#9;&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
+&#9;&#9;&#9;&#9;&#9;if Character:FindFirstChild&apos;Right Arm&apos; and Character[&apos;Right Arm&apos;]:FindFirstChild&apos;RightGrip&apos; then
+&#9;&#9;&#9;&#9;&#9;&#9;Character[&apos;Right Arm&apos;].RightGrip:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if key_down_connect then
+&#9;&#9;&#9;&#9;&#9;key_down_connect:disconnect()
+&#9;&#9;&#9;&#9;&#9;key_up_connect:disconnect()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;if server then
+&#9;&#9;&#9;&#9;&#9;key_down_connect=Tool.KeyDown.OnServerEvent:connect(function(client, ...) if client == LocalPlayer then keyDownFunc(...) end end)
+&#9;&#9;&#9;&#9;&#9;key_up_connect=Tool.KeyUp.OnServerEvent:connect(function(client, ...) if client == LocalPlayer then keyUpFunc(...) end end)
+&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;key_down_connect=Tool.KeyDownLocal.Event:connect(keyDownFunc)
+&#9;&#9;&#9;&#9;&#9;key_up_connect=Tool.KeyUpLocal.Event:connect(keyUpFunc)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;SmokePart.Parent = handle
+&#9;&#9;&#9;&#9;if not SmokePart:FindFirstChild(&apos;Weld&apos;) then
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;local tweld=Instance.new(&apos;Weld&apos;)
+&#9;&#9;&#9;&#9;&#9;tweld.C0 = CFrame.new(0.600000024, 1.10000014, -2.20000005, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+&#9;&#9;&#9;&#9;&#9;tweld.Part0 = SmokePart
+&#9;&#9;&#9;&#9;&#9;tweld.Part1 = handle
+&#9;&#9;&#9;&#9;&#9;tweld.Parent = SmokePart
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;EngineSound:Play()
+&#9;&#9;&#9;&#9;Character.Humanoid.WalkSpeed = 0
+&#9;&#9;&#9;--end
+&#9;&#9;end)
+&#9;end
+&#9;
+&#9;
+&#9;function onUnequipped()
+&#9;&#9;Equipped = false
+&#9;&#9;handle.Size = Vector3.new(0.2, 0.2, 0.2)
+&#9;&#9;forwards = false
+&#9;&#9;left = false
+&#9;&#9;back = false
+&#9;&#9;right = false&#9;
+&#9;&#9;RotationForce:Destroy()
+&#9;&#9;RotationForce=nil
+&#9;&#9;thrustForce:Destroy()
+&#9;&#9;thrustForce=nil
+&#9;&#9;TurnGyro:Destroy()
+&#9;&#9;TurnGyro=nil
+&#9;&#9;HoldAniTrack:Stop()
+&#9;&#9;torsoWeld:Destroy()
+&#9;&#9;key_down_connect:disconnect()
+&#9;&#9;key_down_connect=nil
+&#9;&#9;key_up_connect:disconnect()
+&#9;&#9;key_up_connect=nil
+&#9;&#9;torsoWeld=nil
+&#9;&#9;EngineSound:Stop()
+&#9;&#9;Character.Humanoid.WalkSpeed = 16
+&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = false
+&#9;&#9;Character.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+&#9;&#9;
+&#9;&#9;local torso = Character:WaitForChild&apos;Torso&apos;
+&#9;&#9;if torso and torso:IsA&apos;BasePart&apos; then
+&#9;&#9;&#9;local hit, pos, norm = workspace:FindPartOnRay(
+&#9;&#9;&#9;&#9;Ray.new(
+&#9;&#9;&#9;&#9;&#9;torso.Position,
+&#9;&#9;&#9;&#9;&#9;Vector3.new(0,-1,0)*(1+2+3)
+&#9;&#9;&#9;&#9;),
+&#9;&#9;&#9;&#9;Character
+&#9;&#9;&#9;)
+&#9;&#9;&#9;torso.CFrame = CFrame.new(pos + Vector3.new(0, 1+2, 0)) * CFrame.Angles(torso.CFrame:toEulerAnglesXYZ())
+&#9;&#9;end
+&#9;&#9;print(&quot;I unequipped!&quot;)
+&#9;end
+&#9;
+&#9;
+&#9;
+&#9;
+&#9;function keyUpFunc(key)&#9;
+&#9;&#9;if key == nil then return end
+&#9;&#9;local key = key:lower()
+&#9;&#9;if key == &quot;w&quot; then
+&#9;&#9;&#9;forwards = false
+&#9;&#9;elseif key == &quot;a&quot; then
+&#9;&#9;&#9;left = false
+&#9;&#9;elseif key == &quot;s&quot; then
+&#9;&#9;&#9;back = false
+&#9;&#9;elseif key == &quot;d&quot; then
+&#9;&#9;&#9;right = false&#9;
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;function keyDownFunc(key)&#9;
+&#9;&#9;if key == nil then return end
+&#9;&#9;if inIntro then return end
+&#9;&#9;local key = key:lower()
+&#9;&#9;if key == &quot;w&quot; then
+&#9;&#9;&#9;forwards = true
+&#9;&#9;&#9;while forwards do
+&#9;&#9;&#9;&#9;CurrentSpeed = math.min(50,CurrentSpeed+(acceleration*(1/30)))
+&#9;&#9;&#9;&#9;wait(1/30)
+&#9;&#9;&#9;end
+&#9;&#9;elseif key == &quot;a&quot; then
+&#9;&#9;&#9;left = true
+&#9;&#9;&#9;while left do
+&#9;&#9;&#9;&#9;turnSpeed= math.min(8,turnSpeed+(turnAlpha))
+&#9;&#9;&#9;&#9;wait(1/30)
+&#9;&#9;&#9;end
+&#9;&#9;elseif key == &quot;s&quot; then
+&#9;&#9;&#9;back = true
+&#9;&#9;&#9;while back do
+&#9;&#9;&#9;&#9;CurrentSpeed = math.max(-50,CurrentSpeed-(deceleration*(1/30)))
+&#9;&#9;&#9;&#9;wait(1/30)
+&#9;&#9;&#9;end
+&#9;&#9;elseif key == &quot;d&quot; then
+&#9;&#9;&#9;right = true
+&#9;
+&#9;&#9;&#9;while right do
+&#9;&#9;&#9;&#9;turnSpeed= math.max(-8,turnSpeed-(turnAlpha))
+&#9;&#9;&#9;&#9;wait(1/30)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;Tool.Unequipped:connect(onUnequipped)
+&#9;Tool.Equipped:connect(onEquipped)
+end</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="BindableEvent" referent="RBX281956C236B7477BB41DD98B0FA38A08">
+			<Properties>
+				<string name="Name">KeyUpLocal</string>
+			</Properties>
+		</Item>
+		<Item class="BindableEvent" referent="RBXCBDB1B9EE524498889E2898B75B22029">
+			<Properties>
+				<string name="Name">KeyDownLocal</string>
 			</Properties>
 		</Item>
 	</Item>
