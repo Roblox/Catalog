@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXACCCAEC2C895486BA2D91EFAE70D9B39">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">FreakyFridayPotion</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=78673347</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXC3574E6D274E490D96F4B215911FF350">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -91,7 +92,7 @@
 					<Z>1.62999988</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX950DE057ECC1466B90E37A142300E5DD">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,443 +118,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">local Tool = script.Parent;
-
-local stillEquipped = true
-function onEquippedLocal(mouse)
-&#9;stillEquipped = true
-&#9;if mouse == nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return
-&#9;end
-&#9;
-&#9;while stillEquipped do
-&#9;&#9;print(&quot;Setting Mouse to Go&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-
-&#9;&#9;while Tool.Enabled and stillEquipped do
-&#9;&#9;&#9;wait(.01)
-&#9;&#9;end
-&#9;
-&#9;&#9;print(&quot;Setting Mouse To Wait&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-
-&#9;&#9;while not Tool.Enabled and stillEquipped do
-&#9;&#9;&#9;wait(.01)
-&#9;&#9;end
-&#9;end
-end
-
-function onUnequippedLocal()
-&#9;stillEquipped = false
-end
-
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX4">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">FridayScript</string>
-				<ProtectedString name="Source">--[[
-
-&#9;// Don&apos;t forget to add helper GUI stuff 
-]]
-
-
-local Tool = script.Parent 
-local Potion = Tool.Handle
-
-Tool.Enabled = true 
-
-local vCharacter
-local vTorso
-local vHumanoid 
-local vPlayer 
-
-local OtherPlayer = nil 
-local OtherCharacter = nil
-local OtherHumanoid
-local OtherTorso
-
-local SwapSound = nil 
-local SwapAnim 
-local OtherSwapAnim
-
-local RBX_Debris = game:GetService(&quot;Debris&quot;)
-
-local Mouse = nil 
-
-local cloneId = 68452456
-local Clone = game:GetService(&quot;InsertService&quot;):LoadAsset(cloneId):GetChildren()[1] 
-local cChildren = Clone:GetChildren()
-for i = 1, #cChildren do 
-&#9;if cChildren[i]:IsA(&quot;Script&quot;) then 
-&#9;&#9;cChildren[i]:Destroy()
-&#9;end 
-end 
-local Clone2 = Clone:Clone()
-
-local function spawnClone(character, torso, clone)
-&#9;if character and torso and clone then
-&#9;&#9;local thisClone = clone:Clone()
-
-&#9;&#9;thisClone.Name = character.Name 
-
-&#9;&#9;local target = thisClone:FindFirstChild(&quot;Target&quot;)
-&#9;&#9;if target then
-&#9;&#9;&#9;target.Value = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;else
-&#9;&#9;&#9;target = Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;target.Name = &quot;Target&quot;
-&#9;&#9;&#9;target.Parent = thisClone
-&#9;&#9;&#9;target.Value = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;end      &#9;&#9;
-&#9;&#9;
-&#9;&#9;thisClone:MoveTo(torso.Position + Vector3.new(5, 0, 5))&#9;&#9;
-
-&#9;&#9;return thisClone 
-&#9;end
-end 
-
-local function dressClone(character, clone)
-&#9;if character then
-&#9;&#9;local children = character:GetChildren()
-&#9;&#9;for i = 1, #children do
-&#9;&#9;&#9;if children[i] then
-&#9;&#9;&#9;&#9;if children[i].ClassName == &quot;Hat&quot; then
-&#9;&#9;&#9;&#9;&#9;-- Special
-&#9;&#9;&#9;&#9;&#9;local hat = Instance.new(&quot;Hat&quot;)
-&#9;&#9;&#9;&#9;&#9;local Hpart = children[i].Handle:clone()
-&#9;&#9;&#9;&#9;&#9;Hpart.Parent = hat
-&#9;&#9;&#9;&#9;&#9;Hpart.Position = clone.Head.Position
-&#9;&#9;&#9;&#9;&#9;hat.Name = children[i].Name
-&#9;&#9;&#9;&#9;&#9;hat.Parent = clone
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentPos = children[i].AttachmentPos
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentRight = children[i].AttachmentRight
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentUp = children[i].AttachmentUp
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentForward = children[i].AttachmentForward
-&#9;&#9;&#9;&#9;elseif children[i]:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;&#9;&#9;if clone:FindFirstChild(children[i].Name) and clone[children[i].Name]:IsA(&quot;BasePart&quot;) then 
-&#9;&#9;&#9;&#9;&#9;&#9;clone[children[i].Name].BrickColor = children[i].BrickColor 
-&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;elseif children[i].ClassName == &quot;ForceField&quot; or children[i]:IsA(&quot;Humanoid&quot;) then
-&#9;&#9;&#9;&#9;-- Ignore it
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;children[i]:Clone().Parent = clone&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return clone
-&#9;end
-end 
-
-local function onActivated()
-&#9;if Tool.Enabled == false then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;if not vTorso or not vHumanoid then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;local target = Mouse.Target
-&#9;if target and target.Parent then &#9;
-&#9;&#9;local humanoid = target.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if target.Parent:IsA(&quot;Hat&quot;) and target.Parent.Parent then 
-&#9;&#9;&#9;humanoid = target.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;end 
-&#9;&#9;if humanoid then 
-&#9;&#9;&#9;OtherPlayer = game.Players:GetPlayerFromCharacter(humanoid.Parent)
-&#9;&#9;&#9;OtherHumanoid = humanoid
-&#9;&#9;&#9;OtherTorso = OtherPlayer.Character:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;end 
-
-&#9;&#9;if OtherPlayer and OtherHumanoid and OtherTorso then &#9;
-&#9;&#9;&#9;OtherCharacter = OtherHumanoid.Parent
-&#9;&#9;&#9;SwapAnim = vHumanoid:LoadAnimation(Tool.SwapAnim)
-&#9;&#9;&#9;if SwapAnim then SwapAnim:Play() end 
-&#9;&#9;&#9;OtherSwapAnim = OtherHumanoid:LoadAnimation(Tool.SwapAnim)
-&#9;&#9;&#9;if OtherSwapAnim then OtherSwapAnim:Play() end 
-
-&#9;&#9;&#9;if Tool:FindFirstChild(&apos;OtherPlayer&apos;) then 
-&#9;&#9;&#9;&#9;Tool.OtherPlayer.Value = OtherPlayer 
-&#9;&#9;&#9;end 
-
-&#9;&#9;&#9;--[[local cf1 = vTorso.CFrame
-&#9;&#9;&#9;local cf2 = OtherTorso.CFrame
-&#9;&#9;&#9;
-&#9;&#9;&#9;vHumanoid.WalkSpeed = 0.0
-&#9;&#9;&#9;OtherHumanoid.WalkSpeed = 0.0
-&#9;&#9;&#9;wait(2.0)
-&#9;&#9;&#9;SwapSound = Tool:FindFirstChild(&quot;SwapSound&quot;)
-&#9;&#9;&#9;if SwapSound then SwapSound:Play() end 
-&#9;&#9;&#9;vHumanoid.WalkSpeed = 16.0 
-&#9;&#9;&#9;OtherHumanoid.WalkSpeed = 16.0 
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;local c = spawnClone(vCharacter, vTorso, Clone) 
-&#9;&#9;&#9;local c1 = spawnClone(OtherCharacter, OtherTorso, Clone)
-&#9;&#9;&#9;c1 = dressClone(vCharacter, c1)
-&#9;&#9;&#9;c = dressClone(OtherCharacter, c)&#9;&#9;&#9;
-&#9;&#9;&#9;vPlayer.Character = c
-&#9;&#9;&#9;OtherPlayer.Character = c1
-&#9;&#9;&#9;vPlayer.Character.Parent = game.Workspace
-&#9;&#9;&#9;vPlayer.Character.Torso.CFrame = cf2
-&#9;&#9;&#9;OtherPlayer.Character.Parent = game.Workspace
-&#9;&#9;&#9;OtherPlayer.Character.Torso.CFrame = cf1]]
-&#9;&#9;end 
-&#9;end 
-end 
-
-local function onEquipped(mouse)
-&#9;vCharacter = Tool.Parent 
-&#9;vTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-&#9;vHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)&#9;
-&#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
-&#9;Mouse = mouse 
-end 
-
-local function onUnequipped()
-&#9;if SwapSound then SwapSound:Stop() end
-&#9;if SwapAnim then SwapAnim:Stop() end 
-&#9;if OtherSwapAnim then OtherSwapAnim:Stop() end 
-&#9;if vHumanoid then vHumanoid.WalkSpeed = 16.0  end 
-&#9;if OtherHumanoid then OtherHumanoid.WalkSpeed = 16.0  end 
-end 
-
-Tool.Equipped:connect(onEquipped)
-Tool.Activated:connect(onActivated)
-Tool.Unequipped:connect(onUnequipped)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX5">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=78674033</url></Content>
-				<string name="Name">SwapAnim</string>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX6">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">GuiScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local Lantern = Tool.Handle
-
-local vCharacter
-local vPlayer
-local genericTextLabel
-
-local sg
-local frame
-
-function onEquipped()
-     vCharacter = Tool.Parent
-     vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
-     if vPlayer then
-          local playerGui = vPlayer:FindFirstChild(&quot;PlayerGui&quot;)
-          if playerGui and playerGui:FindFirstChild(&quot;LanternGui&quot;) == nil then
-               sg = Instance.new(&quot;ScreenGui&quot;)
-               sg.Name = &quot;LanternGui&quot;
-               sg.Parent = playerGui
-
-               frame = Instance.new(&quot;Frame&quot;)
-               frame.Parent = sg
-               frame.Size = UDim2.new(0, 240, 0, 30)
-               frame.Position = UDim2.new(0.5, -120, 1, -130)
-               frame.Style = Enum.FrameStyle.RobloxRound
-
-               genericTextLabel = Instance.new(&quot;TextLabel&quot;)
-               genericTextLabel.BackgroundTransparency = 1.0
-               genericTextLabel.Size = UDim2.new(1, 0, 1, 0)
-               genericTextLabel.Visible = true
-               genericTextLabel.ZIndex = 10
-               genericTextLabel.FontSize = Enum.FontSize.Size10
-               genericTextLabel.Font = Enum.Font.Legacy
-               genericTextLabel.TextColor3 = Color3.new(1, 127/255, 0)
-               genericTextLabel.TextXAlignment = Enum.TextXAlignment.Center
-               genericTextLabel.TextYAlignment = Enum.TextYAlignment.Top
-               genericTextLabel.Parent = frame
-               genericTextLabel.Text = &quot;Click on someone to swap bodies!!&quot;
-          end
-     end
-end
-
-function onUnequipped()
-     if sg then sg:Remove() end
-end
-
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX7">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ServerSwapScript</string>
-				<ProtectedString name="Source">local function WaitForChild(parent, childName)
-&#9;while parent:FindFirstChild(childName) == nil do 
-&#9;&#9;wait()
-&#9;end 
-&#9;return parent[childName]
-end 
-
-
-local Tool = script.Parent 
-local Potion = Tool.Handle
-
-local Player 
-local Character 
-local Humanoid 
-local Torso 
-
-local Swap 
-local OtherPlayer 
-local OtherHumanoid 
-local OtherTorso 
-local OtherPlayerValue
-
-local cloneId = 68452456
-local Clone0 = game:GetService(&quot;InsertService&quot;):LoadAsset(cloneId):GetChildren()[1] 
-local cChildren = Clone0:GetChildren()
-for i = 1, #cChildren do 
-&#9;if cChildren[i]:IsA(&quot;Script&quot;) then 
-&#9;&#9;cChildren[i]:Destroy()
-&#9;end 
-end 
-local Clone2 = Clone0:Clone()
-
-local function spawnClone(character, torso, clone0)
-&#9;if character and torso and clone0 then
-&#9;&#9;local thisClone = clone0:Clone()
-
-&#9;&#9;thisClone.Name = character.Name 
-
-&#9;&#9;local target = thisClone:FindFirstChild(&quot;Target&quot;)
-&#9;&#9;if target then
-&#9;&#9;&#9;target.Value = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;else
-&#9;&#9;&#9;target = Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;target.Name = &quot;Target&quot;
-&#9;&#9;&#9;target.Parent = thisClone
-&#9;&#9;&#9;target.Value = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;end      &#9;&#9;
-&#9;&#9;
-&#9;&#9;thisClone:MoveTo(torso.Position + Vector3.new(5, 0, 5))&#9;&#9;
-
-&#9;&#9;return thisClone 
-&#9;end
-end 
-
-local function dressClone(character, clone0)
-&#9;print(clone0, &apos; ... .. .... . .. . &apos;)
-&#9;if character then
-&#9;&#9;local children = character:GetChildren()
-&#9;&#9;for i = 1, #children do
-&#9;&#9;&#9;if children[i] then
-&#9;&#9;&#9;&#9;if children[i].ClassName == &quot;Hat&quot; then
-&#9;&#9;&#9;&#9;&#9;-- Special
-&#9;&#9;&#9;&#9;&#9;local hat = Instance.new(&quot;Hat&quot;)
-&#9;&#9;&#9;&#9;&#9;local Hpart = children[i].Handle:Clone()
-&#9;&#9;&#9;&#9;&#9;Hpart.Parent = hat
-&#9;&#9;&#9;&#9;&#9;Hpart.Position = clone0.Head.Position
-&#9;&#9;&#9;&#9;&#9;hat.Name = children[i].Name
-&#9;&#9;&#9;&#9;&#9;hat.Parent = clone0
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentPos = children[i].AttachmentPos
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentRight = children[i].AttachmentRight
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentUp = children[i].AttachmentUp
-&#9;&#9;&#9;&#9;&#9;hat.AttachmentForward = children[i].AttachmentForward
-&#9;&#9;&#9;&#9;elseif children[i]:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;&#9;&#9;if clone0:FindFirstChild(children[i].Name) and clone0[children[i].Name]:IsA(&quot;BasePart&quot;) then 
-&#9;&#9;&#9;&#9;&#9;&#9;clone0[children[i].Name].BrickColor = children[i].BrickColor 
-&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;elseif children[i].ClassName == &quot;ForceField&quot; or children[i]:IsA(&quot;Humanoid&quot;) then
-&#9;&#9;&#9;&#9;-- Ignore it
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;children[i]:Clone().Parent = clone0&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return clone0
-&#9;end
-end 
-
-local function OnEquipped()
-&#9;Character = Tool.Parent 
-&#9;Player = Game.Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = WaitForChild(Character, &apos;Humanoid&apos;)
-&#9;Torso = WaitForChild(Character, &apos;Torso&apos;) 
-end 
-
-Tool.Equipped:connect(OnEquipped) 
-
-OtherPlayerValue = WaitForChild(Tool, &apos;OtherPlayer&apos;)
-
-OtherPlayerValue.Changed:connect(function()
-&#9;if OtherPlayerValue.Value and OtherPlayerValue.Value:IsA(&apos;Player&apos;) then 
-&#9;&#9;OtherPlayer = OtherPlayerValue.Value 
-&#9;&#9;OtherCharacter = OtherPlayer.Character 
-&#9;&#9;if OtherCharacter then 
-&#9;&#9;&#9;OtherHumanoid = WaitForChild(OtherCharacter, &apos;Humanoid&apos;)
-&#9;&#9;&#9;OtherTorso = WaitForChild(OtherCharacter, &apos;Torso&apos;)
-&#9;&#9;end  
-
-&#9;&#9;OtherPlayerValue.Value = nil 
-&#9;
-&#9;&#9;if OtherPlayer and OtherHumanoid and OtherTorso then &#9;
-&#9;&#9;&#9;local cf1 = Torso.CFrame
-&#9;&#9;&#9;local cf2 = OtherTorso.CFrame
-&#9;&#9;&#9;OtherCharacter = OtherHumanoid.Parent
-&#9;&#9;&#9;
-&#9;&#9;&#9;Humanoid.WalkSpeed = 0.0
-&#9;&#9;&#9;OtherHumanoid.WalkSpeed = 0.0&#9;&#9;&#9;
-&#9;&#9;&#9;SwapSound = Tool:FindFirstChild(&quot;SwapSound&quot;)
-&#9;&#9;&#9;if SwapSound then SwapSound:Play() end 
-&#9;&#9;&#9;Humanoid.WalkSpeed = 16.0 
-&#9;&#9;&#9;OtherHumanoid.WalkSpeed = 16.0 
-
-&#9;&#9;&#9;print(Clone0) 
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;local char0 = spawnClone(Character, Torso, Clone0) 
-&#9;&#9;&#9;local char2 = spawnClone(OtherCharacter, OtherTorso, Clone0)
-&#9;&#9;&#9;char2 = dressClone(Character, char2)
-&#9;&#9;&#9;char0 = dressClone(OtherCharacter, char0)&#9;&#9;&#9;
-&#9;&#9;&#9;Player.Character = char0
-&#9;&#9;&#9;OtherPlayer.Character = char2
-&#9;&#9;&#9;Player.Character.Parent = game.Workspace
-&#9;&#9;&#9;Player.Character.Torso.CFrame = cf2
-&#9;&#9;&#9;OtherPlayer.Character.Parent = game.Workspace
-&#9;&#9;&#9;OtherPlayer.Character.Torso.CFrame = cf1
-&#9;&#9;end 
-&#9;end 
-end) </ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX8">
-			<Properties>
-				<string name="Name">Swap</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="ObjectValue" referent="RBX9">
-			<Properties>
-				<string name="Name">OtherPlayer</string>
-				<Ref name="Value">null</Ref>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="Camera" referent="RBX24B0B0CC802D42D18B29584A9D192EAC">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -587,6 +152,213 @@ end) </ProtectedString>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX4BB5B101752E4CEB8A4F1838C2BD6415">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Players = game:GetService&apos;Players&apos;
+
+SwitchClothes = {
+&#9;Accoutrement = function(char, hat)
+&#9;&#9;local handle = hat:FindFirstChild&apos;Handle&apos;
+&#9;&#9;local head = char:FindFirstChild&apos;Head&apos;
+&#9;&#9;
+&#9;&#9;handle:BreakJoints()
+&#9;&#9;
+&#9;&#9;if handle and handle:IsA&apos;BasePart&apos; and head and head:IsA&apos;BasePart&apos; then
+&#9;&#9;&#9;hat.Parent = nil
+&#9;&#9;&#9;local hatWeld = Instance.new&apos;Weld&apos;
+&#9;&#9;&#9;hatWeld.Part0 = head
+&#9;&#9;&#9;hatWeld.Part1 = handle
+&#9;&#9;&#9;hatWeld.C1 = head.CFrame * hat.AttachmentPoint:inverse() * CFrame.new(0, 0.5, -9.53674316e-007, 1, -1.89326617e-029, 0, -1.89326617e-029, 1, 2.5243549e-029, 0, 2.5243549e-029, 1)
+&#9;&#9;&#9;hatWeld.Name = &apos;HeadWeld&apos;
+&#9;&#9;&#9;hatWeld.Parent = head
+&#9;&#9;&#9;hat.Parent = char
+&#9;&#9;end
+&#9;end,
+&#9;CharacterAppearance = function(char, appItem)
+&#9;&#9;appItem.Parent = char
+&#9;end,
+&#9;DataModelMesh = function(char, appItem)
+&#9;&#9;appItem.Parent = char:FindFirstChild&apos;Head&apos;
+&#9;end,
+&#9;FaceInstance = function(char, appItem)
+&#9;&#9;appItem.Parent = char:FindFirstChild&apos;Head&apos;
+&#9;end
+}
+
+function animate(char)
+&#9;local animateScript = script.AnimateCharacterScript:Clone()
+&#9;for i, obj in next, char:GetChildren() do
+&#9;&#9;if obj:IsA&apos;Humanoid&apos; or obj:IsA&apos;AnimationController&apos; then
+&#9;&#9;&#9;animateScript.Humanoid.Value = obj
+&#9;&#9;&#9;break
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;animateScript.Parent = char
+&#9;animateScript.Disabled = false
+end
+
+Tool.SwapWith.OnServerEvent:connect(function(client, character)
+&#9;if client == Players:GetPlayerFromCharacter(Tool.Parent) and client.Character then
+&#9;&#9;local otherPlayer = Players:GetPlayerFromCharacter(character)
+&#9;&#9;if not otherPlayer then return end -- Remove to make it work with NPCs
+&#9;&#9;
+&#9;&#9;local clothesA, clothesB = {}, {}
+&#9;&#9;for i, child in next, client.Character:GetChildren() do
+&#9;&#9;&#9;local use = false
+&#9;&#9;&#9;for className in next, SwitchClothes do
+&#9;&#9;&#9;&#9;if child:IsA(className) then
+&#9;&#9;&#9;&#9;&#9;use = true
+&#9;&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;
+&#9;&#9;&#9;if use then
+&#9;&#9;&#9;&#9;table.insert(clothesA, child)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for i, obj in next, client.Character:FindFirstChild&apos;Head&apos; and client.Character.Head:GetChildren() do
+&#9;&#9;&#9;if obj:IsA&apos;DataModelMesh&apos; or obj:IsA&apos;FaceInstance&apos; then
+&#9;&#9;&#9;&#9;table.insert(clothesA, obj)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for i, child in next, character:GetChildren() do
+&#9;&#9;&#9;local use = false
+&#9;&#9;&#9;for className in next, SwitchClothes do
+&#9;&#9;&#9;&#9;if child:IsA(className) then
+&#9;&#9;&#9;&#9;&#9;use = true
+&#9;&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;
+&#9;&#9;&#9;if use then
+&#9;&#9;&#9;&#9;table.insert(clothesB, child)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for i, obj in next, character:FindFirstChild&apos;Head&apos; and character.Head:GetChildren() do
+&#9;&#9;&#9;if obj:IsA&apos;DataModelMesh&apos; or obj:IsA&apos;FaceInstance&apos; then
+&#9;&#9;&#9;&#9;table.insert(clothesB, obj)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for i, item in next, clothesA do
+&#9;&#9;&#9;for className, f in next, SwitchClothes do
+&#9;&#9;&#9;&#9;if item:IsA(className) then print(item:GetFullName(),&apos;is&apos;,className)
+&#9;&#9;&#9;&#9;&#9;f(character, item)
+&#9;&#9;&#9;&#9;&#9;print(item:GetFullName(),&apos;moved&apos;)
+&#9;&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;for i, item in next, clothesB do
+&#9;&#9;&#9;for className, f in next, SwitchClothes do
+&#9;&#9;&#9;&#9;if item:IsA(className) then
+&#9;&#9;&#9;&#9;&#9;f(client.Character, item)
+&#9;&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;if otherPlayer then
+&#9;&#9;&#9;animate(character)
+&#9;&#9;end
+&#9;&#9;animate(client.Character)
+&#9;&#9;
+&#9;&#9;if otherPlayer and client.Character:FindFirstChild&apos;HumanoidRootPart&apos; and character:FindFirstChild&apos;HumanoidRootPart&apos; and client.Character.HumanoidRootPart.Anchored == false and character.HumanoidRootPart.Anchored == false then
+&#9;&#9;&#9;local posA, posB = client.Character.HumanoidRootPart.CFrame, character.HumanoidRootPart.CFrame
+&#9;&#9;&#9;client.Character.HumanoidRootPart.CFrame = posB
+&#9;&#9;&#9;character.HumanoidRootPart.CFrame = posA
+&#9;&#9;end
+&#9;end 
+end)</ProtectedString>
+			</Properties>
+			<Item class="LocalScript" referent="RBX85544035186A4EBD9C8321673E8178E3">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">AnimateCharacterScript</string>
+					<ProtectedString name="Source">local track = (script:WaitForChild&apos;Humanoid&apos;.Value or script.Humanoid.Changed:wait()):LoadAnimation(script.SwapAnim)
+track:Play()
+
+wait(1)
+script:Destroy()</ProtectedString>
+				</Properties>
+				<Item class="Animation" referent="RBX10733414574F4375B933882143DF3F10">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=78674033</url></Content>
+						<string name="Name">SwapAnim</string>
+					</Properties>
+				</Item>
+				<Item class="ObjectValue" referent="RBX06D8DD61B25B4BCAA7D9B591A14456B2">
+					<Properties>
+						<string name="Name">Humanoid</string>
+						<Ref name="Value">null</Ref>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX26C12D5479234E60A5EA3D892494B2AD">
+			<Properties>
+				<string name="Name">SwapWith</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBXF9750D5CDE864BC8BF70BF5BA7249750">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+Tool.Enabled = true
+local Players = game:GetService&apos;Players&apos;
+
+GetCharacterFromPart = function(part)
+&#9;local current = part
+&#9;local character = nil
+&#9;while true do
+&#9;&#9;for i, child in next, current:GetChildren() do
+&#9;&#9;&#9;if child:IsA&apos;Humanoid&apos; then
+&#9;&#9;&#9;&#9;character = current
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;if character then
+&#9;&#9;&#9;break
+&#9;&#9;else
+&#9;&#9;&#9;current = current.Parent
+&#9;&#9;&#9;
+&#9;&#9;&#9;if not current or current == game then
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;return character, character and Players:GetPlayerFromCharacter(character)
+end
+
+Tool.Equipped:connect(function(mouse)
+&#9;mouse.Icon = &apos;rbxasset://textures/GunCursor.png&apos;
+&#9;
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;local hit = mouse.Target
+&#9;&#9;local char = GetCharacterFromPart(hit)
+&#9;&#9;
+&#9;&#9;if char then
+&#9;&#9;&#9;Tool.SwapWith:FireServer(char)
+&#9;&#9;&#9;
+&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+&#9;&#9;&#9;Tool.Enabled = false
+&#9;&#9;&#9;wait(2)
+&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures/GunCursor.png&apos;
+&#9;&#9;&#9;Tool.Enabled = true
+&#9;&#9;end
+&#9;end)
+end)</ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
