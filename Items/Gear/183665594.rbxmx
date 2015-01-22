@@ -660,7 +660,8 @@ setUp()</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">InputClient</string>
-				<ProtectedString name="Source">--our player is usually a nice thing to have
+				<ProtectedString name="Source">wait()
+--our player is usually a nice thing to have
 local Player = game:GetService(&quot;Players&quot;).LocalPlayer
 --the mouse is handy
 local Mouse = Player:GetMouse()
@@ -685,18 +686,25 @@ function onAttack(actionName, inputState, inputObject)
 end
 
 --when the sword is equipped, bind our actions
-function onEquipped()
+function onEquipped(mouse)
 &#9;--make sure we unequipped
 &#9;onUnequipped()
 &#9;
 &#9;--bind
+&#9;--[[
 &#9;CAS:BindActionToInputTypes(
 &#9;&#9;ActionName,
 &#9;&#9;onAttack,
 &#9;&#9;false,
 &#9;&#9;Enum.UserInputType.MouseButton1,
 &#9;&#9;Enum.UserInputType.Touch
-&#9;)
+&#9;)--]] -- This is super weird and it crashes mobile.  No idea why we&apos;re not using mouse.Button1.  Changed. -ArceusInator
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;onAttack(ActionName, Enum.UserInputState.Begin)
+&#9;end)
+&#9;mouse.Button1Up:connect(function()
+&#9;&#9;onAttack(ActionName, Enum.UserInputState.End)
+&#9;end)
 end
 Tool.Equipped:connect(onEquipped)
 
@@ -717,10 +725,13 @@ Tool.Unequipped:connect(onUnequipped)</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">AnimationClient</string>
-				<ProtectedString name="Source">--get references to important objects
+				<ProtectedString name="Source">wait()
+--get references to important objects
 local Player = game:GetService(&quot;Players&quot;).LocalPlayer
 local Tool = script.Parent
 local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+
+local animationTracks = {}
 
 --this function plays an animation on demand
 --inefficient, but prevents edge cases with dropping the weapon
@@ -729,8 +740,22 @@ function playAnimation(animationName, speed)
 &#9;if animation and Tool.Parent and Tool.Parent:FindFirstChild(&quot;Humanoid&quot;) then
 &#9;&#9;local human = Tool.Parent.Humanoid
 &#9;&#9;local track = human:LoadAnimation(animation)
+&#9;&#9;
+&#9;&#9;if animationTracks[animationName] then
+&#9;&#9;&#9;animationTracks[animationName]:Stop()
+&#9;&#9;end
 &#9;&#9;track:Play(nil, nil, speed)
+&#9;&#9;animationTracks[animationName] = track
 &#9;end
+end
+
+-- stops all animations to prevent the from being stuck
+function stopAnimations()
+&#9;for name, track in next, animationTracks do
+&#9;&#9;track:Stop()
+&#9;end
+&#9;
+&#9;animationTracks = {}
 end
 
 --hook up the remote
@@ -740,7 +765,10 @@ Remote.OnClientEvent:connect(function(func, ...)
 &#9;if func == &quot;PlayAnimation&quot; then
 &#9;&#9;playAnimation(args[1], args[2])
 &#9;end
-end)</ProtectedString>
+end)
+
+-- stops all animations once the sword is unequipped
+Tool.Unequipped:connect(stopAnimations)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Animation" referent="RBX8E2E0ADF46B3476E86FE2254819A27B7">
