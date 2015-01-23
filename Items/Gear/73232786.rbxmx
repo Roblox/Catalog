@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXBD0CCEA485944206820E5F49A2127E25">
 		<Properties>
 			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>-1</R21>
 				<R22>-4.37113883e-008</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">DragonBoStaff</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=73184333</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX98369EBE5545470BB91DE508AF7AD767">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -91,7 +92,7 @@
 					<Z>7</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX72626C1FE6774F5786F3015F16159539">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,11 +118,352 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
+		<Item class="LocalScript" referent="RBX0FC7EF715EDD4A83B29CAEA1683B4195">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Main</string>
+				<string name="Name">MainClient</string>
+				<ProtectedString name="Source">script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;script.Parent.Remote:FireServer(&apos;MB1Down&apos;)
+&#9;end)
+&#9;mouse.Button1Up:connect(function()
+&#9;&#9;script.Parent.Remote:FireServer(&apos;MB1Up&apos;)
+&#9;end)
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXC61244681BFB4ADAB8C0F0A5F7F29B09">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Damage</string>
+				<ProtectedString name="Source">local function class(name)
+&#9;local def = {}
+&#9;getfenv(0)[name] = def
+&#9;return function(ctor, static)
+&#9;&#9;local nctor = function(...)
+&#9;&#9;&#9;local this = {}
+&#9;&#9;&#9;if ctor then
+&#9;&#9;&#9;&#9;ctor(this, ...)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;return this
+&#9;&#9;end
+&#9;&#9;getfenv(0)[&apos;Create&apos;..name] = nctor
+&#9;&#9;if static then static(def) end
+&#9;end
+end
+
+local function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+class&apos;Signal&apos;(function(this)
+&#9;local mListeners = {}
+&#9;local mWaitObject = Create&apos;BoolValue&apos;{}
+
+&#9;function this:connect(func)
+&#9;&#9;local connection = {}
+&#9;&#9;function connection:disconnect()
+&#9;&#9;&#9;mListeners[func] = nil
+&#9;&#9;end
+&#9;&#9;mListeners[func] = connection
+&#9;&#9;return connection
+&#9;end
+
+&#9;function this:fire(...)
+&#9;&#9;for func, conn in pairs(mListeners) do
+&#9;&#9;&#9;func(...)
+&#9;&#9;end
+&#9;&#9;mWaitObject.Value = not mWaitObject.Value
+&#9;end
+
+&#9;function this:wait()
+&#9;&#9;mWaitObject.Changed:wait()
+&#9;end
+end)
+
+--[[
+&#9;DamageReducer
+&#9;&#9;Reduces damage taken to humanoid by a specified percentage.
+
+&#9;CreateDamageReducer()
+&#9;&#9;Returns a new DamageReducer.
+&#9;DamageReducer:SetHumanoid(humanoid)
+&#9;&#9;Sets the humanoid. `humanoid` can be nil.
+&#9;DamageReducer:SetActive(active)
+&#9;&#9;Sets whether the damage reducer is active.
+&#9;DamageReducer:SetReduction(pct)
+&#9;&#9;Sets the amount of damage reduction as a percentage.
+]]
+class&apos;DamageReducer&apos;(function(def)
+&#9;local reduction = 0
+&#9;local active = false
+&#9;local humanoid
+&#9;local changed
+
+&#9;local function connect_changed()
+&#9;&#9;if not changed then
+&#9;&#9;&#9;local e = true
+&#9;&#9;&#9;local last_health = humanoid.Health
+&#9;&#9;&#9;changed = humanoid.HealthChanged:connect(function(health)
+&#9;&#9;&#9;&#9;if e then
+&#9;&#9;&#9;&#9;&#9;e = false
+&#9;&#9;&#9;&#9;&#9;if health &lt; last_health then
+&#9;&#9;&#9;&#9;&#9;&#9;local damage = math.abs(health - last_health)
+&#9;&#9;&#9;&#9;&#9;&#9;humanoid.Health = health + damage*reduction
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;e = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;last_health = humanoid.Health
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+
+&#9;local function disconnect_changed()
+&#9;&#9;if changed then
+&#9;&#9;&#9;changed:disconnect()
+&#9;&#9;&#9;changed = nil
+&#9;&#9;end
+&#9;end
+
+&#9;function def:SetHumanoid(h)
+&#9;&#9;if changed then
+&#9;&#9;&#9;disconnect_changed()
+&#9;&#9;end
+&#9;&#9;humanoid = h
+&#9;&#9;if h and active then
+&#9;&#9;&#9;connect_changed()
+&#9;&#9;end
+&#9;end
+
+&#9;function def:SetReduction(pct)
+&#9;&#9;reduction = pct &lt; 0 and 0 or pct &gt; 1 and 1 or pct
+&#9;end
+
+&#9;function def:SetActive(a)
+&#9;&#9;active = a
+&#9;&#9;if a then
+&#9;&#9;&#9;connect_changed()
+&#9;&#9;else
+&#9;&#9;&#9;disconnect_changed()
+&#9;&#9;end
+&#9;end
+end)
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- Tiny Event Manager; Add: [[Event.EventName = (event)]]; Remove: [[Disconnect(&quot;EventName&quot;,...)]]
+local Event = {}
+local function Disconnect(...)
+&#9;for _,name in pairs{...} do
+&#9;&#9;if Event[name] then
+&#9;&#9;&#9;Event[name]:disconnect()
+&#9;&#9;&#9;Event[name] = nil
+&#9;&#9;end
+&#9;end
+end
+
+-- get an object; make it if it doesn&apos;t exist
+local function GetMake(parent,name,type)
+&#9;local object = parent:FindFirstChild(name)
+&#9;if not object then
+&#9;&#9;object = Create(type){Name=name}
+&#9;&#9;object.Parent = parent
+&#9;end
+&#9;return object
+end
+
+-- wait until child exists; return child
+local function WaitForChild(parent,name)
+&#9;while not parent:FindFirstChild(name) do
+&#9;&#9;parent.ChildAdded:wait()
+&#9;end
+&#9;return parent:FindFirstChild(name)
+end
+
+-- get a sibling humanoid of object; by humanoid, not by name
+local function GetHumanoid(object)
+&#9;if object and object.Parent then
+&#9;&#9;for i,v in pairs(object.Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA&quot;Humanoid&quot; then
+&#9;&#9;&#9;&#9;return v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+-- get the parent character from an object; verified by GetHumanoid
+local function GetCharacter(object)
+&#9;local humanoid = GetHumanoid(object)
+&#9;if humanoid then
+&#9;&#9;return object.Parent,humanoid
+&#9;end
+&#9;return nil
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+local Players = Game:GetService(&quot;Players&quot;)
+local Debris = Game:GetService(&quot;Debris&quot;)
+
+local Tool = script.Parent
+local Handle = WaitForChild(Tool,&quot;Handle&quot;)
+local BurnScript = Tool:FindFirstChild(&quot;BurnScript&quot;)
+local DamageBin = WaitForChild(Tool,&quot;DamageBin&quot;)
+local Spinning = WaitForChild(Tool,&quot;Spinning&quot;)
+
+local DamageReducer = CreateDamageReducer()
+DamageReducer:SetReduction(0.25)
+
+Spinning.Changed:connect(function(value)
+&#9;DamageReducer:SetActive(value)
+end)
+
+Tool.Equipped:connect(function()
+&#9;local Character,Humanoid = GetCharacter(Tool)
+&#9;local Player = Players:GetPlayerFromCharacter(Character)
+
+&#9;if BurnScript then
+&#9;&#9;local ctag = GetMake(BurnScript,&quot;creator&quot;,&quot;ObjectValue&quot;)
+&#9;&#9;ctag.Value = Player
+&#9;end
+
+&#9;DamageReducer:SetHumanoid(Humanoid)
+
+&#9;Event.DamageBin = DamageBin.ChildAdded:connect(function(dtag)
+&#9;&#9;if dtag:IsA&quot;ObjectValue&quot; then
+&#9;&#9;&#9;local humanoid = dtag.Value
+&#9;&#9;&#9;local damage = tonumber(dtag.Name)
+&#9;&#9;&#9;if humanoid and damage then
+&#9;&#9;&#9;&#9;local ctag = Create&apos;ObjectValue&apos;{
+&#9;&#9;&#9;&#9;&#9;Name = &quot;creator&quot;;
+&#9;&#9;&#9;&#9;&#9;Value = Player;
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;ctag.Parent = humanoid
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;&#9;&#9;Debris:AddItem(ctag,1)
+&#9;&#9;&#9;&#9;Debris:AddItem(dtag,1)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+end)
+
+Tool.Unequipped:connect(function()
+&#9;DamageReducer:SetHumanoid()
+&#9;Disconnect(&quot;DamageBin&quot;)
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXF05AA9F6E171446CB5CECF50A058273D">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">BurnScript</string>
+				<ProtectedString name="Source">local damage = 2
+local interval = 0.5
+
+local Debris = Game:GetService(&quot;Debris&quot;)
+local BodyPart = script.Parent
+local Humanoid
+do
+&#9;if BodyPart.Parent then
+&#9;&#9;for i,v in pairs(BodyPart.Parent:GetChildren()) do
+&#9;&#9;&#9;if v:IsA&quot;Humanoid&quot; then
+&#9;&#9;&#9;&#9;Humanoid = v
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+if Humanoid then
+&#9;local Fire = Instance.new(&quot;Fire&quot;,BodyPart)
+&#9;Fire.Color = Color3.new(246/255,69/255,0)
+&#9;Fire.SecondaryColor = Color3.new(102/255,0,102/255)
+&#9;script.Parent = Fire
+
+&#9;local died = false
+&#9;Humanoid.Died:connect(function() died = true end)
+
+&#9;local CreatorTag = script:FindFirstChild(&quot;creator&quot;)
+&#9;if CreatorTag then
+&#9;&#9;CreatorTag = CreatorTag:Clone()
+&#9;&#9;while not died do
+&#9;&#9;&#9;local ctag = CreatorTag:Clone()
+&#9;&#9;&#9;ctag.Parent = Humanoid
+&#9;&#9;&#9;Humanoid:TakeDamage(damage)
+&#9;&#9;&#9;Debris:AddItem(ctag,interval)
+&#9;&#9;&#9;wait(interval)
+&#9;&#9;end
+&#9;else
+&#9;&#9;while not died do
+&#9;&#9;&#9;Humanoid:TakeDamage(damage)
+&#9;&#9;&#9;wait(interval)
+&#9;&#9;end
+&#9;end
+end
+script:Destroy()</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX1688170C840C4912B4C742606D397B5D">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>30.0748558</X>
+					<Y>6.87266016</Y>
+					<Z>27.8593006</Z>
+					<R00>0.997801602</R00>
+					<R01>0.0202767048</R01>
+					<R02>-0.0630945489</R02>
+					<R10>-1.86264515e-009</R10>
+					<R11>0.952044845</R11>
+					<R12>0.305958748</R12>
+					<R20>0.0662726685</R20>
+					<R21>-0.305286139</R21>
+					<R22>0.949951768</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>31.3082047</X>
+					<Y>0.891891956</Y>
+					<Z>9.38999557</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX91BEFBD5C9EF479FB2FA323411DC8F4D">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MainServer</string>
 				<ProtectedString name="Source">local function class(name)
 &#9;local def = {}
 &#9;getfenv(0)[name] = def
@@ -548,6 +890,8 @@ end)
 --------------------------------------------------------------------------------
 
 -- Tiny Event Manager; Add: [[Event.EventName = (event)]]; Remove: [[Disconnect(&quot;EventName&quot;,...)]]
+local clicktime = 0
+local Torso
 local Event = {}
 local function Disconnect(...)
 &#9;for _,name in pairs{...} do
@@ -835,11 +1179,40 @@ local function StartSpin(Torso)
 &#9;Handle.CanCollide = true
 end
 
+Tool.Remote.OnServerEvent:connect(function(client, command, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if command == &apos;MB1Down&apos; then
+&#9;&#9;&#9;local t = tick()
+&#9;&#9;&#9;if t-clicktime &lt; 0.2 then&#9;-- double-click
+&#9;&#9;&#9;&#9;clicktime = t
+&#9;&#9;&#9;&#9;Animation.Swing:Stop(0)
+&#9;&#9;&#9;&#9;Swinging = false
+&#9;&#9;&#9;&#9;Damage:SetActive(&quot;Attack&quot;,false)
+&#9;&#9;&#9;&#9;StartSpin(Torso)
+&#9;&#9;&#9;else&#9;&#9;&#9;&#9;&#9;&#9;-- single-click
+&#9;&#9;&#9;&#9;clicktime = t
+&#9;&#9;&#9;&#9;Swinging = true
+&#9;&#9;&#9;&#9;Animation.Swing:Play(0.1,1,1.25)
+&#9;&#9;&#9;&#9;if debugKeyframeReached then
+&#9;&#9;&#9;&#9;&#9;Sound.Swoosh.Pitch = math.random(120,123)/100
+&#9;&#9;&#9;&#9;&#9;Sound.Swoosh:Play()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;elseif command == &apos;MB1Up&apos; then
+&#9;&#9;&#9;SpinThread:Request() --sloppy
+&#9;&#9;&#9;Animation.Swing:Stop(0.25)
+&#9;&#9;&#9;Swinging = false
+&#9;&#9;&#9;Damage:SetActive(&quot;Attack&quot;,false)
+&#9;&#9;end
+&#9;end
+end)
+
 Tool.Equipped:connect(function(Mouse)
 &#9;Character,Humanoid = GetCharacter(Tool)
 &#9;if not Character then return end
 &#9;Animation:LoadHumanoid(Humanoid)
 &#9;WalkSpeed:SetHumanoid(Humanoid)
+&#9;clicktime = 0
 
 &#9;do&#9;-- replace the interfering RightGrip joint
 &#9;&#9;local RightArm = GetBodyPart(&quot;Right Arm&quot;)
@@ -852,32 +1225,7 @@ Tool.Equipped:connect(function(Mouse)
 
 &#9;Animation.Standing:Play()
 
-&#9;local Torso = GetBodyPart(&quot;Torso&quot;)
-&#9;local clicktime = 0
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;local t = tick()
-&#9;&#9;if t-clicktime &lt; 0.2 then&#9;-- double-click
-&#9;&#9;&#9;clicktime = t
-&#9;&#9;&#9;Animation.Swing:Stop(0)
-&#9;&#9;&#9;Swinging = false
-&#9;&#9;&#9;Damage:SetActive(&quot;Attack&quot;,false)
-&#9;&#9;&#9;StartSpin(Torso)
-&#9;&#9;else&#9;&#9;&#9;&#9;&#9;&#9;-- single-click
-&#9;&#9;&#9;clicktime = t
-&#9;&#9;&#9;Swinging = true
-&#9;&#9;&#9;Animation.Swing:Play(0.1,1,1.25)
-&#9;&#9;&#9;if debugKeyframeReached then
-&#9;&#9;&#9;&#9;Sound.Swoosh.Pitch = math.random(120,123)/100
-&#9;&#9;&#9;&#9;Sound.Swoosh:Play()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-&#9;Mouse.Button1Up:connect(function()
-&#9;&#9;SpinThread:Request() --sloppy
-&#9;&#9;Animation.Swing:Stop(0.25)
-&#9;&#9;Swinging = false
-&#9;&#9;Damage:SetActive(&quot;Attack&quot;,false)
-&#9;end)
+&#9;Torso = GetBodyPart(&quot;Torso&quot;)
 
 &#9;Event.Died = Humanoid.Died:connect(function()
 &#9;&#9;SpinThread:Reset()
@@ -916,330 +1264,9 @@ Tool.Unequipped:connect(function()
 end)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="RemoteEvent" referent="RBX80B42D8101FB4C84AE9CE2D82FD9257C">
 			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Damage</string>
-				<ProtectedString name="Source">local function class(name)
-&#9;local def = {}
-&#9;getfenv(0)[name] = def
-&#9;return function(ctor, static)
-&#9;&#9;local nctor = function(...)
-&#9;&#9;&#9;local this = {}
-&#9;&#9;&#9;if ctor then
-&#9;&#9;&#9;&#9;ctor(this, ...)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;return this
-&#9;&#9;end
-&#9;&#9;getfenv(0)[&apos;Create&apos;..name] = nctor
-&#9;&#9;if static then static(def) end
-&#9;end
-end
-
-local function Create(ty)
-&#9;return function(data)
-&#9;&#9;local obj = Instance.new(ty)
-&#9;&#9;for k, v in pairs(data) do
-&#9;&#9;&#9;if type(k) == &apos;number&apos; then
-&#9;&#9;&#9;&#9;v.Parent = obj
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;obj[k] = v
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return obj
-&#9;end
-end
-
-class&apos;Signal&apos;(function(this)
-&#9;local mListeners = {}
-&#9;local mWaitObject = Create&apos;BoolValue&apos;{}
-
-&#9;function this:connect(func)
-&#9;&#9;local connection = {}
-&#9;&#9;function connection:disconnect()
-&#9;&#9;&#9;mListeners[func] = nil
-&#9;&#9;end
-&#9;&#9;mListeners[func] = connection
-&#9;&#9;return connection
-&#9;end
-
-&#9;function this:fire(...)
-&#9;&#9;for func, conn in pairs(mListeners) do
-&#9;&#9;&#9;func(...)
-&#9;&#9;end
-&#9;&#9;mWaitObject.Value = not mWaitObject.Value
-&#9;end
-
-&#9;function this:wait()
-&#9;&#9;mWaitObject.Changed:wait()
-&#9;end
-end)
-
---[[
-&#9;DamageReducer
-&#9;&#9;Reduces damage taken to humanoid by a specified percentage.
-
-&#9;CreateDamageReducer()
-&#9;&#9;Returns a new DamageReducer.
-&#9;DamageReducer:SetHumanoid(humanoid)
-&#9;&#9;Sets the humanoid. `humanoid` can be nil.
-&#9;DamageReducer:SetActive(active)
-&#9;&#9;Sets whether the damage reducer is active.
-&#9;DamageReducer:SetReduction(pct)
-&#9;&#9;Sets the amount of damage reduction as a percentage.
-]]
-class&apos;DamageReducer&apos;(function(def)
-&#9;local reduction = 0
-&#9;local active = false
-&#9;local humanoid
-&#9;local changed
-
-&#9;local function connect_changed()
-&#9;&#9;if not changed then
-&#9;&#9;&#9;local e = true
-&#9;&#9;&#9;local last_health = humanoid.Health
-&#9;&#9;&#9;changed = humanoid.HealthChanged:connect(function(health)
-&#9;&#9;&#9;&#9;if e then
-&#9;&#9;&#9;&#9;&#9;e = false
-&#9;&#9;&#9;&#9;&#9;if health &lt; last_health then
-&#9;&#9;&#9;&#9;&#9;&#9;local damage = math.abs(health - last_health)
-&#9;&#9;&#9;&#9;&#9;&#9;humanoid.Health = health + damage*reduction
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;e = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;last_health = humanoid.Health
-&#9;&#9;&#9;end)
-&#9;&#9;end
-&#9;end
-
-&#9;local function disconnect_changed()
-&#9;&#9;if changed then
-&#9;&#9;&#9;changed:disconnect()
-&#9;&#9;&#9;changed = nil
-&#9;&#9;end
-&#9;end
-
-&#9;function def:SetHumanoid(h)
-&#9;&#9;if changed then
-&#9;&#9;&#9;disconnect_changed()
-&#9;&#9;end
-&#9;&#9;humanoid = h
-&#9;&#9;if h and active then
-&#9;&#9;&#9;connect_changed()
-&#9;&#9;end
-&#9;end
-
-&#9;function def:SetReduction(pct)
-&#9;&#9;reduction = pct &lt; 0 and 0 or pct &gt; 1 and 1 or pct
-&#9;end
-
-&#9;function def:SetActive(a)
-&#9;&#9;active = a
-&#9;&#9;if a then
-&#9;&#9;&#9;connect_changed()
-&#9;&#9;else
-&#9;&#9;&#9;disconnect_changed()
-&#9;&#9;end
-&#9;end
-end)
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
--- Tiny Event Manager; Add: [[Event.EventName = (event)]]; Remove: [[Disconnect(&quot;EventName&quot;,...)]]
-local Event = {}
-local function Disconnect(...)
-&#9;for _,name in pairs{...} do
-&#9;&#9;if Event[name] then
-&#9;&#9;&#9;Event[name]:disconnect()
-&#9;&#9;&#9;Event[name] = nil
-&#9;&#9;end
-&#9;end
-end
-
--- get an object; make it if it doesn&apos;t exist
-local function GetMake(parent,name,type)
-&#9;local object = parent:FindFirstChild(name)
-&#9;if not object then
-&#9;&#9;object = Create(type){Name=name}
-&#9;&#9;object.Parent = parent
-&#9;end
-&#9;return object
-end
-
--- wait until child exists; return child
-local function WaitForChild(parent,name)
-&#9;while not parent:FindFirstChild(name) do
-&#9;&#9;parent.ChildAdded:wait()
-&#9;end
-&#9;return parent:FindFirstChild(name)
-end
-
--- get a sibling humanoid of object; by humanoid, not by name
-local function GetHumanoid(object)
-&#9;if object and object.Parent then
-&#9;&#9;for i,v in pairs(object.Parent:GetChildren()) do
-&#9;&#9;&#9;if v:IsA&quot;Humanoid&quot; then
-&#9;&#9;&#9;&#9;return v
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return nil
-end
-
--- get the parent character from an object; verified by GetHumanoid
-local function GetCharacter(object)
-&#9;local humanoid = GetHumanoid(object)
-&#9;if humanoid then
-&#9;&#9;return object.Parent,humanoid
-&#9;end
-&#9;return nil
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-local Players = Game:GetService(&quot;Players&quot;)
-local Debris = Game:GetService(&quot;Debris&quot;)
-
-local Tool = script.Parent
-local Handle = WaitForChild(Tool,&quot;Handle&quot;)
-local BurnScript = Tool:FindFirstChild(&quot;BurnScript&quot;)
-local DamageBin = WaitForChild(Tool,&quot;DamageBin&quot;)
-local Spinning = WaitForChild(Tool,&quot;Spinning&quot;)
-
-local DamageReducer = CreateDamageReducer()
-DamageReducer:SetReduction(0.25)
-
-Spinning.Changed:connect(function(value)
-&#9;DamageReducer:SetActive(value)
-end)
-
-Tool.Equipped:connect(function()
-&#9;local Character,Humanoid = GetCharacter(Tool)
-&#9;local Player = Players:GetPlayerFromCharacter(Character)
-
-&#9;if BurnScript then
-&#9;&#9;local ctag = GetMake(BurnScript,&quot;creator&quot;,&quot;ObjectValue&quot;)
-&#9;&#9;ctag.Value = Player
-&#9;end
-
-&#9;DamageReducer:SetHumanoid(Humanoid)
-
-&#9;Event.DamageBin = DamageBin.ChildAdded:connect(function(dtag)
-&#9;&#9;if dtag:IsA&quot;ObjectValue&quot; then
-&#9;&#9;&#9;local humanoid = dtag.Value
-&#9;&#9;&#9;local damage = tonumber(dtag.Name)
-&#9;&#9;&#9;if humanoid and damage then
-&#9;&#9;&#9;&#9;local ctag = Create&apos;ObjectValue&apos;{
-&#9;&#9;&#9;&#9;&#9;Name = &quot;creator&quot;;
-&#9;&#9;&#9;&#9;&#9;Value = Player;
-&#9;&#9;&#9;&#9;}
-&#9;&#9;&#9;&#9;ctag.Parent = humanoid
-&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
-&#9;&#9;&#9;&#9;Debris:AddItem(ctag,1)
-&#9;&#9;&#9;&#9;Debris:AddItem(dtag,1)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-end)
-
-Tool.Unequipped:connect(function()
-&#9;DamageReducer:SetHumanoid()
-&#9;Disconnect(&quot;DamageBin&quot;)
-end)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX5">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">BurnScript</string>
-				<ProtectedString name="Source">local damage = 2
-local interval = 0.5
-
-local Debris = Game:GetService(&quot;Debris&quot;)
-local BodyPart = script.Parent
-local Humanoid
-do
-&#9;if BodyPart.Parent then
-&#9;&#9;for i,v in pairs(BodyPart.Parent:GetChildren()) do
-&#9;&#9;&#9;if v:IsA&quot;Humanoid&quot; then
-&#9;&#9;&#9;&#9;Humanoid = v
-&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-if Humanoid then
-&#9;local Fire = Instance.new(&quot;Fire&quot;,BodyPart)
-&#9;Fire.Color = Color3.new(246/255,69/255,0)
-&#9;Fire.SecondaryColor = Color3.new(102/255,0,102/255)
-&#9;script.Parent = Fire
-
-&#9;local died = false
-&#9;Humanoid.Died:connect(function() died = true end)
-
-&#9;local CreatorTag = script:FindFirstChild(&quot;creator&quot;)
-&#9;if CreatorTag then
-&#9;&#9;CreatorTag = CreatorTag:Clone()
-&#9;&#9;while not died do
-&#9;&#9;&#9;local ctag = CreatorTag:Clone()
-&#9;&#9;&#9;ctag.Parent = Humanoid
-&#9;&#9;&#9;Humanoid:TakeDamage(damage)
-&#9;&#9;&#9;Debris:AddItem(ctag,interval)
-&#9;&#9;&#9;wait(interval)
-&#9;&#9;end
-&#9;else
-&#9;&#9;while not died do
-&#9;&#9;&#9;Humanoid:TakeDamage(damage)
-&#9;&#9;&#9;wait(interval)
-&#9;&#9;end
-&#9;end
-end
-script:Destroy()</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX6">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>30.0748558</X>
-					<Y>6.87266016</Y>
-					<Z>27.8593006</Z>
-					<R00>0.997801602</R00>
-					<R01>0.0202767048</R01>
-					<R02>-0.0630945489</R02>
-					<R10>-1.86264515e-009</R10>
-					<R11>0.952044845</R11>
-					<R12>0.305958748</R12>
-					<R20>0.0662726685</R20>
-					<R21>-0.305286139</R21>
-					<R22>0.949951768</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>31.3082047</X>
-					<Y>0.891891956</Y>
-					<Z>9.38999557</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<string name="Name">Remote</string>
 			</Properties>
 		</Item>
 	</Item>
