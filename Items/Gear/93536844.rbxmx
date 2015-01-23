@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX700469FC96F6429A871E799267489C22">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,248 +19,12 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">ZombieLauncher</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=93632438</url></Content>
 			<string name="ToolTip">Launch Zombies!</string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">NpcLauncher_v1</string>
-				<ProtectedString name="Source">-----------------
---| Constants |--
------------------
-
-local NPC_ID = 93601062 -- Asset ID of the NPC to be launched
-
-local COOLDOWN = 6 -- Seconds until tool can be used again
-local TIME_TO_LIVE = 60 -- Seconds until NPC is cleaned up
-
-local LAUNCH_SPEED_MIN = 60 -- Minimum speed NPC will be launched
-local LAUNCH_SPEED_MAX = 300 -- Maximum speed NPC will be launched
-
-local LAUNCH_TIME_MIN = 0 -- Seconds until launch speed starts increasing beyond min
-local LAUNCH_TIME_MAX = 3 -- Seconds to reach max launch speed
-
-local CHANCE_TO_EXPLODE = 10 -- There is a 1 in X chance that the NPC will explode
-
-local Tool = script.Parent
-while Tool:FindFirstChild(&apos;Handle&apos;) == nil do wait() end 
-local ToolHandle = Tool.Handle
-
-local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
-local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
-
------------------
---| Variables |--
------------------
-
-local InsertService = Game:GetService(&apos;InsertService&apos;)
-local DebrisService = Game:GetService(&apos;Debris&apos;)
-local PlayersService = Game:GetService(&apos;Players&apos;)
-
-local MyPlayer = PlayersService.LocalPlayer
-
-local Npc = InsertService:LoadAsset(NPC_ID):GetChildren()[1]
-
-do&#9;-- Give NPC a creator tag
-&#9;local creatorTag = Instance.new(&apos;ObjectValue&apos;)
-&#9;creatorTag.Name = &apos;creator&apos;
-&#9;creatorTag.Value = MyPlayer
-&#9;creatorTag.Parent = Npc
-end
-
-local NpcClone = Npc:Clone()
-
-local Mouse = nil
-local ClickTime = 0
-
-local SoundTable = {}
-local Holding = false
-
------------------
---| Functions |--
------------------
-
-local function StartInfiniteChargeSound()
-&#9;local chargeSound = ToolHandle:FindFirstChild(&apos;Charge&apos;)
-&#9;local lastPlayTime = 0
-&#9;repeat -- Start a new charge sound every second
-&#9;&#9;if chargeSound and time() - lastPlayTime &gt;= 1 then
-&#9;&#9;&#9;local chargeSoundClone = chargeSound:Clone()
-&#9;&#9;&#9;chargeSoundClone.Parent = ToolHandle
-&#9;&#9;&#9;chargeSoundClone:Play()
-&#9;&#9;&#9;lastPlayTime = time()
-&#9;&#9;&#9;table.insert(SoundTable, chargeSoundClone)
-&#9;&#9;end
-&#9;&#9;wait(1/30)
-&#9;until not Holding
-
-&#9;-- Play fire sound
-&#9;local fireSound = ToolHandle:FindFirstChild(&apos;Fire&apos;)
-&#9;if fireSound then
-&#9;&#9;fireSound:Play()
-&#9;end
-
-&#9;-- Stop all charge sounds
-&#9;for _, sound in pairs(SoundTable) do
-&#9;&#9;sound:Stop()
-&#9;&#9;sound:Destroy()
-&#9;end
-&#9;SoundTable = {}
-end
-
-local function OnButton1Down()
-&#9;local myModel = MyPlayer.Character
-&#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
-&#9;&#9;ClickTime = time()
-&#9;&#9;Holding = true
-&#9;&#9;StartInfiniteChargeSound()
-&#9;end
-end
-
-local function OnButton1Up()
-&#9;Holding = false
-&#9;local myModel = MyPlayer.Character
-&#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
-&#9;&#9;Tool.Enabled = false
-&#9;&#9;Mouse.Icon = RELOADING_ICON
-
-&#9;&#9;-- Determine launch speed (based on how long click is held)
-&#9;&#9;local launchSpeed = LAUNCH_SPEED_MIN
-&#9;&#9;do
-&#9;&#9;&#9;local timeHeldDown = time() - ClickTime
-&#9;&#9;&#9;if timeHeldDown &gt; LAUNCH_TIME_MIN then
-&#9;&#9;&#9;&#9;local speedRange = LAUNCH_SPEED_MAX - LAUNCH_SPEED_MIN
-&#9;&#9;&#9;&#9;local timeRatio = timeHeldDown / (LAUNCH_TIME_MAX - LAUNCH_TIME_MIN)
-&#9;&#9;&#9;&#9;launchSpeed = launchSpeed + (speedRange * math.min(timeRatio, 1))
-&#9;&#9;&#9;end
-&#9;&#9;end
-
-&#9;&#9;-- Give all the NPC&apos;s BaseParts a velocity, and make any Humanoids sit
-&#9;&#9;local velocity = (Mouse.Hit.p - ToolHandle.CFrame.p).unit * launchSpeed
-&#9;&#9;for _, child in pairs(NpcClone:GetChildren()) do
-&#9;&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
-&#9;&#9;&#9;&#9;child.Velocity = velocity
-&#9;&#9;&#9;elseif child:IsA(&apos;Humanoid&apos;) then
-&#9;&#9;&#9;&#9;child.Sit = true --NOTE: Turns off the gyro until NPC jumps
-&#9;&#9;&#9;end
-&#9;&#9;end
-
-&#9;&#9;-- Add the explode script if we get lucky
-&#9;&#9;if math.random(CHANCE_TO_EXPLODE) == 1 then
-&#9;&#9;&#9;local explodeScript = script:FindFirstChild(&apos;Explode&apos;)
-&#9;&#9;&#9;if explodeScript then
-&#9;&#9;&#9;&#9;local explodeScriptClone = explodeScript:Clone()
-&#9;&#9;&#9;&#9;explodeScriptClone.Parent = NpcClone
-&#9;&#9;&#9;&#9;explodeScriptClone.Disabled = false
-&#9;&#9;&#9;end
-&#9;&#9;end
-
-&#9;&#9;-- Add the NPC to the world
-&#9;&#9;DebrisService:AddItem(NpcClone, TIME_TO_LIVE)
-&#9;&#9;NpcClone.Parent = Workspace
-&#9;&#9;NpcClone:MoveTo(ToolHandle.Position) --NOTE: Must already be in Workspace
-
-&#9;&#9;-- Clone the next NPC
-&#9;&#9;NpcClone = Npc:Clone()
-
-&#9;&#9;wait(COOLDOWN)
-
-&#9;&#9;Mouse.Icon = MOUSE_ICON
-&#9;&#9;Tool.Enabled = true
-&#9;end
-end
-
-local function OnEquipped(mouse)
-&#9;Mouse = mouse
-&#9;if Tool.Enabled then
-&#9;&#9;Mouse.Icon = MOUSE_ICON
-&#9;else
-&#9;&#9;Mouse.Icon = RELOADING_ICON
-&#9;end
-&#9;Mouse.Button1Down:connect(OnButton1Down)
-&#9;Mouse.Button1Up:connect(OnButton1Up)
-end
-
---------------------
---| Script Logic |--
---------------------
-
-Tool.Equipped:connect(OnEquipped)
-</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX2">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">Explode</string>
-					<ProtectedString name="Source">local Model = script.Parent
-
-local BodyColors = Model:FindFirstChild(&apos;Body Colors&apos;)
-if BodyColors then -- Make BodyColors red
-&#9;local red = BrickColor.new(&apos;Bright red&apos;)
-&#9;BodyColors.HeadColor = red
-&#9;BodyColors.LeftArmColor = red
-&#9;BodyColors.LeftLegColor = red
-&#9;BodyColors.RightArmColor = red
-&#9;BodyColors.RightLegColor = red
-&#9;BodyColors.TorsoColor = red
-end
-
-local HeadMesh = nil
-do -- Find HeadMesh
-&#9;local head = Model:FindFirstChild(&apos;Head&apos;)
-&#9;if head then
-&#9;&#9;HeadMesh = head:FindFirstChild(&apos;Mesh&apos;)
-&#9;end
-end
-
--- Head flashy
-if HeadMesh then
-&#9;local color = HeadMesh.VertexColor
-&#9;local red = Vector3.new(2, 0, 0)
-&#9;local function flashy(howLong)
-&#9;&#9;HeadMesh.VertexColor = red
-&#9;&#9;wait(howLong)
-&#9;&#9;HeadMesh.VertexColor = color
-&#9;&#9;wait(howLong)
-&#9;end
-&#9;local flashTime = 1
-&#9;while flashTime &gt; 0.025 do
-&#9;&#9;flashy(flashTime)
-&#9;&#9;flashTime = flashTime * 0.75
-&#9;end
-else
-&#9;wait(3)
-end
-
-Instance.new(&apos;Explosion&apos;, Workspace).Position = Model:GetModelCFrame().p
-
-local BoomSound = script:FindFirstChild(&apos;Boom&apos;)
-if BoomSound then
-&#9;local torso = Model:FindFirstChild(&apos;Torso&apos;)
-&#9;if torso then
-&#9;&#9;BoomSound.Parent = torso
-&#9;end
-&#9;BoomSound:Play()
-end
-</ProtectedString>
-				</Properties>
-				<Item class="Sound" referent="RBX3">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">Boom</string>
-						<float name="Pitch">1</float>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>rbxasset://sounds/collide.wav</url></Content>
-						<float name="Volume">0.5</float>
-					</Properties>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="Part" referent="RBX4">
+		<Item class="Part" referent="RBX21EFD8BD98F84D7DB5AED12096A4ADD3">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -328,7 +92,7 @@ end
 					<Z>3.20000076</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX5">
+			<Item class="SpecialMesh" referent="RBX633F9033583E4312B96607CCCEAC3E90">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -353,7 +117,7 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX6">
+			<Item class="Sound" referent="RBXD8DAD8DFAF55420FA5445E658EC01835">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Charge</string>
@@ -363,7 +127,7 @@ end
 					<float name="Volume">0.200000003</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX7">
+			<Item class="Sound" referent="RBX0FCAC3DF61DA4B86993A64E466E683AA">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
@@ -374,7 +138,7 @@ end
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX8">
+		<Item class="Camera" referent="RBX15A8505416534473BD72720AD013E205">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -408,6 +172,346 @@ end
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX34817E9AAC2E41119414D684CA78F916">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--[[
+&#9;Fixed by ArceusInator
+&#9;1/22/2015 Zombies no longer randomly die, works with FE
+--]]
+
+-----------------
+--| Constants |--
+-----------------
+
+local NPC_ID = 93601062 -- Asset ID of the NPC to be launched
+
+local COOLDOWN = 6 -- Seconds until tool can be used again
+local TIME_TO_LIVE = 60 -- Seconds until NPC is cleaned up
+
+local LAUNCH_SPEED_MIN = 60 -- Minimum speed NPC will be launched
+local LAUNCH_SPEED_MAX = 300 -- Maximum speed NPC will be launched
+
+local LAUNCH_TIME_MIN = 0 -- Seconds until launch speed starts increasing beyond min
+local LAUNCH_TIME_MAX = 3 -- Seconds to reach max launch speed
+
+local CHANCE_TO_EXPLODE = 10 -- There is a 1 in X chance that the NPC will explode
+
+local Tool = script.Parent
+while Tool:FindFirstChild(&apos;Handle&apos;) == nil do wait() end 
+local ToolHandle = Tool.Handle
+
+-----------------
+--| Variables |--
+-----------------
+
+local InsertService = Game:GetService(&apos;InsertService&apos;)
+local DebrisService = Game:GetService(&apos;Debris&apos;)
+local PlayersService = Game:GetService(&apos;Players&apos;)
+
+local MyPlayer
+
+local Npc = InsertService:LoadAsset(NPC_ID):GetChildren()[1]
+Npc:MakeJoints()
+
+do&#9;-- Give NPC a creator tag
+&#9;local creatorTag = Instance.new(&apos;ObjectValue&apos;)
+&#9;creatorTag.Name = &apos;creator&apos;
+&#9;creatorTag.Value = MyPlayer
+&#9;creatorTag.Parent = Npc
+end
+
+local NpcClone = Npc:Clone()
+NpcClone:MakeJoints()
+
+local Mouse = nil
+local ClickTime = 0
+
+local SoundTable = {}
+local Holding = false
+
+-----------------
+--| Functions |--
+-----------------
+
+local function OnButton1Down()
+&#9;local myModel = MyPlayer.Character
+&#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
+&#9;&#9;ClickTime = time()
+&#9;&#9;Holding = true
+&#9;end
+end
+
+local function OnButton1Up(hitCF)
+&#9;if not Holding then return end
+&#9;
+&#9;Holding = false
+&#9;local myModel = MyPlayer.Character
+&#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
+&#9;&#9;Tool.Enabled = false
+
+&#9;&#9;-- Determine launch speed (based on how long click is held)
+&#9;&#9;local launchSpeed = LAUNCH_SPEED_MIN
+&#9;&#9;do
+&#9;&#9;&#9;local timeHeldDown = time() - ClickTime
+&#9;&#9;&#9;if timeHeldDown &gt; LAUNCH_TIME_MIN then
+&#9;&#9;&#9;&#9;local speedRange = LAUNCH_SPEED_MAX - LAUNCH_SPEED_MIN
+&#9;&#9;&#9;&#9;local timeRatio = timeHeldDown / (LAUNCH_TIME_MAX - LAUNCH_TIME_MIN)
+&#9;&#9;&#9;&#9;launchSpeed = launchSpeed + (speedRange * math.min(timeRatio, 1))
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+&#9;&#9;-- Give all the NPC&apos;s BaseParts a velocity, and make any Humanoids sit
+&#9;&#9;local velocity = (hitCF.p - ToolHandle.CFrame.p).unit * launchSpeed
+&#9;&#9;for _, child in pairs(NpcClone:GetChildren()) do
+&#9;&#9;&#9;if child:IsA(&apos;BasePart&apos;) then
+&#9;&#9;&#9;&#9;child.Velocity = velocity
+&#9;&#9;&#9;elseif child:IsA(&apos;Humanoid&apos;) then
+&#9;&#9;&#9;&#9;child.Sit = true --NOTE: Turns off the gyro until NPC jumps
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+&#9;&#9;-- Add the explode script if we get lucky
+&#9;&#9;if math.random(CHANCE_TO_EXPLODE) == 1 then
+&#9;&#9;&#9;local explodeScript = script:FindFirstChild(&apos;Explode&apos;)
+&#9;&#9;&#9;if explodeScript then
+&#9;&#9;&#9;&#9;local explodeScriptClone = explodeScript:Clone()
+&#9;&#9;&#9;&#9;explodeScriptClone.Parent = NpcClone
+&#9;&#9;&#9;&#9;explodeScriptClone.Disabled = false
+&#9;&#9;&#9;end
+&#9;&#9;end
+
+&#9;&#9;-- Add the NPC to the world
+&#9;&#9;DebrisService:AddItem(NpcClone, TIME_TO_LIVE)
+&#9;&#9;NpcClone.Parent = Workspace
+&#9;&#9;NpcClone:MakeJoints()
+&#9;&#9;NpcClone:MoveTo(ToolHandle.Position) --NOTE: Must already be in Workspace
+&#9;&#9;NpcClone:MakeJoints()
+
+&#9;&#9;-- Clone the next NPC
+&#9;&#9;NpcClone = Npc:Clone()
+&#9;&#9;NpcClone:MakeJoints()
+
+&#9;&#9;wait(COOLDOWN)
+
+&#9;&#9;Tool.Enabled = true
+&#9;end
+end
+
+local function OnEquipped()
+&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(Tool.Parent)
+end
+
+-------------------
+--|   Remotes   |--
+-------------------
+
+Tool.MouseButton1Down.OnServerEvent:connect(function(client)
+&#9;if client == MyPlayer then
+&#9;&#9;OnButton1Down()
+&#9;end
+end)
+Tool.MouseButton1Up.OnServerEvent:connect(function(client, hitCF)
+&#9;if client == MyPlayer then
+&#9;&#9;OnButton1Up(hitCF)
+&#9;end
+end)
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Tool.Equipped:connect(OnEquipped)
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBXE9FD3A12A8FD4425ABFBDF870050C934">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Explode</string>
+					<ProtectedString name="Source">local Model = script.Parent
+
+local BodyColors = Model:FindFirstChild(&apos;Body Colors&apos;)
+if BodyColors then -- Make BodyColors red
+&#9;local red = BrickColor.new(&apos;Bright red&apos;)
+&#9;BodyColors.HeadColor = red
+&#9;BodyColors.LeftArmColor = red
+&#9;BodyColors.LeftLegColor = red
+&#9;BodyColors.RightArmColor = red
+&#9;BodyColors.RightLegColor = red
+&#9;BodyColors.TorsoColor = red
+end
+
+local HeadMesh = nil
+do -- Find HeadMesh
+&#9;local head = Model:FindFirstChild(&apos;Head&apos;)
+&#9;if head then
+&#9;&#9;HeadMesh = head:FindFirstChild(&apos;Mesh&apos;)
+&#9;end
+end
+
+-- Head flashy
+if HeadMesh then
+&#9;local color = HeadMesh.VertexColor
+&#9;local red = Vector3.new(2, 0, 0)
+&#9;local function flashy(howLong)
+&#9;&#9;HeadMesh.VertexColor = red
+&#9;&#9;wait(howLong)
+&#9;&#9;HeadMesh.VertexColor = color
+&#9;&#9;wait(howLong)
+&#9;end
+&#9;local flashTime = 1
+&#9;while flashTime &gt; 0.025 do
+&#9;&#9;flashy(flashTime)
+&#9;&#9;flashTime = flashTime * 0.75
+&#9;end
+else
+&#9;wait(3)
+end
+
+Instance.new(&apos;Explosion&apos;, Workspace).Position = Model:GetModelCFrame().p
+
+local BoomSound = script:FindFirstChild(&apos;Boom&apos;)
+if BoomSound then
+&#9;local torso = Model:FindFirstChild(&apos;Torso&apos;)
+&#9;if torso then
+&#9;&#9;BoomSound.Parent = torso
+&#9;end
+&#9;BoomSound:Play()
+end
+</ProtectedString>
+				</Properties>
+				<Item class="Sound" referent="RBX1DC45CAFDA164552B8C2F0162A4DBD15">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Boom</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>rbxasset://sounds/collide.wav</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX521279FC94614EAF8560D832F7BD9701">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">-----------------
+--| Constants |--
+-----------------
+
+local Tool = script.Parent
+while Tool:FindFirstChild(&apos;Handle&apos;) == nil do wait() end 
+local ToolHandle = Tool.Handle
+
+local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
+local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+
+local COOLDOWN = 6 -- Seconds until tool can be used again
+
+-----------------
+--| Variables |--
+-----------------
+
+local MyPlayer = game:GetService&apos;Players&apos;.LocalPlayer
+
+local Mouse = nil
+local ClickTime = 0
+
+local SoundTable = {}
+local Holding = false
+
+-----------------
+--| Functions |--
+-----------------
+
+local function StartInfiniteChargeSound()
+&#9;local chargeSound = ToolHandle:FindFirstChild(&apos;Charge&apos;)
+&#9;local lastPlayTime = 0
+&#9;repeat -- Start a new charge sound every second
+&#9;&#9;if chargeSound and time() - lastPlayTime &gt;= 1 then
+&#9;&#9;&#9;local chargeSoundClone = chargeSound:Clone()
+&#9;&#9;&#9;chargeSoundClone.Parent = ToolHandle
+&#9;&#9;&#9;chargeSoundClone:Play()
+&#9;&#9;&#9;lastPlayTime = time()
+&#9;&#9;&#9;table.insert(SoundTable, chargeSoundClone)
+&#9;&#9;end
+&#9;&#9;wait(1/30)
+&#9;until not Holding
+
+&#9;-- Play fire sound
+&#9;local fireSound = ToolHandle:FindFirstChild(&apos;Fire&apos;)
+&#9;if fireSound then
+&#9;&#9;fireSound:Play()
+&#9;end
+
+&#9;-- Stop all charge sounds
+&#9;for _, sound in pairs(SoundTable) do
+&#9;&#9;sound:Stop()
+&#9;&#9;sound:Destroy()
+&#9;end
+&#9;SoundTable = {}
+end
+
+local function OnButton1Down()
+&#9;local myModel = MyPlayer.Character
+&#9;if Tool.Enabled and myModel and myModel:FindFirstChild(&apos;Humanoid&apos;) and myModel.Humanoid.Health &gt; 0 then
+&#9;&#9;ClickTime = time()
+&#9;&#9;Holding = true
+&#9;&#9;
+&#9;&#9;Tool.MouseButton1Down:FireServer(Mouse.Hit.p)
+&#9;&#9;StartInfiniteChargeSound()
+&#9;end
+end
+
+local function OnButton1Up()
+&#9;Tool.MouseButton1Up:FireServer(Mouse.Hit)
+&#9;
+&#9;Holding = false
+end
+
+local function OnEquipped(mouse)
+&#9;Mouse = mouse
+&#9;if Tool.Enabled then
+&#9;&#9;Mouse.Icon = MOUSE_ICON
+&#9;else
+&#9;&#9;Mouse.Icon = RELOADING_ICON
+&#9;end
+&#9;Mouse.Button1Down:connect(OnButton1Down)
+&#9;Mouse.Button1Up:connect(OnButton1Up)
+end
+
+--------------------
+--| Script Logic |--
+--------------------
+
+Tool.Equipped:connect(OnEquipped)
+
+
+Tool.Changed:connect(function(prop)
+&#9;if prop == &apos;Enabled&apos; then
+&#9;&#9;if Mouse then
+&#9;&#9;&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+&#9;&#9;end
+&#9;end
+end)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX745670D3EBED422AB99E22714DA7107E">
+			<Properties>
+				<string name="Name">MouseButton1Down</string>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX4ACC4D96A92A4DEAB7007AB9BB4B525B">
+			<Properties>
+				<string name="Name">MouseButton1Up</string>
 			</Properties>
 		</Item>
 	</Item>
