@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="Archivable">true</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -19,13 +19,14 @@
 				<R21>1</R21>
 				<R22>-0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">SkyBallista</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=55911187 </url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
 				<bool name="Anchored">false</bool>
-				<bool name="Archivable">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
 				<token name="BackSurface">0</token>
@@ -51,7 +52,6 @@
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">3</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -84,6 +84,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1.1099999</X>
@@ -93,7 +94,6 @@
 			</Properties>
 			<Item class="SpecialMesh" referent="RBX2">
 				<Properties>
-					<bool name="Archivable">true</bool>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
 					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=55727348</url></Content>
@@ -120,7 +120,6 @@
 		</Item>
 		<Item class="LocalScript" referent="RBX3">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
@@ -129,22 +128,22 @@
 local stillEquipped = true
 
 function onEquippedLocal(mouse)
-	stillEquipped = true 
-	if mouse == nil then return end	
-	while stillEquipped do 		
-		mouse.Icon = &quot;http://www.roblox.com/asset/?id=55912939&quot;
-		while Tool.Enabled and stillEquipped do 
-			wait(0.01)
-		end
-		mouse.Icon = &quot;http://www.roblox.com/asset/?id=55913016&quot; 
-		while not Tool.Enabled and stillEquipped do 
-			wait(0.01)
-		end
-	end
+&#9;stillEquipped = true 
+&#9;if mouse == nil then return end&#9;
+&#9;while stillEquipped do &#9;&#9;
+&#9;&#9;mouse.Icon = &quot;http://www.roblox.com/asset/?id=55912939&quot;
+&#9;&#9;while Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;&#9;mouse.Icon = &quot;http://www.roblox.com/asset/?id=55913016&quot; 
+&#9;&#9;while not Tool.Enabled and stillEquipped do 
+&#9;&#9;&#9;wait(0.01)
+&#9;&#9;end
+&#9;end
 end
 
 function onUnequippedLocal()
-	stillEquipped = false
+&#9;stillEquipped = false
 end
 
 
@@ -153,13 +152,164 @@ Tool.Unequipped:connect(onUnequippedLocal)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="NumberValue" referent="RBX5">
 			<Properties>
-				<bool name="Archivable">true</bool>
+				<string name="Name">BallistaActive</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX6">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">AnimateScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Ballista = Tool.Handle
+
+local vCharacter 
+local holdAnim
+local ballistaActive
+local myHumanoid
+
+local firebolt 
+
+function wait15() 
+&#9;wait(5)
+&#9;firebolt = Tool:FindFirstChild(&quot;FireBolt&quot;)
+&#9;if firebolt then firebolt.Value = 0 end
+&#9;wait(10)
+end
+
+function fireb(key)
+&#9;if key:lower() == &quot;x&quot; then &#9;
+&#9;&#9;if co == nil or coroutine.status(co) == &apos;dead&apos; then 
+&#9;&#9;&#9;co = coroutine.create(wait15)
+&#9;&#9;&#9;coroutine.resume(co)
+&#9;&#9;&#9;firebolt = Tool:FindFirstChild(&quot;FireBolt&quot;)
+&#9;&#9;&#9;if firebolt then firebolt.Value = 1 end
+&#9;&#9;end
+&#9;end
+end
+
+function animate()
+&#9;ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)
+&#9;if ballistaActive then
+&#9;&#9;if ballistaActive.Value == 1 and myHumanoid then 
+&#9;&#9;&#9;--holdAnim = myHumanoid:LoadAnimation(Tool.HoldAnim)
+&#9;&#9;&#9;if holdAnim then holdAnim:Play() end
+&#9;&#9;else 
+&#9;&#9;&#9;if holdAnim then holdAnim:Stop() end
+&#9;&#9;end
+&#9;end
+end
+
+
+function onEquipped(mouse)
+&#9;vCharacter = Tool.Parent
+&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)
+&#9;if ballistaActive then ballistaActive.Changed:connect(animate)&#9;end
+&#9;if mouse then mouse.KeyDown:connect(fireb) end
+end
+
+function onUnequipped()
+&#9;if holdAnim then holdAnim:Stop () end
+end
+
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=55913910</url></Content>
+				<string name="Name">HoldAnim</string>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBX8">
+			<Properties>
+				<string name="Name">FireBolt</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX9">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">BallistaColdScript</string>
+				<ProtectedString name="Source">vCharacter = script.Parent
+myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+
+local count = 6
+while myHumanoid and count &gt; 0 do &#9;&#9;&#9;
+&#9;myHumanoid:TakeDamage(10)
+&#9;myHumanoid.WalkSpeed = myHumanoid.WalkSpeed - 16.0
+&#9;count = count - 1
+&#9;wait(1.0)
+end
+
+if (myHumanoid.WalkSpeed + 8.0) &lt; 20.0 then 
+&#9;myHumanoid.WalkSpeed = myHumanoid.WalkSpeed + 16.0 
+else
+&#9;myHumanoid.WalkSpeed = 16.0
+end
+
+if myTorso then 
+&#9;fire = myTorso:FindFirstChild(&quot;Ice&quot;)
+&#9;if fire then fire:Remove() end
+end
+wait(1.0)
+
+script:Remove()
+&#9;
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX10">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-4.2723465</X>
+					<Y>6.84834814</Y>
+					<Z>5.77753639</Z>
+					<R00>-0.788010418</R00>
+					<R01>-0.19468917</R01>
+					<R02>-0.584068239</R02>
+					<R10>-1.49011612e-008</R10>
+					<R11>0.948683381</R11>
+					<R12>-0.316227406</R12>
+					<R20>0.61566186</R20>
+					<R21>-0.24919048</R21>
+					<R22>-0.747572422</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>7.40902042</X>
+					<Y>13.1728973</Y>
+					<Z>20.7289867</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX0D5231B05C2E4BBAB341CDD1F7BDCB7C">
+			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">BallistaScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
+				<ProtectedString name="Source">--Fixed by Luckymaxer
+
+local Tool = script.Parent
 local Ballista = Tool.Handle
 local vCharacter
 local myTorso
@@ -210,156 +360,155 @@ local sh
 local firebolt
 
 function blow(hit, missile)
-	if hit.Parent then 
-		humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-	end
-	myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-	f = missile:FindFirstChild(&quot;Fire&quot;)
-	if f then 
-			e = Instance.new(&quot;Explosion&quot;)
-			e.Position = missile.Position
-			e.BlastRadius = 5.0
-			e.BlastPressure = 1000.0
-			e.Parent = game.Workspace
-	end
-	if humanoid and humanoid ~= myHumanoid then 		
-		if f then
-			if hit.Parent:FindFirstChild(&quot;BallistaColdScript&quot;) == nil then 
-				newScript = Tool.BallistaColdScript:Clone() 
-				newScript.Parent = hit.Parent 
-				newScript.Disabled = false 
-			end		
-		end		
-		creator = missile:FindFirstChild(&quot;creator&quot;)
-		if creator then creator.Parent = humanoid end
-		humanoid:TakeDamage(damage)
-		debris:AddItem(creator, 1)	
-	end
+&#9;if hit.Parent then 
+&#9;&#9;humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;end
+&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;f = missile:FindFirstChild(&quot;Fire&quot;)
+&#9;if f then 
+&#9;&#9;&#9;e = Instance.new(&quot;Explosion&quot;)
+&#9;&#9;&#9;e.Position = missile.Position
+&#9;&#9;&#9;e.BlastRadius = 5.0
+&#9;&#9;&#9;e.BlastPressure = 1000.0
+&#9;&#9;&#9;e.Parent = game.Workspace
+&#9;end
+&#9;if humanoid and humanoid ~= myHumanoid then &#9;&#9;
+&#9;&#9;if f then
+&#9;&#9;&#9;if hit.Parent:FindFirstChild(&quot;BallistaColdScript&quot;) == nil then 
+&#9;&#9;&#9;&#9;newScript = Tool.BallistaColdScript:Clone() 
+&#9;&#9;&#9;&#9;newScript.Parent = hit.Parent 
+&#9;&#9;&#9;&#9;newScript.Disabled = false 
+&#9;&#9;&#9;end&#9;&#9;
+&#9;&#9;end&#9;&#9;
+&#9;&#9;creator = missile:FindFirstChild(&quot;creator&quot;)
+&#9;&#9;if creator then creator.Parent = humanoid end
+&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;debris:AddItem(creator, 1)&#9;
+&#9;end
 end
 
 function restore()
-	wait(12.0)
-	shieldStrength = 10
+&#9;wait(12.0)
+&#9;shieldStrength = 10
 end
 
 function protect(hit)
-	if shieldStrength &gt; 0 then
-		if hit.Parent then 
-			humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-		end
-		if humanoid ~= nil and humanoid ~= myHumanoid then 
-			humanoid.WalkSpeed = 0.0
-			wait(1.0)
-			if humanoid.WalkSpeed == 0.0 then humanoid.WalkSpeed = 16.0 end
-			shieldStrength = shieldStrength - 1
-		end
-	else
-		if resCo == nil or coroutine.status(resCo) == &apos;dead&apos; then
-			resCo = coroutine.create(restore)
-			coroutine.resume(resCo)
-		end
-	end
+&#9;if shieldStrength &gt; 0 then
+&#9;&#9;if hit.Parent then 
+&#9;&#9;&#9;humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;end
+&#9;&#9;if humanoid ~= nil and humanoid ~= myHumanoid then 
+&#9;&#9;&#9;humanoid.WalkSpeed = 0.0
+&#9;&#9;&#9;wait(1.0)
+&#9;&#9;&#9;if humanoid.WalkSpeed == 0.0 then humanoid.WalkSpeed = 16.0 end
+&#9;&#9;&#9;shieldStrength = shieldStrength - 1
+&#9;&#9;end
+&#9;else
+&#9;&#9;if resCo == nil or coroutine.status(resCo) == &apos;dead&apos; then
+&#9;&#9;&#9;resCo = coroutine.create(restore)
+&#9;&#9;&#9;coroutine.resume(resCo)
+&#9;&#9;end
+&#9;end
 end
 
-function shoot(pPos, target)		
-	local vCharacter = Tool.Parent
-	if vCharacter == nil or vCharacter:findFirstChild(&quot;Humanoid&quot;) == nil then		  
-		  return
-	end
-	local vPlayer = game.Players:playerFromCharacter(vCharacter)
-	if vPlayer == nil then return end		
-	
-	missile = bolt:Clone()			
-	if skyBallista then
-		print(skyBallista.CFrame)
-		print(skyBallista.CFrame.lookVector)
-		print(&quot;Found you&quot;)
-		if target ~= skyBallista.Position then fakeD = (target - skyBallista.Position).unit end
-		LV = (skyBallista.CFrame * CFrame.Angles(math.pi/2, 0, 0)).lookVector
-		print(LV)
-		print(fakeD)
-		signedAngle = LV:Dot(fakeD)		
-		if signedAngle &lt; 0.5 then
-			print(&quot;there&quot;)
-			-- need to adjust fakeD			
-			-- get axis of rotation
-			cross = LV:Cross(fakeD)
-			-- get direction of rotation
-			v1 = LV * 0.866 + cross:Cross(LV) * 0.5 + cross *(cross:Dot(LV)) * 0.134
-			v2 = LV * 0.866 + cross:Cross(LV) * -0.5 + cross *(cross:Dot(LV)) * 0.134
-			print(v1)
-			print(v2)
-			a1 = v1:Dot(fakeD)
-			a2 = v2:Dot(fakeD)
-			if a1 &gt; a2 then 
-				fakeD = v1
-			else
-				fakeD = v2
-			end
-			print(&quot;Done&quot;)
-			-- rotate LV around axis of rotation by 30-degrees
-		end 		
-	end
-	firebolt = Tool:FindFirstChild(&quot;FireBolt&quot;)
-	if firebolt and firebolt.Value == 1 then fire = Instance.new(&quot;Fire&quot;) fire.Color = Color3.new(0, 204/255, 1) fire.Parent = missile end
-	missile.Velocity = fakeD * 120.0
-	local sPos = vCharacter.PrimaryPart.Position	
-	sPos = sPos + fakeD.unit * 14.0
-	missile.CFrame = CFrame.new(sPos, sPos + fakeD) * CFrame.Angles(math.pi/2, 0, math.pi)		
-	missile.Name = &quot;BOLT&quot;
-	missile.CanCollide = false		
-	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-	creator_tag.Value = vPlayer
-	creator_tag.Name = &quot;creator&quot;
-	creator_tag.Parent = missile
-	print(&quot;Missile&quot;)
-	missile.Parent = game.Workspace	
-	
-	missile.Touched:connect(function(hit) blow(hit, missile) end)	
-	debris:AddItem(missile, 75) 
+function shoot(pPos, target)&#9;&#9;
+&#9;local vCharacter = Tool.Parent
+&#9;if vCharacter == nil or vCharacter:findFirstChild(&quot;Humanoid&quot;) == nil then&#9;&#9;  
+&#9;&#9;  return
+&#9;end
+&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
+&#9;if vPlayer == nil then return end&#9;&#9;
+&#9;
+&#9;missile = bolt:Clone()&#9;&#9;&#9;
+&#9;if skyBallista then
+&#9;&#9;print(skyBallista.CFrame)
+&#9;&#9;print(skyBallista.CFrame.lookVector)
+&#9;&#9;print(&quot;Found you&quot;)
+&#9;&#9;if target ~= skyBallista.Position then fakeD = (target - skyBallista.Position).unit end
+&#9;&#9;LV = (skyBallista.CFrame * CFrame.Angles(math.pi/2, 0, 0)).lookVector
+&#9;&#9;print(LV)
+&#9;&#9;print(fakeD)
+&#9;&#9;signedAngle = LV:Dot(fakeD)&#9;&#9;
+&#9;&#9;if signedAngle &lt; 0.5 then
+&#9;&#9;&#9;print(&quot;there&quot;)
+&#9;&#9;&#9;-- need to adjust fakeD&#9;&#9;&#9;
+&#9;&#9;&#9;-- get axis of rotation
+&#9;&#9;&#9;cross = LV:Cross(fakeD)
+&#9;&#9;&#9;-- get direction of rotation
+&#9;&#9;&#9;v1 = LV * 0.866 + cross:Cross(LV) * 0.5 + cross *(cross:Dot(LV)) * 0.134
+&#9;&#9;&#9;v2 = LV * 0.866 + cross:Cross(LV) * -0.5 + cross *(cross:Dot(LV)) * 0.134
+&#9;&#9;&#9;print(v1)
+&#9;&#9;&#9;print(v2)
+&#9;&#9;&#9;a1 = v1:Dot(fakeD)
+&#9;&#9;&#9;a2 = v2:Dot(fakeD)
+&#9;&#9;&#9;if a1 &gt; a2 then 
+&#9;&#9;&#9;&#9;fakeD = v1
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;fakeD = v2
+&#9;&#9;&#9;end
+&#9;&#9;&#9;print(&quot;Done&quot;)
+&#9;&#9;&#9;-- rotate LV around axis of rotation by 30-degrees
+&#9;&#9;end &#9;&#9;
+&#9;end
+&#9;firebolt = Tool:FindFirstChild(&quot;FireBolt&quot;)
+&#9;if firebolt and firebolt.Value == 1 then fire = Instance.new(&quot;Fire&quot;) fire.Color = Color3.new(0, 204/255, 1) fire.Parent = missile end
+&#9;missile.Velocity = fakeD * 120.0
+&#9;local sPos = vCharacter.PrimaryPart.Position&#9;
+&#9;sPos = sPos + fakeD.unit * 14.0
+&#9;missile.CFrame = CFrame.new(sPos, sPos + fakeD) * CFrame.Angles(math.pi/2, 0, math.pi)&#9;&#9;
+&#9;missile.Name = &quot;BOLT&quot;
+&#9;missile.CanCollide = false&#9;&#9;
+&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;creator_tag.Value = vPlayer
+&#9;creator_tag.Name = &quot;creator&quot;
+&#9;creator_tag.Parent = missile
+&#9;print(&quot;Missile&quot;)
+&#9;missile.Parent = game.Workspace&#9;
+&#9;
+&#9;missile.Touched:connect(function(hit) blow(hit, missile) end)&#9;
+&#9;debris:AddItem(missile, 75) 
 end
 
 
 function onActivated()
-	if Tool.Enabled == false then return end
-	Tool.Enabled = false
-	vCharacter = Tool.Parent
-	myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-	myHead = vCharacter:FindFirstChild(&quot;Head&quot;)
-	myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-	if myTorso == nil then return end
-	if myHead == nil then return end
-	if myHumanoid == nil then return end
-	ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)	
-	if ballistaActive.Value == 0 then 
-		ballistaActive.Value = 1
-		skyBallista = Ballista:Clone()
-		skyBallista.Name = &quot;Ballista&quot;
-		Ballista.Transparency = 1.0
-		skyBallista.Size = Vector3.new(8, 10, 7.5)
-		skyBallista.CFrame = Ballista.CFrame
-		skyBallista.Position = (myTorso.Position + (myTorso.CFrame.lookVector * 6.0))
-		skyBallista.CanCollide = true
-		skyBallista.Parent = game.Workspace	
+&#9;if Tool.Enabled == false then return end
+&#9;Tool.Enabled = false
+&#9;vCharacter = Tool.Parent
+&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;myHead = vCharacter:FindFirstChild(&quot;Head&quot;)
+&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if myTorso == nil then return end
+&#9;if myHead == nil then return end
+&#9;if myHumanoid == nil then return end
+&#9;ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)&#9;
+&#9;if ballistaActive.Value == 0 then 
+&#9;&#9;ballistaActive.Value = 1
+&#9;&#9;skyBallista = Ballista:Clone()
+&#9;&#9;skyBallista.Name = &quot;Ballista&quot;
+&#9;&#9;Ballista.Transparency = 1.0
+&#9;&#9;skyBallista.Size = Vector3.new(8, 10, 7.5)
+&#9;&#9;skyBallista.CFrame = Ballista.CFrame
+&#9;&#9;skyBallista.Position = (myTorso.Position + (myTorso.CFrame.lookVector * 6.0))
+&#9;&#9;skyBallista.CanCollide = true
+&#9;&#9;skyBallista.Parent = game.Workspace&#9;
 
-		smoke = Instance.new(&quot;Smoke&quot;)
-		smoke.Parent = skyBallista
+&#9;&#9;smoke = Instance.new(&quot;Smoke&quot;)
+&#9;&#9;smoke.Parent = skyBallista
 
-		skyBallista.Mesh.Scale = Vector3.new(1.5, 1.5, 1.5)
-		myHead.Anchored = true
-		ratio = myHumanoid.Health/myHumanoid.MaxHealth
-		myHumanoid.MaxHealth = 500
-		wait(0.1)
-		myHumanoid.Health = ratio * 500
-		wait(1.4)
-		if smoke then smoke:Remove() end
-	else
-		target = myHumanoid.TargetPoint		
-		direction = (target - skyBallista.Position).unit 		
-		shoot(direction, target)
-	end
-	wait(2.0)
-	Tool.Enabled = true
+&#9;&#9;skyBallista.Mesh.Scale = Vector3.new(1.5, 1.5, 1.5)
+&#9;&#9;myHead.Anchored = true
+&#9;&#9;ratio = myHumanoid.Health/myHumanoid.MaxHealth
+&#9;&#9;myHumanoid.MaxHealth = 500
+&#9;&#9;myHumanoid.Health = ratio * 500
+&#9;&#9;wait(1.4)
+&#9;&#9;if smoke then smoke:Remove() end
+&#9;else
+&#9;&#9;target = myHumanoid.TargetPoint&#9;&#9;
+&#9;&#9;direction = (target - skyBallista.Position).unit &#9;&#9;
+&#9;&#9;shoot(direction, target)
+&#9;end
+&#9;wait(2.0)
+&#9;Tool.Enabled = true
 end
 
 
@@ -367,179 +516,23 @@ function onEquipped()
 end
 
 function onUnequipped()
-	if myHead then myHead.Anchored = false end
-	if skyBallista then skyBallista:Remove() end
-	ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)
-	if ballistaActive then ballistaActive.Value = 0 end
-	Ballista.Transparency = 0.0
-	if sh then sh:Remove() end
-	if myHumanoid then 
-		ratio = myHumanoid.Health/myHumanoid.MaxHealth
-		myHumanoid.MaxHealth = 100
-		wait(0.1)
-		myHumanoid.Health = ratio * 100
-	end
+&#9;if myHead then myHead.Anchored = false end
+&#9;if skyBallista then skyBallista:Remove() end
+&#9;ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)
+&#9;if ballistaActive then ballistaActive.Value = 0 end
+&#9;Ballista.Transparency = 0.0
+&#9;if sh then sh:Remove() end
+&#9;if myHumanoid then 
+&#9;&#9;ratio = myHumanoid.Health/myHumanoid.MaxHealth
+&#9;&#9;myHumanoid.MaxHealth = 100
+&#9;&#9;myHumanoid.Health = ratio * 100
+&#9;end
 end
 
 Tool.Activated:connect(onActivated)
 Tool.Equipped:connect(onEquipped)
 Tool.Unequipped:connect(onUnequipped)
 </ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="NumberValue" referent="RBX5">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<string name="Name">BallistaActive</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX6">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">AnimateScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local Ballista = Tool.Handle
-
-local vCharacter 
-local holdAnim
-local ballistaActive
-local myHumanoid
-
-local firebolt 
-
-function wait15() 
-	wait(5)
-	firebolt = Tool:FindFirstChild(&quot;FireBolt&quot;)
-	if firebolt then firebolt.Value = 0 end
-	wait(10)
-end
-
-function fireb(key)
-	if key:lower() == &quot;x&quot; then 	
-		if co == nil or coroutine.status(co) == &apos;dead&apos; then 
-			co = coroutine.create(wait15)
-			coroutine.resume(co)
-			firebolt = Tool:FindFirstChild(&quot;FireBolt&quot;)
-			if firebolt then firebolt.Value = 1 end
-		end
-	end
-end
-
-function animate()
-	ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)
-	if ballistaActive then
-		if ballistaActive.Value == 1 and myHumanoid then 
-			--holdAnim = myHumanoid:LoadAnimation(Tool.HoldAnim)
-			if holdAnim then holdAnim:Play() end
-		else 
-			if holdAnim then holdAnim:Stop() end
-		end
-	end
-end
-
-
-function onEquipped(mouse)
-	vCharacter = Tool.Parent
-	myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-	ballistaActive = Tool:FindFirstChild(&quot;BallistaActive&quot;)
-	if ballistaActive then ballistaActive.Changed:connect(animate)	end
-	if mouse then mouse.KeyDown:connect(fireb) end
-end
-
-function onUnequipped()
-	if holdAnim then holdAnim:Stop () end
-end
-
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX7">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=55913910</url></Content>
-				<bool name="Archivable">true</bool>
-				<string name="Name">HoldAnim</string>
-			</Properties>
-		</Item>
-		<Item class="NumberValue" referent="RBX8">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<string name="Name">FireBolt</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX9">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">BallistaColdScript</string>
-				<ProtectedString name="Source">vCharacter = script.Parent
-myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-
-local count = 6
-while myHumanoid and count &gt; 0 do 			
-	myHumanoid:TakeDamage(10)
-	myHumanoid.WalkSpeed = myHumanoid.WalkSpeed - 16.0
-	count = count - 1
-	wait(1.0)
-end
-
-if (myHumanoid.WalkSpeed + 8.0) &lt; 20.0 then 
-	myHumanoid.WalkSpeed = myHumanoid.WalkSpeed + 16.0 
-else
-	myHumanoid.WalkSpeed = 16.0
-end
-
-if myTorso then 
-	fire = myTorso:FindFirstChild(&quot;Ice&quot;)
-	if fire then fire:Remove() end
-end
-wait(1.0)
-
-script:Remove()
-	
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX10">
-			<Properties>
-				<bool name="Archivable">true</bool>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-4.2723465</X>
-					<Y>6.84834814</Y>
-					<Z>5.77753639</Z>
-					<R00>-0.788010418</R00>
-					<R01>-0.19468917</R01>
-					<R02>-0.584068239</R02>
-					<R10>-1.49011612e-008</R10>
-					<R11>0.948683381</R11>
-					<R12>-0.316227406</R12>
-					<R20>0.61566186</R20>
-					<R21>-0.24919048</R21>
-					<R22>-0.747572422</R22>
-				</CoordinateFrame>
-				<CoordinateFrame name="Focus">
-					<X>7.40902042</X>
-					<Y>13.1728973</Y>
-					<Z>20.7289867</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
