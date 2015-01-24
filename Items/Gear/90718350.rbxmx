@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX379741F286CD47F783322CA0CAFF35D9">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>1.91068547e-015</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">BearHugger</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=90706265</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX1">
+		<Item class="Script" referent="RBX6C8C791DDEBE495F9C6F379F88F7568C">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -318,102 +319,47 @@ end)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX2">
+		<Item class="LocalScript" referent="RBX71E42ED1C51C4FCF935E6E3D1C8665AF">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">-- Made by Stickmasterluke
- -- edited by fusroblox
-
-function WaitForChild(obj, name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
-end
-
-local Reloading = &quot;http://www.roblox.com/asset/?id=50911776&quot;
-
-local Cursors = {
+				<ProtectedString name="Source">local Cursors = {
 &quot;http://www.roblox.com/asset/?id=90875398&quot;,--50912619&quot;, -- red -- change the cursors
 &quot;http://www.roblox.com/asset/?id=50912641&quot;, -- blue
 &quot;http://www.roblox.com/asset/?id=90875896&quot;, -- purple
 Reloading = &quot;http://www.roblox.com/asset/?id=90875896&quot;, }--50911776&quot;, }
 
-local ClipSize = 45
-local Equipped = false
-
 local Tool = script.Parent
-local Player = game.Players.localPlayer
-local Ammo = WaitForChild(Tool,&quot;Ammo&quot;)
-local Clips = nil
 
-
-function UpdateGui()
+script.Parent.Equipped:connect(function(mouse)
+&#9;Equipped = true
 &#9;
-end
-
-function OnEquipped(mouse)
-&#9;if mouse ~= nil then
-&#9;&#9;Equipped = true
-&#9;&#9;local Player = game.Players.LocalPlayer
-&#9;&#9;if Player ~= nil then
-&#9;&#9;&#9;local plrgui = WaitForChild(Player,&quot;PlayerGui&quot;)
-&#9;&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;&#9;if not Tool.Down.Value then
-&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;Tool.Down.Value = true
-&#9;&#9;&#9;&#9;&#9;while Tool.Down.Value do
-&#9;&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;mouse.Button1Up:connect(function()
-&#9;&#9;&#9;&#9;Tool.Down.Value = false
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;mouse.Icon = Cursors[1]
-&#9;&#9;&#9;Tool.Reloading.Changed:connect(function(val)
-&#9;&#9;&#9;&#9;if mouse ~= nil and Equipped then
-&#9;&#9;&#9;&#9;&#9;if val then
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon = Cursors.Reloading
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon = Cursors[1]
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;UpdateGui()
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;script.Parent.RemoteEvent:FireServer(&apos;ClickDown&apos;,mouse.Hit)
+&#9;end)
+&#9;mouse.Button1Up:connect(function()
+&#9;&#9;script.Parent.RemoteEvent:FireServer(&apos;ClickUp&apos;)
+&#9;end)
+&#9;
+&#9;mouse.Icon = Cursors[1]
+&#9;Tool.Reloading.Changed:connect(function(val)
+&#9;&#9;if mouse ~= nil and Equipped then
+&#9;&#9;&#9;if val then
+&#9;&#9;&#9;&#9;mouse.Icon = Cursors.Reloading
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;mouse.Icon = Cursors[1]
+&#9;&#9;&#9;end
 &#9;&#9;end
-&#9;end
-end
-
-function OnUnequipped()
-&#9;Equipped = false
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-
-
-while Tool:FindFirstChild(&quot;Reloading&quot;) == nil do
-&#9;wait(1)
-end
-Tool.Reloading.Changed:connect(function()
-&#9;UpdateGui()
+&#9;end)
 end)
 
-function PlayFireAni()
-&#9;local aniTrack = WaitForChild(Tool.Parent,&quot;Humanoid&quot;):LoadAnimation(Tool.FireAni)
-&#9;aniTrack:Play()
-end
-
-Tool.DoFireAni.Changed:connect(PlayFireAni)
-</ProtectedString>
+script.Parent.Unequipped:connect(function()
+&#9;Equipped = false
+end)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX3">
+		<Item class="Part" referent="RBX000FE432334C4EA5A874B1F511C83DF8">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -481,7 +427,7 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 					<Z>1.75999904</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBX7DC14AAE31C04D99BD8F20975482E49A">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -506,7 +452,7 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBXBF391C62483547D18AA4F5C00AD41C3A">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
@@ -516,7 +462,7 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 					<float name="Volume">0.75</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX6">
+			<Item class="Sound" referent="RBX672642EFF7724E9091D7F3A7703E7583">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Reload</string>
@@ -527,7 +473,7 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Vector3Value" referent="RBX7">
+		<Item class="Vector3Value" referent="RBX0E489F9E207F49C68C608D489C661D55">
 			<Properties>
 				<string name="Name">Aim</string>
 				<Vector3 name="Value">
@@ -537,43 +483,43 @@ Tool.DoFireAni.Changed:connect(PlayFireAni)
 				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="IntValue" referent="RBX8">
+		<Item class="IntValue" referent="RBX93CEECDDA25F4FEAAF40596F5983E2FC">
 			<Properties>
 				<string name="Name">Ammo</string>
 				<int name="Value">2</int>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX9">
+		<Item class="BoolValue" referent="RBX9540511FDFE34013AF7BE39432CA33F3">
 			<Properties>
 				<string name="Name">Down</string>
 				<bool name="Value">false</bool>
 			</Properties>
 		</Item>
-		<Item class="IntValue" referent="RBX10">
+		<Item class="IntValue" referent="RBX3028D7394DEA4C8F8A6712749250CC5B">
 			<Properties>
 				<string name="Name">NoClips</string>
 				<int name="Value">0</int>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX11">
+		<Item class="BoolValue" referent="RBX990FBEFC81624A559AF089B045B0DA42">
 			<Properties>
 				<string name="Name">Reloading</string>
 				<bool name="Value">false</bool>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX12">
+		<Item class="Animation" referent="RBX0F42FD8F24864098B0692DCEEA47529D">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=89456847</url></Content>
 				<string name="Name">FireAni</string>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBX13">
+		<Item class="BoolValue" referent="RBX38F6A8EC329745F2ACE7859FD9449661">
 			<Properties>
 				<string name="Name">DoFireAni</string>
 				<bool name="Value">false</bool>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX14">
+		<Item class="Script" referent="RBXFC2E6BBAE73D4B20B4ABB499824CF5AB">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -631,10 +577,16 @@ function DoAwesomeness()
 &#9;Bear2.Value.Anchored=true
 &#9;local explosion= Instance.new(&apos;Explosion&apos;)
 &#9;explosion.Position=Bear1.Value.CFrame.p
-&#9;explosion.BlastPressure=50000
+&#9;explosion.BlastPressure=0
 &#9;explosion.BlastRadius=25
 &#9;explosion.ExplosionType=&apos;CratersAndDebris&apos;
 &#9;explosion.Parent=game.Workspace
+&#9;explosion.Hit:connect(function(hit)
+&#9;&#9;local hum = hit.Parent and hit.Parent:FindFirstChild&apos;Humanoid&apos;
+&#9;&#9;if hum and hum:IsA&apos;Humanoid&apos; then
+&#9;&#9;&#9;hum:TakeDamage(hum.MaxHealth)
+&#9;&#9;end
+&#9;end)
 &#9;local explosionSound= script.BearHit:Clone()
 &#9;explosionSound.Parent=game.Workspace--Bear1.Value
 &#9;wait()
@@ -652,6 +604,7 @@ function DoAwesomeness()
 &#9;&#9;billGui.Adornee=Bear1.Value
 &#9;&#9;billGui.StudsOffset = startPos
 &#9;&#9;billGui.Parent=player.PlayerGui
+&#9;&#9;billGui.ImageLabel.Visible = true
 &#9;&#9;bearGuis[iter]=billGui
 &#9;&#9;
 &#9;end
@@ -666,6 +619,14 @@ function DoAwesomeness()
 &#9;&#9;&#9;local explosion2= Instance.new(&apos;Explosion&apos;)
 &#9;&#9;&#9;explosion2.Position=Bear1.Value.CFrame.p+Vector3.new(math.random(100)-50,math.random(50),math.random(5))
 &#9;&#9;&#9;explosion2.Parent=game.Workspace
+&#9;&#9;&#9;explosion2.BlastPressure = 0
+&#9;&#9;&#9;
+&#9;&#9;&#9;explosion2.Hit:connect(function(hit)
+&#9;&#9;&#9;&#9;local hum = hit.Parent and hit.Parent:FindFirstChild&apos;Humanoid&apos;
+&#9;&#9;&#9;&#9;if hum and hum:IsA&apos;Humanoid&apos; then
+&#9;&#9;&#9;&#9;&#9;hum:TakeDamage(hum.MaxHealth)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
 &#9;&#9;end
 &#9;&#9;
 &#9;&#9;wait()
@@ -718,7 +679,7 @@ Bear1.Value.Touched:connect(function(hit) OnTouched(Bear1.Value,Bear1.Value,hit)
 Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit) end)
 </ProtectedString>
 			</Properties>
-			<Item class="Sound" referent="RBX15">
+			<Item class="Sound" referent="RBXE6382A0951524204BFAB436EFA5DD421">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">BearHit</string>
@@ -728,7 +689,7 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX16">
+			<Item class="Sound" referent="RBX3AAADAB64D6541A9AE5B182C4A245266">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">BearLead</string>
@@ -738,19 +699,19 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="ObjectValue" referent="RBX17">
+			<Item class="ObjectValue" referent="RBX635ACB946BD24C65B6B333AB7D170883">
 				<Properties>
 					<string name="Name">Bear1</string>
 					<Ref name="Value">null</Ref>
 				</Properties>
 			</Item>
-			<Item class="ObjectValue" referent="RBX18">
+			<Item class="ObjectValue" referent="RBXAD90FC693B95495CA03608A50139E9F2">
 				<Properties>
 					<string name="Name">Bear2</string>
 					<Ref name="Value">null</Ref>
 				</Properties>
 			</Item>
-			<Item class="BillboardGui" referent="RBX19">
+			<Item class="BillboardGui" referent="RBXC53618586CB240BBA889A74A2ED02F71">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Ref name="Adornee">null</Ref>
@@ -779,7 +740,7 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 						<Z>0</Z>
 					</Vector3>
 				</Properties>
-				<Item class="ImageLabel" referent="RBX20">
+				<Item class="ImageLabel" referent="RBX2721717F80F04F30B95B75B18CB80B84">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Color3 name="BackgroundColor3">4288914085</Color3>
@@ -789,6 +750,16 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 						<bool name="ClipsDescendants">false</bool>
 						<bool name="Draggable">false</bool>
 						<Content name="Image"><url>http://www.roblox.com/Asset?ID=90698952</url></Content>
+						<Color3 name="ImageColor3">4294967295</Color3>
+						<Vector2 name="ImageRectOffset">
+							<X>0</X>
+							<Y>0</Y>
+						</Vector2>
+						<Vector2 name="ImageRectSize">
+							<X>0</X>
+							<Y>0</Y>
+						</Vector2>
+						<float name="ImageTransparency">0</float>
 						<string name="Name">ImageLabel</string>
 						<UDim2 name="Position">
 							<XS>0</XS>
@@ -796,6 +767,7 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 							<YS>0</YS>
 							<YO>0</YO>
 						</UDim2>
+						<float name="Rotation">0</float>
 						<UDim2 name="Size">
 							<XS>1</XS>
 							<XO>0</XO>
@@ -803,13 +775,13 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 							<YO>0</YO>
 						</UDim2>
 						<token name="SizeConstraint">0</token>
-						<bool name="Visible">true</bool>
+						<bool name="Visible">false</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX21">
+		<Item class="Camera" referent="RBX9FA59ABB3FEE4F75B728DDE2ACC28CCB">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -843,6 +815,103 @@ Bear2.Value.Touched:connect(function(hit) OnTouched(Bear2.Value,Bear2.Value,hit)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX1ACD06180AEB41B383105C66CBBAE471">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">-- Made by Stickmasterluke
+ -- edited by fusroblox
+--[[
+&#9;Fixed by ArceusInator
+&#9;1/23/2015 - Made it work with FE
+--]]
+
+function WaitForChild(obj, name)
+&#9;while not obj:FindFirstChild(name) do
+&#9;&#9;wait()
+&#9;&#9;print(&quot;1waiting for &quot; .. name)
+&#9;end
+&#9;return obj:FindFirstChild(name)
+end
+
+local Reloading = &quot;http://www.roblox.com/asset/?id=50911776&quot;
+
+local Cursors = {
+&quot;http://www.roblox.com/asset/?id=90875398&quot;,--50912619&quot;, -- red -- change the cursors
+&quot;http://www.roblox.com/asset/?id=50912641&quot;, -- blue
+&quot;http://www.roblox.com/asset/?id=90875896&quot;, -- purple
+Reloading = &quot;http://www.roblox.com/asset/?id=90875896&quot;, }--50911776&quot;, }
+
+local ClipSize = 45
+local Equipped = false
+
+local Tool = script.Parent
+local Player = game.Players.localPlayer
+local Ammo = WaitForChild(Tool,&quot;Ammo&quot;)
+local Clips = nil
+
+
+function UpdateGui()
+&#9;
+end
+
+Tool.RemoteEvent.OnServerEvent:connect(function(client, action, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if action == &apos;ClickDown&apos; then
+&#9;&#9;&#9;local hit = ...
+&#9;&#9;&#9;
+&#9;&#9;&#9;if not Tool.Down.Value then
+&#9;&#9;&#9;&#9;Tool.Aim.Value = hit.p
+&#9;&#9;&#9;&#9;Tool.Down.Value = true
+&#9;&#9;&#9;&#9;while Tool.Down.Value do
+&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = hit.p
+&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;elseif action == &apos;ClickUp&apos; then
+&#9;&#9;&#9;Tool.Down.Value = false
+&#9;&#9;end
+&#9;end
+end)
+
+function OnEquipped(mouse)
+&#9;Equipped = true
+&#9;local Player = game.Players.LocalPlayer
+&#9;if Player ~= nil then
+&#9;&#9;UpdateGui()
+&#9;end
+end
+
+function OnUnequipped()
+&#9;Equipped = false
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+
+
+while Tool:FindFirstChild(&quot;Reloading&quot;) == nil do
+&#9;wait(1)
+end
+Tool.Reloading.Changed:connect(function()
+&#9;UpdateGui()
+end)
+
+function PlayFireAni()
+&#9;local aniTrack = WaitForChild(Tool.Parent,&quot;Humanoid&quot;):LoadAnimation(Tool.FireAni)
+&#9;aniTrack:Play()
+end
+
+Tool.DoFireAni.Changed:connect(PlayFireAni)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX44E6AA9C175247D48E78CA90B908263C">
+			<Properties>
+				<string name="Name">RemoteEvent</string>
 			</Properties>
 		</Item>
 	</Item>
