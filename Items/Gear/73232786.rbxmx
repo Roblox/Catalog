@@ -1,9 +1,9 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXBD0CCEA485944206820E5F49A2127E25">
+	<Item class="Tool" referent="RBX86FF80F7EFD74E6F922DFEBC366DB7E8">
 		<Properties>
-			<bool name="CanBeDropped">false</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=73184333</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX98369EBE5545470BB91DE508AF7AD767">
+		<Item class="Part" referent="RBX971E3E846C3E43D2993A6FCD9A5ACF39">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -37,9 +37,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>30.3008232</X>
-					<Y>4.61940908</Y>
-					<Z>21.9703407</Z>
+					<X>-16.6991768</X>
+					<Y>16.6194096</Y>
+					<Z>5.97034073</Z>
 					<R00>0.111295462</R00>
 					<R01>-0.993111134</R01>
 					<R02>0.036654532</R02>
@@ -92,7 +92,7 @@
 					<Z>7</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX72626C1FE6774F5786F3015F16159539">
+			<Item class="SpecialMesh" referent="RBX2E5093903B764821A6C14965F72F51D0">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -118,7 +118,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX0FC7EF715EDD4A83B29CAEA1683B4195">
+		<Item class="LocalScript" referent="RBX4E965E032D764858BAFAC280046F9926">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -133,7 +133,7 @@
 end)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBXC61244681BFB4ADAB8C0F0A5F7F29B09">
+		<Item class="Script" referent="RBX2335D070773143F7941048004B01AAB1">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -372,7 +372,7 @@ Tool.Unequipped:connect(function()
 end)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBXF05AA9F6E171446CB5CECF50A058273D">
+		<Item class="Script" referent="RBXEC99A52C34E744ACAA46E777F09400CD">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -423,7 +423,7 @@ end
 script:Destroy()</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX1688170C840C4912B4C742606D397B5D">
+		<Item class="Camera" referent="RBXEAD5173EFEFA4C11BE53238B0034F1FA">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -459,7 +459,7 @@ script:Destroy()</ProtectedString>
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX91BEFBD5C9EF479FB2FA323411DC8F4D">
+		<Item class="Script" referent="RBX201483BA1C8B43E1A12C75F04C5AA35D">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -787,6 +787,10 @@ class&apos;WalkSpeedManager&apos;(function(def)
 &#9;&#9;&#9;end)
 &#9;&#9;end
 &#9;end
+&#9;
+&#9;function def:Disconnect()
+&#9;&#9;if changed then changed:disconnect() changed=nil end
+&#9;end
 
 &#9;function def:Set(ws)
 &#9;&#9;if humanoid then
@@ -942,6 +946,7 @@ local function GetCharacter(object)
 end
 
 -- make a joint, if the objects exist
+local PLEASE_STOP_EXISTING
 local function AttemptJoint(x,y,c0,c1)
 &#9;if x and y then
 &#9;&#9;local weld = Instance.new(&quot;Motor6D&quot;)
@@ -950,6 +955,10 @@ local function AttemptJoint(x,y,c0,c1)
 &#9;&#9;if c0 then weld.C0 = c0 end
 &#9;&#9;if c1 then weld.C1 = c1 end
 &#9;&#9;weld.Parent = x
+&#9;&#9;
+&#9;&#9;if x.Name == &apos;Right Arm&apos; then
+&#9;&#9;&#9;PLEASE_STOP_EXISTING = weld
+&#9;&#9;end
 &#9;end
 end
 
@@ -974,55 +983,6 @@ end
 local Tool = script.Parent
 local Handle = WaitForChild(Tool,&quot;Handle&quot;)
 local Character,Humanoid
-
-local DamageBin = GetMake(Tool,&quot;DamageBin&quot;,&quot;Configuration&quot;)
-local Spinning = GetMake(Tool,&quot;Spinning&quot;,&quot;BoolValue&quot;)
-
-if not Tool:FindFirstChild(&quot;HandleFireTop&quot;) then
-&#9;local HandleFire = Create&apos;Part&apos;{
-&#9;&#9;Name = &quot;HandleFireTop&quot;;
-&#9;&#9;Parent = Tool;
-&#9;&#9;Archivable = false;
-&#9;&#9;Anchored = false;
-&#9;&#9;CanCollide = false;
-&#9;&#9;Locked = true;
-&#9;&#9;Transparency = 1;
-&#9;&#9;FormFactor = 0;
-&#9;&#9;Size = Vector3.new(1,1,1);
-&#9;&#9;TopSurface = 0;
-&#9;&#9;BottomSurface = 0;
-&#9;&#9;Create&apos;Fire&apos;{
-&#9;&#9;&#9;Color = Color3.new(246/255,69/255,0);
-&#9;&#9;&#9;SecondaryColor = Color3.new(102/255,0,102/255);
-&#9;&#9;&#9;Heat = 9;
-&#9;&#9;&#9;Size = 4;
-&#9;&#9;}
-&#9;}
-&#9;AttemptJoint(Handle,HandleFire,nil,CFrame.Angles(math.pi/2,0,0)*CFrame.new(0,0,3.5))
-end
-
-if not Tool:FindFirstChild(&quot;HandleFireBottom&quot;) then
-&#9;local HandleFire = Create&apos;Part&apos;{
-&#9;&#9;Name = &quot;HandleFireBottom&quot;;
-&#9;&#9;Archivable = false;
-&#9;&#9;Parent = Tool;
-&#9;&#9;Anchored = false;
-&#9;&#9;CanCollide = false;
-&#9;&#9;Locked = true;
-&#9;&#9;Transparency = 1;
-&#9;&#9;FormFactor = 0;
-&#9;&#9;Size = Vector3.new(1,1,1);
-&#9;&#9;TopSurface = 0;
-&#9;&#9;BottomSurface = 0;
-&#9;&#9;Create&apos;Fire&apos;{
-&#9;&#9;&#9;Color = Color3.new(1,0,0);
-&#9;&#9;&#9;SecondaryColor = Color3.new(179/255,0,182/255);
-&#9;&#9;&#9;Heat = 9;
-&#9;&#9;&#9;Size = 4;
-&#9;&#9;}
-&#9;}
-&#9;AttemptJoint(Handle,HandleFire,nil,CFrame.Angles(-math.pi/2,0,0)*CFrame.new(0,0,-3.5))
-end
 
 local BurnScript = Tool:FindFirstChild(&quot;BurnScript&quot;)
 
@@ -1207,7 +1167,65 @@ Tool.Remote.OnServerEvent:connect(function(client, command, ...)
 &#9;end
 end)
 
-Tool.Equipped:connect(function(Mouse)
+local equipping = false
+local unequipping = false
+local unequippedCon
+local unequippedFunc
+Tool.Equipped:connect(function(Mouse) if equipping then return end equipping = true if unequipping then Tool.Parent = workspace end
+&#9;if not unequippedCon then
+&#9;&#9;unequippedCon = Tool.Unequipped:connect(unequippedFunc)
+&#9;end
+&#9;
+&#9;DamageBin = GetMake(Tool,&quot;DamageBin&quot;,&quot;Configuration&quot;)
+&#9;Spinning = GetMake(Tool,&quot;Spinning&quot;,&quot;BoolValue&quot;)
+&#9;
+&#9;if not Tool:FindFirstChild(&quot;HandleFireTop&quot;) then
+&#9;&#9;local HandleFire = Create&apos;Part&apos;{
+&#9;&#9;&#9;Name = &quot;HandleFireTop&quot;;
+&#9;&#9;&#9;Parent = Tool;
+&#9;&#9;&#9;Archivable = false;
+&#9;&#9;&#9;Anchored = false;
+&#9;&#9;&#9;CanCollide = false;
+&#9;&#9;&#9;Locked = true;
+&#9;&#9;&#9;Transparency = 1;
+&#9;&#9;&#9;FormFactor = 0;
+&#9;&#9;&#9;Size = Vector3.new(1,1,1);
+&#9;&#9;&#9;TopSurface = 0;
+&#9;&#9;&#9;BottomSurface = 0;
+&#9;&#9;&#9;Create&apos;Fire&apos;{
+&#9;&#9;&#9;&#9;Color = Color3.new(246/255,69/255,0);
+&#9;&#9;&#9;&#9;SecondaryColor = Color3.new(102/255,0,102/255);
+&#9;&#9;&#9;&#9;Heat = 9;
+&#9;&#9;&#9;&#9;Size = 4;
+&#9;&#9;&#9;}
+&#9;&#9;}
+&#9;&#9;AttemptJoint(Handle,HandleFire,nil,CFrame.Angles(math.pi/2,0,0)*CFrame.new(0,0,3.5))
+&#9;end
+&#9;
+&#9;if not Tool:FindFirstChild(&quot;HandleFireBottom&quot;) then
+&#9;&#9;local HandleFire = Create&apos;Part&apos;{
+&#9;&#9;&#9;Name = &quot;HandleFireBottom&quot;;
+&#9;&#9;&#9;Archivable = false;
+&#9;&#9;&#9;Parent = Tool;
+&#9;&#9;&#9;Anchored = false;
+&#9;&#9;&#9;CanCollide = false;
+&#9;&#9;&#9;Locked = true;
+&#9;&#9;&#9;Transparency = 1;
+&#9;&#9;&#9;FormFactor = 0;
+&#9;&#9;&#9;Size = Vector3.new(1,1,1);
+&#9;&#9;&#9;TopSurface = 0;
+&#9;&#9;&#9;BottomSurface = 0;
+&#9;&#9;&#9;Create&apos;Fire&apos;{
+&#9;&#9;&#9;&#9;Color = Color3.new(1,0,0);
+&#9;&#9;&#9;&#9;SecondaryColor = Color3.new(179/255,0,182/255);
+&#9;&#9;&#9;&#9;Heat = 9;
+&#9;&#9;&#9;&#9;Size = 4;
+&#9;&#9;&#9;}
+&#9;&#9;}
+&#9;&#9;AttemptJoint(Handle,HandleFire,nil,CFrame.Angles(-math.pi/2,0,0)*CFrame.new(0,0,-3.5))
+&#9;end
+&#9;
+&#9;
 &#9;Character,Humanoid = GetCharacter(Tool)
 &#9;if not Character then return end
 &#9;Animation:LoadHumanoid(Humanoid)
@@ -1248,12 +1266,45 @@ Tool.Equipped:connect(function(Mouse)
 
 &#9;wait(0.25) --ewww
 &#9;Handle.CanCollide = true
+&#9;
+&#9;equipping = false
 end)
 
-Tool.Unequipped:connect(function()
+local lastTorsoCF
+spawn(function()
+&#9;while true do
+&#9;&#9;if Character and Character:FindFirstChild&apos;Torso&apos; and not unequipping then
+&#9;&#9;&#9;lastTorsoCF = Character.Torso.CFrame
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;wait()
+&#9;end
+end)
+
+unequippedFunc = function() print&apos;-a&apos; if unequipping then return end unequipping = true if Tool.Parent:IsA&apos;Workspace&apos; then unequippedCon:disconnect() unequippedCon=nil end print&apos;a&apos;
+&#9;if Character and Character:FindFirstChild&apos;Torso&apos; then
+&#9;&#9;Character.Torso.CFrame = lastTorsoCF or (Character.Torso.CFrame - Vector3.new(0, 19202, 0))
+&#9;end
+&#9;
+&#9;local h2 = Handle:Clone()
+&#9;Handle:Destroy()
+&#9;Handle = h2
+&#9;Handle.Name = &apos;Handle&apos;
+&#9;Handle.Velocity = Vector3.new()
+&#9;Handle.RotVelocity = Vector3.new()
+&#9;Handle.CFrame = CFrame.new(Character.Torso.CFrame * Vector3.new(0, 0, -8)) * CFrame.Angles(Handle.CFrame:toEulerAnglesXYZ())
+&#9;Handle.Parent = Tool
+&#9;print&apos;b&apos;
+&#9;if Tool:FindFirstChild&apos;HandleFireTop&apos; then Tool.HandleFireTop:Destroy() end
+&#9;if Tool:FindFirstChild&apos;HandleFireBottom&apos; then Tool.HandleFireBottom:Destroy() end
+&#9;if Tool:FindFirstChild&apos;DamageBin&apos; then Tool.DamageBin:Destroy() end
+&#9;if Tool:FindFirstChild&apos;Spinning&apos; then Tool.Spinning:Destroy() end
+
+&#9;WalkSpeed:Disconnect()
+&#9;
 &#9;Disconnect(&quot;Died&quot;,&quot;Touched&quot;)
 &#9;Animation:StopAnimations()
-&#9;KillJoint(GetBodyPart(&quot;Right Arm&quot;),Handle)
+&#9;KillJoint(Character and Character:FindFirstChild&apos;Right Arm&apos;, Handle)
 &#9;Swinging = false
 &#9;Spinning.Value = false
 &#9;Damage:DeactivateAll()
@@ -1261,10 +1312,23 @@ Tool.Unequipped:connect(function()
 &#9;WalkSpeed:Reset()
 &#9;WalkSpeed:SetHumanoid()
 &#9;HandleControl:SetEnabled(false)
-end)</ProtectedString>
+&#9;print&apos;c&apos;
+&#9;delay(.5, function()
+&#9;&#9;Handle.Name = &apos;Handle&apos;
+&#9;&#9;
+&#9;&#9;if Tool.Parent == workspace then
+&#9;&#9;&#9;local t2 = Tool:Clone()
+&#9;&#9;&#9;t2.Parent = workspace
+&#9;&#9;&#9;Tool:Destroy()
+&#9;&#9;end
+&#9;end)
+&#9;unequipping = false
+end
+
+unequippedCon = Tool.Unequipped:connect(unequippedFunc)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="RemoteEvent" referent="RBX80B42D8101FB4C84AE9CE2D82FD9257C">
+		<Item class="RemoteEvent" referent="RBX65C09B7502434E6994A9E009530687E1">
 			<Properties>
 				<string name="Name">Remote</string>
 			</Properties>
