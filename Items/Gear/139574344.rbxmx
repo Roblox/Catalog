@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX65D9AD9261404E0F94685AEA18577DE1">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">IceKnightSword</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=139555577</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXEF4DD65404CC48658871D49EFC0120CE">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -36,18 +37,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.200000003</X>
-					<Y>8.15000057</Y>
-					<Z>0.200000003</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<X>-0.00971698761</X>
+					<Y>2.77463365</Y>
+					<Z>0.0362186432</Z>
+					<R00>0.899381518</R00>
+					<R01>-0.00778207881</R01>
+					<R02>0.437095344</R02>
+					<R10>-1.50948132e-014</R10>
+					<R11>0.999841571</R11>
+					<R12>0.017801255</R12>
+					<R20>-0.437164605</R20>
+					<R21>-0.0160101205</R21>
+					<R22>0.899239004</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -91,7 +92,7 @@
 					<Z>1.5</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBXD012B17C24AA46319246D549830A6CFB">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,25 +118,33 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX3">
+		<Item class="Sound" referent="RBXC48B570F830C4922B4D83B92115BE595">
+			<Properties>
+				<bool name="Looped">false</bool>
+				<string name="Name">CrystalExplosion</string>
+				<float name="Pitch">1</float>
+				<bool name="PlayOnRemove">false</bool>
+				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=84937942</url></Content>
+				<float name="Volume">1</float>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX86348B0836BE43CFA6866456CF73CAE4">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">CrystalSword</string>
-				<ProtectedString name="Source">--Crystal Sword
+				<ProtectedString name="Source">--Fixed by Luckymaxer
+
+--Crystal Sword
 
 local Tool = script.Parent
 local Handle = Tool.Handle
 local Character = nil
-local InsertService = game:GetService(&apos;InsertService&apos;)
 
 local EruptionID = 84929999
-local Eruption = InsertService:LoadAsset(&apos;84929999&apos;)
-Eruption = Eruption:GetChildren()[1]
+local Eruption = game:GetService(&quot;InsertService&quot;):LoadAsset(EruptionID):GetChildren()[1]
 
--- super hack to change the colors
-wait()
-local EruptionChildren = Eruption:GetChildren()
+EruptionChildren = Eruption:GetChildren()
 if #EruptionChildren &gt; 0 then
 &#9;for _,child in pairs(EruptionChildren) do
 &#9;&#9;if child:IsA(&apos;BasePart&apos;) then
@@ -153,7 +162,9 @@ if #EruptionChildren &gt; 0 then
 &#9;end
 end
 
+
 local Debris = game.Debris
+
 
 local Damage = 5
 local Eruptions = 5
@@ -161,6 +172,8 @@ local DistancePerObject = 7
 local TimeBetweenEruptions = .05
 local EruptionLife = 3
 local DamagePerTouch = 10
+
+Counters = {} --Fix implemented by Luckymaxer
 
 --Creates a random number of particles and lets them fall down from the sky.  
 function ParticleExplosion(Parent, Colors)
@@ -206,7 +219,8 @@ function onCrystalTouched(part)
 &#9;&#9;Counter = Instance.new(&quot;IntValue&quot;)
 &#9;&#9;Counter.Name = &quot;Counter&quot;
 &#9;&#9;Counter.Value = 0
-&#9;&#9;Counter.Parent = Character
+&#9;&#9;Counter.Parent = Character.Humanoid
+&#9;&#9;table.insert(Counters, Counter)
 &#9;&#9;Debris:AddItem(Counter, .2)
 &#9;end
 
@@ -216,19 +230,12 @@ end
 --Find the players with a counter variable, then kill them
 --If they survive, knock them over
 function ExplodePlayers()
-&#9;local Players = game.Players:GetChildren()
-
-&#9;for i = 1, #Players do
-&#9;&#9;local Character = Players[i].Character
-&#9;&#9;local counter = Character:FindFirstChild(&quot;Counter&quot;)
-&#9;&#9;if counter then
-&#9;&#9;&#9;Character.Humanoid:TakeDamage(counter.Value * DamagePerTouch)
-
-&#9;&#9;&#9;Character.Humanoid.Sit = true
-&#9;&#9;
+&#9;for i, v in pairs(Counters) do
+&#9;&#9;if v and v.Parent and v.Parent:IsA(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;v.Parent:TakeDamage(v.Value * DamagePerTouch)
 &#9;&#9;end
-&#9;&#9;&#9;
 &#9;end
+&#9;Counters = {}
 end
 
 
@@ -298,7 +305,7 @@ function Swing()
 &#9;SwingParticle.Name = &quot;SwingParticle&quot;
 &#9;SwingParticle.Parent = Handle
 
-&#9;local Color = BrickColor.new(28).Color
+&#9;local Color = BrickColor.new(23).Color
 &#9;SwingParticle.Color = Color
 &#9;SwingParticle.SecondaryColor = Color
 &#9;Debris:AddItem(SwingParticle, 1)
@@ -343,39 +350,29 @@ end
 Tool.Unequipped:connect(onUnequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Sound" referent="RBX4">
-			<Properties>
-				<bool name="Looped">false</bool>
-				<string name="Name">CrystalExplosion</string>
-				<float name="Pitch">1</float>
-				<bool name="PlayOnRemove">false</bool>
-				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=84937942</url></Content>
-				<float name="Volume">1</float>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX5">
+		<Item class="Camera" referent="RBX09D75239F72A48B2938A05B25FFE2173">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-5.41868782</X>
-					<Y>8.11733341</Y>
-					<Z>1.93603754</Z>
-					<R00>0.315650851</R00>
-					<R01>-0.00563586783</R01>
-					<R02>-0.948858678</R02>
-					<R10>1.16415322e-010</R10>
-					<R11>0.999982357</R11>
-					<R12>-0.00593952322</R12>
-					<R20>0.948875427</R20>
-					<R21>0.00187481544</R21>
-					<R22>0.315645278</R22>
+					<X>-4.64824057</X>
+					<Y>3.17435098</Y>
+					<Z>2.51828527</Z>
+					<R00>0.4694691</R00>
+					<R01>0.0415914059</R01>
+					<R02>-0.881968796</R02>
+					<R10>-0</R10>
+					<R11>0.998889983</R11>
+					<R12>0.0471051075</R12>
+					<R20>0.882948995</R20>
+					<R21>-0.0221143924</R21>
+					<R22>0.468947887</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.199999988</X>
-					<Y>8.15000057</Y>
-					<Z>0.199999988</Z>
+					<X>-3.413486</X>
+					<Y>3.10840392</Y>
+					<Z>1.86175919</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
