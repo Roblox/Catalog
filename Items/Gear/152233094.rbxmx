@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX5C05471E43294C9DA5BE094621C8ACE1">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">false</bool>
@@ -19,11 +19,12 @@
 				<R21>0</R21>
 				<R22>-1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">BassDrop</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=151980533</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXCD64B1ADB254462B94C40E644BB7CC99">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -91,7 +92,7 @@
 					<Z>0.75</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBXE701543C27354D42B6680B96CA60FD36">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,7 +117,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX275AB4C9DD7C40399920600F9509530E">
 				<Properties>
 					<bool name="Looped">true</bool>
 					<string name="Name">Music</string>
@@ -127,7 +128,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX149B8F8D2A294561A89D6879E5E3FA79">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -315,12 +316,16 @@ Tool.Unequipped:connect(onUnequipped)
 
 </ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX5">
+			<Item class="Script" referent="RBXC41501DE151443B0BFCA111F607ABA01">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">MeteorBassDropScript</string>
 					<ProtectedString name="Source">--Made by Luckymaxer
+--[[
+&#9;Fixed by ArceusInator
+&#9;1/23/2015 - It actually does damage now
+--]]
 
 BassDrop = script.Parent
 Creator = BassDrop:WaitForChild(&quot;creator&quot;)
@@ -331,35 +336,41 @@ Debris = game:GetService(&quot;Debris&quot;)
 BassDrop.Touched:connect(function(hitPart)
 &#9;local explosion = Instance.new(&apos;Explosion&apos;)
 &#9;explosion.BlastPressure = 0
+&#9;explosion.BlastRadius = 10
 &#9;explosion.Parent = BassDrop
 &#9;explosion.Position = BassDrop.CFrame.p
 &#9;BassDrop.Transparency = 1
 &#9;if BassDrop:FindFirstChild(&apos;Fire&apos;) then
 &#9;&#9;BassDrop.Fire.Enabled = false
 &#9;end
-&#9;if hitParent and hitParent.Parent then
-&#9;&#9;local humanoid = hitParent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;local player = Players:GetPlayerFromCharacter(hitParent)
-&#9;&#9;if humanoid and humanoid.Health &gt; 0 and player and player ~= creator.Value then
-&#9;&#9;&#9;for i, v in pairs(humanoid:GetChildren()) do
-&#9;&#9;&#9;&#9;if v.Name == &quot;creator&quot; then
-&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;local hitHumanoids = {}
+&#9;explosion.Hit:connect(function(hitPart)
+&#9;&#9;local hitParent = hitPart.Parent
+&#9;&#9;if hitParent and hitParent.Parent then
+&#9;&#9;&#9;local humanoid = hitParent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;local player = Players:GetPlayerFromCharacter(hitParent)
+&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and not hitHumanoids[humanoid] and (player and player ~= Creator.Value and (player.TeamColor~=Creator.Value.TeamColor or player.Neutral or Creator.Value.Neutral) or not player) then
+&#9;&#9;&#9;&#9;hitHumanoids[humanoid]=true
+&#9;&#9;&#9;&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;if v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local creator = Creator:Clone()
+&#9;&#9;&#9;&#9;creator.Value = Creator.Value
+&#9;&#9;&#9;&#9;Debris:AddItem(creator, 2)
+&#9;&#9;&#9;&#9;creator.Parent = humanoid
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(35)
 &#9;&#9;&#9;end
-&#9;&#9;&#9;local creator = Creator:Clone()
-&#9;&#9;&#9;creator.Value = Creator.Value
-&#9;&#9;&#9;Debris:AddItem(creator, 2)
-&#9;&#9;&#9;creator.Parent = humanoid
-&#9;&#9;&#9;humanoid:TakeDamage(35)
 &#9;&#9;end
-&#9;end
+&#9;end)
 &#9;wait(1)
 &#9;BassDrop:Destroy()
 end)</ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
+		<Item class="LocalScript" referent="RBX7E68EC06C149464593CD69A743BE8E64">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -393,13 +404,13 @@ Tool.Changed:connect(OnChanged)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX7">
+		<Item class="Animation" referent="RBX22853DEDD9BB407581E5EE68DE0D8770">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset?id=152208184</url></Content>
 				<string name="Name">BassDrop</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX8">
+		<Item class="Camera" referent="RBX9CD88EBBABC64E27904328AC4708765C">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
