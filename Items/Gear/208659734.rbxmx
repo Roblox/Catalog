@@ -1,0 +1,447 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBXD2669CAA140146448B5E2E662BAE14BC">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0.400000006</X>
+				<Y>-0.600000024</Y>
+				<Z>0.100000001</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">DynamicallyLitLaserGun</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=193471329 </url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBXEAB20F3746E04BD6AF40C6883068DD0B">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Server</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+local Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+local FriendlyFire = false
+
+local AttackDamage = 45
+
+local LeftDown = false
+local MousePos, MouseTarget
+
+local Lasers = {}
+local LaserLength = 8
+local LaserSound = Handle:WaitForChild(&quot;Laser&quot;)
+
+local Heartbeat = game:GetService(&quot;RunService&quot;).Heartbeat
+
+--returns the wielding player of this tool
+function getPlayer()
+&#9;local char = Tool.Parent
+&#9;return game:GetService(&quot;Players&quot;):GetPlayerFromCharacter(char)
+end
+
+--helpfully checks a table for a specific value
+function contains(t, v)
+&#9;for _, val in pairs(t) do
+&#9;&#9;if val == v then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+--tags a human for the ROBLOX KO system
+function tagHuman(human)
+&#9;local tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;tag.Value = getPlayer()
+&#9;tag.Name = &quot;creator&quot;
+&#9;tag.Parent = human
+&#9;game:GetService(&quot;Debris&quot;):AddItem(tag)
+end
+
+--used by checkTeams
+function sameTeam(otherHuman)
+&#9;local player = getPlayer()
+&#9;local otherPlayer = game:GetService(&quot;Players&quot;):GetPlayerFromCharacter(otherHuman.Parent)
+&#9;if player and otherPlayer then
+&#9;&#9;return player.TeamColor == otherPlayer.TeamColor
+&#9;end
+&#9;return false
+end
+
+--use this to determine if you want this human to be harmed or not, returns boolean
+function checkTeams(otherHuman)
+&#9;return not (sameTeam(otherHuman) and not FriendlyFire)
+end
+
+function getHandleTip()
+&#9;return (Handle.CFrame * CFrame.new(0, 0.1, -1.7)).p
+end
+
+function laserBetween(a, b)
+&#9;local d = (b - a)
+&#9;local m = d.magnitude
+&#9;local lasersNeeded = math.ceil(m/LaserLength)
+&#9;
+&#9;--this following is basically witchcraft so that we replicate as little as possible
+&#9;if #Lasers &gt; lasersNeeded then
+&#9;&#9;for i = lasersNeeded+1, #Lasers do
+&#9;&#9;&#9;Lasers[i]:Destroy()
+&#9;&#9;&#9;Lasers[i] = nil
+&#9;&#9;end
+&#9;elseif #Lasers &lt; lasersNeeded then
+&#9;&#9;repeat
+&#9;&#9;&#9;local laser = Instance.new(&quot;Part&quot;)
+&#9;&#9;&#9;laser.FormFactor = &quot;Custom&quot;
+&#9;&#9;&#9;laser.Anchored = true
+&#9;&#9;&#9;laser.CanCollide = false
+&#9;&#9;&#9;laser.Size = Vector3.new(0.2, 0.2, LaserLength)
+&#9;&#9;&#9;laser.BrickColor = BrickColor.new(&quot;Teal&quot;)
+&#9;&#9;&#9;
+&#9;&#9;&#9;local light = Instance.new(&quot;PointLight&quot;)
+&#9;&#9;&#9;light.Color = laser.BrickColor.Color
+&#9;&#9;&#9;light.Parent = laser
+&#9;&#9;&#9;
+&#9;&#9;&#9;table.insert(Lasers, laser)
+&#9;&#9;until #Lasers &gt;= lasersNeeded
+&#9;end
+&#9;
+&#9;for index, laser in pairs(Lasers) do
+&#9;&#9;local factor = index - 1
+&#9;&#9;
+&#9;&#9;local laserStart = a + d.unit * factor * LaserLength
+&#9;&#9;local laserFinish = laserStart + d.unit * LaserLength
+&#9;&#9;local laserPos = (laserStart + laserFinish) / 2
+&#9;&#9;
+&#9;&#9;laser.CFrame = CFrame.new(laserPos, laserFinish)
+&#9;&#9;laser.Parent = Tool
+&#9;end
+end
+
+function clearLasers()
+&#9;for index, laser in pairs(Lasers) do
+&#9;&#9;laser:Destroy()
+&#9;&#9;Lasers[index] = nil
+&#9;end
+end
+
+function firingLoop()
+&#9;LaserSound:Play()
+&#9;while LeftDown do
+&#9;&#9;local ray = Ray.new(getHandleTip(), (MousePos-getHandleTip()).unit * 256)
+&#9;&#9;local targetPart, targetPos = workspace:FindPartOnRay(ray, Tool.Parent)
+&#9;&#9;
+&#9;&#9;laserBetween(getHandleTip(), targetPos)
+
+&#9;&#9;local dt = Heartbeat:wait()
+&#9;&#9;
+&#9;&#9;if targetPart and targetPart.Parent and targetPart.Parent:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;local human = targetPart.Parent.Humanoid
+&#9;&#9;&#9;if checkTeams(human) then
+&#9;&#9;&#9;&#9;tagHuman(human)
+&#9;&#9;&#9;&#9;human:TakeDamage(AttackDamage * dt)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;LaserSound:Stop()
+&#9;clearLasers()
+end
+
+function onEquip()
+&#9;Remote:FireClient(getPlayer(), &quot;PlayAnimation&quot;, &quot;GunHold&quot;)
+end
+
+function onUnequip()
+&#9;Remote:FireClient(getPlayer(), &quot;StopAnimation&quot;, &quot;GunHold&quot;)
+end
+
+function onLeftDown(mousePos, mouseTarget)
+&#9;LeftDown = true
+&#9;MousePos = mousePos
+&#9;MouseTarget = mouseTarget
+&#9;firingLoop()
+end
+
+function onLeftMoved(mousePos, mouseTarget)
+&#9;MousePos = mousePos
+&#9;MouseTarget = mouseTarget
+end
+
+function onLeftUp(mousePos, mouseTarget)
+&#9;LeftDown = false
+end
+
+function onRemote(player, func, ...)
+&#9;if player ~= getPlayer() then return end
+&#9;
+&#9;if func == &quot;LeftDown&quot; then
+&#9;&#9;onLeftDown(...)
+&#9;elseif func == &quot;LeftMoved&quot; then
+&#9;&#9;onLeftMoved(...)
+&#9;elseif func == &quot;LeftUp&quot; then
+&#9;&#9;onLeftUp(...)
+&#9;end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Remote.OnServerEvent:connect(onRemote)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX44C37AD0B9A94B1EB91391403BFD96B0">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Client</string>
+				<ProtectedString name="Source">local Player = game:GetService(&quot;Players&quot;).LocalPlayer
+local UIS = game:GetService(&quot;UserInputService&quot;)
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild(&quot;Remote&quot;)
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+local BeganConnection, EndedConnection, ChangedConnection
+local LeftDown = false
+
+function playAnimation(animName, ...)
+&#9;if Tracks[animName] then
+&#9;&#9;Tracks[animName]:Play()
+&#9;else
+&#9;&#9;local anim = Tool:FindFirstChild(animName)
+&#9;&#9;if anim and Tool.Parent and Tool.Parent:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+&#9;&#9;&#9;playAnimation(animName, ...)
+&#9;&#9;end
+&#9;end
+end
+
+function stopAnimation(animName)
+&#9;if Tracks[animName] then
+&#9;&#9;Tracks[animName]:Stop()
+&#9;end
+end
+
+function inputBegan(input)
+&#9;if input.UserInputType == InputType.MouseButton1 then
+&#9;&#9;Remote:FireServer(&quot;LeftDown&quot;, Mouse.Hit.p, Mouse.Target)
+&#9;&#9;LeftDown = true
+&#9;end
+end
+
+function inputEnded(input)
+&#9;if input.UserInputType == InputType.MouseButton1 then
+&#9;&#9;Remote:FireServer(&quot;LeftUp&quot;, Mouse.Hit.p, Mouse.Target)
+&#9;&#9;LeftDown = false
+&#9;end
+end
+
+function inputChanged(input)
+&#9;if input.UserInputType == InputType.MouseMovement then
+&#9;&#9;if LeftDown then
+&#9;&#9;&#9;Remote:FireServer(&quot;LeftMoved&quot;, Mouse.Hit.p, Mouse.Target)
+&#9;&#9;end
+&#9;end
+end
+
+function onRemote(func, ...)
+&#9;if func == &quot;PlayAnimation&quot; then
+&#9;&#9;playAnimation(...)
+&#9;elseif func == &quot;StopAnimation&quot; then
+&#9;&#9;stopAnimation(...)
+&#9;end
+end
+
+function onEquip()
+&#9;BeganConnection = UIS.InputBegan:connect(inputBegan)
+&#9;EndedConnection = UIS.InputEnded:connect(inputEnded)
+&#9;ChangedConnection = UIS.InputChanged:connect(inputChanged)
+end
+
+function onUnequip()
+&#9;if BeganConnection then
+&#9;&#9;BeganConnection:disconnect()
+&#9;&#9;BeganConnection = nil
+&#9;end
+&#9;
+&#9;if EndedConnection then
+&#9;&#9;EndedConnection:disconnect()
+&#9;&#9;EndedConnection = nil
+&#9;end
+&#9;
+&#9;if ChangedConnection then
+&#9;&#9;ChangedConnection:disconnect()
+&#9;&#9;ChangedConnection = nil
+&#9;end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Remote.OnClientEvent:connect(onRemote)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX338B441737EA4C20B49E3FF78985FF3A">
+			<Properties>
+				<string name="Name">Remote</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXC8E49060B75C440192A97DBC20790863">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.0634107292</X>
+					<Y>35.7792511</Y>
+					<Z>0.958115637</Z>
+					<R00>0.84903419</R00>
+					<R01>-0.524518549</R01>
+					<R02>0.0634107292</R02>
+					<R10>0.489482373</R10>
+					<R11>0.826083183</R11>
+					<R12>0.279272825</R12>
+					<R20>-0.198866427</R20>
+					<R21>-0.206073835</R21>
+					<R22>0.958115637</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>3</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX79BBD3553CB74C39B7749E9837C46E9C">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=193471371 </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=193471260 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXD11D8F878F4A42249EAFB07254FCCDF9">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Laser</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=69446762</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBXFC099179F9914C9990F14CEBA874553C">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=206851098</url></Content>
+				<string name="Name">GunHold</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXB324B4D580564FC8A6FDFA7993B12571">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-2.17555904</X>
+					<Y>34.5240669</Y>
+					<Z>-0.554407597</Z>
+					<R00>-0.559782624</R00>
+					<R01>-0.34910816</R01>
+					<R02>-0.751509786</R02>
+					<R10>1.49011612e-008</R10>
+					<R11>0.906920075</R11>
+					<R12>-0.421302795</R12>
+					<R20>0.828639567</R20>
+					<R21>-0.235837996</R21>
+					<R22>-0.507678092</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.672539473</X>
+					<Y>35.3666725</Y>
+					<Z>0.460948586</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
