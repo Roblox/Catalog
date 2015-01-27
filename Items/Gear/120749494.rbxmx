@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXC25EF227A7564A658DBE6D79FB58E907">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -9,141 +9,171 @@
 				<X>0.5</X>
 				<Y>-0.300000012</Y>
 				<Z>0.5</Z>
-				<R00>-4.37113883e-08</R00>
+				<R00>-4.37113883e-008</R00>
 				<R01>0</R01>
 				<R02>-1</R02>
 				<R10>1</R10>
-				<R11>-4.37113883e-08</R11>
-				<R12>-4.37113883e-08</R12>
-				<R20>-4.37113883e-08</R20>
+				<R11>-4.37113883e-008</R11>
+				<R12>-4.37113883e-008</R12>
+				<R20>-4.37113883e-008</R20>
 				<R21>-1</R21>
-				<R22>1.91068547e-15</R22>
+				<R22>1.91068547e-015</R22>
 			</CoordinateFrame>
-			<string name="Name">EaglePet</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">BaldEagle</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=120647457</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX1">
+		<Item class="Script" referent="RBXFA6BD8BA792943BBBDB9804C92B66F75">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
-				<ProtectedString name="Source">function WaitForChild(parent, child)
-&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
-&#9;return parent[child]
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+InsertService = game:GetService(&quot;InsertService&quot;)
+
+BirdModel = InsertService:LoadAsset(120756595)
+Bird = BirdModel:GetChildren()[1]:Clone()
+if BirdModel and BirdModel.Parent then
+&#9;BirdModel:Destroy()
 end
 
+MaxBirds = 3
+Birds = {}
+Duration = (60 * 1)
 
-local Tool = script.Parent
-local birdPrototypeContainer = game:GetService(&quot;InsertService&quot;):LoadAsset(120756595)
---local birdPrototype = game.Lighting:WaitForChild(&apos;AmericanEagle&apos;)
-local birdPrototype = birdPrototypeContainer:GetChildren()[1]
+Animations = {
+&#9;Hold = {Animation = Tool:WaitForChild(&quot;Hold&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+&#9;Blow = {Animation = Tool:WaitForChild(&quot;Blow&quot;), FadeTime = 0, Weight = nil, Speed = nil, Duration = 0.5}, 
+}
 
-local MAX_NUM_BIRDS = 3
-local birds = {}
-local numBirds = 0
-local myCharacter
-local myTorso
+Sounds = {
+&#9;SmallHorn = Handle:WaitForChild(&quot;SmallHorn&quot;),
+&#9;BigHorn = Handle:WaitForChild(&quot;BigHorn&quot;)
+}
 
-local Handle = WaitForChild(Tool, &quot;Handle&quot;)
-local SmallHorn = WaitForChild(Handle, &quot;SmallHorn&quot;)
-local BigHorn = WaitForChild(Handle, &quot;BigHorn&quot;)
+ToolEquipped = false
 
-print(&quot;Got it&quot;)
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
 
-local SkeletonBirdDuration = 1*60
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
 
---&#9;&#9;&#9;Create&apos;Sound&apos;{
---&#9;&#9;&#9;&#9;Name = &apos;CawSound&apos;;
---&#9;&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=96100733&apos;;
---&#9;&#9;&#9;&#9;Volume = 1;
---&#9;&#9;&#9;&#9;Pitch = math.random(80,120)/100;
---&#9;&#9;&#9;};
+Tool.Enabled = true
 
-
-function removeDeadBirds()
-&#9;for birdRef, bird in pairs(birds) do
-&#9;&#9;if not bird or not bird.Parent then
-&#9;&#9;&#9;birds[birdRef] = nil
-&#9;&#9;&#9;birdRef.Parent = nil
-&#9;&#9;&#9;numBirds = numBirds - 1
+function RemoveDeadBirds()
+&#9;for i, v in pairs(Birds) do
+&#9;&#9;if not v or not v.Parent then
+&#9;&#9;&#9;table.remove(Birds, i)
 &#9;&#9;end
 &#9;end
 end
 
-function spawnBird(torsoPosition)
-&#9;local newBird = birdPrototype:Clone()
-&#9;print(&quot;spawn bird prewait&quot;)
-&#9;local newBirdTorso = WaitForChild(newBird, &quot;Torso&quot;)
-&#9;local ownerRef = WaitForChild(newBirdTorso, &quot;OwnerRef&quot;)
-&#9;ownerRef.Value = myCharacter
-&#9;print(&quot;spawn bird post wait&quot;)
-&#9;local newBirdTag = Instance.new(&quot;ObjectValue&quot;)
-&#9;newBirdTag.Name = &quot;SkeletonBirdRefObject&quot;
-&#9;newBirdTag.Value = newBird
-&#9;birds[newBirdTag] = newBird
-&#9;newBirdTag.Parent = myCharacter
-
-&#9;local angle = math.pi * 2 * numBirds / (MAX_NUM_BIRDS + 1)
-&#9;local spawnPosition = torsoPosition + 200*(Vector3.new(math.sin(angle), 1, math.cos(angle)))
-&#9;newBird:TranslateBy(spawnPosition - newBird:GetModelCFrame().p)
-
-&#9;newBird.Parent = workspace
-&#9;numBirds = numBirds + 1
-&#9;game:GetService(&quot;Debris&quot;):AddItem(newBird, SkeletonBirdDuration)
-&#9;print(&quot;Added bird&quot;)
+function SpawnBird(Position)
+&#9;local NewBird = Bird:Clone()
+&#9;local OwnerRef = NewBird:WaitForChild(&quot;OwnerRef&quot;)
+&#9;OwnerRef.Value = Character
+&#9;local ToolRef = NewBird:WaitForChild(&quot;ToolRef&quot;)
+&#9;ToolRef.Value = Tool
+&#9;table.insert(Birds, NewBird)
+&#9;
+&#9;local Angle = (math.pi * 2 * #Birds / (MaxBirds + 1))
+&#9;local SpawnPosition = (Position + 200 * (Vector3.new(math.sin(Angle), 1, math.cos(Angle))))
+&#9;NewBird:TranslateBy(SpawnPosition - NewBird:GetModelCFrame().p)
+&#9;Debris:AddItem(NewBird, Duration)
+&#9;NewBird.Parent = game:GetService(&quot;Workspace&quot;)
 end
 
-local debounce = false
-function onActivated()
-&#9;if not myTorso or debounce then return end
-&#9;debounce = true
+function Activated()
+&#9;if not Tool.Enabled or not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
 &#9;Tool.Enabled = false
-&#9;removeDeadBirds()
-
-&#9;local addedBird = false
-
-&#9;if numBirds &lt; MAX_NUM_BIRDS then BigHorn.Volume = 1 SmallHorn.Volume = 0 else SmallHorn.Volume = 1 BigHorn.Volume = 0 end
-
-&#9;while numBirds &lt; MAX_NUM_BIRDS do
-&#9;&#9;print(&quot;Spawning a bird&quot;)
-&#9;&#9;spawnBird(myTorso.CFrame.p)
-&#9;&#9;wait(1)
-&#9;&#9;addedBird = true
+&#9;local Animation = Animations.Blow
+&#9;InvokeClient(&quot;PlayAnimation&quot;, Animation)
+&#9;RemoveDeadBirds()
+&#9;local AddedBird = false
+&#9;if #Birds &lt; MaxBirds then
+&#9;&#9;Sounds.BigHorn.Volume = 1
+&#9;&#9;Sounds.SmallHorn.Volume = 0
+&#9;else
+&#9;&#9;Sounds.BigHorn.Volume = 0
+&#9;&#9;Sounds.SmallHorn.Volume = 1
 &#9;end
-
-&#9;local myHumanoid = nil
-&#9;if myCharacter then myHumanoid = myCharacter:FindFirstChild(&quot;Humanoid&quot;) end
-
-&#9;if not myHumanoid or addedBird then debounce = false Tool.Enabled = true return end
-&#9;wait(.5)
-&#9;for birdRef, bird in pairs(birds) do
-&#9;&#9;local birdTorso = bird:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;if birdTorso then
-&#9;&#9;&#9;local birdTarget = birdTorso:FindFirstChild(&quot;TargetPoint&quot;)
-&#9;&#9;&#9;if birdTarget then birdTarget.Value = myHumanoid.TargetPoint end
+&#9;Spawn(function()
+&#9;&#9;wait(Animation.Duration)
+&#9;&#9;Sounds.BigHorn:Play()
+&#9;&#9;Sounds.SmallHorn:Play()
+&#9;end)
+&#9;while #Birds &lt; MaxBirds do
+&#9;&#9;SpawnBird(Torso.Position)
+&#9;&#9;wait(1)
+&#9;&#9;AddedBird = true
+&#9;end
+&#9;if AddedBird then
+&#9;&#9;Tool.Enabled = true
+&#9;end
+&#9;wait(0.5)
+&#9;for i, v in pairs(Birds) do
+&#9;&#9;local BirdTarget = v:FindFirstChild(&quot;TargetPoint&quot;)
+&#9;&#9;if BirdTarget then
+&#9;&#9;&#9;BirdTarget.Value = InvokeClient(&quot;MousePosition&quot;)
 &#9;&#9;end
 &#9;end
-
 &#9;wait(1.5)
 &#9;Tool.Enabled = true
-&#9;debounce = false
 end
 
-function onEquipped()
-&#9;myCharacter = Tool.Parent
-&#9;if not myCharacter or not myCharacter.Parent then myTorso = nil return end
-
-&#9;myTorso = myCharacter:FindFirstChild(&quot;Torso&quot;)
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent) and true) or false)
 end
 
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Hold)
+&#9;end)
+&#9;ToolEquipped = true
+end
 
-Tool.Activated:connect(onActivated)
-Tool.Equipped:connect(onEquipped)
-</ProtectedString>
+function Unequipped()
+&#9;ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+end
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX2">
+		<Item class="Part" referent="RBXA95EB5B1FE334B9BACB672120D29FB08">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -183,7 +213,7 @@ Tool.Equipped:connect(onEquipped)
 				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
-				<float name="Reflectance">0.699999988</float>
+				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
 				<float name="RightParamB">0.5</float>
 				<token name="RightSurface">0</token>
@@ -211,7 +241,7 @@ Tool.Equipped:connect(onEquipped)
 					<Z>3</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX41102664335D4AF49104038396FCA7D3">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -236,17 +266,17 @@ Tool.Equipped:connect(onEquipped)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Sound" referent="RBX113622F100CE4A4C9A5F7FACF64E2BB6">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">BigHorn</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=96100733</url></Content>
-					<float name="Volume">0.5</float>
+					<float name="Volume">0</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBX3B21DA5D90704D7AA3071717A25DF575">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">SmallHorn</string>
@@ -257,219 +287,209 @@ Tool.Equipped:connect(onEquipped)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool = script.Parent 
-
-local stillEquipped = false 
-
-function onEquippedLocal(mouse) 
-     stillEquipped = true 
-     if mouse == nil then 
-          print(&quot;Mouse not found&quot;) 
-          return 
-     end 
-     while stillEquipped do 
-          print(&quot;Setting Mouse to go&quot;) 
-          mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot; 
-          while Tool.Enabled and stillEquipped do 
-               wait(0.01) 
-          end 
-          print(&quot;Setting Mouse to wait&quot;) 
-          mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot; 
-          while not Tool.Enabled and stillEquipped do 
-               wait(0.01) 
-          end      
-     end 
-end 
-
-
-function onUnequippedLocal() 
-     stillEquipped = false 
-end 
-
-Tool.Equipped:connect(onEquippedLocal) 
-Tool.Unequipped:connect(onUnequippedLocal)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX7">
+		<Item class="Animation" referent="RBX8ECAEBC35C44431393E2714EBFE78E73">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=70439232</url></Content>
-				<string name="Name">BlowAnimation</string>
+				<string name="Name">Blow</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX8">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=70439247</url></Content>
-				<string name="Name">HoldAnimation</string>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX9">
+		<Item class="LocalScript" referent="RBXFB5F2DFA849B4A8D8411F5424FF35DD3">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">HornAnimate</string>
-				<ProtectedString name="Source">function WaitForChild(parent, child)
-&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
-&#9;return parent[child]
-end
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
 
-local Tool = script.Parent
-local Blow = WaitForChild(Tool, &quot;BlowAnimation&quot;)
-local Hold = WaitForChild(Tool, &quot;HoldAnimation&quot;)
-local Character
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-local BlowAnimation
-local HoldAnimation
+Players = game:GetService(&quot;Players&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
 
-local Handle = WaitForChild(Tool, &quot;Handle&quot;)
-local BigHorn = WaitForChild(Handle, &quot;BigHorn&quot;)
-local SmallHorn = WaitForChild(Handle, &quot;SmallHorn&quot;)
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
 
-function onEquipped()
-&#9;Character = Tool.Parent
-&#9;local Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if Humanoid then
-&#9;&#9;BlowAnimation = Humanoid:LoadAnimation(Blow)
-&#9;&#9;HoldAnimation = Humanoid:LoadAnimation(Hold)
-&#9;&#9;HoldAnimation:Play()
-&#9;end
-end
+Animations = {}
+LocalObjects = {}
 
-function onUnequipped()
-&#9;if HoldAnimation then HoldAnimation:Stop() end
-end
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
 
-local debounce = false
-function onActivated()
-&#9;if debounce then return end
-&#9;while Tool.Enabled do wait() end
-&#9;debounce = true
-&#9;BlowAnimation:Play(0)
-&#9;wait(.5)
-&#9;BigHorn:Play()
-&#9;SmallHorn:Play()
-&#9;
-&#9;while not Tool.Enabled do wait() end
+ToolEquipped = false
 
-&#9;debounce = false
-end
-
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)
-Tool.Activated:connect(onActivated)
-</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX10">
-				<Properties>
-					<bool name="Disabled">false</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">MotorizeRightGrip</string>
-					<ProtectedString name="Source">print(&quot;Run RightgripScript, parent=&quot;, script.Parent)
-
-function Create(ty)
-&#9;return function(data)
-&#9;&#9;local obj = Instance.new(ty)
-&#9;&#9;for k, v in pairs(data) do
-&#9;&#9;&#9;if type(k) == &apos;number&apos; then
-&#9;&#9;&#9;&#9;v.Parent = obj
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;obj[k] = v
+function SetAnimation(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
 &#9;&#9;&#9;end
 &#9;&#9;end
-&#9;&#9;return obj
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
 &#9;end
 end
 
-local Tool = script.Parent.Parent
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
+end
 
-local armChildRemovedConn = nil
-local Motor6DGrip = nil
-local EquippedNum = 0
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;PlayerMouse = Player:GetMouse()
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+end
 
-Tool.Equipped:connect(function()
-&#9;EquippedNum = EquippedNum + 1
-&#9;local myEquip = EquippedNum
-&#9;--some vars
-&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
-&#9;local Character = Player.Character
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;LocalObjects = {}
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs({ObjectLocalTransparencyModifier}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;Animations = {}
+end
 
-&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
-&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
-&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
-&#9;&#9;local handle = rightGrip.Part1
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;local ServerReturn = ServerControl:InvokeServer(Mode, Value)
+&#9;&#9;return ServerReturn
+&#9;end)
+end
 
-&#9;&#9;--kill my joint when the normal joint is removed
-&#9;&#9;--this must be done here so that the joint is removed 
-&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
-&#9;&#9;--glitch up.
-&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
-&#9;&#9;&#9;if ch == rightGrip then
-&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
-&#9;&#9;&#9;&#9;Motor6DGrip = nil
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
-&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
-&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
-&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
-&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
-&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
-&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
-&#9;&#9;&#9;&#9;&#9;end
+function OnClientInvoke(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
+&#9;elseif Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;StopSound&quot; and Value then
+&#9;&#9;Value:Stop()
+&#9;elseif Mode == &quot;MousePosition&quot; then
+&#9;&#9;return PlayerMouse.Hit.p
+&#9;elseif Mode == &quot;SetLocalTransparencyModifier&quot; and Value and ToolEquipped then
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;local ObjectFound = false
+&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;if v == Value then
+&#9;&#9;&#9;&#9;&#9;ObjectFound = true
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;end
+&#9;&#9;&#9;if not ObjectFound then
+&#9;&#9;&#9;&#9;table.insert(LocalObjects, Value)
+&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
+&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ((not v.AutoUpdate and (v.Object.LocalTransparencyModifier == 1 or  v.Object.LocalTransparencyModifier == 0)) or v.AutoUpdate) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(LocalObjects, i)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
 &#9;&#9;end)
-
-&#9;&#9;--make my new joint
-&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
-&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
-&#9;&#9;&#9;Part0 = rightarm,
-&#9;&#9;&#9;Part1 = handle,
-&#9;&#9;&#9;C0 = CFrame.new(),
-&#9;&#9;&#9;C1 = rightGrip.C1
-&#9;&#9;}
-&#9;&#9;--kill the old weld
-&#9;&#9;rightGrip.Part1 = nil
-&#9;&#9;rightGrip.Part0 = nil
-&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
 &#9;end
-end)
+end
 
-Tool.Unequipped:connect(function()
-&#9;EquippedNum = EquippedNum + 1
-&#9;if armChildRemovedConn then
-&#9;&#9;armChildRemovedConn:disconnect()
-&#9;&#9;armChildRemovedConn = nil
-&#9;end
-end)
-</ProtectedString>
-				</Properties>
-			</Item>
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
+			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX11">
+		<Item class="LocalScript" referent="RBXF10A874181A446A1BE790DA111F75982">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX1B0E9D266B8049D3BEF81459928490DB">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=70439247</url></Content>
+				<string name="Name">Hold</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX7414C16E87464DEAB2639ED5E2B7CD85">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-3.90439844</X>
-					<Y>2.68832588</Y>
-					<Z>-4.40497255</Z>
-					<R00>-0.804896057</R00>
-					<R01>0.209765092</R01>
-					<R02>-0.555104494</R02>
-					<R10>-2.98023224e-08</R10>
-					<R11>0.935439289</R11>
-					<R12>0.353487551</R12>
-					<R20>0.593415856</R20>
-					<R21>0.284520775</R21>
-					<R22>-0.752931356</R22>
+					<X>-3.45575976</X>
+					<Y>2.450418</Y>
+					<Z>-3.88941145</Z>
+					<R00>-0.831519246</R00>
+					<R01>0.203566551</R01>
+					<R02>-0.516852379</R02>
+					<R10>-0</R10>
+					<R11>0.930434108</R11>
+					<R12>0.366459161</R12>
+					<R20>0.555495858</R20>
+					<R21>0.304717839</R21>
+					<R22>-0.773673952</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
