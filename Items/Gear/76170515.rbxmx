@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXD0EECE27B27F4D3C8A091294A5938121">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">ParasitePet</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">AlienParasite</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=76117461</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX5E77F82315624CA8B2302AAE49982D0C">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -32,7 +33,7 @@
 				<token name="BackSurfaceInput">0</token>
 				<float name="BottomParamA">-0.5</float>
 				<float name="BottomParamB">0.5</float>
-				<token name="BottomSurface">4</token>
+				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
@@ -60,7 +61,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -75,7 +76,7 @@
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
-				<token name="TopSurface">3</token>
+				<token name="TopSurface">0</token>
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
@@ -91,7 +92,7 @@
 					<Z>1.76000392</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX9721F904C0C543A29E25DE5B9A986A59">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,494 +118,580 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">Tool = script.Parent
-
-local stillEquipped = false
-
-function onEquippedLocal(mouse)
-&#9;stillEquipped = true
-&#9;if mouse == nil then 
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return
-&#9;end
-&#9;while stillEquipped do 
-&#9;&#9;print(&quot;Setting Mouse to go&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;while Tool.Enabled and stillEquipped do 
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end
-&#9;&#9;print(&quot;Setting Mouse to wait&quot;)
-&#9;&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;while not Tool.Enabled and stillEquipped do 
-&#9;&#9;&#9;wait(0.01)
-&#9;&#9;end&#9;
-&#9;end
-end
-
-
-function onUnequippedLocal()
-&#9;stillEquipped = false
-end
-
-Tool.Equipped:connect(onEquippedLocal)
-Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX97A0E7A66EC44D4AB59405512AE28C58">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">ParasiteScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent 
-local Parasite = Tool.Handle
+				<ProtectedString name="Source">--Fixed by Luckymaxer
 
-local vCharacter
-local myTorso 
-local myHumanoid 
+Tool = script.Parent 
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
 
-Tool.Enabled = true 
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+InsertService = game:GetService(&quot;InsertService&quot;)
 
-local petParasite
+HelpGui = script:WaitForChild(&quot;HelpGui&quot;)
+ParasiteAIScript = script:WaitForChild(&quot;ParasiteAIScript&quot;)
 
-local equipped = false
+ParasiteId = 76117301
+ParasiteModel = InsertService:LoadAsset(ParasiteId)
+Parasite = ParasiteModel:GetChildren()[1]:Clone()
+if ParasiteModel and ParasiteModel.Parent then
+&#9;ParasiteModel:Destroy()
+end
 
-local debris = game:GetService(&quot;Debris&quot;)
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
 
-function summonParasite()
-&#9;if myTorso and myHumanoid then
-&#9;&#9;petParasite = game:GetService(&quot;InsertService&quot;):LoadAsset(76117301):GetChildren()[1] 
-&#9;&#9;if petParasite then 
-&#9;&#9;&#9;debris:AddItem(petParasite, 60) -- Make sure that it will get deleted 
-&#9;&#9;&#9;petParasite:MoveTo(myTorso.Position + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3)))
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
 
-&#9;&#9;&#9;local parasiteAIScript = Tool.ParasiteAIScript:Clone()
-&#9;&#9;
-&#9;&#9;&#9;while parasiteAIScript:FindFirstChild(&quot;Parasite&quot;) == nil do &#9;&#9;&#9;
-&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;end 
-&#9;&#9;&#9;
-&#9;&#9;&#9;parasiteAIScript.Parasite.Value = petParasite 
-&#9;&#9;&#9;parasiteAIScript.Parent = vCharacter
+ToolEquipped = false
 
-&#9;&#9;&#9;local target = Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;target.Name = &quot;Target&quot;
-&#9;&#9;&#9;target.Value = nil 
-&#9;&#9;&#9;target.Parent = petParasite
+Tool.Enabled = true
 
-&#9;&#9;&#9;wait()
-&#9;&#9;&#9;parasiteAIScript.Disabled = false 
+function IsTeamMate(Player1, Player2)
+&#9;return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
 
-&#9;&#9;&#9;debris:AddItem(parasiteAIScript, 60)
-&#9;&#9;
-&#9;&#9;&#9;petParasite.Parent = game.Workspace
-&#9;&#9;&#9;petParasite:MoveTo(myTorso.Position + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3)))
-&#9;&#9;&#9;Parasite.Transparency = 1.0
+function SummonParasite()
+&#9;if not ToolEquipped or not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;if HelpGuiClone and HelpGuiClone.Parent then
+&#9;&#9;HelpGuiClone.Frame.TextLabel.Text = &quot;Command him to consume your enemies!&quot;
+&#9;end
+&#9;ParasitePet = Parasite:Clone()
+&#9;local ParasiteAIScriptClone = ParasiteAIScript:Clone()
+&#9;local Target = Instance.new(&quot;ObjectValue&quot;)
+&#9;Target.Name = &quot;Target&quot;
+&#9;Target.Value = nil
+&#9;Target.Parent = ParasitePet
+&#9;local Creator = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator.Name = &quot;Creator&quot;
+&#9;Creator.Value = Player
+&#9;Creator.Parent = ParasitePet
+&#9;ParasiteAIScriptClone.Disabled = false
+&#9;ParasiteAIScriptClone.Parent = ParasitePet
+&#9;local ParasiteHumanoid = ParasitePet:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if ParasiteHumanoid then
+&#9;&#9;ParasiteHumanoid.Died:connect(function()
+&#9;&#9;&#9;Debris:AddItem(ParasitePet, 4)
+&#9;&#9;end)
+&#9;end
+&#9;if ParasiteRemoved then
+&#9;&#9;ParasiteRemoved:disconnect()
+&#9;end
+&#9;ParasiteRemoved = ParasitePet.Changed:connect(function(Property)
+&#9;&#9;if Property == &quot;Parent&quot; and not ParasitePet.Parent then
+&#9;&#9;&#9;if HelpGuiClone and HelpGuiClone.Parent then
+&#9;&#9;&#9;&#9;HelpGuiClone.Frame.TextLabel.Text = &quot;Summon the Parasite!&quot;
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;end
+&#9;end)
+&#9;Debris:AddItem(ParasitePet, 60)
+&#9;ParasitePet.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;ParasitePet:MoveTo((Torso.Position + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3))))
+end
 
-&#9;&#9;&#9;coroutine.resume(coroutine.create(function()
-&#9;&#9;&#9;&#9;wait(60.0)
-&#9;&#9;&#9;&#9;Parasite.Transparency = 0.0
-&#9;&#9;&#9;end)) 
-
-&#9;&#9;&#9;if petParasite:FindFirstChild(&quot;Humanoid&quot;) then 
-&#9;&#9;&#9;&#9;petParasite.Humanoid.Died:connect(function()&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;debris:AddItem(petParasite, 4) 
-&#9;&#9;&#9;&#9;&#9;wait(3.5)
-&#9;&#9;&#9;&#9;&#9;Parasite.Transparency = 0.0
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;end 
-&#9;&#9;end 
-&#9;end 
-end 
-
-function onActivated()
-&#9;if Tool.Enabled == false then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;if myTorso == nil or myHumanoid == nil then 
-&#9;&#9;return 
-&#9;end 
-&#9;
-
-&#9;Tool.Enabled = false 
-
-&#9;if not petParasite or not petParasite.Parent then 
-&#9;&#9;summonParasite()
-&#9;end 
-
-&#9;local target = myHumanoid.TargetPoint
-&#9;local direction = (target - myTorso.Position).unit
-&#9;
-&#9;local hit = game.Workspace:FindPartOnRay(Ray.new(myTorso.Position, direction * 150), vCharacter)
-&#9;if hit then 
-&#9;&#9;print(hit)
-&#9;&#9;local enemyHumanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if hit.Parent and hit.Parent:IsA(&quot;Hat&quot;) and hit.Parent.Parent then 
-&#9;&#9;&#9;enemyHumanoid = hit.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;end  
-&#9;&#9;if enemyHumanoid then 
-&#9;&#9;&#9;if petParasite:FindFirstChild(&quot;Target&quot;) then 
-&#9;&#9;&#9;&#9;petParasite.Target.Value = enemyHumanoid
-&#9;&#9;&#9;end 
-&#9;&#9;end 
-&#9;end 
-
-&#9;wait(2.0)
-&#9;&#9;
+function Activated()
+&#9;if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped then
+&#9;&#9;return
+&#9;end
+&#9;if not ParasitePet or not ParasitePet.Parent then
+&#9;&#9;Handle.Transparency = 1
+&#9;&#9;SummonParasite()
+&#9;end
+&#9;Tool.Enabled = false
+&#9;local TargetPosition = InvokeClient(&quot;MousePosition&quot;)
+&#9;local Direction = CFrame.new(Torso.Position, TargetPosition).lookVector
+&#9;local RayHit, RayPos = game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(Torso.Position, (Direction * 150)), {Character})
+&#9;if RayHit then
+&#9;&#9;local character = RayHit.Parent
+&#9;&#9;if character:IsA(&quot;Hat&quot;) then
+&#9;&#9;&#9;character = character.Parent
+&#9;&#9;end
+&#9;&#9;local player = Players:GetPlayerFromCharacter(character)
+&#9;&#9;if player and IsTeamMate(Player, player) then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;local Target = ParasitePet:FindFirstChild(&quot;Target&quot;)
+&#9;&#9;&#9;if Target then
+&#9;&#9;&#9;&#9;Target.Value = humanoid
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;wait(2)&#9;
 &#9;Tool.Enabled = true
+end
+
+function SetMaxHealth(humanoid, MaxHealth)
+&#9;if not humanoid then
+&#9;&#9;return
+&#9;end
+&#9;local Ratio = (humanoid.Health / humanoid.MaxHealth)
+&#9;humanoid.MaxHealth = MaxHealth
+&#9;humanoid.Health = (Ratio * MaxHealth)
+end
+
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;local PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;if PlayerGui then
+&#9;&#9;HelpGuiClone = HelpGui:Clone()
+&#9;&#9;HelpGuiClone.Parent = PlayerGui
+&#9;&#9;HelpGuiClone.Frame.TextLabel.Text = &quot;Summon the Parasite!&quot;
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;SetMaxHealth(Humanoid, 350)
+&#9;end)
+&#9;ToolEquipped = true
 end 
 
-function onEquipped()
-&#9;vCharacter = Tool.Parent 
-&#9;myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;equipped = true 
-&#9;if myHumanoid then
-&#9;&#9;local ratio = myHumanoid.Health/myHumanoid.MaxHealth
-&#9;&#9;myHumanoid.MaxHealth = 350 
-&#9;&#9;while myHumanoid.Health ~= ratio * myHumanoid.MaxHealth do 
-&#9;&#9;&#9;myHumanoid.Health = ratio * myHumanoid.MaxHealth 
-&#9;&#9;&#9;wait()
-&#9;&#9;end 
-&#9;end  
-&#9;coroutine.resume(coroutine.create(function() 
-&#9;&#9;while equipped do
-&#9;&#9;&#9;if myHumanoid then 
-&#9;&#9;&#9;&#9;myHumanoid.Health = myHumanoid.Health - 1
-&#9;&#9;&#9;end  
-&#9;&#9;&#9;wait(1.0)
-&#9;&#9;end 
-&#9;&#9;if myHumanoid then&#9;
-&#9;&#9;&#9;local ratio = myHumanoid.Health/myHumanoid.MaxHealth
-&#9;&#9;&#9;myHumanoid.MaxHealth = 100 
-&#9;&#9;&#9;while myHumanoid.Health ~= ratio * myHumanoid.MaxHealth do 
-&#9;&#9;&#9;&#9;myHumanoid.Health = ratio * myHumanoid.MaxHealth 
-&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;end 
-&#9;&#9;end  
-&#9;end)) 
+function Unequipped()
+&#9;for i, v in pairs({ParasitePet, HelpGuiClone}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;if ParasiteRemoved then
+&#9;&#9;ParasiteRemoved:disconnect()
+&#9;end
+&#9;Handle.Transparency = 0
+&#9;Spawn(function()
+&#9;&#9;SetMaxHealth(Humanoid, 100)
+&#9;end)
+&#9;ToolEquipped = false 
 end 
 
-function onUnequipped()
-&#9;if petParasite then petParasite:Destroy() end &#9;
-&#9;Parasite.Transparency = 0.0
-&#9;if myHumanoid then&#9;
-&#9;&#9;local ratio = myHumanoid.Health/myHumanoid.MaxHealth
-&#9;&#9;myHumanoid.MaxHealth = 100 
-&#9;&#9;while myHumanoid.Health ~= ratio * myHumanoid.MaxHealth do 
-&#9;&#9;&#9;myHumanoid.Health = ratio * myHumanoid.MaxHealth 
-&#9;&#9;&#9;wait()
-&#9;&#9;end 
-&#9;end  
-&#9;equipped = false 
-end 
+function OnServerInvoke(player, mode, value)
+&#9;if player == Player and ToolEquipped and value and CheckIfAlive() then
+&#9;end
+end
 
-Tool.Activated:connect(onActivated)
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)</ProtectedString>
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX5">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ParasiteAIScript</string>
-				<ProtectedString name="Source">while script:FindFirstChild(&quot;Parasite&quot;) == nil do 
-&#9;wait()
+			<Item class="ScreenGui" referent="RBXFF1D1BD7102E4C3B9C2B01E691D4544A">
+				<Properties>
+					<string name="Name">HelpGui</string>
+				</Properties>
+				<Item class="Frame" referent="RBX490537ED4CC247A6B691C3F8E42B2591">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Frame</string>
+						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>-130</XO>
+							<YS>1</YS>
+							<YO>-165</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>250</XO>
+							<YS>0</YS>
+							<YO>30</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">3</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+					<Item class="TextLabel" referent="RBXE022576E4B8B4FBD9F082EFDF64C51EA">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">2</token>
+							<string name="Name">TextLabel</string>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>0</XO>
+								<YS>0</YS>
+								<YO>0</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<UDim2 name="Size">
+								<XS>1</XS>
+								<XO>0</XO>
+								<YS>1</YS>
+								<YO>0</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<string name="Text">Command him to consume your enemies!</string>
+							<Color3 name="TextColor3">4294934272</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
+							<float name="TextTransparency">0</float>
+							<bool name="TextWrapped">false</bool>
+							<token name="TextXAlignment">2</token>
+							<token name="TextYAlignment">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">10</int>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+			<Item class="Script" referent="RBX3F1A538DA3A74CF581F81451E23B26A9">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">ParasiteAIScript</string>
+					<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Parasite = script.Parent
+
+Creator = Parasite:WaitForChild(&quot;Creator&quot;)
+Target = Parasite:WaitForChild(&quot;Target&quot;)
+
+Bite = script:WaitForChild(&quot;Bite&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+Player = Creator.Value
+Character = Player.Character
+Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+Torso = Character:FindFirstChild(&quot;Torso&quot;)
+
+ParasiteHumanoid = Parasite:FindFirstChild(&quot;Humanoid&quot;)
+ParasiteTorso = Parasite:FindFirstChild(&quot;Torso&quot;)
+ParasiteLeftArm = Parasite:FindFirstChild(&quot;Left Arm&quot;)
+ParasiteRightArm = Parasite:FindFirstChild(&quot;Right Arm&quot;)
+ParasiteRightMidArm = Parasite:FindFirstChild(&quot;Right MidArm&quot;)
+ParasiteLeftMidArm = Parasite:FindFirstChild(&quot;Left MidArm&quot;)
+ParasiteLeftForeArm = Parasite:FindFirstChild(&quot;Left ForeArm&quot;)
+ParasiteRightForeArm = Parasite:FindFirstChild(&quot;Right ForeArm&quot;)
+
+Animating = false
+
+ParasiteHumanoid.WalkSpeed = 24
+ParasiteHumanoid.MaxHealth = 350
+ParasiteHumanoid.Health = ParasiteHumanoid.MaxHealth
+
+function TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
 end
 
-local petParasite = script.Parasite
-
-while petParasite.Value == nil do 
-&#9;wait()
-end 
-
-petParasite = petParasite.Value
-
-while petParasite:FindFirstChild(&quot;Target&quot;) == nil do 
-&#9;wait()
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
 end
 
-local target = petParasite.Target
+function IsTeamMate(Player1, Player2)
+&#9;return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
 
-local targetEnemyTorso 
-
-if target.Value == nil then 
-&#9;--petParasite:Remove()
-end 
-
--- Best part about doing this from the character 
-local vCharacter = script.Parent
-local myTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-local myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-
-local petParasiteHumanoid = petParasite:FindFirstChild(&quot;Humanoid&quot;)
-local petParasiteTorso = petParasite:FindFirstChild(&quot;Torso&quot;)
-
-local debris = game:GetService(&quot;Debris&quot;)
-
-local enemyHumanoid = target.Value 
-
-if petParasiteHumanoid then &#9;
-&#9;petParasiteHumanoid.WalkSpeed = 24.0
-&#9;
-&#9;while petParasiteHumanoid.MaxHealth &lt; 350 do 
-&#9;&#9;petParasiteHumanoid.MaxHealth = 350 
-&#9;&#9;wait()
+function Slash(Hit)
+&#9;if not Hit or not Hit.Parent then
+&#9;&#9;return
 &#9;end
-
-&#9;while petParasiteHumanoid.Health &lt; 350 do 
-&#9;&#9;petParasiteHumanoid.Health = 350 
-&#9;&#9;wait()
+&#9;local character = Hit.Parent
+&#9;if character:IsA(&quot;Hat&quot;) then
+&#9;&#9;character = character.Parent
 &#9;end
-end 
-
-local healCount = 0
-
-function slash(hit)&#9;
-&#9;if hit and hit.Parent then           &#9;&#9;
-&#9;&#9;local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if humanoid and humanoid ~= petParasiteHumanoid and humanoid == enemyHumanoid and humanoid ~= myHumanoid then                &#9;&#9;&#9;
-&#9;&#9;&#9;humanoid:TakeDamage(15)      
-&#9;&#9;&#9;if myHumanoid then 
-&#9;&#9;&#9;&#9;if myHumanoid.Health + 12 &lt; myHumanoid.MaxHealth then 
-&#9;&#9;&#9;&#9;&#9;myHumanoid.Health = myHumanoid.Health + 12
-&#9;&#9;&#9;&#9;&#9;if myTorso  and myTorso:FindFirstChild(&quot;ParasiteFire&quot;) == nil then 
-&#9;&#9;&#9;&#9;&#9;&#9;local fire = Instance.new(&quot;Fire&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;fire.Parent = myTorso 
-&#9;&#9;&#9;&#9;&#9;&#9;fire.Name = &quot;ParasiteFire&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;fire.Color = Color3.new(0, 0, 0)
-&#9;&#9;&#9;&#9;&#9;&#9;fire.SecondaryColor = Color3.new(1, 0, 0)
-&#9;&#9;&#9;&#9;&#9;&#9;fire.Size = 4
-&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(fire, 1.5)
-&#9;&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;&#9;end 
+&#9;if character == Character or character == Parasite then
+&#9;&#9;return
+&#9;end
+&#9;local player = Players:GetPlayerFromCharacter(character)
+&#9;if player and IsTeamMate(Player, player) then
+&#9;&#9;return
+&#9;end
+&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if humanoid and humanoid == EnemyHumanoid then
+&#9;&#9;UntagHumanoid(humanoid)
+&#9;&#9;TagHumanoid(humanoid, Player)
+&#9;&#9;humanoid:TakeDamage(15) 
+&#9;&#9;if (Humanoid.Health + 12) &lt; Humanoid.MaxHealth then 
+&#9;&#9;&#9;Humanoid.Health = (Humanoid.Health + 12)
+&#9;&#9;&#9;if not Torso:FindFirstChild(&quot;Fire&quot;) then
+&#9;&#9;&#9;&#9;local Fire = Instance.new(&quot;Fire&quot;)
+&#9;&#9;&#9;&#9;Fire.Parent = Torso
+&#9;&#9;&#9;&#9;Fire.Name = &quot;ParasiteFire&quot;
+&#9;&#9;&#9;&#9;Fire.Color = Color3.new(0, 0, 0)
+&#9;&#9;&#9;&#9;Fire.SecondaryColor = Color3.new(1, 0, 0)
+&#9;&#9;&#9;&#9;Fire.Size = 4
+&#9;&#9;&#9;&#9;Debris:AddItem(Fire, 1.5)
 &#9;&#9;&#9;end 
-&#9;&#9;&#9;if humanoid.Health == 0 then &#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;targetEnemyTorso = nil &#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;followCharacter = true &#9;&#9;&#9;
-&#9;&#9;&#9;else &#9;&#9;&#9;&#9;
-&#9;&#9;&#9;end 
+&#9;&#9;end
+&#9;&#9;if humanoid.Health == 0 then
+&#9;&#9;&#9;EnemyTorso = nil
 &#9;&#9;end
 &#9;end
 end 
 
-local petParasiteLeftArm  = petParasite:FindFirstChild(&quot;Left Arm&quot;)
-local petParasiteRightArm  = petParasite:FindFirstChild(&quot;Right Arm&quot;)
-local petParasiteRightMidArm = petParasite:FindFirstChild(&quot;Right MidArm&quot;)
-local petParasiteLeftMidArm = petParasite:FindFirstChild(&quot;Left MidArm&quot;)
-local petParasiteLeftForeArm = petParasite:FindFirstChild(&quot;Left ForeArm&quot;)
-local petParasiteRightForeArm = petParasite:FindFirstChild(&quot;Right ForeArm&quot;)
-
-
-if petParasiteLeftArm  then
-&#9;petParasiteLeftArm.Touched:connect(slash)
+for i, v in pairs({ParasiteTorso, ParasiteLeftArm, ParasiteRightArm, ParasiteLeftForeArm, ParasiteRightForeArm, ParasiteLeftMidArm, ParasiteRightMidArm}) do
+&#9;if v then
+&#9;&#9;v.Touched:connect(Slash)
+&#9;end
 end
 
-if petParasiteRightArm  then 
-&#9;petParasiteRightArm.Touched:connect(slash)
-end 
+Target.Changed:connect(function()
+&#9;if Target.Value then
+&#9;&#9;EnemyHumanoid = Target.Value
+&#9;&#9;Enemy = EnemyHumanoid.Parent
+&#9;&#9;local torso = Enemy:FindFirstChild(&quot;Torso&quot;)
+&#9;&#9;if torso then
+&#9;&#9;&#9;EnemyTorso = torso
+&#9;&#9;end
+&#9;end
+end)
 
-if petParasiteLeftForeArm then
-&#9;petParasiteLeftForeArm.Touched:connect(slash)
-end 
+Animating = false
+CheckAOE = Vector3.new(15, 15, 15)
 
-if petParasiteRightForeArm then 
-&#9;petParasiteRightForeArm.Touched:connect(slash)
-end 
-
-if petParasiteRightMidArm then 
-&#9;petParasiteRightMidArm.Touched:connect(slash)
-end 
-
-if petParasiteLeftMidArm then 
-&#9;petParasiteLeftMidArm.Touched:connect(slash)
-end 
-
-
-petParasiteTorso.Touched:connect(slash)
-
-local children = petParasite:GetChildren()
-for i = 1, #children do 
-&#9;if children[i].ClassName == &quot;Tool&quot; then 
-&#9;&#9;if children[i]:FindFirstChild(&quot;Handle&quot;) then 
-&#9;&#9;&#9;children[i].Handle.Touched:connect(slash) 
-&#9;&#9;end 
+while true do 
+&#9;local Ray = game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(ParasiteTorso.Position, ParasiteTorso.CFrame.lookVector * 5), {Parasite})
+&#9;if Ray and ParasiteHumanoid.Health &gt; 0 and Ray.Parent ~= Parasite and Ray.Parent ~= Character then
+&#9;&#9;ParasiteHumanoid.Jump = true
 &#9;end 
-end 
-
-
-local targetEnemy 
-if enemyHumanoid then targetEnemy = enemyHumanoid.Parent end
-
-if targetEnemy then 
-&#9;targetEnemyTorso = targetEnemy:FindFirstChild(&quot;Torso&quot;)
-&#9;if targetEnemyTorso == nil then
-&#9;&#9;--petParasite:Remove()
-&#9;end 
-else 
-&#9;--petParasite:Remove() 
-end 
-
-target.Changed:connect(function()
-&#9;if target.Value then 
-&#9;&#9;enemyHumanoid = target.Value 
-&#9;&#9;targetEnemy = enemyHumanoid.Parent 
-&#9;&#9;if targetEnemy then 
-&#9;&#9;&#9;targetEnemyTorso = targetEnemy:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;end 
-&#9;end 
-end) 
-
-local animating = false
-
-local checkAOE = Vector3.new(15, 15, 15)
-
-while true do     
-&#9;local ray = game.Workspace:FindPartOnRay(Ray.new(petParasiteTorso.Position, petParasiteTorso.CFrame.lookVector * 5.0), petParasite)
-&#9;if ray and petParasiteHumanoid and ray.Parent ~= petParasite and ray.Parent ~= vCharacter then
-&#9;&#9;petParasiteHumanoid.Jump = true&#9;&#9;
-&#9;end     
-&#9;if targetEnemyTorso then       &#9;&#9;
-&#9;&#9;local distance = (targetEnemyTorso.Position - petParasiteTorso.Position).magnitude
-&#9;&#9;local targetEnemy = targetEnemyTorso.Parent
-&#9;&#9;if distance &lt; 60 then 
-&#9;&#9;&#9;local targetEnemyHumanoid = targetEnemy:FindFirstChild(&quot;Humanoid&quot;)&#9;&#9;
-&#9;&#9;&#9;petParasiteHumanoid:MoveTo(targetEnemyTorso.Position, targetEnemyTorso)     
-&#9;&#9;&#9;if distance &lt; 4 and not animating then 
-&#9;&#9;&#9;&#9;animating = true
-&#9;&#9;&#9;&#9;local biteAnim = petParasiteHumanoid:LoadAnimation(script:FindFirstChild(&quot;BiteAnim&quot;))
-&#9;&#9;&#9;&#9;if biteAnim then biteAnim:Play() end 
-&#9;&#9;&#9;&#9;coroutine.resume(coroutine.create(function() wait(1.25) animating = false end))
-&#9;&#9;&#9;end 
+&#9;if EnemyTorso then &#9;&#9;
+&#9;&#9;local Distance = (EnemyTorso.Position - ParasiteTorso.Position).magnitude
+&#9;&#9;local TargetEnemy = EnemyTorso.Parent
+&#9;&#9;if Distance &lt; 60 then 
+&#9;&#9;&#9;local TargetEnemyHumanoid = TargetEnemy:FindFirstChild(&quot;Humanoid&quot;)&#9;&#9;
+&#9;&#9;&#9;ParasiteHumanoid:MoveTo(EnemyTorso.Position)
+&#9;&#9;&#9;if Distance &lt; 4 and not Animating then 
+&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;Animating = true
+&#9;&#9;&#9;&#9;&#9;local BiteAnim = ParasiteHumanoid:LoadAnimation(Bite)
+&#9;&#9;&#9;&#9;&#9;BiteAnim:Play()
+&#9;&#9;&#9;&#9;&#9;wait(1.25)
+&#9;&#9;&#9;&#9;&#9;Animating = false
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
 &#9;&#9;else 
-&#9;&#9;&#9;if myTorso then 
-&#9;&#9;&#9;&#9;petParasiteHumanoid:MoveTo(myTorso.Position + Vector3.new(4, 0, 4), myTorso)
-&#9;&#9;&#9;end 
+&#9;&#9;&#9;ParasiteHumanoid:MoveTo(Torso.Position + Vector3.new(4, 0, 4))
 &#9;&#9;end 
 &#9;else
-&#9;&#9;if myTorso then 
-&#9;&#9;&#9;petParasiteHumanoid:MoveTo(myTorso.Position + Vector3.new(4, 0, 4), myTorso)
-&#9;&#9;end 
+&#9;&#9;ParasiteHumanoid:MoveTo(Torso.Position + Vector3.new(4, 0, 4))
 &#9;end
 &#9;wait()
-end 
-</ProtectedString>
-			</Properties>
-			<Item class="ObjectValue" referent="RBX6">
-				<Properties>
-					<string name="Name">Parasite</string>
-					<Ref name="Value">null</Ref>
+end</ProtectedString>
 				</Properties>
-			</Item>
-			<Item class="Animation" referent="RBX7">
-				<Properties>
-					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=76138892</url></Content>
-					<string name="Name">BiteAnim2</string>
-				</Properties>
-			</Item>
-			<Item class="Animation" referent="RBX8">
-				<Properties>
-					<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=76138892</url></Content>
-					<string name="Name">BiteAnim</string>
-				</Properties>
+				<Item class="Animation" referent="RBX7BA5163EBF444CBF910F442DF5B574BC">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=76138892</url></Content>
+						<string name="Name">Bite</string>
+					</Properties>
+				</Item>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX9">
+		<Item class="LocalScript" referent="RBXB20705640AD649B58179D1A76DB682EF">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">GuiScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent 
-local Lantern = Tool.Handle
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
 
-local vCharacter 
-local vPlayer 
-local genericTextLabel
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
 
-local sg 
-local frame 
+Tool = script.Parent
 
-function onEquipped()
-&#9;vCharacter = Tool.Parent
-&#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
-&#9;if vPlayer then 
-&#9;&#9;local playerGui = vPlayer:FindFirstChild(&quot;PlayerGui&quot;)
-&#9;&#9;if playerGui and playerGui:FindFirstChild(&quot;LanternGui&quot;) == nil then 
-&#9;&#9;&#9;sg = Instance.new(&quot;ScreenGui&quot;)
-&#9;&#9;&#9;sg.Name = &quot;LanternGui&quot;
-&#9;&#9;&#9;sg.Parent = playerGui 
+Mouse = nil
 
-&#9;&#9;&#9;frame = Instance.new(&quot;Frame&quot;)
-&#9;&#9;&#9;frame.Parent = sg 
-&#9;&#9;&#9;frame.Size = UDim2.new(0, 220, 0, 30)
-&#9;&#9;&#9;frame.Position = UDim2.new(0.5, -110, 1, -130) 
-&#9;&#9;&#9;frame.Style = Enum.FrameStyle.RobloxRound
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
 
-&#9;&#9;&#9;genericTextLabel = Instance.new(&quot;TextLabel&quot;)
-&#9;&#9;&#9;genericTextLabel.BackgroundTransparency = 1.0
-&#9;&#9;&#9;genericTextLabel.Size = UDim2.new(1, 0, 1, 0)
-&#9;&#9;&#9;genericTextLabel.Visible = true 
-&#9;&#9;&#9;genericTextLabel.ZIndex = 10 
-&#9;&#9;&#9;genericTextLabel.FontSize = Enum.FontSize.Size10 
-&#9;&#9;&#9;genericTextLabel.Font = Enum.Font.Legacy
-&#9;&#9;&#9;genericTextLabel.TextColor3 = Color3.new(1, 127/255, 0)
-&#9;&#9;&#9;genericTextLabel.TextXAlignment = Enum.TextXAlignment.Center
-&#9;&#9;&#9;genericTextLabel.TextYAlignment = Enum.TextYAlignment.Top
-&#9;&#9;&#9;genericTextLabel.Parent = frame
-&#9;&#9;&#9;genericTextLabel.Text = &quot;Summon the Parasite!&quot; 
-&#9;&#9;end 
-&#9;end 
-end 
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
 
-function onUnequipped()
-&#9;if sg then sg:Remove() end 
-end 
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
 
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)
-
-while true do 
-&#9;if vCharacter and genericTextLabel then 
-&#9;&#9;if vCharacter:FindFirstChild(&quot;ParasiteAIScript&quot;) then 
-&#9;&#9;&#9;genericTextLabel.Text = &quot;Command him to consume your enemies!&quot; 
-&#9;&#9;else 
-&#9;&#9;&#9;genericTextLabel.Text = &quot;Summon the Parasite!&quot; 
-&#9;&#9;end 
-&#9;end 
-&#9;wait()
-end 
-</ProtectedString>
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="LocalScript" referent="RBX7040069495B84FACAE3BB34651016CBB">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
+
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ReloadCounter = 0
+
+ToolEquipped = false
+
+function SetAnimation(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;PlayerMouse = Player:GetMouse()
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+end
+
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;LocalObjects = {}
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;Animations = {}
+end
+
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;local ServerReturn = ServerControl:InvokeServer(Mode, Value)
+&#9;&#9;return ServerReturn
+&#9;end)
+end
+
+function OnClientInvoke(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
+&#9;elseif Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;StopSound&quot; and Value then
+&#9;&#9;Value:Stop()
+&#9;elseif Mode == &quot;MousePosition&quot; then
+&#9;&#9;return PlayerMouse.Hit.p
+&#9;end
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXE1C6F7FFD4F947A0BAAEA6D4D9738CAD">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
+				<token name="CameraType">5</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-61.175312</X>
-					<Y>2.36315536</Y>
-					<Z>28.7585716</Z>
+					<X>-61.1720543</X>
+					<Y>2.39059567</Y>
+					<Z>28.8362656</Z>
 					<R00>0.999123573</R00>
-					<R01>-0.0039392761</R01>
-					<R02>0.0416717194</R02>
+					<R01>-0.00393927749</R01>
+					<R02>0.041671671</R02>
 					<R10>-0</R10>
-					<R11>0.9955616</R11>
-					<R12>0.094111599</R12>
-					<R20>-0.0418574996</R20>
-					<R21>-0.0940291137</R21>
-					<R22>0.994689107</R22>
+					<R11>0.995561659</R11>
+					<R12>0.094111748</R12>
+					<R20>-0.0418574475</R20>
+					<R21>-0.0940292627</R21>
+					<R22>0.994689167</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-61.2478905</X>
-					<Y>2.19924283</Y>
-					<Z>27.0261402</Z>
+					<X>-61.2479668</X>
+					<Y>2.21915412</Y>
+					<Z>27.0242596</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
