@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX7B47E188F1F64F6294521497C7857269">
+	<Item class="Tool" referent="RBXC2FD4A9BCDCD4418921BD161201E9F6F">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -20,289 +20,11 @@
 				<R22>0.83518827</R22>
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
-			<string name="Name">Red 9</string>
+			<string name="Name">Mauser .96</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=97899275</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBXA802E0DEFE4B42D3A3CF947FDB57D563">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">-- Made by Stickmasterluke
- -- edited by fusroblox
-
-function WaitForChild(obj, name)
-&#9;while not obj:FindFirstChild(name) do
-&#9;&#9;wait()
-&#9;&#9;print(&quot;1waiting for &quot; .. name)
-&#9;end
-&#9;return obj:FindFirstChild(name)
-end
-
-local function FindCharacterAncestor(subject)
-&#9;if subject and subject ~= Workspace then
-&#9;&#9;if subject:FindFirstChild(&apos;Humanoid&apos;) then
-&#9;&#9;&#9;return subject
-&#9;&#9;else
-&#9;&#9;&#9;return FindCharacterAncestor(subject.Parent)
-&#9;&#9;end
-&#9;end
-&#9;return nil
-end
-
-local Tool = script.Parent
-
-local GunObj ={
-&#9;Reloading = &quot;http://www.roblox.com/asset/?id=94155503&quot;,
-&#9;
-&#9;Cursors = {
-&#9;&#9;&quot;http://www.roblox.com/asset/?id=94154683&quot;, -- black
-&#9;&#9;&quot;http://www.roblox.com/asset/?id= 94154829&quot;, -- red
-&#9;&#9;&quot;http://www.roblox.com/asset/?id=94155503&quot;, 
-&#9;&#9;&quot;http://www.roblox.com/asset/?id=94155569&quot;
-&#9;},
-&#9;
-&#9;ClipSize = 10,
-&#9;Equipped = false,
-&#9;
-&#9;Player = game.Players.localPlayer,
-&#9;Ammo = WaitForChild(script.Parent,&quot;Ammo&quot;),
-&#9;Clips,
-&#9;Gui = WaitForChild(Tool,&quot;AmmoHud&quot;),
-&#9;NumberImages={},
-&#9;IdleAni,
-&#9;MyMouse
-&#9;
-}
-
-local ChestWeld
-
-local initialized=false
-
-function GunObj:Initialize()
-&#9;if initialized then return end
-&#9;initialized=true
-&#9;self.Ammo.Changed:connect(function()self:UpdateGui()end)
-
-&#9;WaitForChild(Tool, &quot;Reloading&quot;)
-&#9;print(&apos;got to connections!!!!! &apos;)
-&#9;Tool.Reloading.Changed:connect(function() self:UpdateGui() end)
-&#9;Tool.Unequipped:connect(function() self:OnUnequipped() end)
-&#9;
-&#9;Tool.DoFireAni.Changed:connect(PlayFireAni)
-&#9;self.NumberImages[&apos;0&apos;]=94128401
-&#9;self.NumberImages[&apos;1&apos;]=94128421
-&#9;self.NumberImages[&apos;2&apos;]=94128434
-&#9;self.NumberImages[&apos;3&apos;]=94128446
-&#9;self.NumberImages[&apos;4&apos;]=94128466
-&#9;self.NumberImages[&apos;5&apos;]=94128485
-&#9;self.NumberImages[&apos;6&apos;]=94128496
-&#9;self.NumberImages[&apos;7&apos;]=94128523
-&#9;self.NumberImages[&apos;8&apos;]=94128538
-&#9;self.NumberImages[&apos;9&apos;]=97903893
-
-&#9;local bar=WaitForChild(self.Gui,&apos;Bar&apos;)
-&#9;self:UpdateNumbers(self.ClipSize..&apos;&apos;, WaitForChild(bar,&apos;TotalAmmo&apos;))
-end
-
-function GunObj:UpdateNumbers(data,frame)
-&#9;if string.len(data)==0 then
-&#9;&#9;data= &apos;0&apos;..data
-&#9;end
-&#9;if string.len(data)==1 then
-&#9;&#9;data= &apos;0&apos;..data
-&#9;end
-
-&#9;local digit=WaitForChild(WaitForChild(frame,&apos;1&apos;),&apos;digit&apos;)
-&#9;if digit.Image ~=&apos;http://www.roblox.com/asset/?id=&apos;..self.NumberImages[string.sub(data,1,1)] then
-&#9;&#9;local ndigit=digit:Clone()
-&#9;&#9;ndigit.Position=UDim2.new(ndigit.Position.X.Scale,ndigit.Position.X.Offset,ndigit.Position.Y.Scale,ndigit.Position.Y.Offset-65)
-&#9;&#9;ndigit.Image=&apos;http://www.roblox.com/asset/?id=&apos;..self.NumberImages[string.sub(data,1,1)]
-&#9;&#9;ndigit.Parent=digit.Parent
-&#9;&#9;ndigit:TweenPosition(digit.Position, &quot;Out&quot;, &quot;Quad&quot;, .1)
-&#9;&#9;digit.Name=&apos;oldDigit&apos;
-&#9;&#9;digit:TweenPosition(UDim2.new(digit.Position.X.Scale,digit.Position.X.Offset,digit.Position.Y.Scale,digit.Position.Y.Offset+65), &quot;Out&quot;, &quot;Quad&quot;, .25)
-&#9;&#9;game.Debris:AddItem(digit,1)
-&#9;end
-&#9;digit=WaitForChild(WaitForChild(frame,&apos;2&apos;),&apos;digit&apos;)
-&#9;if digit.Image ~=&apos;http://www.roblox.com/asset/?id=&apos;..self.NumberImages[string.sub(data,2,2)] then
-&#9;&#9;ndigit=digit:Clone()
-&#9;&#9;ndigit.Position=UDim2.new(ndigit.Position.X.Scale,ndigit.Position.X.Offset,ndigit.Position.Y.Scale,ndigit.Position.Y.Offset-65)
-&#9;&#9;ndigit.Image=&apos;http://www.roblox.com/asset/?id=&apos;..self.NumberImages[string.sub(data,2,2)]
-&#9;&#9;ndigit.Parent=digit.Parent
-&#9;&#9;ndigit:TweenPosition(UDim2.new(digit.Position.X.Scale,digit.Position.X.Offset,digit.Position.Y.Scale,0), &quot;Out&quot;, &quot;Quad&quot;, .25)
-&#9;&#9;digit.Name=&apos;oldDigit&apos;
-&#9;&#9;digit:TweenPosition(UDim2.new(digit.Position.X.Scale,digit.Position.X.Offset,digit.Position.Y.Scale,digit.Position.Y.Offset+65), &quot;Out&quot;, &quot;Quad&quot;, .25)
-&#9;&#9;game.Debris:AddItem(digit,1)
-&#9;end
-end
-
-function GunObj:UpdateGui()
-&#9;if self.Equipped then
-&#9;&#9;local Player = game.Players.localPlayer
-&#9;&#9;if Player ~= nil then
-&#9;&#9;&#9;if self.Ammo == nil then
-&#9;&#9;&#9;&#9;--self.Gui.Bar.GunLabel.Text =&quot;Futuro Heavy Pistol&quot;
-&#9;&#9;&#9;&#9;--self.Gui.Bar.AmmoLabel.Text = &quot;&quot;
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;--self.Gui.Bar.GunLabel.Text =&quot;Futuro Heavy Pistol&quot;
-&#9;&#9;&#9;&#9;--self.Gui.Bar.AmmoLabel.Text = tostring(self.Ammo.Value)..&quot;/&quot;..tostring(self.ClipSize)
-&#9;&#9;&#9;&#9;self:UpdateNumbers(tostring(self.Ammo.Value),WaitForChild(self.Gui.Bar,&apos;AmmoLeft&apos;))
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if Tool.Reloading.Value then
-&#9;&#9;&#9;&#9;--self.Gui.Bar.AmmoLabel.Text = &quot;Reloading&quot;
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function GunObj:CursorUpdate(mouse)
-&#9;local reloadCounter=0
-&#9;while self.Equipped do
-&#9;&#9;if Tool.Reloading.Value then
-&#9;&#9;&#9;reloadCounter=reloadCounter+1
-&#9;&#9;&#9;if reloadCounter%20&lt;10 then
-&#9;&#9;&#9;&#9;mouse.Icon = self.Cursors[3]
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;mouse.Icon = self.Cursors[4]
-&#9;&#9;&#9;end
-&#9;&#9;elseif mouse.Target and FindCharacterAncestor(mouse.Target) then
-&#9;&#9;&#9;mouse.Icon = self.Cursors[2]
-&#9;&#9;else 
-&#9;&#9;&#9;mouse.Icon = self.Cursors[1]
-&#9;&#9;end
-&#9;&#9;wait(1/30)
-&#9;end
-end
-
-local InReload=false
-
-function GunObj:OnEquipped(mouse)
-&#9;self:Initialize()
-&#9;if mouse ~= nil then
-&#9;&#9;self.Equipped = true
-&#9;&#9;local Player = game.Players.LocalPlayer
-&#9;&#9;if Player ~= nil then
-&#9;&#9;&#9;local humanoid=WaitForChild(Player.Character,&apos;Humanoid&apos;)
-&#9;&#9;&#9;if not self.IdleAni then
-&#9;&#9;&#9;&#9;self.IdleAni = humanoid:LoadAnimation(WaitForChild(script.Parent,&apos;idle&apos;))
-&#9;&#9;&#9;&#9;self.IdleAni:Play()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local plrgui = WaitForChild(Player,&quot;PlayerGui&quot;)
-&#9;&#9;&#9;self.Gui.Parent = plrgui
-&#9;&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;&#9;if not Tool.Down.Value then
-&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;Tool.Down.Value = true
-&#9;&#9;&#9;&#9;&#9;while Tool.Down.Value do
-&#9;&#9;&#9;&#9;&#9;&#9;Tool.Aim.Value = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;mouse.Button1Up:connect(function()
-&#9;&#9;&#9;&#9;Tool.Down.Value = false
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;mouse.KeyDown:connect(function(key) 
-&#9;&#9;&#9;&#9;if key==&apos;r&apos; and not Tool.Reloading.Value and not Tool.Down.Value and self.Ammo.Value ~=8 and self.Ammo.Value ~=0 and not InReload then
-&#9;&#9;&#9;&#9;&#9;Tool.Reloading.Value=true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;--mouse.Icon = self.Cursors[1]
-&#9;&#9;&#9;Tool.Reloading.Changed:connect(function(val)
-&#9;&#9;&#9;&#9;if mouse ~= nil and self.Equipped then
-&#9;&#9;&#9;&#9;&#9;if val then
-&#9;&#9;&#9;&#9;&#9;&#9;--mouse.Icon = self.Cursors.Reloading
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;--mouse.Icon = self.Cursors[1]
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;local Player = game.Players.LocalPlayer
-&#9;&#9;&#9;&#9;&#9;if Player ~= nil then
-&#9;&#9;&#9;&#9;&#9;&#9;local gui = WaitForChild(Player.PlayerGui, &quot;AmmoHud&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;local humanoid=WaitForChild(Player.Character,&apos;Humanoid&apos;)
-&#9;&#9;&#9;&#9;&#9;&#9;self:UpdateGui()
-&#9;&#9;&#9;&#9;&#9;&#9;if Tool.Reloading.Value then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;--gui.Bar.AmmoLabel.Text = &quot;Reloading&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;self:UpdateGui()
-&#9;&#9;&#9;MyMouse=mouse
-&#9;&#9;&#9;Spawn(function() self:CursorUpdate(mouse) end )
-&#9;&#9;end
-&#9;end
-end
-
-function GunObj:OnUnequipped()
-&#9;if self.IdleAni then
-&#9;&#9;self.IdleAni:Stop()
-&#9;&#9;self.IdleAni:Destroy()
-&#9;&#9;self.IdleAni=nil
-&#9;end
-&#9;self.Gui.Parent = Tool
-&#9;self.Equipped = false
-&#9;print(&apos;in unequipp&apos;)
-&#9;if ChestWeld then
-&#9;&#9;print(&apos;chestweldexists&apos;)
-&#9;&#9;ChestWeld:Destroy()
-&#9;end
-&#9;local Player = game.Players.localPlayer
-&#9;if Player ~= nil then
-&#9;&#9;local gui = WaitForChild(Player.PlayerGui,&quot;AmmoHud&quot;)
-&#9;&#9;--gui.Bar.GunLabel.Text = &quot;&quot;
-&#9;&#9;--gui.Bar.AmmoLabel.Text = &quot;&quot;
-&#9;end
-end
-
-function PlayFireAni()
-&#9;wait(.1)
-&#9;local aniTrack = WaitForChild(Tool.Parent,&quot;Humanoid&quot;):LoadAnimation(Tool.FireAni)
-&#9;aniTrack:Play(0,1,3)
-end
-
-local function weldBetween(a, b)
-    local weld = Instance.new(&quot;Weld&quot;)
-    weld.Part0 = a
-    weld.Part1 = b
-    weld.C0 = CFrame.new()
-    weld.C1 = b.CFrame:inverse() * a.CFrame
-    weld.Parent = a
-    return weld;
-end
-
-
-function PlayReloadAni()
-&#9;InReload=true
-&#9;local aniTrack = WaitForChild(Tool.Parent,&quot;Humanoid&quot;):LoadAnimation(Tool.Reload)
-&#9;local torso=WaitForChild(Tool.Parent,&apos;Torso&apos;)
-&#9;local oldWeld
-&#9;for _,i in pairs(WaitForChild(Tool.Parent,&apos;Right Arm&apos;):GetChildren()) do
-&#9;&#9;if i:IsA(&apos;Weld&apos;) and i.Part1==Tool.Handle then
-&#9;&#9;&#9;oldWeld=i
-&#9;&#9;end
-&#9;end
-&#9;if not oldWeld then 
-&#9;&#9;print(&apos;What... no old weld!&apos;)
-&#9;&#9;return
-&#9;end
-&#9;ChestWeld= weldBetween(torso,Tool.Handle)
-&#9;oldWeld.Part1=nil
-&#9;aniTrack:Play(0,1,2)
-&#9;wait(3.5)
-&#9;oldWeld.Part1=Tool.Handle
-&#9;ChestWeld:Destroy()
-&#9;ChestWeld=nil
-&#9;InReload=false
-end
-
-Tool.Reloading.Changed:connect(function() if Tool.Reloading.Value then PlayReloadAni() end end)
-Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBXF40E767DEA3C46BEB8544440AD627211">
+		<Item class="Part" referent="RBXE0360C2C5E6349A693CFD2CB98879487">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -311,9 +33,9 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 				<token name="BackSurfaceInput">0</token>
 				<float name="BottomParamA">-0.5</float>
 				<float name="BottomParamB">0.5</float>
-				<token name="BottomSurface">4</token>
+				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">107</int>
+				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
 					<X>18.9789352</X>
 					<Y>4.12693024</Y>
@@ -328,7 +50,7 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 					<R21>-0.633349359</R21>
 					<R22>-0.758403003</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -354,7 +76,7 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
-				<token name="TopSurface">3</token>
+				<token name="TopSurface">0</token>
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
@@ -370,7 +92,7 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 					<Z>1.34999704</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXA6F323E6A97845CDBA207290495F1046">
+			<Item class="SpecialMesh" referent="RBXC0E93A8BCDA54CBDA2C13F661B7FFD5E">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -395,17 +117,17 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXFBBE336AFB624E67BAE086EAC45DA51F">
+			<Item class="Sound" referent="RBXBC4F4463A38140A0BD54830DF52E53B5">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
-					<float name="Pitch">0.821169138</float>
+					<float name="Pitch">0.929174185</float>
 					<bool name="PlayOnRemove">false</bool>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=97852331</url></Content>
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXBC91991A182E4F9781372147B102B5DB">
+			<Item class="Sound" referent="RBXB4E17D748F284E85A8F418C285E471D6">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Reload</string>
@@ -416,688 +138,25 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Vector3Value" referent="RBX1035AD9A58E64223988C9B03E69461E0">
+		<Item class="Animation" referent="RBXBECAF64035C24BFB9CD1630F7937694D">
 			<Properties>
-				<string name="Name">Aim</string>
-				<Vector3 name="Value">
-					<X>7370.47461</X>
-					<Y>-428.252258</Y>
-					<Z>-6819.59961</Z>
-				</Vector3>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/id=97898138</url></Content>
+				<string name="Name">Fire</string>
 			</Properties>
 		</Item>
-		<Item class="IntValue" referent="RBX4ABCDFA042174E45854A17297C099831">
+		<Item class="Animation" referent="RBX39D435BBE3C34DFAA09007975A98A1BA">
 			<Properties>
-				<string name="Name">Ammo</string>
-				<int name="Value">10</int>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=97898532</url></Content>
+				<string name="Name">Idle</string>
 			</Properties>
 		</Item>
-		<Item class="BoolValue" referent="RBXC9D0F429C09240BCA36E9DA6BE7AF670">
+		<Item class="Animation" referent="RBX2E4312E4EAB542BEB9628B9A1CC8D298">
 			<Properties>
-				<string name="Name">Down</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="IntValue" referent="RBXCB7BC9C655B44BAE9758E466ADFC1BB4">
-			<Properties>
-				<string name="Name">NoClips</string>
-				<int name="Value">0</int>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX79FFCD04F9404188A5E7A8FE5CACD22B">
-			<Properties>
-				<string name="Name">Reloading</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX1E339E0E133640558C7DD7249E318EAE">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=97898138</url></Content>
-				<string name="Name">FireAni</string>
-			</Properties>
-		</Item>
-		<Item class="BoolValue" referent="RBX56FD460B131646B390BD760E8BA8E371">
-			<Properties>
-				<string name="Name">DoFireAni</string>
-				<bool name="Value">false</bool>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBXEDD53742372547688CEE50A5E85A6F3C">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=97898532</url></Content>
-				<string name="Name">idle</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX9A3A293133A5480BA8409540475941CA">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=97900365</url></Content>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=97900365</url></Content>
 				<string name="Name">Reload</string>
 			</Properties>
 		</Item>
-		<Item class="SpecialMesh" referent="RBX17A3F865437C40CFAD62C3F65CFF862F">
-			<Properties>
-				<token name="LODX">2</token>
-				<token name="LODY">2</token>
-				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=95387759</url></Content>
-				<token name="MeshType">5</token>
-				<string name="Name">BulletMesh</string>
-				<Vector3 name="Offset">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
-				</Vector3>
-				<Vector3 name="Scale">
-					<X>3</X>
-					<Y>3</Y>
-					<Z>3</Z>
-				</Vector3>
-				<Content name="TextureId"><url>http://www.roblox.com/asset/?id=95387789</url></Content>
-				<Vector3 name="VertexColor">
-					<X>1</X>
-					<Y>1</Y>
-					<Z>1</Z>
-				</Vector3>
-			</Properties>
-		</Item>
-		<Item class="ScreenGui" referent="RBX7D4A1A3E04C541EC980ABBA299E550C9">
-			<Properties>
-				<string name="Name">AmmoHud</string>
-			</Properties>
-			<Item class="Frame" referent="RBX33B52ABE28C74B5DB331232D9D48C7B9">
-				<Properties>
-					<bool name="Active">false</bool>
-					<Color3 name="BackgroundColor3">4288914085</Color3>
-					<float name="BackgroundTransparency">1</float>
-					<Color3 name="BorderColor3">4279970357</Color3>
-					<int name="BorderSizePixel">1</int>
-					<bool name="ClipsDescendants">true</bool>
-					<bool name="Draggable">false</bool>
-					<string name="Name">Bar</string>
-					<UDim2 name="Position">
-						<XS>1</XS>
-						<XO>-200</XO>
-						<YS>1</YS>
-						<YO>-170</YO>
-					</UDim2>
-					<float name="Rotation">0</float>
-					<UDim2 name="Size">
-						<XS>0</XS>
-						<XO>200</XO>
-						<YS>0</YS>
-						<YO>60</YO>
-					</UDim2>
-					<token name="SizeConstraint">0</token>
-					<token name="Style">0</token>
-					<bool name="Visible">true</bool>
-					<int name="ZIndex">1</int>
-				</Properties>
-				<Item class="Frame" referent="RBXEAC1EF0F9ED241A6BFD5EF4B92EDB7A5">
-					<Properties>
-						<bool name="Active">false</bool>
-						<Color3 name="BackgroundColor3">4288914085</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">1</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<string name="Name">AmmoLeft</string>
-						<UDim2 name="Position">
-							<XS>0</XS>
-							<XO>10</XO>
-							<YS>0</YS>
-							<YO>5</YO>
-						</UDim2>
-						<float name="Rotation">0</float>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>65</XO>
-							<YS>0</YS>
-							<YO>50</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<token name="Style">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-					<Item class="Frame" referent="RBXAFC130287E72454D86D8CF898345B644">
-						<Properties>
-							<bool name="Active">false</bool>
-							<Color3 name="BackgroundColor3">4288914085</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">1</int>
-							<bool name="ClipsDescendants">false</bool>
-							<bool name="Draggable">false</bool>
-							<string name="Name">1</string>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<UDim2 name="Size">
-								<XS>0</XS>
-								<XO>30</XO>
-								<YS>0</YS>
-								<YO>40</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<token name="Style">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">1</int>
-						</Properties>
-						<Item class="ImageLabel" referent="RBXB7CE32B366514A2F887340CDA6DD9CCB">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">ImageLabel</string>
-								<UDim2 name="Position">
-									<XS>0</XS>
-									<XO>0</XO>
-									<YS>0</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>1</XS>
-									<XO>0</XO>
-									<YS>1</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-						<Item class="ImageLabel" referent="RBX383A6C8269E747FA9D59754C67EC5F66">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94099941</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">digit</string>
-								<UDim2 name="Position">
-									<XS>0.0500000007</XS>
-									<XO>0</XO>
-									<YS>0.0500000007</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>0.899999976</XS>
-									<XO>0</XO>
-									<YS>0.899999976</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-					</Item>
-					<Item class="Frame" referent="RBXE890994D353F4D308BB3956C2C8FA990">
-						<Properties>
-							<bool name="Active">false</bool>
-							<Color3 name="BackgroundColor3">4288914085</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">1</int>
-							<bool name="ClipsDescendants">false</bool>
-							<bool name="Draggable">false</bool>
-							<string name="Name">2</string>
-							<UDim2 name="Position">
-								<XS>1</XS>
-								<XO>-30</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<UDim2 name="Size">
-								<XS>0</XS>
-								<XO>30</XO>
-								<YS>0</YS>
-								<YO>40</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<token name="Style">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">1</int>
-						</Properties>
-						<Item class="ImageLabel" referent="RBXD815279CFE7345D3B61C5FBA901207E1">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">ImageLabel</string>
-								<UDim2 name="Position">
-									<XS>0</XS>
-									<XO>0</XO>
-									<YS>0</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>1</XS>
-									<XO>0</XO>
-									<YS>1</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-						<Item class="ImageLabel" referent="RBXF15C32CB6C444236BBCE5BFC66A872A5">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94099941</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">digit</string>
-								<UDim2 name="Position">
-									<XS>0.0500000007</XS>
-									<XO>0</XO>
-									<YS>0.0500000007</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>0.899999976</XS>
-									<XO>0</XO>
-									<YS>0.899999976</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-					</Item>
-				</Item>
-				<Item class="ImageLabel" referent="RBXF7C812A8BC1641D89F6813D48A6A4E2D">
-					<Properties>
-						<bool name="Active">false</bool>
-						<Color3 name="BackgroundColor3">4288914085</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">1</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<Content name="Image"><url>http://www.roblox.com/asset/?id=94100300</url></Content>
-						<Color3 name="ImageColor3">4294967295</Color3>
-						<Vector2 name="ImageRectOffset">
-							<X>0</X>
-							<Y>0</Y>
-						</Vector2>
-						<Vector2 name="ImageRectSize">
-							<X>0</X>
-							<Y>0</Y>
-						</Vector2>
-						<float name="ImageTransparency">0</float>
-						<string name="Name">slash</string>
-						<UDim2 name="Position">
-							<XS>0.5</XS>
-							<XO>-20</XO>
-							<YS>0</YS>
-							<YO>5</YO>
-						</UDim2>
-						<float name="Rotation">0</float>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>30</XO>
-							<YS>0</YS>
-							<YO>40</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">2</int>
-					</Properties>
-				</Item>
-				<Item class="Frame" referent="RBX74A71A584A054C9EBCC64CFB178EF374">
-					<Properties>
-						<bool name="Active">false</bool>
-						<Color3 name="BackgroundColor3">4288914085</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">1</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<string name="Name">TotalAmmo</string>
-						<UDim2 name="Position">
-							<XS>0.5</XS>
-							<XO>10</XO>
-							<YS>0</YS>
-							<YO>5</YO>
-						</UDim2>
-						<float name="Rotation">0</float>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>65</XO>
-							<YS>0</YS>
-							<YO>50</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<token name="Style">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-					<Item class="Frame" referent="RBX0275C13D18714E7285CD4E6C14377477">
-						<Properties>
-							<bool name="Active">false</bool>
-							<Color3 name="BackgroundColor3">4288914085</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">1</int>
-							<bool name="ClipsDescendants">true</bool>
-							<bool name="Draggable">false</bool>
-							<string name="Name">1</string>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<UDim2 name="Size">
-								<XS>0</XS>
-								<XO>30</XO>
-								<YS>0</YS>
-								<YO>40</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<token name="Style">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">1</int>
-						</Properties>
-						<Item class="ImageLabel" referent="RBX4A191A613EF74B6F8BB8D1895251BE60">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">ImageLabel</string>
-								<UDim2 name="Position">
-									<XS>0</XS>
-									<XO>0</XO>
-									<YS>0</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>1</XS>
-									<XO>0</XO>
-									<YS>1</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-						<Item class="ImageLabel" referent="RBX5986964475EA411D959BFE37BAF035B0">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94099941</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">digit</string>
-								<UDim2 name="Position">
-									<XS>0.0500000007</XS>
-									<XO>0</XO>
-									<YS>0.0500000007</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>0.899999976</XS>
-									<XO>0</XO>
-									<YS>0.899999976</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-					</Item>
-					<Item class="Frame" referent="RBX263143CAAEE94D66AFA0F6A327E1AD3C">
-						<Properties>
-							<bool name="Active">false</bool>
-							<Color3 name="BackgroundColor3">4288914085</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">1</int>
-							<bool name="ClipsDescendants">false</bool>
-							<bool name="Draggable">false</bool>
-							<string name="Name">2</string>
-							<UDim2 name="Position">
-								<XS>1</XS>
-								<XO>-30</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<UDim2 name="Size">
-								<XS>0</XS>
-								<XO>30</XO>
-								<YS>0</YS>
-								<YO>40</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<token name="Style">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">1</int>
-						</Properties>
-						<Item class="ImageLabel" referent="RBX549E9E4B03054712A622C9876BBE0DF8">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">ImageLabel</string>
-								<UDim2 name="Position">
-									<XS>0</XS>
-									<XO>0</XO>
-									<YS>0</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>1</XS>
-									<XO>0</XO>
-									<YS>1</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-						<Item class="ImageLabel" referent="RBX6F3B5FFB80134C859F70F18D523FBF7A">
-							<Properties>
-								<bool name="Active">false</bool>
-								<Color3 name="BackgroundColor3">4288914085</Color3>
-								<float name="BackgroundTransparency">1</float>
-								<Color3 name="BorderColor3">4279970357</Color3>
-								<int name="BorderSizePixel">1</int>
-								<bool name="ClipsDescendants">false</bool>
-								<bool name="Draggable">false</bool>
-								<Content name="Image"><url>http://www.roblox.com/asset/?id=94099941</url></Content>
-								<Color3 name="ImageColor3">4294967295</Color3>
-								<Vector2 name="ImageRectOffset">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<Vector2 name="ImageRectSize">
-									<X>0</X>
-									<Y>0</Y>
-								</Vector2>
-								<float name="ImageTransparency">0</float>
-								<string name="Name">digit</string>
-								<UDim2 name="Position">
-									<XS>0.0500000007</XS>
-									<XO>0</XO>
-									<YS>0.0500000007</YS>
-									<YO>0</YO>
-								</UDim2>
-								<float name="Rotation">0</float>
-								<UDim2 name="Size">
-									<XS>0.899999976</XS>
-									<XO>0</XO>
-									<YS>0.899999976</YS>
-									<YO>0</YO>
-								</UDim2>
-								<token name="SizeConstraint">0</token>
-								<bool name="Visible">true</bool>
-								<int name="ZIndex">2</int>
-							</Properties>
-						</Item>
-					</Item>
-				</Item>
-				<Item class="ImageLabel" referent="RBX75C7F78779A643FEAA585ABCC66787A2">
-					<Properties>
-						<bool name="Active">false</bool>
-						<Color3 name="BackgroundColor3">4288914085</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">1</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<Content name="Image"><url>http://www.roblox.com/asset/?id=94129782</url></Content>
-						<Color3 name="ImageColor3">4294967295</Color3>
-						<Vector2 name="ImageRectOffset">
-							<X>0</X>
-							<Y>0</Y>
-						</Vector2>
-						<Vector2 name="ImageRectSize">
-							<X>0</X>
-							<Y>0</Y>
-						</Vector2>
-						<float name="ImageTransparency">0</float>
-						<string name="Name">ImageLabel</string>
-						<UDim2 name="Position">
-							<XS>0</XS>
-							<XO>0</XO>
-							<YS>0</YS>
-							<YO>0</YO>
-						</UDim2>
-						<float name="Rotation">0</float>
-						<UDim2 name="Size">
-							<XS>1</XS>
-							<XO>0</XO>
-							<YS>1</YS>
-							<YO>0</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="Camera" referent="RBX78FFFC8DAA2347BD8FE5BF9B596D1084">
+		<Item class="Camera" referent="RBX52085B626D0D4FC1ABB6E940933F8235">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -1133,333 +192,1384 @@ Tool.Equipped:connect(function(mouse) GunObj:OnEquipped(mouse) end)
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX9CB47ABC78044A5EA2E05434BDFF779B">
+		<Item class="Script" referent="RBXDD87949F8BC04FF6BC2FCACA07A84ADA">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Firescript</string>
-				<ProtectedString name="Source">-- Made by Stickmasterluke
- -- edited by fusroblox
-local GoreOn=false
-function WaitForChild(parent,child)
-&#9;while not parent:FindFirstChild(child) do print(&quot;2waiting for &quot; .. child) wait() end
-&#9;return parent[child]
-end
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+--Made by Stickmasterluke
+ --edited by fusroblox
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+AmmoHud = script:WaitForChild(&quot;AmmoHud&quot;)
  
-local GunObject = {
-&#9;Tool = script.Parent,
-&#9;Handle = WaitForChild(script.Parent,&apos;Handle&apos;),
-&#9;check = true,
-&#9;
-&#9;GunDamage = 25, -- Base output damage per shot.
-&#9;FireRate = .3, -- How often the weapon can fire.
-&#9;Automatic = false, -- hold down to continue firing
-&#9;Range = 250, -- Max distance that the weapon can fire.
-&#9;Spread = 1, -- The bigger the spread, the more inaccurate the shots will be.
-&#9;ClipSize = 10, -- Shots in a clip
-&#9;ReloadTime = 3.4, -- Time it takes to reload the tool.
-&#9;StartingClips = 10, -- If you want infinit clips, remove the IntValue named &quot;Clips&quot; from the tool.
-&#9;SegmentLength = 40, -- How long the shot segments are, or the speed of the shot.
-&#9;FadeDelayTime = 1/60,
-&#9;
-&#9;
-&#9;BarrelPos = CFrame.new(0, 0, - 1.2), -- L, F, U
-&#9;Rate = 1/30,
-&#9;--local Colors = {BrickColor.new(&quot;Bright red&quot;), BrickColor.new(&quot;Really red&quot;), BrickColor.new(&quot;Dusty Rose&quot;), BrickColor.new(&quot;Medium red&quot;)}
-&#9;Colors = {BrickColor.new(&quot;Bright yellow&quot;),BrickColor.new(&quot;Mid gray&quot;), BrickColor.new(&quot;Medium stone grey&quot;), BrickColor.new(&quot;Dark stone grey&quot;)},
-&#9;FlashColors = {&quot;Medium red&quot;, &quot;Dusty Rose&quot;, &quot;Bright red&quot;, &quot;Really red&quot;},
-&#9;
+BaseUrl = &quot;http://www.roblox.com/asset/?id=&quot;
+
+Modules = Tool:WaitForChild(&quot;Modules&quot;)
+Configuration = require(Modules:WaitForChild(&quot;Configuration&quot;))
+Objects = require(Modules:WaitForChild(&quot;Templates&quot;))
+Content = require(Modules:WaitForChild(&quot;Content&quot;))
+Functions = require(Modules:WaitForChild(&quot;Functions&quot;))
+
+Variables = {
+&#9;Ammo = Configuration.ClipSize,
+&#9;Equipped = false,
+&#9;MouseDown = false,
+&#9;Initalized = false,
 &#9;Reloading = false,
-&#9;Debris = game:GetService(&quot;Debris&quot;),
-&#9;Ammo,
-&#9;Clips,
-&#9;LaserObj,
-&#9;SparkEffect,
-&#9;ShellPart,
-&#9;--tool children
-&#9;DownVal=WaitForChild(script.Parent, &apos;Down&apos;),
-&#9;AimVal=WaitForChild(script.Parent, &apos;Aim&apos;),
-&#9;ReloadingVal=WaitForChild(script.Parent, &apos;Reloading&apos;),
-&#9;DoFireAni = WaitForChild(script.Parent,&apos;DoFireAni&apos;),
-&#9;
-&#9;--handlechildren
-&#9;Fire,
-&#9;
+&#9;Check = true,
+&#9;ReloadCounter = 0,
 }
 
---[[Member functions]]
+Animations = {
+&#9;Fire = {Animation = Tool:WaitForChild(&quot;Fire&quot;), FadeTime = 0, Weight = 1, Speed = 3, Duration = nil},
+&#9;Reload = {Animation = Tool:WaitForChild(&quot;Reload&quot;), FadeTime = 0, Weight = 1, Speed = 2, Duration = 3.5},
+&#9;Idle = {Animation = Tool:WaitForChild(&quot;Idle&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+}
 
-function GunObject:Initialize()
+Sounds = {
+&#9;Fire = Handle:WaitForChild(&quot;Fire&quot;),
+&#9;Reload = Handle:WaitForChild(&quot;Reload&quot;)
+}
 
-&#9;self.Fire=WaitForChild(self.Handle, &apos;Fire&apos;)
-&#9;
-&#9;self.Ammo = self.Tool:FindFirstChild(&quot;Ammo&quot;)
-&#9;if self.Ammo ~= nil then
-&#9;&#9;self.Ammo.Value = self.ClipSize
+Events = {}
+GuiEvents = {}
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+Tool.Enabled = true
+
+function CanFire()
+&#9;return (((Variables.MouseDown and Variables.Equipped and CheckIfAlive() and not Variables.Reloading and Variables.Check) and true) or false)
+end
+
+function Events:Fire()
+&#9;if not Variables.MouseDown or not CanFire() then
+&#9;&#9;return
 &#9;end
-&#9;self.Clips = self.Tool:FindFirstChild(&quot;Clips&quot;)
-&#9;if self.Clips ~= nil then
-&#9;&#9;self.Clips.Value = self.StartingClips
-&#9;end
-&#9;self.Tool.Equipped:connect(function()
-&#9;&#9;self.Tool.Handle.Fire:Stop()
-&#9;&#9;self.Tool.Handle.Reload:Stop()
-&#9;end)
-&#9;self.Tool.Unequipped:connect(function()
-&#9;&#9;self.Tool.Handle.Fire:Stop()
-&#9;&#9;self.Tool.Handle.Reload:Stop()
-&#9;end)
-&#9;self.LaserObj = Instance.new(&quot;Part&quot;)
-&#9;self.LaserObj.Name = &quot;Bullet&quot;
-&#9;self.LaserObj.Anchored = true
-&#9;self.LaserObj.CanCollide = false
-&#9;self.LaserObj.Shape = &quot;Block&quot;
-&#9;self.LaserObj.formFactor = &quot;Custom&quot;
-&#9;self.LaserObj.Material = Enum.Material.Plastic
-&#9;self.LaserObj.Locked = true
-&#9;self.LaserObj.TopSurface = 0
-&#9;self.LaserObj.BottomSurface = 0
-&#9;--local tshellmesh=WaitForChild(script.Parent,&apos;BulletMesh&apos;):Clone()
-&#9;--tshellmesh.Scale=Vector3.new(4,4,4)
-&#9;--tshellmesh.Parent=self.LaserObj
-
-&#9;local tSparkEffect = Instance.new(&quot;Part&quot;)
-&#9;tSparkEffect.Name = &quot;Effect&quot;
-&#9;tSparkEffect.Anchored = false
-&#9;tSparkEffect.CanCollide = false
-&#9;tSparkEffect.Shape = &quot;Block&quot;
-&#9;tSparkEffect.formFactor = &quot;Custom&quot;
-&#9;tSparkEffect.Material = Enum.Material.Plastic
-&#9;tSparkEffect.Locked = true
-&#9;tSparkEffect.TopSurface = 0
-&#9;tSparkEffect.BottomSurface = 0
-&#9;self.SparkEffect=tSparkEffect
-
-&#9;local tshell = Instance.new(&apos;Part&apos;)
-&#9;tshell.Name=&apos;effect&apos;
-&#9;tshell.FormFactor=&apos;Custom&apos;
-&#9;tshell.Size=Vector3.new(1, 0.4, 0.33)
-&#9;tshell.BrickColor=BrickColor.new(&apos;Bright yellow&apos;)
-&#9;tshellmesh=WaitForChild(script.Parent,&apos;BulletMesh&apos;):Clone()
-&#9;tshellmesh.Parent=tshell
-&#9;self.ShellPart = tshell
-
-&#9;self.DownVal.Changed:connect(function()
-&#9;&#9;while self.DownVal.Value and self.check and not self.Reloading do
-&#9;&#9;&#9;self.check = false
-&#9;&#9;&#9;local humanoid = self.Tool.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;local plr1 = game.Players:GetPlayerFromCharacter(self.Tool.Parent)
-&#9;&#9;&#9;if humanoid ~= nil and plr1 ~= nil then
-&#9;&#9;&#9;&#9;if humanoid.Health &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;local spos1 = (self.Tool.Handle.CFrame * self.BarrelPos).p
-&#9;&#9;&#9;&#9;&#9;delay(0, function() self:SendBullet(spos1, self.AimVal.Value, self.Spread, self.SegmentLength, self.Tool.Parent, self.Colors[1], self.GunDamage, self.FadeDelayTime) end)
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;self.check = true
-&#9;&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;self.check = true
-&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(self.FireRate)
-&#9;&#9;&#9;self.check = true
-&#9;&#9;&#9;if not self.Automatic then
+&#9;while CanFire() do
+&#9;&#9;Variables.Check = false
+&#9;&#9;local StartPosition = (Handle.CFrame * Configuration.BarrelPosition).p
+&#9;&#9;local TargetPosition = InvokeClient(&quot;MousePosition&quot;).Position
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Fire)
+&#9;&#9;&#9;Events:SendBullet(StartPosition, TargetPosition, Configuration.Spread, Configuration.SegmentLength, Character, Configuration.Colors[1], Configuration.GunDamage, Configuration.FadeDelayTime)
+&#9;&#9;end)
+&#9;&#9;if not CanFire() then
+&#9;&#9;&#9;break
+&#9;&#9;else
+&#9;&#9;&#9;wait(Configuration.FireRate)
+&#9;&#9;&#9;Variables.Check = true
+&#9;&#9;&#9;if not Configuration.Automatic then
 &#9;&#9;&#9;&#9;break
 &#9;&#9;&#9;end
 &#9;&#9;end
-&#9;end)
-
-&#9;self.ReloadingVal.Changed:connect(function() if self.ReloadingVal.Value then self:Reload() end end)
-
+&#9;end
+&#9;if not Variables.Check then
+&#9;&#9;wait(Configuration.FireRate)
+&#9;&#9;Variables.Check = true
+&#9;end
 end
 
-
-
-function GunObject:Reload()
-&#9;self.Reloading = true
-&#9;self.ReloadingVal.Value = true
-&#9;if self.Clips ~= nil then
-&#9;&#9;if self.Clips.Value &gt; 0 then
-&#9;&#9;&#9;self.Clips.Value = Clips.Value - 1
+function Events:Reload()
+&#9;Variables.Reloading = true
+&#9;Tool.Enabled = false
+&#9;Spawn(function()
+&#9;&#9;local RightArm = Character:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;RightGrip = nil
+&#9;&#9;if RightArm then
+&#9;&#9;&#9;RightGrip = RightArm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;if RightGrip then
+&#9;&#9;&#9;&#9;RightGrip.Part1 = nil
+&#9;&#9;&#9;&#9;RightGrip.Parent = nil
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;if ChestWeld and ChestWeld.Parent then
+&#9;&#9;&#9;ChestWeld:Destroy()
+&#9;&#9;end
+&#9;&#9;ChestWeld = Functions.WeldBetween(Torso, Handle)
+&#9;&#9;local Animation = Animations.Reload
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Reload)
+&#9;&#9;wait(Animation.Duration)
+&#9;&#9;if ChestWeld and ChestWeld.Parent then
+&#9;&#9;&#9;ChestWeld:Destroy()
+&#9;&#9;end
+&#9;&#9;if RightGrip then
+&#9;&#9;&#9;RightGrip.Part1 = Handle
+&#9;&#9;&#9;RightGrip.Parent = RightArm
+&#9;&#9;end
+&#9;end)
+&#9;if Variables.Clips then
+&#9;&#9;if Variables.Clips &gt; 0 then
+&#9;&#9;&#9;Variables.Clips = (Variables.Clips - 1)
+&#9;&#9;&#9;GuiEvents:UpdateGui()
 &#9;&#9;else
-&#9;&#9;&#9;self.Reloading = false
-&#9;&#9;&#9;self.ReloadingVal.Value = false
+&#9;&#9;&#9;Variables.Reloading = false
+&#9;&#9;&#9;Tool.Enabled = true
 &#9;&#9;&#9;return
 &#9;&#9;end
 &#9;end
-&#9;self.Tool.Handle.Reload:Play()
-&#9;for i = 1, self.ClipSize do
-&#9;&#9;wait(self.ReloadTime/self.ClipSize)
-&#9;&#9;self.Ammo.Value = i
+&#9;Sounds.Reload:Play()
+&#9;for i = 1, Configuration.ClipSize do
+&#9;&#9;wait(Configuration.ReloadTime / Configuration.ClipSize)
+&#9;&#9;Variables.Ammo = i
+&#9;&#9;GuiEvents:UpdateGui()
 &#9;end
-&#9;self.Reloading = false
-&#9;self.Tool.Reloading.Value = false
+&#9;Variables.Reloading = false
+&#9;Tool.Enabled = true
 end
 
-
-
-function GunObject:SpawnShell()
-&#9;local tshell=self.ShellPart:Clone()
-&#9;tshell.CFrame=self.Handle.CFrame
-&#9;tshell.Parent=Workspace
-&#9;game.Debris:AddItem(tshell,2)
+function Events:SpawnShell()
+&#9;local shell = Objects.Shell:Clone()
+&#9;Debris:AddItem(shell, 2)
+&#9;shell.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;shell.CFrame = Handle.CFrame
 end
 
-function TakeHit(tchar)
-&#9;local enemyTorso=tchar:FindFirstChild(&apos;Torso&apos;)
-&#9;local myTorso= script.Parent.Parent:FindFirstChild(&apos;Torso&apos;)
-&#9;if enemyTorso and myTorso then 
-&#9;&#9;
-&#9;&#9;local tvel=Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;tvel.maxForce=Vector3.new(999999,0,9999999)
-&#9;&#9;tvel.velocity=(enemyTorso.CFrame.p-myTorso.CFrame.p).unit*100
-&#9;&#9;tvel.Parent=tchar.Torso
-&#9;&#9;game.Debris:AddItem(tvel,.5)
+function TakeHit(character)
+&#9;if not character then
+&#9;&#9;return
 &#9;end
+&#9;local torso = character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not torso then
+&#9;&#9;return
+&#9;end
+&#9;local tvel = Instance.new(&quot;BodyVelocity&quot;)
+&#9;tvel.maxForce = Vector3.new(999999, 0, 9999999)
+&#9;tvel.velocity = ((torso.CFrame.p - Torso.CFrame.p).unit * 100)
+&#9;Debris:AddItem(tvel, 0.5)
+&#9;tvel.Parent = torso
 end
 
-function GunObject:SendBullet(boltstart, targetpos, fuzzyness, SegmentLength, ignore, clr, damage, fadedelay)
-&#9;if self.Ammo.Value &lt;=0 then return end
-&#9;self.Ammo.Value = self.Ammo.Value - 1
-&#9;self:SpawnShell()
-&#9;self.Fire.Pitch = (math.random() * .5) + .75
-&#9;self.Fire:Play()
-&#9;self.DoFireAni.Value = not self.DoFireAni.Value
-&#9;print(self.Fire.Pitch)
-&#9;local boltdist = self.Range
-&#9;local clickdist = (boltstart - targetpos).magnitude
-&#9;local targetpos = targetpos + (Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5) * (clickdist/100))
-&#9;local boltvec = (targetpos - boltstart).unit
-&#9;local totalsegments = math.ceil(boltdist/SegmentLength)
-&#9;local lastpos = boltstart
-&#9;for i = 1, totalsegments do
-&#9;&#9;local newpos = (boltstart + (boltvec * (boltdist * (i/totalsegments))))
-&#9;&#9;local segvec = (newpos - lastpos).unit
-&#9;&#9;local boltlength = (newpos - lastpos).magnitude
-&#9;&#9;local bolthit, endpos = CastRay(lastpos, segvec, boltlength, ignore, false)
-&#9;&#9;DrawBeam(lastpos, endpos, clr, fadedelay, self.LaserObj)
-&#9;&#9;if bolthit ~= nil then
-&#9;&#9;&#9;local h = bolthit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;if h ~= nil then
-&#9;&#9;&#9;&#9;local plr = game.Players:GetPlayerFromCharacter(self.Tool.Parent)
-&#9;&#9;&#9;&#9;if plr ~= nil then
-&#9;&#9;&#9;&#9;&#9;local creator = Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;&#9;&#9;creator.Name = &quot;creator&quot;
-&#9;&#9;&#9;&#9;&#9;creator.Value = plr
-&#9;&#9;&#9;&#9;&#9;creator.Parent = h
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if hit.Parent:FindFirstChild(&quot;BlockShot&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;hit.Parent:FindFirstChild(&quot;BlockShot&quot;):Fire(newpos)
-&#9;&#9;&#9;&#9;&#9;&#9;delay(0, function() self:HitEffect(endpos, BrickColor.new(&apos;Medium stone grey&apos;),5) end)
-&#9;&#9;&#9;&#9;else
+function Events:SendBullet(StartPosition, EndPosition, Spread, SegmentLength, Ignore, Color, Damage, FadeDelay)
+&#9;if Variables.Ammo &lt;= 0 then
+&#9;&#9;return
+&#9;end
+&#9;Variables.Ammo = (Variables.Ammo - 1)
+&#9;GuiEvents:UpdateNumbers(tostring(Variables.Ammo), AmmoHudClone.Bar.AmmoLeft)
+&#9;Events:SpawnShell()
+&#9;Sounds.Fire.Pitch = ((math.random() * 0.5) + 0.75)
+&#9;Sounds.Fire:Play()
+&#9;local BulletDistance = Configuration.Range
+&#9;local ClickDistance = (StartPosition - EndPosition).magnitude
+&#9;local EndPosition = (EndPosition + (Vector3.new((math.random() - 0.5), (math.random() - 0.5), (math.random() - 0.5)) * (ClickDistance / 100)))
+&#9;local BulletVec = (EndPosition - StartPosition).unit
+&#9;local TotalSegments = math.ceil(BulletDistance / SegmentLength)
+&#9;local LastPosition = StartPosition
+&#9;for i = 1, TotalSegments do
+&#9;&#9;local NewPosition = (StartPosition + (BulletVec * (BulletDistance * (i / TotalSegments))))
+&#9;&#9;local SegVec = (NewPosition - LastPosition).unit
+&#9;&#9;local BulletLength = (NewPosition - LastPosition).magnitude
+&#9;&#9;local BulletHit, EndPosition = Functions.CastRay(LastPosition, SegVec, BulletLength, Ignore, false)
+&#9;&#9;DrawBeam(LastPosition, EndPosition, Color, FadeDelay, Objects.Bullet)
+&#9;&#9;if BulletHit then
+&#9;&#9;&#9;local character = BulletHit.Parent
+&#9;&#9;&#9;if character:IsA(&quot;Hat&quot;) then
+&#9;&#9;&#9;&#9;character = character.Parent
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if character == Character then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local player = Players:GetPlayerFromCharacter(character)
+&#9;&#9;&#9;if player and Functions.IsTeamMate(Player, player) then
+&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 then
+&#9;&#9;&#9;&#9;Functions.UntagHumanoid(humanoid)
+&#9;&#9;&#9;&#9;Functions.TagHumanoid(humanoid, Player)
+&#9;&#9;&#9;&#9;TakeHit(character)
+&#9;&#9;&#9;&#9;humanoid:TakeDamage(Damage)
+&#9;&#9;&#9;&#9;if character:FindFirstChild(&quot;BlockShot&quot;) then
 &#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;TakeHit(hit.Parent)
-&#9;&#9;&#9;&#9;&#9;h:TakeDamage(damage)
 &#9;&#9;&#9;&#9;end
 &#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;delay(0, function() self:HitEffect(endpos, BrickColor.new(&apos;Medium stone grey&apos;),5) end)
+&#9;&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;&#9;Events:HitEffect(EndPosition, BrickColor.new(&quot;Medium stone grey&quot;), 5)
+&#9;&#9;&#9;&#9;end)
 &#9;&#9;&#9;end
 &#9;&#9;&#9;break
 &#9;&#9;end
-&#9;&#9;lastpos = endpos
-&#9;&#9;wait(Rate)
+&#9;&#9;LastPosition = EndPosition
+&#9;&#9;wait(Configuration.Rate)
 &#9;end
-
-&#9;if self.Ammo.Value &lt; 1 then
-&#9;&#9;self:Reload()
+&#9;if Variables.Ammo &lt; 1 then
+&#9;&#9;Events:Reload()
 &#9;end
-
 end
 
-
-
-function GunObject:MakeSpark(pos,tcolor)
-&#9;local effect=self.SparkEffect:Clone()
-&#9;effect.BrickColor = tcolor
-&#9;effect.CFrame = CFrame.new(pos)
-&#9;effect.Parent = game.Workspace
-&#9;local effectVel = Instance.new(&quot;BodyVelocity&quot;)
-&#9;effectVel.maxForce = Vector3.new(99999, 99999, 99999)
-&#9;effectVel.velocity = Vector3.new(math.random() * 15 * SigNum(math.random( - 10, 10)), &#9;&#9;math.random() * 15 * SigNum(math.random( - 10, 10)), math.random() * 15 * SigNum(math.random( - 10, 10)))
-&#9;effectVel.Parent = effect
-&#9;effect.Size = Vector3.new(math.abs(effectVel.velocity.x)/30, math.abs(effectVel.velocity.y)/30, math.abs(effectVel.velocity.z)/30)
-&#9;wait()
-&#9;effectVel:Destroy()
-&#9;local effecttime = .5
-&#9;game.Debris:AddItem(effect, effecttime * 2)
-&#9;local startTime = time()
-&#9;while time() - startTime &lt; effecttime do
-&#9;&#9;if effect ~= nil then
-&#9;&#9;&#9;effect.Transparency = (time() - startTime)/effecttime
+function Events:MakeSpark(Position, Color)
+&#9;local EffectTime = 0.5
+&#9;local Effect = Objects.SparkEffect:Clone()
+&#9;Effect.BrickColor = Color
+&#9;local EffectVel = Instance.new(&quot;BodyVelocity&quot;)
+&#9;EffectVel.maxForce = Vector3.new(99999, 99999, 99999)
+&#9;EffectVel.velocity = Vector3.new((math.random() * 15 * Functions.SigNum(math.random(-10, 10))), (math.random() * 15 * Functions.SigNum(math.random(-10, 10))), (math.random() * 15 * Functions.SigNum(math.random(-10, 10))))
+&#9;EffectVel.Parent = Effect
+&#9;Effect.Size = Vector3.new((math.abs(EffectVel.velocity.x) / 30), (math.abs(EffectVel.velocity.y) / 30), (math.abs(EffectVel.velocity.z) / 30))
+&#9;Debris:AddItem(EffectVel, wait())
+&#9;Debris:AddItem(Effect, EffectTime * 2)
+&#9;Effect.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;Effect.CFrame = CFrame.new(Position)
+&#9;local StartTime = time()
+&#9;while time() - StartTime &lt; EffectTime do
+&#9;&#9;if Effect ~= nil then
+&#9;&#9;&#9;Effect.Transparency = ((time() - StartTime) / EffectTime)
 &#9;&#9;end
 &#9;&#9;wait()
 &#9;end
-&#9;if effect ~= nil then
-&#9;&#9;effect.Parent = nil
+&#9;if Effect and Effect.Parent then
+&#9;&#9;Effect:Destroy()
 &#9;end
 end
 
-function GunObject:HitEffect(pos,tcolor,numSparks)
-&#9;for i = 0, numSparks, 1 do
-&#9;&#9;Spawn(function() self:MakeSpark(pos,tcolor) end)
+function Events:HitEffect(Position, Color, NumberOfSparks)
+&#9;for i = 1, NumberOfSparks, 1 do
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;Events:MakeSpark(Position, Color)
+&#9;&#9;end)
 &#9;end
-&#9;
 end
 
---[[/Member functions]]
-
-
---[[Static functions]]
-
-function Round(number, decimal)
-&#9;decimal = decimal or 0
-&#9;local mult = 10^decimal
-&#9;return math.floor(number * mult + .5)/mult
+function DrawBeam(BeamStart, BeamEnd, Color, FadeDelay, TemplatePart)
+&#9;local Distance = 2 --(BeamStart - BeamEnd).magnitude
+&#9;local Laser = TemplatePart:Clone()
+&#9;Laser.BrickColor = Color
+&#9;Laser.Size = Vector3.new(0.1, 0.1, (Distance + 0.2))
+&#9;Debris:AddItem(Laser, FadeDelay)
+&#9;Laser.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;Laser.CFrame = CFrame.new(((BeamEnd + BeamStart) / 2), BeamStart) * CFrame.new(0, 0, -(Distance / 2))
 end
 
-function SigNum(num)
-&#9;if num == 0 then return 1 end
-&#9;return math.abs(num)/num
-end
-
---this is a little bad, but shouldn&apos;t really be part of the &apos;class&apos; of the gun
-local Intangibles = {shock=1, bolt=1, bullet=1, plasma=1, effect=1, laser=1, handle=1, effects=1, flash=1,}
-function CheckIntangible(hitObj)
-&#9;print(hitObj.Name)
-&#9;return Intangibles[(string.lower(hitObj.Name))] or hitObj.Transparency == 1
-end
-
-function CastRay(startpos, vec, length, ignore, delayifhit)
-&#9;if length &gt; 999 then
-&#9;&#9;length = 999
+function GuiEvents.LoadGui(Player)
+&#9;if not Player then
+&#9;&#9;return
 &#9;end
-&#9;hit, endpos2 = game.Workspace:FindPartOnRay(Ray.new(startpos, vec * length), ignore)
-&#9;if hit ~= nil then
-&#9;&#9;if CheckIntangible(hit) then
-&#9;&#9;&#9;if delayifhit then
-&#9;&#9;&#9;&#9;wait()
+&#9;local PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;if not PlayerGui then
+&#9;&#9;return
+&#9;end
+&#9;AmmoHudClone = AmmoHud:Clone()
+&#9;AmmoHudClone.Parent = PlayerGui
+&#9;GuiEvents:UpdateNumbers(tostring(Variables.Ammo), AmmoHudClone.Bar.AmmoLeft)
+end
+
+function GuiEvents:UpdateGui()
+&#9;if not AmmoHudClone or not AmmoHudClone.Parent then
+&#9;&#9;return
+&#9;end
+&#9;GuiEvents:UpdateNumbers(tostring(Variables.Ammo), AmmoHudClone.Bar.AmmoLeft)
+end
+
+function GuiEvents:UpdateNumbers(Data, Frame)
+&#9;if not AmmoHudClone or not AmmoHudClone.Parent then
+&#9;&#9;return
+&#9;end
+&#9;local DataLength = string.len(Data)
+&#9;Data = ((((DataLength == 0 or DataLength == 1) and &quot;0&quot;) or &quot;&quot;) .. Data)
+&#9;local Frame1 = Frame:FindFirstChild(&quot;1&quot;)
+&#9;local Frame2 = Frame:FindFirstChild(&quot;2&quot;)
+&#9;if not Frame1 or not Frame2 then
+&#9;&#9;return
+&#9;end
+&#9;local Digit1 = Frame1:FindFirstChild(&quot;Digit&quot;)
+&#9;local Digit2 = Frame2:FindFirstChild(&quot;Digit&quot;)
+&#9;if not Digit1 or not Digit2 then
+&#9;&#9;return
+&#9;end
+&#9;for i, v in pairs({Digit1, Digit2}) do
+&#9;&#9;local StringPortion = ((v == Digit1 and string.sub(Data, 1, 1)) or (string.sub(Data, 2, 2)))
+&#9;&#9;local NumberImage = Content.NumberImages[tonumber(StringPortion)]
+&#9;&#9;if v.Image ~= (BaseUrl .. NumberImage) then
+&#9;&#9;&#9;local NewDigit = v:Clone()
+&#9;&#9;&#9;NewDigit.Position = UDim2.new(NewDigit.Position.X.Scale, NewDigit.Position.X.Offset, NewDigit.Position.Y.Scale, (NewDigit.Position.Y.Offset - 65))
+&#9;&#9;&#9;NewDigit.Image = (BaseUrl .. NumberImage)
+&#9;&#9;&#9;NewDigit.Parent = v.Parent
+&#9;&#9;&#9;if v == Digit1 then
+&#9;&#9;&#9;&#9;NewDigit:TweenPosition(v.Position, &quot;Out&quot;, &quot;Quad&quot;, 0.1)
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;NewDigit:TweenPosition(UDim2.new(v.Position.X.Scale, v.Position.X.Offset, v.Position.Y.Scale, 0), &quot;Out&quot;, &quot;Quad&quot;, .25)
 &#9;&#9;&#9;end
-&#9;&#9;&#9;hit, endpos2 = CastRay(endpos2 + (vec * .01), vec, length - ((startpos - endpos2).magnitude), ignore, delayifhit)
+&#9;&#9;&#9;v.Name = &quot;OldDigit&quot;
+&#9;&#9;&#9;v:TweenPosition(UDim2.new(v.Position.X.Scale, v.Position.X.Offset, v.Position.Y.Scale, (v.Position.Y.Offset + 65)), &quot;Out&quot;, &quot;Quad&quot;, 0.25)
+&#9;&#9;&#9;Debris:AddItem(v, 1)
 &#9;&#9;end
 &#9;end
-&#9;return hit, endpos2
 end
 
-function DrawBeam(beamstart, beamend, clr, fadedelay, templatePart)
-&#9;local dis = 2 --(beamstart - beamend).magnitude
-&#9;local tlaser=templatePart:Clone()
-&#9;tlaser.BrickColor = clr
-&#9;tlaser.Size = Vector3.new(.1, .1, dis + .2)
-&#9;tlaser.CFrame = CFrame.new((beamend+beamstart)/2, beamstart) * CFrame.new(0, 0, - dis/2)
-&#9;tlaser.Parent = game.Workspace
-&#9;game.Debris:AddItem(tlaser, fadedelay)
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
 end
 
---[[/Static functions]]
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Idle)
+&#9;end)
+&#9;Spawn(function()
+&#9;&#9;GuiEvents.LoadGui(Player)
+&#9;end)
+&#9;Variables.Equipped = true
+end
 
+function Unequipped()
+&#9;Variables.Equipped = false
+&#9;Variables.MouseDown = false
+&#9;RightGrip = nil
+&#9;for i, v in pairs(Sounds) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Stop()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs({AmmoHudClone, ChestWeld}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
 
-GunObject:Initialize()</ProtectedString>
+function OnServerInvoke(player, mode, value)
+&#9;if player == Player and Variables.Equipped and value and CheckIfAlive() then
+&#9;&#9;if mode == &quot;MouseClick&quot; then
+&#9;&#9;&#9;local Down = value.Down
+&#9;&#9;&#9;Variables.MouseDown = Down
+&#9;&#9;&#9;if Variables.MouseDown then
+&#9;&#9;&#9;&#9;Events:Fire()
+&#9;&#9;&#9;end
+&#9;&#9;elseif mode == &quot;KeyPress&quot; then
+&#9;&#9;&#9;local Key = value.Key
+&#9;&#9;&#9;local ByteKey = string.byte(Key)
+&#9;&#9;&#9;local Down = value.Key
+&#9;&#9;&#9;if Key == &quot;r&quot; and Down then
+&#9;&#9;&#9;&#9;if Variables.Equipped and not Variables.MouseDown and not Variables.Reloading and CheckIfAlive() then
+&#9;&#9;&#9;&#9;&#9;Events:Reload()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
+			<Item class="ScreenGui" referent="RBXA3B5FE9CC19D4892A6B829E51FD650DE">
+				<Properties>
+					<string name="Name">AmmoHud</string>
+				</Properties>
+				<Item class="Frame" referent="RBX37CDFA42EF1049D4B92197EEC3935DB1">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">true</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Bar</string>
+						<UDim2 name="Position">
+							<XS>1</XS>
+							<XO>-200</XO>
+							<YS>1</YS>
+							<YO>-170</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>200</XO>
+							<YS>0</YS>
+							<YO>60</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+					<Item class="Frame" referent="RBXE69D34246C834DDE9BD8BFEF598EEE2C">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<string name="Name">AmmoLeft</string>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>10</XO>
+								<YS>0</YS>
+								<YO>5</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<UDim2 name="Size">
+								<XS>0</XS>
+								<XO>65</XO>
+								<YS>0</YS>
+								<YO>50</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<token name="Style">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">1</int>
+						</Properties>
+						<Item class="Frame" referent="RBX1A61A6AD95B545D8A77E2FEE7D7E6814">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4288914085</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<string name="Name">1</string>
+								<UDim2 name="Position">
+									<XS>0</XS>
+									<XO>0</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>0</XS>
+									<XO>30</XO>
+									<YS>0</YS>
+									<YO>40</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<token name="Style">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+							<Item class="ImageLabel" referent="RBXEA9F5EEE50174328BE920469A53A6471">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">ImageLabel</string>
+									<UDim2 name="Position">
+										<XS>0</XS>
+										<XO>0</XO>
+										<YS>0</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>1</XS>
+										<XO>0</XO>
+										<YS>1</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+							<Item class="ImageLabel" referent="RBX7BF5CB9D50D64EB183352A3ED7AD14F7">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94128421</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">Digit</string>
+									<UDim2 name="Position">
+										<XS>0.0500000007</XS>
+										<XO>0</XO>
+										<YS>0.0500000007</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>0.899999976</XS>
+										<XO>0</XO>
+										<YS>0.899999976</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+						</Item>
+						<Item class="Frame" referent="RBX1E61FFFF4B1F4189B3BE59ACAB501305">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4288914085</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<string name="Name">2</string>
+								<UDim2 name="Position">
+									<XS>1</XS>
+									<XO>-30</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>0</XS>
+									<XO>30</XO>
+									<YS>0</YS>
+									<YO>40</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<token name="Style">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+							<Item class="ImageLabel" referent="RBX613313EA6BDE43CA8642D5458ADDAC97">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">ImageLabel</string>
+									<UDim2 name="Position">
+										<XS>0</XS>
+										<XO>0</XO>
+										<YS>0</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>1</XS>
+										<XO>0</XO>
+										<YS>1</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+							<Item class="ImageLabel" referent="RBXBDD6CE55AC5F4F2F99232A8F14132299">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94128401</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">Digit</string>
+									<UDim2 name="Position">
+										<XS>0.0500000007</XS>
+										<XO>0</XO>
+										<YS>0.0500000007</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>0.899999976</XS>
+										<XO>0</XO>
+										<YS>0.899999976</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+						</Item>
+					</Item>
+					<Item class="ImageLabel" referent="RBXA145F59B3C6C47E1B48B6C5DCFB15530">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<Content name="Image"><url>http://www.roblox.com/asset/?id=94100300</url></Content>
+							<Color3 name="ImageColor3">4294967295</Color3>
+							<Vector2 name="ImageRectOffset">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<Vector2 name="ImageRectSize">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<float name="ImageTransparency">0</float>
+							<string name="Name">Slash</string>
+							<UDim2 name="Position">
+								<XS>0.5</XS>
+								<XO>-20</XO>
+								<YS>0</YS>
+								<YO>5</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<UDim2 name="Size">
+								<XS>0</XS>
+								<XO>30</XO>
+								<YS>0</YS>
+								<YO>40</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">2</int>
+						</Properties>
+					</Item>
+					<Item class="Frame" referent="RBX45D5FD47CEAD440090BCBA699DAA9324">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<string name="Name">TotalAmmo</string>
+							<UDim2 name="Position">
+								<XS>0.5</XS>
+								<XO>10</XO>
+								<YS>0</YS>
+								<YO>5</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<UDim2 name="Size">
+								<XS>0</XS>
+								<XO>65</XO>
+								<YS>0</YS>
+								<YO>50</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<token name="Style">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">1</int>
+						</Properties>
+						<Item class="Frame" referent="RBX3C535EE5DA4E4F7E8F4C461373101C23">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4288914085</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">true</bool>
+								<bool name="Draggable">false</bool>
+								<string name="Name">1</string>
+								<UDim2 name="Position">
+									<XS>0</XS>
+									<XO>0</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>0</XS>
+									<XO>30</XO>
+									<YS>0</YS>
+									<YO>40</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<token name="Style">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+							<Item class="ImageLabel" referent="RBX77C504112F9A4F3AA4482937343A07D3">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">ImageLabel</string>
+									<UDim2 name="Position">
+										<XS>0</XS>
+										<XO>0</XO>
+										<YS>0</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>1</XS>
+										<XO>0</XO>
+										<YS>1</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+							<Item class="ImageLabel" referent="RBX157E2B120E024B99B776EA3227684E56">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94128421</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">Digit</string>
+									<UDim2 name="Position">
+										<XS>0.0500000007</XS>
+										<XO>0</XO>
+										<YS>0.0500000007</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>0.899999976</XS>
+										<XO>0</XO>
+										<YS>0.899999976</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+						</Item>
+						<Item class="Frame" referent="RBX71C18FE87F0145788122BE7A1D568C38">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4288914085</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<string name="Name">2</string>
+								<UDim2 name="Position">
+									<XS>1</XS>
+									<XO>-30</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>0</XS>
+									<XO>30</XO>
+									<YS>0</YS>
+									<YO>40</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<token name="Style">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+							<Item class="ImageLabel" referent="RBXDF3A31C01C2B4E76A82E0C69DDB1994E">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94130434</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">ImageLabel</string>
+									<UDim2 name="Position">
+										<XS>0</XS>
+										<XO>0</XO>
+										<YS>0</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>1</XS>
+										<XO>0</XO>
+										<YS>1</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+							<Item class="ImageLabel" referent="RBX11575E2D520147DB8C292D6C2D3DC175">
+								<Properties>
+									<bool name="Active">false</bool>
+									<Color3 name="BackgroundColor3">4288914085</Color3>
+									<float name="BackgroundTransparency">1</float>
+									<Color3 name="BorderColor3">4279970357</Color3>
+									<int name="BorderSizePixel">1</int>
+									<bool name="ClipsDescendants">false</bool>
+									<bool name="Draggable">false</bool>
+									<Content name="Image"><url>http://www.roblox.com/asset/?id=94128401</url></Content>
+									<Color3 name="ImageColor3">4294967295</Color3>
+									<Vector2 name="ImageRectOffset">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<Vector2 name="ImageRectSize">
+										<X>0</X>
+										<Y>0</Y>
+									</Vector2>
+									<float name="ImageTransparency">0</float>
+									<string name="Name">Digit</string>
+									<UDim2 name="Position">
+										<XS>0.0500000007</XS>
+										<XO>0</XO>
+										<YS>0.0500000007</YS>
+										<YO>0</YO>
+									</UDim2>
+									<float name="Rotation">0</float>
+									<UDim2 name="Size">
+										<XS>0.899999976</XS>
+										<XO>0</XO>
+										<YS>0.899999976</YS>
+										<YO>0</YO>
+									</UDim2>
+									<token name="SizeConstraint">0</token>
+									<bool name="Visible">true</bool>
+									<int name="ZIndex">2</int>
+								</Properties>
+							</Item>
+						</Item>
+					</Item>
+					<Item class="ImageLabel" referent="RBXB1D4346FAF3146BC8345285986277166">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<Content name="Image"><url>http://www.roblox.com/asset/?id=94129782</url></Content>
+							<Color3 name="ImageColor3">4294967295</Color3>
+							<Vector2 name="ImageRectOffset">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<Vector2 name="ImageRectSize">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<float name="ImageTransparency">0</float>
+							<string name="Name">ImageLabel</string>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>0</XO>
+								<YS>0</YS>
+								<YO>0</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<UDim2 name="Size">
+								<XS>1</XS>
+								<XO>0</XO>
+								<YS>1</YS>
+								<YO>0</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">1</int>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX6AA294F86F4342D3A9E01843A555277D">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
+
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+
+Modules = Tool:WaitForChild(&quot;Modules&quot;)
+Configuration = require(Modules:WaitForChild(&quot;Configuration&quot;))
+Objects = require(Modules:WaitForChild(&quot;Templates&quot;))
+Content = require(Modules:WaitForChild(&quot;Content&quot;))
+Functions = require(Modules:WaitForChild(&quot;Functions&quot;))
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ReloadCounter = 0
+
+ToolEquipped = false
+
+function SetAnimation(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function SetMouseIcon(Mouse)
+&#9;if not ToolEquipped then
+&#9;&#9;return
+&#9;end
+&#9;local MouseData = OnClientInvoke(&quot;MousePosition&quot;)
+&#9;if not MouseData then
+&#9;&#9;return
+&#9;end
+&#9;local Position = MouseData.Position
+&#9;local Target = MouseData.Target
+&#9;local Cursors = Content.Cursors
+&#9;if not Tool.Enabled then
+&#9;&#9;ReloadCounter = (ReloadCounter + 1)
+&#9;&#9;if (ReloadCounter % 20) &lt; 10 then
+&#9;&#9;&#9;Mouse.Icon = Cursors.ReloadStatic1
+&#9;&#9;else
+&#9;&#9;&#9;Mouse.Icon = Cursors.ReloadStatic2
+&#9;&#9;end
+&#9;elseif Target and Functions.FindCharacterAncestor(Target) then
+&#9;&#9;Mouse.Icon = Cursors.Target
+&#9;else
+&#9;&#9;Mouse.Icon = Cursors.Normal
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;PlayerMouse = Player:GetMouse()
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+&#9;Mouse.Move:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseMove&quot;, {Position = Mouse.Hit.p, Target = Mouse.Target})
+&#9;end)
+&#9;Spawn(function()
+&#9;&#9;while ToolEquipped and Mouse do
+&#9;&#9;&#9;SetMouseIcon(Mouse)
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;end)
+end
+
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;LocalObjects = {}
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs({ObjectLocalTransparencyModifier}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;PlayerMouse.Icon = &quot;&quot;
+&#9;Animations = {}
+end
+
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;local ServerReturn = ServerControl:InvokeServer(Mode, Value)
+&#9;&#9;return ServerReturn
+&#9;end)
+end
+
+function OnClientInvoke(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
+&#9;elseif Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;StopSound&quot; and Value then
+&#9;&#9;Value:Stop()
+&#9;elseif Mode == &quot;MousePosition&quot; then
+&#9;&#9;return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+&#9;elseif Mode == &quot;SetMouseIcon&quot; and Value and ToolEquipped then
+&#9;&#9;PlayerMouse.Icon = Value
+&#9;elseif Mode == &quot;SetLocalTransparencyModifier&quot; and Value and ToolEquipped then
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;local ObjectFound = false
+&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;if v == Value then
+&#9;&#9;&#9;&#9;&#9;ObjectFound = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not ObjectFound then
+&#9;&#9;&#9;&#9;table.insert(LocalObjects, Value)
+&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
+&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ((not v.AutoUpdate and (v.Object.LocalTransparencyModifier == 1 or  v.Object.LocalTransparencyModifier == 0)) or v.AutoUpdate) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(LocalObjects, i)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Configuration" referent="RBX3B1BF3E012564832B8F1877F909D13EE">
+			<Properties>
+				<string name="Name">Modules</string>
+			</Properties>
+			<Item class="ModuleScript" referent="RBX7B277CC26C3B4C7FA203AF2E68AC029B">
+				<Properties>
+					<string name="Name">Configuration</string>
+					<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Configuration = {
+&#9;GunDamage = 25, --Base output damage per shot.
+&#9;FireRate = 0.3, --How often the weapon can fire.
+&#9;Automatic = false, --hold down to continue firing
+&#9;Range = 250, --Max Distance that the weapon can fire.
+&#9;Spread = 1, --The bigger the spread, the more inaccurate the shots will be.
+&#9;ClipSize = 10, --Shots in a clip
+&#9;ReloadTime = 3.4, --Time it takes to reload the tool.
+&#9;StartingClips = 10, --If you want infinit clips, remove the IntValue named &quot;Clips&quot; from the tool.
+&#9;SegmentLength = 40, --How long the shot Segments are, or the speed of the shot.
+&#9;FadeDelayTime = (1 / 60),
+&#9;BarrelPosition = CFrame.new(0, 0, -1.2), --L, F, U
+&#9;Rate = (1 / 30),
+&#9;Colors = {
+&#9;&#9;BrickColor.new(&quot;Bright yellow&quot;),
+&#9;&#9;BrickColor.new(&quot;Mid gray&quot;),
+&#9;&#9;BrickColor.new(&quot;Medium stone grey&quot;),
+&#9;&#9;BrickColor.new(&quot;Dark stone grey&quot;)
+&#9;},
+&#9;FlashColors = {&quot;Medium red&quot;, &quot;Dusty Rose&quot;, &quot;Bright red&quot;, &quot;Really red&quot;},
+}
+
+return Configuration</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXD970ADE309E445ECAAA8FDD574B020C0">
+				<Properties>
+					<string name="Name">Content</string>
+					<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Content = {
+&#9;Cursors ={
+&#9;&#9;Normal = &quot;http://www.roblox.com/asset/?id=94154683&quot;, --black
+&#9;&#9;Target = &quot;http://www.roblox.com/asset/?id=94154829&quot;, --red
+&#9;&#9;ReloadStatic1 = &quot;http://www.roblox.com/asset/?id=94155503&quot;,
+&#9;&#9;ReloadStatic2 = &quot;http://www.roblox.com/asset/?id=94155569&quot;,
+&#9;},
+&#9;NumberImages = {
+&#9;&#9;[0] = 94128401,
+&#9;&#9;[1] = 94128421,
+&#9;&#9;[2] = 94128434,
+&#9;&#9;[3] = 94128446,
+&#9;&#9;[4] = 94128466,
+&#9;&#9;[5] = 94128485,
+&#9;&#9;[6] = 94128496,
+&#9;&#9;[7] = 94128523,
+&#9;&#9;[8] = 94128538,
+&#9;&#9;[9] = 97903893,
+&#9;},
+}
+
+return Content</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX19757F05A8CC4323870E08BEF311FF63">
+				<Properties>
+					<string name="Name">Functions</string>
+					<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Functions = {}
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+ProjectileNames = {&quot;Water&quot;, &quot;Arrow&quot;, &quot;Projectile&quot;, &quot;Effect&quot;, &quot;Rail&quot;, &quot;Laser&quot;, &quot;Bullet&quot;}
+
+function Functions.IsTeamMate(Player1, Player2)
+&#9;return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function Functions.Round(Number, Decimal)
+&#9;Decimal = (Decimal or 0)
+&#9;local Multiplier = (10 ^ Decimal)
+&#9;return (math.floor(Number * Multiplier + 0.5) / Multiplier)
+end
+
+function Functions.SigNum(Number)
+&#9;if Number == 0 then
+&#9;&#9;return 1
+&#9;end
+&#9;return (math.abs(Number) / Number)
+end
+
+function Functions.TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
+end
+
+function Functions.UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function Functions.FindCharacterAncestor(Object)
+&#9;if Object and Object ~= game:GetService(&quot;Workspace&quot;) then
+&#9;&#9;if Object:FindFirstChild(&quot;Humanoid&quot;) then
+&#9;&#9;&#9;return Object
+&#9;&#9;else
+&#9;&#9;&#9;return Functions.FindCharacterAncestor(Object.Parent)
+&#9;&#9;end
+&#9;end
+&#9;return nil
+end
+
+function Functions.WeldBetween(Part1, Part2)
+    local Weld = Instance.new(&quot;Weld&quot;)
+    Weld.Part0 = Part1
+    Weld.Part1 = Part2
+    Weld.C0 = CFrame.new()
+    Weld.C1 = Part2.CFrame:inverse() * Part1.CFrame
+    Weld.Parent = Part1
+    return Weld
+end
+
+function CheckTableForString(Table, String)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if string.lower(v) == string.lower(String) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function CheckIntangible(Hit)
+&#9;if Hit and Hit.Parent then
+&#9;&#9;if Hit.Transparency &gt; 0.8 or CheckTableForString(ProjectileNames, Hit.Name) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function Functions.CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+&#9;local Ignore = ((type(Ignore) == &quot;table&quot; and Ignore) or {Ignore})
+&#9;local RayHit, RayPos, RayNormal = game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+&#9;if RayHit and CheckIntangible(RayHit) then
+&#9;&#9;if DelayIfHit then
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;RayHit, RayPos, RayNormal = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+&#9;end
+&#9;return RayHit, RayPos, RayNormal
+end
+
+return Functions</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX7C50525B885E438A9644750B4A93EFC9">
+				<Properties>
+					<string name="Name">Templates</string>
+					<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+BasePart = Instance.new(&quot;Part&quot;)
+BasePart.Shape = Enum.PartType.Block
+BasePart.Material = Enum.Material.Plastic
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.Locked = true
+BasePart.CanCollide = true
+BasePart.Anchored = false
+
+Bullet = BasePart:Clone()
+Bullet.Name = &quot;Bullet&quot;
+Bullet.CanCollide = false
+BulletMesh = Instance.new(&quot;SpecialMesh&quot;)
+BulletMesh.MeshType = Enum.MeshType.FileMesh
+BulletMesh.MeshId = &quot;http://www.roblox.com/asset/?id=95387759&quot;
+BulletMesh.TextureId = &quot;http://www.roblox.com/asset/?id=95387789&quot;
+BulletMesh.Scale = Vector3.new(3, 3, 3)
+BulletMesh.VertexColor = Vector3.new(1, 1, 1)
+BulletMesh.Parent = Bullet
+
+Shell = Bullet:Clone()
+Shell.Name = &quot;Shell&quot;
+Shell.BrickColor = BrickColor.new(&quot;Bright yellow&quot;)
+Shell.Size = Vector3.new(1, 0.4, 0.33)
+Shell.CanCollide = true
+
+SparkEffect = BasePart:Clone()
+SparkEffect.Name = &quot;Effect&quot;
+SparkEffect.CanCollide = false
+
+Templates = {
+&#9;Bullet = Bullet,
+&#9;Shell = Shell,
+&#9;SparkEffect = SparkEffect,
+}
+
+return Templates</ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
 	</Item>
 </roblox>
