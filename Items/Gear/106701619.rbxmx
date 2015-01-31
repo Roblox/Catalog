@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX206F6CBF25C544C2AD5E0893D983267C">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">FrogWand</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=106762265</url></Content>
 			<string name="ToolTip">Wand of Buforia</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX8D111DE3404F4E53B118B0F2AB9C98E9">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -36,18 +37,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.799999952</X>
-					<Y>0</Y>
-					<Z>-0.5</Z>
+					<X>0.200000048</X>
+					<Y>0.200000003</Y>
+					<Z>0.5</Z>
 					<R00>-1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
-					<R10>-0</R10>
+					<R10>0</R10>
 					<R11>0</R11>
 					<R12>1</R12>
-					<R20>-0</R20>
+					<R20>0</R20>
 					<R21>1</R21>
-					<R22>0</R22>
+					<R22>-0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
@@ -91,7 +92,7 @@
 					<Z>0.280000001</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBXA2125CA7B8E345EF89E11F293A6C7769">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,7 +117,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Script" referent="RBX3">
+			<Item class="Script" referent="RBX11DB99C3798546399EFC3E943BB3654E">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -127,6 +128,7 @@
 end
 
 local FROG_ASSET_ID = 106808835
+local GLib = require(206209239)
 
 local Handle = script.Parent
 local Tool = Handle.Parent
@@ -178,6 +180,7 @@ end
 --local Froggy = workspace.Froggy
 
 function transformPlayer(player)
+&#9;--[[
 &#9;local newFroggy = Froggy:Clone()
 &#9;local newFrogScript = FrogScript:Clone()
 &#9;local oldCharacter = player.Character
@@ -196,6 +199,64 @@ function transformPlayer(player)
 &#9;removeToolsFromChar(oldCharacter)
 &#9;oldCharacter.Parent = workspace
 &#9;player.Character = oldCharacter
+&#9;--]]
+&#9;
+&#9;local new = Instance.new&apos;Part&apos;
+&#9;new.Name = &apos;Frog&apos;
+&#9;new.CanCollide = false
+&#9;new.Locked = true
+&#9;new.FormFactor = &apos;Custom&apos;
+&#9;new.Size = Vector3.new(1,1,1)
+&#9;local mesh = script.FrogMesh:Clone()
+&#9;mesh.Parent = new
+&#9;local newScript = FrogScript:Clone()
+&#9;
+&#9;new:MakeJoints()
+&#9;local char = player.Character
+&#9;if char:FindFirstChild&apos;Frog&apos; then return end
+&#9;
+&#9;new.Parent = char
+&#9;newScript.Parent = char
+&#9;newScript.Disabled = false
+&#9;local w = Instance.new(&apos;Weld&apos;)
+&#9;w.Part0 = char.HumanoidRootPart
+&#9;w.Part1 = new
+&#9;w.C0 = CFrame.new(0, -3+1/2+0.05, 0)
+&#9;w.Parent = new
+&#9;
+&#9;local original = {} do
+&#9;&#9;for i,v in next, GLib.GetDescendants(char) do
+&#9;&#9;&#9;if v:IsA&apos;BasePart&apos; and v~=new then
+&#9;&#9;&#9;&#9;original[v] = {
+&#9;&#9;&#9;&#9;&#9;Transparency = v.Transparency
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;v.Transparency = 1
+&#9;&#9;&#9;elseif v:IsA&apos;Decal&apos; then
+&#9;&#9;&#9;&#9;original[v] = {
+&#9;&#9;&#9;&#9;&#9;Transparency = v.Transparency
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;v.Transparency = 1
+&#9;&#9;&#9;elseif v:IsA&apos;Fire&apos; or v:IsA&apos;Sparkles&apos; or v:IsA&apos;Smoke&apos; then
+&#9;&#9;&#9;&#9;original[v] = {
+&#9;&#9;&#9;&#9;&#9;Enabled = v.Enabled
+&#9;&#9;&#9;&#9;}
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;v.Enabled = false
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;wait(20)
+&#9;new:Destroy()
+&#9;
+&#9;for v, p in next, original do
+&#9;&#9;for i,n in next, p do
+&#9;&#9;&#9;v[i] = n
+&#9;&#9;end
+&#9;end
+&#9;newScript:Destroy()
 end
 
 local playersToTransform = {}
@@ -248,7 +309,7 @@ end
 
 
 Tool.Enabled = false
-function onActivated()
+function onActivated(hit)
 &#9;if not Humanoid or Tool.Enabled then return end
 &#9;Tool.Enabled = true
 &#9;MagicSound:Play()
@@ -262,7 +323,7 @@ function onActivated()
 &#9;newSludge.BrickColor = BrickColor.new(&quot;Br. yellowish green&quot;)
 &#9;newSludge.CanCollide = false
 &#9;newSludge.Anchored = true
-&#9;newSludge.CFrame = CFrame.new(Humanoid.TargetPoint + Vector3.new(0, .25, 0))
+&#9;newSludge.CFrame = CFrame.new(hit.p + Vector3.new(0, .25, 0))
 &#9;
 &#9;local newSludgeMesh = SludgeMesh:Clone()
 &#9;newSludgeMesh.Parent = newSludge
@@ -279,12 +340,48 @@ function onEquipped()
 &#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
 end
 
-Tool.Activated:connect(onActivated)
+--Tool.Activated:connect(onActivated)
+Tool.Input.OnServerEvent:connect(function(client, action, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if action == &apos;Mouse1&apos; then
+&#9;&#9;&#9;local down, hit = ...
+&#9;&#9;&#9;
+&#9;&#9;&#9;if down then
+&#9;&#9;&#9;&#9;onActivated(hit)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
 Tool.Equipped:connect(onEquipped)
 </ProtectedString>
 				</Properties>
+				<Item class="SpecialMesh" referent="RBXC9B1280719CC4B65B934DC4CC3F35D09">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=106762078</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">FrogMesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>2</X>
+							<Y>2</Y>
+							<Z>2</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=106762118</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
 			</Item>
-			<Item class="LocalScript" referent="RBX4">
+			<Item class="LocalScript" referent="RBXE1097E5F58A94DBB836F78C0C15DF771">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -304,7 +401,8 @@ local Humanoid = WaitForChild(Character, &quot;Humanoid&quot;)
 
 local NeckAngle = 0
 
-local CroakSound = WaitForChild(Torso, &apos;Croak&apos;)
+local CroakSound = WaitForChild(script, &apos;Croak&apos;)
+spawn(function() CroakSound.Parent = Torso end)
 local JumpHumanoid = false
 local keysDown = {}
 
@@ -317,7 +415,7 @@ function onKeyDown(key)
 &#9;&#9;if currTime - lastSpace &gt; 2 then
 &#9;&#9;&#9;lastSpace = currTime
 &#9;&#9;&#9;NeckAngle = NeckAngle + math.pi*2
-&#9;&#9;&#9;Neck.DesiredAngle = NeckAngle
+&#9;&#9;&#9;--Neck.DesiredAngle = NeckAngle
 &#9;&#9;end
 &#9;elseif key == &quot;w&quot; or key == &quot;a&quot; or key == &quot;s&quot; or key == &quot;d&quot; or (string.byte(key) == 17 and string.byte(key) == 18) then
 &#9;&#9;lastSpace = tick()
@@ -357,8 +455,18 @@ while true do
 end
 </ProtectedString>
 				</Properties>
+				<Item class="Sound" referent="RBX0714E4C5C1784EB0BE77761E26FE3F38">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Croak</string>
+						<float name="Pitch">1</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=106805531</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBXBBC8039473834904ADDAE9C55D15CBAC">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Sludge</string>
@@ -368,7 +476,7 @@ end
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX6">
+			<Item class="Sound" referent="RBX701409FF0B5F47299C5F6E0B113A7A89">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Magic</string>
@@ -378,7 +486,7 @@ end
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
-			<Item class="LocalScript" referent="RBX7">
+			<Item class="LocalScript" referent="RBX2DC7D5A2890440789841033E8DED1584">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -402,10 +510,14 @@ function onEquipped()
 end
 
 local wasEnabled = false
-function onChanged()
+function onChanged() -- A prime example of garbage.
 &#9;if Tool.Enabled and not wasEnabled then
 &#9;&#9;wasEnabled = true
-&#9;&#9;Animation:Play()
+&#9;&#9;Animation = Tool.Parent:FindFirstChild&apos;Humanoid&apos; and Tool.Parent.Humanoid:LoadAnimation(animation)
+&#9;&#9;
+&#9;&#9;if Animation then
+&#9;&#9;&#9;Animation:Play()
+&#9;&#9;end
 &#9;elseif not Tool.Enabled and wasEnabled then
 &#9;&#9;wasEnabled = false
 &#9;end
@@ -422,7 +534,7 @@ Tool.Unequipped:connect(onUnequipped)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="SpecialMesh" referent="RBX8">
+		<Item class="SpecialMesh" referent="RBX8BF4BB0B0B284302B811B519A926E450">
 			<Properties>
 				<token name="LODX">2</token>
 				<token name="LODY">2</token>
@@ -447,35 +559,52 @@ Tool.Unequipped:connect(onUnequipped)
 				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX9">
+		<Item class="Animation" referent="RBX3CB84867D0944D23B1099CAAB072D32E">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=31665427</url></Content>
 				<string name="Name">wandcast</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="RemoteEvent" referent="RBX0EDE8D9BFFFE4828B31C34CD8C6B29CD">
+			<Properties>
+				<string name="Name">Input</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX0FC3CA3E933F4DA3B11055BE0FB339EE">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.Button1Down:connect(function()
+&#9;&#9;script.Parent.Input:FireServer(&apos;Mouse1&apos;, true, mouse.Hit)
+&#9;end)
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXBCD39BB1D8674E1090E1A329C2F8CB5A">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.04693282</X>
-					<Y>2.12075305</Y>
-					<Z>-0.751606941</Z>
-					<R00>-0.704633772</R00>
-					<R01>0.700244486</R01>
-					<R02>-0.114669308</R02>
-					<R10>-7.4505806e-009</R10>
-					<R11>0.161603659</R11>
+					<X>0.024121508</X>
+					<Y>1.85714817</Y>
+					<Z>0.100598931</Z>
+					<R00>-0.70463419</R00>
+					<R01>0.700244069</R01>
+					<R02>-0.114669323</R02>
+					<R10>-7.45057971e-009</R10>
+					<R11>0.161603779</R11>
 					<R12>0.986855745</R12>
-					<R20>0.709571242</R20>
-					<R21>0.695371866</R21>
-					<R22>-0.113871381</R22>
+					<R20>0.709570825</R20>
+					<R21>0.695372283</R21>
+					<R22>-0.113871537</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.817594171</X>
-					<Y>0.147041321</Y>
-					<Z>-0.52386415</Z>
+					<X>0.198418885</X>
+					<Y>0.357127428</Y>
+					<Z>0.273683667</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
