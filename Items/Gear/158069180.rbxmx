@@ -24,596 +24,6 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id= 158070595 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBXBEA7F1C0A6C24C03A1409EB26DA8D832">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-
-Players = game:GetService(&quot;Players&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
-RunService = game:GetService(&quot;RunService&quot;)
-
-AssetLink = &quot;http://www.roblox.com/asset?id=&quot;
-
-SkeletonAssets = {
-&#9;[&quot;Head&quot;] = {MeshId = 36869983, TextureId = 36869975, Scale = Vector3.new(0.95, 0.9, 0.95)},
-&#9;[&quot;Torso&quot;] = {MeshId = 36780113, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
-&#9;[&quot;Left Arm&quot;] = {MeshId = 36780032, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
-&#9;[&quot;Right Arm&quot;] = {MeshId = 36780156, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
-&#9;[&quot;Left Leg&quot;] = {MeshId = 36780079, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
-&#9;[&quot;Right Leg&quot;] = {MeshId = 36780195, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)}
-}
-
-PoisonScript = script:WaitForChild(&quot;PoisonScript&quot;)
-
-DualEquip = Tool:WaitForChild(&quot;DualEquip&quot;) --Animations and very negligable stat fixes by EC2
-DualSlash = Tool:WaitForChild(&quot;DualSlash&quot;)
-DualLunge = Tool:WaitForChild(&quot;DualLunge&quot;)
-SpinAnimation = Tool:WaitForChild(&quot;Spin&quot;)
-
-SlashSound = Handle:WaitForChild(&quot;SlashSound&quot;)
-LungeSound = Handle:WaitForChild(&quot;LungeSound&quot;)
-UnsheathSound = Handle:WaitForChild(&quot;UnsheathSound&quot;)
-
-Base_Damage = 5
-Slash_Damage = 10
-Lunge_Damage = 20
-
-Damage = Base_Damage
-
-PoisonDamage = 2.5
-
-Debounce = false
-MiniDebounce = false
-SpinDebounce = false
-
-PoisonPuddles = {}
-Projectiles = {}
-
-SpinReload = 30
-SpinCount = 0
-Last_Attack = 0
-
-SpinForce = Instance.new(&quot;BodyAngularVelocity&quot;)
-SpinForce.P = 1000000
-SpinForce.angularvelocity = Vector3.new(0, 20, 0)
-SpinForce.maxTorque = Vector3.new(SpinForce.P, SpinForce.P, SpinForce.P)
-
-StayUpright = Instance.new(&quot;BodyGyro&quot;)
-StayUpright.P = 1000000
-StayUpright.maxTorque = Vector3.new(1, 0, 1) * StayUpright.P
-StayUpright.cframe = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-
-Force = Instance.new(&quot;BodyVelocity&quot;)
-Force.velocity = Vector3.new(0, 10, 0)
-Force.maxForce = Vector3.new(0, 4000, 0)
-
-BasePart = Instance.new(&quot;Part&quot;)
-BasePart.Name = &quot;Part&quot;
-BasePart.Material = Enum.Material.Plastic
-BasePart.Shape = Enum.PartType.Block
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
-BasePart.Anchored = true
-BasePart.CanCollide = false
-BasePart.Locked = true
-BasePart.BrickColor = BrickColor.new(&quot;Medium stone grey&quot;)
-
-function FindCharacterAncestor(Parent)
-&#9;if Parent and Parent ~= game:GetService(&quot;Workspace&quot;) then
-&#9;&#9;local humanoid = Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;return Parent, humanoid
-&#9;&#9;else
-&#9;&#9;&#9;return FindCharacterAncestor(Parent.Parent)
-&#9;&#9;end
-&#9;end
-&#9;return nil
-end
-
-function RayCast(Position, Direction, MaxDistance, IgnoreList)
-&#9;return game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(Position, Direction.unit * (MaxDistance or 999.999)), IgnoreList) 
-end
-
-function TagHumanoid(humanoid, player)
-&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;Creator_Tag.Name = &quot;creator&quot;
-&#9;Creator_Tag.Value = player
-&#9;Debris:AddItem(Creator_Tag, 2)
-&#9;Creator_Tag.Parent = humanoid
-end
-
-function UntagHumanoid(humanoid)
-&#9;for i, v in pairs(humanoid:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-function CheckForForceField(Parent)
-&#9;for i, v in pairs(Parent:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;ForceField&quot;) then
-&#9;&#9;&#9;return true
-&#9;&#9;end
-&#9;end
-&#9;return false
-end
-
-function Blow(Hit)
-&#9;if Hit and Hit.Parent then
-&#9;&#9;local character = Hit.Parent
-&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if Humanoid and Humanoid ~= humanoid and humanoid and Humanoid.Health &gt; 0 and humanoid.Health &gt; 0 then
-&#9;&#9;&#9;local Right_Arm = Character:FindFirstChild(&quot;Right Arm&quot;)
-&#9;&#9;&#9;if Right_Arm then
-&#9;&#9;&#9;&#9;local Joint = Right_Arm:FindFirstChild(&quot;RightGrip&quot;)
-&#9;&#9;&#9;&#9;if (Joint and (Joint.Part0 == Handle or Joint.Part1 == Handle)) then
-&#9;&#9;&#9;&#9;&#9;UntagHumanoid(humanoid)
-&#9;&#9;&#9;&#9;&#9;TagHumanoid(humanoid, Player)
-&#9;&#9;&#9;&#9;&#9;humanoid:TakeDamage(Damage)
-&#9;&#9;&#9;&#9;&#9;if humanoid.Health &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;if not character:FindFirstChild(PoisonScript.Name) and not CheckForForceField(character) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local PoisonScriptClone = PoisonScript:Clone()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Creator = Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Creator.Name = &quot;Creator&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Creator.Value = Player
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Creator.Parent = PoisonScriptClone
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;PoisonScriptClone.Disabled = false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;PoisonScriptClone.Parent = character
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function CreateFakeHandle()
-&#9;LeftSword = Handle:Clone()
-&#9;LeftSword.Name = &quot;FakeHandle&quot;
-&#9;LeftSword.CanCollide = false
-&#9;
-&#9;LeftSwordWeld = Instance.new(&quot;ManualWeld&quot;)
-&#9;LeftSwordWeld.Part1 = LeftSword
-&#9;LeftSwordWeld.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
-&#9;LeftSwordWeld.C1 = CFrame.new(0, 0, -2, 0, 0, 1, 1, 0, 0, 0, 1, 0)
-&#9;
-&#9;LeftSwordC0Origin = LeftSwordWeld.C0
-&#9;LeftSwordC1Origin = LeftSwordWeld.C1
-&#9;
-&#9;local LeftArm = Character:FindFirstChild(&quot;Left Arm&quot;)
-&#9;LeftSwordWeld.Part0 = LeftArm
-&#9;LeftSword.Parent = Tool
-&#9;LeftSwordWeld.Parent = LeftSword
-&#9;
-&#9;LeftSword.Touched:connect(Blow)&#9;
-end
-
-function PlaySpin()
-&#9;SpinForce.Parent = Torso
-&#9;StayUpright.Parent = Torso
-&#9;Force.Parent = nil
-&#9;SwordOut()
-&#9;if SpinTrack then
-&#9;&#9;SpinTrack:Play()
-&#9;end
-end
-
-function StopSpin()
-&#9;SpinForce.Parent = nil
-&#9;StayUpright.Parent = nil
-&#9;SpinDebounce = false
-&#9;SwordUp()
-&#9;if SpinTrack then
-&#9;&#9;SpinTrack:Stop()
-&#9;end
-&#9;if PoisonPuddlesModel and PoisonPuddlesModel.Parent then
-&#9;&#9;PoisonPuddlesModel:Destroy()
-&#9;end
-&#9;for i, v in pairs(PoisonPuddles) do
-&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs(Projectiles) do
-&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-&#9;PoisonPuddles = {}
-&#9;Projectiles = {}
-end
-
-function CheckTable(Table, Instance)
-&#9;for i, v in pairs(Table) do
-&#9;&#9;if v == Instance then
-&#9;&#9;&#9;return true
-&#9;&#9;end
-&#9;end
-&#9;return false
-end
-
-function CreatePoison()
-&#9;Debounce = true
-&#9;
-&#9;local PuddleDuration = 30
-&#9;local PuddleRadius = 30
-&#9;local PuddleSpawnRadius = 50
-&#9;
-&#9;local PoisonPuddles = {}
-&#9;local Projectiles = {}
-&#9;local IgnoreObjects = {Character}
-&#9;local PoisonTick = tick()&#9;
-&#9;
-&#9;PoisonPuddlesModel = Instance.new(&quot;Model&quot;)
-&#9;PoisonPuddlesModel.Name = &quot;PoisonPuddles&quot;
-&#9;Spawn(function()
-&#9;&#9;PoisonPuddlesModel:WaitForChild(&quot;PoisonPuddle&quot;)
-&#9;&#9;while PoisonPuddlesModel and PoisonPuddlesModel.Parent do
-&#9;&#9;&#9;local Humanoids = {}
-&#9;&#9;&#9;for i, v in pairs(PoisonPuddles) do
-&#9;&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;&#9;local NegativePartRadius = Vector3.new((v.Size.X / 2), 0, (v.Size.Z / 2))
-&#9;&#9;&#9;&#9;&#9;local PositivePartRadius = Vector3.new((v.Size.X / 2), 0, (v.Size.Z / 2))
-&#9;&#9;&#9;&#9;&#9;local Parts = game:GetService(&quot;Workspace&quot;):FindPartsInRegion3WithIgnoreList(Region3.new(v.Position - NegativePartRadius, v.Position + PositivePartRadius), IgnoreObjects, 100)
-&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
-&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local humanoid = v.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;if not CheckTable(Humanoids, humanoid) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Humanoids, humanoid)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;for i, v in pairs(Humanoids) do
-&#9;&#9;&#9;&#9;if v and v.Parent and v.Health &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;UntagHumanoid(v)
-&#9;&#9;&#9;&#9;&#9;TagHumanoid(v, Player)
-&#9;&#9;&#9;&#9;&#9;v:TakeDamage(PoisonDamage)
-&#9;&#9;&#9;&#9;&#9;if v.Health == 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;if v.Parent and v.Parent.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(v.Parent:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) and SkeletonAssets[v.Name] then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local SkeletonPart = SkeletonAssets[v.Name]
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Part = v:Clone()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.CanCollide = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(Part:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = SkeletonPart.Scale
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.TextureId = AssetLink .. tostring(SkeletonPart.TextureId)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshId = AssetLink .. tostring(SkeletonPart.MeshId)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Parent = Part
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Part, 10)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait()
-&#9;&#9;end
-&#9;end)
-&#9;Debris:AddItem(PoisonPuddlesModel, 60)
-&#9;PoisonPuddlesModel.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;
-&#9;local BasePoisonPuddle = BasePart:Clone()
-&#9;BasePoisonPuddle.Name = &quot;PoisonPuddle&quot;
-&#9;BasePoisonPuddle.BrickColor = BrickColor.new(&quot;Grime&quot;)
-&#9;local CylinderMesh = Instance.new(&quot;CylinderMesh&quot;)
-&#9;CylinderMesh.Parent = BasePoisonPuddle
-&#9;
-&#9;local StartingPoisonPuddle = BasePoisonPuddle:Clone()
-&#9;StartingPoisonPuddle.Size = Vector3.new(PuddleRadius, 0.2, PuddleRadius)
-&#9;
-&#9;local Hit, EndPosition = RayCast(Torso.Position, Vector3.new(0, -1, 0), (Torso.Size.Y * 2), IgnoreObjects)
-&#9;if Hit then
-&#9;&#9;table.insert(PoisonPuddles, StartingPoisonPuddle)
-&#9;&#9;table.insert(IgnoreObjects, StartingPoisonPuddle)
-&#9;&#9;StartingPoisonPuddle.Parent = PoisonPuddlesModel
-&#9;&#9;StartingPoisonPuddle.CFrame = CFrame.new(EndPosition)
-&#9;end
-&#9;
-&#9;while (tick() - PoisonTick) &lt; PuddleDuration and Equipped do
-&#9;&#9;local PoisonChance = math.random(1, 5)
-&#9;&#9;if PoisonChance == 1 then
-&#9;&#9;&#9;local Projectile = BasePart:Clone()
-&#9;&#9;&#9;Projectile.Name = &quot;PoisonProjectile&quot;
-&#9;&#9;&#9;Projectile.BrickColor = BrickColor.new(&quot;Grime&quot;)
-&#9;&#9;&#9;Projectile.CanCollide = true
-&#9;&#9;&#9;Projectile.Anchored = false
-&#9;&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.Head
-&#9;&#9;&#9;Mesh.Parent = Projectile
-&#9;&#9;&#9;Projectile.Size = Vector3.new(1, 1.5, 1)
-&#9;&#9;&#9;table.insert(Projectiles, Projectile)
-&#9;&#9;&#9;table.insert(IgnoreObjects, Projectile)
-&#9;&#9;&#9;Debris:AddItem(Projectile, 5)
-&#9;&#9;&#9;Projectile.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;&#9;Projectile.CFrame = Torso.CFrame + Vector3.new(math.random(-PuddleSpawnRadius, PuddleSpawnRadius), math.random((PuddleSpawnRadius - 5), PuddleSpawnRadius), math.random(-PuddleSpawnRadius, PuddleSpawnRadius))
-&#9;&#9;&#9;Projectile.Touched:connect(function(Hit)
-&#9;&#9;&#9;&#9;if Hit and Hit.Parent and Hit.Name ~= &quot;PoisonPuddle&quot; then
-&#9;&#9;&#9;&#9;&#9;local character, humanoid = FindCharacterAncestor(Hit.Parent)
-&#9;&#9;&#9;&#9;&#9;if ((character and character ~= Character) or not character) then
-&#9;&#9;&#9;&#9;&#9;&#9;local HitPosition = Projectile.Position
-&#9;&#9;&#9;&#9;&#9;&#9;local Hit, EndPosition = RayCast(HitPosition, Vector3.new(0, -1, 0), 6, IgnoreObjects)
-&#9;&#9;&#9;&#9;&#9;&#9;if Hit then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local NewPoisonPuddle = BasePoisonPuddle:Clone()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local NewPuddleRadius = math.random(3, (PuddleRadius / 1.25))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;NewPoisonPuddle.Size = Vector3.new(NewPuddleRadius, StartingPoisonPuddle.Size.Y, NewPuddleRadius)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(PoisonPuddles, NewPoisonPuddle)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(IgnoreObjects, NewPoisonPuddle)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;NewPoisonPuddle.Parent = PoisonPuddlesModel
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;NewPoisonPuddle.CFrame = CFrame.new(EndPosition)
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;Projectile:Destroy()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;end
-&#9;&#9;wait(0.1)
-&#9;end
-&#9;wait(SpinReload)
-&#9;Debounce = false
-end
-
-function Spin()
-&#9;if not Debounce and not SpinDebounce then
-&#9;&#9;SpinDebounce = true
-&#9;&#9;if SpinCount &lt; 4 then
-&#9;&#9;&#9;SpinCount = SpinCount + 1
-&#9;&#9;&#9;if SpinCount &gt; 3 then
-&#9;&#9;&#9;&#9;PlaySpin()
-&#9;&#9;&#9;&#9;CreatePoison()
-&#9;&#9;&#9;&#9;StopSpin()
-&#9;&#9;&#9;&#9;SpinCount = 0
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;delay(3, function()
-&#9;&#9;&#9;&#9;&#9;if SpinCount &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;SpinCount = SpinCount - 1
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;PlaySpin()
-&#9;&#9;&#9;&#9;wait(0.5)
-&#9;&#9;&#9;&#9;if not Debounce then
-&#9;&#9;&#9;&#9;&#9;StopSpin()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;SpinDebounce = false
-&#9;&#9;end
-&#9;end
-end
-
-function SwordUp()
-&#9;Tool.GripForward = Vector3.new(-1,0,0)
-&#9;Tool.GripRight = Vector3.new(0,1,0)
-&#9;Tool.GripUp = Vector3.new(0,0,1)
-
-&#9;LeftSwordWeld.C0 = LeftSwordC0Origin
-&#9;LeftSwordWeld.C1 = LeftSwordC1Origin
-&#9;
-end
-
-function SwordOut()
-&#9;Tool.GripForward = Vector3.new(0, 0, 1)
-&#9;Tool.GripRight = Vector3.new(0, -1, 0)
-&#9;Tool.GripUp = Vector3.new(-1,0,0)
-&#9;
-&#9;LeftSwordWeld.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
-&#9;LeftSwordWeld.C1 = CFrame.new(0, 0, -2, 0, -1, -0, -1, 0, -0, 0, 0, -1)
-&#9;
-end
-
-function Attack()
-&#9;if not SpinDebounce then
-&#9;&#9;Damage = Slash_Damage
-&#9;&#9;SlashSound:Play()
-&#9;&#9;slashA:Play()
-&#9;&#9;
-&#9;&#9;--[[local Anim = Instance.new(&quot;StringValue&quot;)
-&#9;&#9;Anim.Name = &quot;toolanim&quot;
-&#9;&#9;Anim.Value = &quot;Slash&quot;
-&#9;&#9;Anim.Parent = Tool]]
-&#9;&#9;
-&#9;&#9;delay(1, function()
-&#9;&#9;&#9;Damage = Base_Damage
-&#9;&#9;end)
-&#9;end
-end
-
-function Lunge()
-&#9;if not MiniDebounce and not SpinDebounce then
-&#9;&#9;MiniDebounce = true
-&#9;&#9;LungeSound:Play()
-&#9;&#9;Damage = Lunge_Damage
-&#9;&#9;lungeA:Play()
-&#9;&#9;
-&#9;&#9;--[[local NewAttack = Instance.new(&quot;StringValue&quot;)
-&#9;&#9;NewAttack.Name = &quot;toolanim&quot;
-&#9;&#9;NewAttack.Value = &quot;Lunge&quot;
-&#9;&#9;NewAttack.Parent = Tool
-&#9;&#9;Force.Parent = Torso]]
-&#9;&#9;
-&#9;&#9;wait(0.25)
-&#9;&#9;if not SpinDebounce then
-&#9;&#9;&#9;SwordOut()
-&#9;&#9;&#9;wait(0.25)
-&#9;&#9;&#9;Force.Parent = nil
-&#9;&#9;&#9;lungeA:Stop()
-&#9;&#9;&#9;wait(0.5)
-&#9;&#9;&#9;if not SpinDebounce then
-&#9;&#9;&#9;&#9;SwordUp()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;Damage = Base_Damage
-&#9;&#9;MiniDebounce = false
-&#9;end
-end
-
-function KeyDown(Key)
-&#9;Key = string.lower(Key)
-&#9;if Key == &quot;e&quot; or Key == &quot;q&quot; or Key == &quot;z&quot; or Key == &quot;x&quot; then
-&#9;&#9;if MiniDebounce then
-&#9;&#9;&#9;Spin()
-&#9;&#9;end
-&#9;end
-end
-
-function Activated()
-&#9;if Tool.Enabled then
-&#9;&#9;Tool.Enabled = false
-&#9;&#9;local Time = RunService.Stepped:wait()
-&#9;&#9;if (Time - Last_Attack) &lt; 1 then
-&#9;&#9;&#9;Lunge()
-&#9;&#9;else
-&#9;&#9;&#9;Attack()
-&#9;&#9;end
-&#9;&#9;Last_Attack = Time
-&#9;&#9;Tool.Enabled = true
-&#9;end
-end
-
-function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;if not Humanoid or Humanoid.Health == 0 or not Torso then
-&#9;&#9;return &#9;
-&#9;end
-&#9;
-&#9;wait()
-&#9;
-&#9;local FakeHandle = Tool:FindFirstChild(&quot;FakeHandle&quot;)
-&#9;if FakeHandle then
-&#9;&#9;FakeHandle:Destroy()
-&#9;end
-
-&#9;CreateFakeHandle()
-&#9;
-&#9;Equipped = true
-&#9;
-&#9;Mouse.KeyDown:connect(KeyDown)&#9;
-&#9;
-&#9;idleA = Humanoid:LoadAnimation(DualEquip)
-&#9;slashA = Humanoid:LoadAnimation(DualSlash)
-&#9;lungeA = Humanoid:LoadAnimation(DualLunge)
-&#9;SpinTrack = Humanoid:LoadAnimation(SpinAnimation)
-
-&#9;UnsheathSound:Play()
-&#9;
-&#9;idleA:Play(0)
-end
-
-function Unequipped()
-&#9;Equipped = false
-&#9;LeftSword:Destroy()
-&#9;
-&#9;idleA:Stop()
-&#9;slashA:Stop()
-&#9;lungeA:Stop()
-&#9;StopSpin()
-end
-
-Handle.Touched:connect(Blow)
-
-Tool.Activated:connect(Activated)
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)
-</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBXBFA2926D11FD45E6A454A98D0ABA09F5">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">PoisonScript</string>
-					<ProtectedString name="Source">--Made by Luckymaxer
-
-Character = script.Parent
-Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-
-Creator = script:WaitForChild(&quot;Creator&quot;)
-
-Debris = game:GetService(&quot;Debris&quot;)
-
-BrickColor = BrickColor.new(&quot;Br. yellowish green&quot;)
-
-function TagHumanoid(humanoid, player)
-&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;Creator_Tag.Name = &quot;creator&quot;
-&#9;Creator_Tag.Value = player
-&#9;Debris:AddItem(Creator_Tag, 2)
-&#9;Creator_Tag.Parent = humanoid
-end
-
-function UntagHumanoid(humanoid)
-&#9;for i, v in pairs(humanoid:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-function Poison()
-
-&#9;local Parts = {}
-&#9;
-&#9;for i, v in pairs(Character:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;table.insert(Parts, {Part = v, Color = v.BrickColor})
-&#9;&#9;&#9;v.BrickColor = BrickColor
-&#9;&#9;end
-&#9;end
-&#9;
-&#9;wait(1)
-&#9;
-&#9;for i, v in pairs(Parts) do
-&#9;&#9;if v.Part and v.Part.Parent then
-&#9;&#9;&#9;v.Part.BrickColor = v.Color
-&#9;&#9;end
-&#9;end
-
-&#9;UntagHumanoid(Humanoid)
-&#9;TagHumanoid(Humanoid, Creator.Value)
-&#9;Humanoid.Health = Humanoid.Health - (Humanoid.MaxHealth / 8) -- ForceField is useless against poison damage
-
-end
-
-for i = 1, 5 do
-&#9;Poison()
-&#9;wait(0.1)
-end
-
-script:Destroy()</ProtectedString>
-				</Properties>
-			</Item>
-		</Item>
-		<Item class="Script" referent="RBX47A268857D73417DA0E15B5BFC2E53E2">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">KillFakeHandle</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Tool = script.Parent
-FakeHandle = Tool:WaitForChild(&quot;FakeHandleDisplay&quot;)
-
-FakeHandle:Destroy()</ProtectedString>
-			</Properties>
-		</Item>
 		<Item class="Part" referent="RBX58951D49F4534EA99D0B19E5F735017C">
 			<Properties>
 				<bool name="Anchored">false</bool>
@@ -682,36 +92,6 @@ FakeHandle:Destroy()</ProtectedString>
 					<Z>6</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBXCFE68BD6940D4EB496126EF18EE5ECB6">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">UnsheathSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds//unsheath.wav</url></Content>
-					<float name="Volume">0.600000024</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX21FEBA12310440B2BF0385431265EF32">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">LungeSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds//swordlunge.wav</url></Content>
-					<float name="Volume">0.600000024</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBXE493AD0956C44345906E5157881182F1">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">SlashSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
-					<float name="Volume">0.699999988</float>
-				</Properties>
-			</Item>
 			<Item class="SpecialMesh" referent="RBX762BCF8609284BEDA3C3063D3C655360">
 				<Properties>
 					<token name="LODX">2</token>
@@ -737,12 +117,56 @@ FakeHandle:Destroy()</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Animation" referent="RBX8D8D3FCD81FF4986A29D637E71E0AF1B">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=157568994</url></Content>
-				<string name="Name">Spin</string>
-			</Properties>
+			<Item class="Sound" referent="RBXD8E100ADC6BD4B9FA6628AE9A98D154A">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">AcidHit</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=141649183</url></Content>
+					<float name="Volume">0.600000024</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXE8085197142343DABCBA947F8BE4B05B">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">AcidRain</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=111816866</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX643D1388AB4949F789114386ED26B711">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Lunge</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//swordlunge.wav</url></Content>
+					<float name="Volume">0.600000024</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX74FD3D23811444ECA6FB130ABDCFABD1">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Slash</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
+					<float name="Volume">0.699999988</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX326C42677E324059AC0AF43CABE72ED3">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Unsheath</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxasset://sounds//unsheath.wav</url></Content>
+					<float name="Volume">0.600000024</float>
+				</Properties>
+			</Item>
 		</Item>
 		<Item class="Part" referent="RBXA22693B90A6649609E56821FAD9BC09F">
 			<Properties>
@@ -783,7 +207,7 @@ FakeHandle:Destroy()</ProtectedString>
 				<token name="LeftSurfaceInput">0</token>
 				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
-				<string name="Name">FakeHandleDisplay</string>
+				<string name="Name">DisplayHandle</string>
 				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
 				<float name="RightParamB">0.5</float>
@@ -909,22 +333,907 @@ FakeHandle:Destroy()</ProtectedString>
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX211F940AA13C460BA63F0A9EA2436550">
+		<Item class="Animation" referent="RBX9560D39C7C47473E9E27F2D4777BB167">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=185824714</url></Content>
-				<string name="Name">DualEquip</string>
+				<string name="Name">Idle</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBXE24C468C99594BE2869177B18DCB8500">
+		<Item class="Animation" referent="RBX2747C998E70D45C0B502392F4C37EEC6">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=186002834</url></Content>
-				<string name="Name">DualLunge</string>
+				<string name="Name">Lunge</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX0E7F609B308A4187B08FA635825B498E">
+		<Item class="Animation" referent="RBX56021B42B3044478949863423A3D6685">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=186001341</url></Content>
-				<string name="Name">DualSlash</string>
+				<string name="Name">Slash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX89203E43FF414C8DB017DAF4DC38A786">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=157568994</url></Content>
+				<string name="Name">Spin</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXCE8503E542B7400A8E784A902981C333">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
+
+Functions = require(script:WaitForChild(&quot;Functions&quot;))
+PoisonScript = script:WaitForChild(&quot;PoisonScript&quot;)
+DisableJump = script:WaitForChild(&quot;DisableJump&quot;)
+
+BaseUrl = &quot;http://www.roblox.com/asset?id=&quot;
+
+Animations = {
+&#9;Idle = {Animation = Tool:WaitForChild(&quot;Idle&quot;), FadeTime = 0, Weight = nil, Speed = nil, Duration = nil},
+&#9;Slash = {Animation = Tool:WaitForChild(&quot;Slash&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+&#9;Lunge = {Animation = Tool:WaitForChild(&quot;Lunge&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+&#9;Spin = {Animation = Tool:WaitForChild(&quot;Spin&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
+}
+
+Sounds = {
+&#9;Unsheath = Handle:WaitForChild(&quot;Unsheath&quot;),
+&#9;Slash = Handle:WaitForChild(&quot;Slash&quot;),
+&#9;Lunge = Handle:WaitForChild(&quot;Lunge&quot;),
+&#9;AcidRain = Handle:WaitForChild(&quot;AcidRain&quot;),
+&#9;AcidHit = Handle:WaitForChild(&quot;AcidHit&quot;)
+}
+
+Grips = {
+&#9;SwordUp = CFrame.new(0, 0, -2, 0, 0, -1, -1, 0, 0, 0, 1, 0),
+&#9;SwordOut = CFrame.new(0, 0, -2, 0, -1, -0, -1, 0, -0, 0, 0, -1)
+}
+
+SkeletonAssets = {
+&#9;[&quot;Head&quot;] = {MeshId = 36869983, TextureId = 36869975, Scale = Vector3.new(0.95, 0.9, 0.95)},
+&#9;[&quot;Torso&quot;] = {MeshId = 36780113, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
+&#9;[&quot;Left Arm&quot;] = {MeshId = 36780032, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
+&#9;[&quot;Right Arm&quot;] = {MeshId = 36780156, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
+&#9;[&quot;Left Leg&quot;] = {MeshId = 36780079, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)},
+&#9;[&quot;Right Leg&quot;] = {MeshId = 36780195, TextureId = 36780292, Scale = Vector3.new(1, 1, 1)}
+}
+
+DamageValues = {
+&#9;Touch = 5,
+&#9;Slash = 10,
+&#9;Lunge = 20,
+&#9;Poison = 1.25
+}
+
+Damage = DamageValues.Touch
+
+Mode = &quot;None&quot;
+SpecialEnabled = true
+SpecialActive = false
+
+Spinning = false
+
+SwordConnections = {}
+
+SpecialReloadTime = 30
+
+SpinCount = 0
+LastAttack = 0
+
+Rate = (1 / 60)
+
+BasePart = Instance.new(&quot;Part&quot;)
+BasePart.Material = Enum.Material.Plastic
+BasePart.Shape = Enum.PartType.Block
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.Anchored = true
+BasePart.CanCollide = false
+BasePart.Locked = true
+
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+Tool.Grip = Grips.SwordUp
+Tool.Enabled = true
+
+function Blow(Part, Weld)
+&#9;local PartTouched = Part.Touched:connect(function(Hit)
+&#9;&#9;if not Hit or not Hit.Parent or not ToolEquipped or not CheckIfAlive() then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local character = Hit.Parent
+&#9;&#9;if character:IsA(&quot;Hat&quot;) then
+&#9;&#9;&#9;character = character.Parent
+&#9;&#9;end
+&#9;&#9;if character == Character then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local player = Players:GetPlayerFromCharacter(character)
+&#9;&#9;if player and Functions.IsTeamMate(Player, player) then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;if not Weld.Parent or (Weld.Part0 ~= Part and Weld.Part1 ~= Part) then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if not humanoid or humanoid.Health == 0 then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;Functions.UntagHumanoid(humanoid)
+&#9;&#9;Functions.TagHumanoid(humanoid, Player)
+&#9;&#9;humanoid:TakeDamage(Damage)
+&#9;&#9;if humanoid.Health &gt; 0 and not character:FindFirstChild(PoisonScript.Name) then
+&#9;&#9;&#9;local PoisonScriptClone = PoisonScript:Clone()
+&#9;&#9;&#9;local Creator = Instance.new(&quot;ObjectValue&quot;)
+&#9;&#9;&#9;Creator.Name = &quot;Creator&quot;
+&#9;&#9;&#9;Creator.Value = Player
+&#9;&#9;&#9;Creator.Parent = PoisonScriptClone
+&#9;&#9;&#9;PoisonScriptClone.Disabled = false
+&#9;&#9;&#9;PoisonScriptClone.Parent = character
+&#9;&#9;end
+&#9;end)
+&#9;return PartTouched
+end
+
+function CreateLeftHandle()
+&#9;for i, v in pairs(Tool:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) and (v.Name == &quot;FakeHandle&quot; or v.Name == &quot;DisplayHandle&quot;) then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;LeftSword = Handle:Clone()
+&#9;LeftSword.Name = &quot;FakeHandle&quot;
+&#9;LeftSword.CanCollide = false
+&#9;local LeftSwordWeld = Instance.new(&quot;ManualWeld&quot;)
+&#9;LeftSwordWeld.Part1 = LeftSword
+&#9;LeftSwordWeld.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
+&#9;LeftSwordWeld.C1 = Tool.Grip
+&#9;local LeftArm = Character:FindFirstChild(&quot;Left Arm&quot;)
+&#9;if LeftArm then
+&#9;&#9;LeftSwordWeld.Part0 = LeftArm
+&#9;&#9;LeftSword.Parent = Tool
+&#9;&#9;LeftSwordWeld.Parent = LeftSword
+&#9;&#9;table.insert(SwordConnections, Blow(LeftSword, LeftSwordWeld))
+&#9;end
+&#9;if SwordGripChanged then
+&#9;&#9;SwordGripChanged:disconnect()
+&#9;end
+&#9;SwordGripChanged = Tool.Changed:connect(function(Property)
+&#9;&#9;if Property == &quot;Grip&quot; and LeftSwordWeld and LeftSwordWeld.Parent then
+&#9;&#9;&#9;LeftSwordWeld.C1 = Tool.Grip
+&#9;&#9;end
+&#9;end)
+end
+
+function CreateDisplayHandle()
+&#9;for i, v in pairs(Tool:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) and (v.Name == &quot;FakeHandle&quot; or v.Name == &quot;DisplayHandle&quot;) then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;local LeftSword = Handle:Clone()
+&#9;LeftSword.Name = &quot;DisplayHandle&quot;
+&#9;LeftSword.CanCollide = false
+&#9;local LeftSwordWeld = Instance.new(&quot;ManualWeld&quot;)
+&#9;LeftSwordWeld.Part0 = Handle
+&#9;LeftSwordWeld.Part1 = LeftSword
+&#9;LeftSwordWeld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(0, (math.pi / 6), 0)
+&#9;LeftSwordWeld.Parent = LeftSword
+&#9;LeftSword.Parent = Tool
+end
+
+function PlaySpin()
+&#9;for i, v in pairs({SpinForce, StayUpRight, PoisonPuddlesModel}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;SpinForce = Instance.new(&quot;BodyAngularVelocity&quot;)
+&#9;SpinForce.P = 1000000
+&#9;SpinForce.angularvelocity = Vector3.new(0, 20, 0)
+&#9;SpinForce.maxTorque = Vector3.new(SpinForce.P, SpinForce.P, SpinForce.P)
+&#9;SpinForce.Parent = Torso
+&#9;StayUpRight = Instance.new(&quot;BodyGyro&quot;)
+&#9;StayUpRight.P = 1000000
+&#9;StayUpRight.maxTorque = Vector3.new(1, 0, 1) * StayUpRight.P
+&#9;StayUpRight.cframe = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+&#9;StayUpRight.Parent = Torso
+&#9;Tool.Grip = Grips.SwordOut
+&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Spin)
+end
+
+function StopSpin()
+&#9;for i, v in pairs({SpinForce, StayUpRight, PoisonPuddlesModel}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;InvokeClient(&quot;StopAnimation&quot;, Animations.Spin)
+&#9;Tool.Grip = Grips.SwordUp
+end
+
+function CheckTableForInstance(Table, Instance)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if v == Instance then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function CreatePoison()
+&#9;
+&#9;Sounds.AcidRain:Play()
+&#9;
+&#9;local PuddleDuration = 30
+&#9;local PuddleRadius = 30
+&#9;local PuddleSpawnRadius = 50
+&#9;
+&#9;local PoisonPuddles = {}
+&#9;local Projectiles = {}
+&#9;local IgnoreObjects = {Character}
+&#9;local PoisonTick = tick()
+&#9;
+&#9;local BasePoisonPuddle = BasePart:Clone()
+&#9;BasePoisonPuddle.Name = &quot;PoisonPuddle&quot;
+&#9;BasePoisonPuddle.BrickColor = BrickColor.new(&quot;Grime&quot;)
+&#9;local CylinderMesh = Instance.new(&quot;CylinderMesh&quot;)
+&#9;CylinderMesh.Parent = BasePoisonPuddle
+&#9;
+&#9;local BaseProjectile = BasePart:Clone()
+&#9;BaseProjectile.Name = &quot;PoisonProjectile&quot;
+&#9;BaseProjectile.BrickColor = BrickColor.new(&quot;Grime&quot;)
+&#9;BaseProjectile.CanCollide = false
+&#9;BaseProjectile.Anchored = true
+&#9;BaseProjectile.Size = Vector3.new(1, 1.5, 1)
+&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
+&#9;Mesh.MeshType = Enum.MeshType.Head
+&#9;Mesh.Parent = BaseProjectile
+&#9;
+&#9;local PartSize = (BaseProjectile.Size.Y * 100)
+&#9;local MovementRate = {Min = (PartSize * 2), Max = (PartSize * 3.5)}
+&#9;
+&#9;PoisonPuddlesModel = Instance.new(&quot;Model&quot;)
+&#9;PoisonPuddlesModel.Name = &quot;PoisonPuddles&quot;
+&#9;Debris:AddItem(PoisonPuddlesModel, PuddleDuration)
+&#9;PoisonPuddlesModel.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;
+&#9;local StartingPoisonPuddle = BasePoisonPuddle:Clone()
+&#9;StartingPoisonPuddle.Size = Vector3.new(PuddleRadius, 0.2, PuddleRadius)
+&#9;local RayHit, RayPos, RayNormal = Functions.CastRay(Torso.Position, Vector3.new(0, -1, 0), (Torso.Size.Y * 2), IgnoreObjects, false)
+&#9;if RayHit then
+&#9;&#9;table.insert(PoisonPuddles, StartingPoisonPuddle)
+&#9;&#9;table.insert(IgnoreObjects, StartingPoisonPuddle)
+&#9;&#9;StartingPoisonPuddle.Parent = PoisonPuddlesModel
+&#9;&#9;local Direction = Vector3.new(0, 1, 0)
+&#9;&#9;StartingPoisonPuddle.CFrame = CFrame.new(RayPos, (CFrame.new(RayPos) + RayNormal * 2).p) * CFrame.Angles((math.pi / 2), 0, 0)
+&#9;end
+&#9;
+&#9;while (tick() - PoisonTick) &lt; PuddleDuration and ToolEquipped and CheckIfAlive() and PoisonPuddlesModel and PoisonPuddlesModel.Parent do
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;if #PoisonPuddlesModel:GetChildren() &gt; 0 then
+&#9;&#9;&#9;&#9;local Humanoids = {}
+&#9;&#9;&#9;&#9;for i, v in pairs(PoisonPuddles) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;local NegativePartRadius = Vector3.new((v.Size.X / 2), (v.Size.Y / 2), (v.Size.Z / 2))
+&#9;&#9;&#9;&#9;&#9;&#9;local PositivePartRadius = Vector3.new((v.Size.X / 2), (v.Size.Y * 6), (v.Size.Z / 2))
+&#9;&#9;&#9;&#9;&#9;&#9;local Parts = game:GetService(&quot;Workspace&quot;):FindPartsInRegion3WithIgnoreList(Region3.new(v.Position - NegativePartRadius, v.Position + PositivePartRadius), IgnoreObjects, 100)
+&#9;&#9;&#9;&#9;&#9;&#9;local HumanoidHit = false
+&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local character = v.Parent
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if character:IsA(&quot;Hat&quot;) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;character = character.Parent
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local player = Players:GetPlayerFromCharacter(character)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if not player or (player and not Functions.IsTeamMate(Player, player)) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if not CheckTableForInstance(Humanoids, humanoid) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Humanoids, humanoid)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;HumanoidHit = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;if HumanoidHit then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local AcidHit = Sounds.AcidHit:Clone()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;AcidHit.Pitch = (math.random(700, 1200) * 0.001)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Delay((AcidHit.TimeLength + 0.25), function()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if AcidHit and AcidHit.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;AcidHit:Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;AcidHit.Parent = v
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;AcidHit:Play()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;for i, v in pairs(Humanoids) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent and v.Health &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;Functions.UntagHumanoid(v)
+&#9;&#9;&#9;&#9;&#9;&#9;Functions.TagHumanoid(v, Player)
+&#9;&#9;&#9;&#9;&#9;&#9;local OriginalHealth = v.Health
+&#9;&#9;&#9;&#9;&#9;&#9;local NoJumpTime = 1.5
+&#9;&#9;&#9;&#9;&#9;&#9;local JumpTime = 0.5
+&#9;&#9;&#9;&#9;&#9;&#9;v:TakeDamage(DamageValues.Poison)
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Health &lt; OriginalHealth then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local DisableJumpClone = v:FindFirstChild(DisableJump.Name)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if not DisableJumpClone then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;DisableJumpClone = DisableJump:Clone()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;DisableJumpClone.Disabled = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local FakeDisableJump = Instance.new(&quot;StringValue&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;FakeDisableJump.Name = DisableJump.Name
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(DisableJumpClone, NoJumpTime)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(FakeDisableJump, (NoJumpTime + JumpTime))
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;FakeDisableJump.Parent = v
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;DisableJumpClone.Parent = v
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Health == 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v.Parent and v.Parent.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i, v in pairs(v.Parent:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) and SkeletonAssets[v.Name] then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local SkeletonPart = SkeletonAssets[v.Name]
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Part = v:Clone()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.CanCollide = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;for ii, vv in pairs(Part:GetChildren()) do
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;vv:Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshType = Enum.MeshType.FileMesh
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = SkeletonPart.Scale
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.TextureId = BaseUrl .. tostring(SkeletonPart.TextureId)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.MeshId = BaseUrl .. tostring(SkeletonPart.MeshId)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Parent = Part
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Debris:AddItem(Part, 10)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Part.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;local PoisonChance = math.random(1, 10)
+&#9;&#9;if PoisonChance == 1 then
+&#9;&#9;&#9;local Projectile = BaseProjectile:Clone()
+&#9;&#9;&#9;table.insert(Projectiles, Projectile)
+&#9;&#9;&#9;table.insert(IgnoreObjects, Projectile)
+&#9;&#9;&#9;Debris:AddItem(Projectile, 5)
+&#9;&#9;&#9;Projectile.Parent = PoisonPuddlesModel
+&#9;&#9;&#9;Projectile.CFrame = Torso.CFrame + Vector3.new(math.random(-PuddleSpawnRadius, PuddleSpawnRadius), math.random((PuddleSpawnRadius - 5), PuddleSpawnRadius), math.random(-PuddleSpawnRadius, PuddleSpawnRadius))
+&#9;&#9;end
+&#9;&#9;for i, v in pairs(Projectiles) do
+&#9;&#9;&#9;local RayHit, RayPos, RayNormal = Functions.CastRay(v.Position, Vector3.new(0, -1, 0), 6, IgnoreObjects, false)
+&#9;&#9;&#9;if RayHit then
+&#9;&#9;&#9;&#9;local character = RayHit.Parent
+&#9;&#9;&#9;&#9;if character:IsA(&quot;Hat&quot;) or character:IsA(&quot;Tool&quot;) then
+&#9;&#9;&#9;&#9;&#9;character = character.Parent
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;&#9;&#9;if not humanoid then
+&#9;&#9;&#9;&#9;&#9;local NewPoisonPuddle = BasePoisonPuddle:Clone()
+&#9;&#9;&#9;&#9;&#9;local NewPuddleRadius = math.random(3, (PuddleRadius / 1.25))
+&#9;&#9;&#9;&#9;&#9;NewPoisonPuddle.Size = Vector3.new(NewPuddleRadius, StartingPoisonPuddle.Size.Y, NewPuddleRadius)
+&#9;&#9;&#9;&#9;&#9;table.insert(PoisonPuddles, NewPoisonPuddle)
+&#9;&#9;&#9;&#9;&#9;table.insert(IgnoreObjects, NewPoisonPuddle)
+&#9;&#9;&#9;&#9;&#9;NewPoisonPuddle.Parent = PoisonPuddlesModel
+&#9;&#9;&#9;&#9;&#9;local Direction = Vector3.new(0, 1, 0)
+&#9;&#9;&#9;&#9;&#9;NewPoisonPuddle.CFrame = CFrame.new(RayPos, (CFrame.new(RayPos) + RayNormal * 2).p) * CFrame.Angles((math.pi / 2), 0, 0)
+&#9;&#9;&#9;&#9;&#9;table.remove(Projectiles, i)
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;v:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;v.CFrame = v.CFrame - Vector3.new(0, (math.random(MovementRate.Min, MovementRate.Max) * 0.01), 0)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(Rate)
+&#9;end
+&#9;
+&#9;Sounds.AcidRain:Stop()
+&#9;
+end
+
+function Spin()
+&#9;if SpinCount &lt; 4 and Mode == &quot;Lunge&quot; and not Spinning and SpecialEnabled and not SpecialActive then
+&#9;&#9;SpinCount = (SpinCount + 1)
+&#9;&#9;Tool.Grip = Grips.SwordOut
+&#9;&#9;Damage = DamageValues.Touch
+&#9;&#9;if SpinCount &gt;= 3 then
+&#9;&#9;&#9;SpecialEnabled = false
+&#9;&#9;&#9;SpecialActive = true
+&#9;&#9;&#9;Spinning = true
+&#9;&#9;&#9;Damage = DamageValues.Touch
+&#9;&#9;&#9;PlaySpin()
+&#9;&#9;&#9;CreatePoison()
+&#9;&#9;&#9;Spinning = false
+&#9;&#9;&#9;SpecialActive = false
+&#9;&#9;&#9;StopSpin()
+&#9;&#9;&#9;SpinCount = 0
+&#9;&#9;&#9;wait(SpecialReloadTime)
+&#9;&#9;&#9;SpecialEnabled = true
+&#9;&#9;else
+&#9;&#9;&#9;Delay(3.6, function()
+&#9;&#9;&#9;&#9;if SpinCount &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;SpinCount = (SpinCount - 1)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end)
+&#9;&#9;&#9;Spinning = true
+&#9;&#9;&#9;PlaySpin()
+&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;if not SpecialActive then
+&#9;&#9;&#9;&#9;StopSpin()
+&#9;&#9;&#9;end
+&#9;&#9;&#9;Spinning = false
+&#9;&#9;end
+&#9;end
+end
+
+function Slash()
+&#9;Mode = &quot;Slash&quot;
+&#9;Damage = DamageValues.Slash
+&#9;Sounds.Slash:Play()
+&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Slash)&#9;&#9;
+&#9;wait(1)
+&#9;if Mode == &quot;Slash&quot; then
+&#9;&#9;if not SpecialActive and not Spinning then
+&#9;&#9;&#9;Damage = DamageValues.Touch
+&#9;&#9;end
+&#9;&#9;Mode = &quot;None&quot;
+&#9;end
+end
+
+function Lunge()
+&#9;Mode = &quot;Lunge&quot;
+&#9;Sounds.Lunge:Play()
+&#9;Damage = DamageValues.Lunge
+&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Lunge)
+&#9;wait(0.25)
+&#9;Tool.Grip = Grips.SwordOut
+&#9;wait(0.25)
+&#9;InvokeClient(&quot;StopAnimation&quot;, Animations.Lunge)
+&#9;wait(0.25)
+&#9;if Mode == &quot;Lunge&quot; then
+&#9;&#9;if not SpecialActive and not Spinning then
+&#9;&#9;&#9;Tool.Grip = Grips.SwordUp
+&#9;&#9;&#9;Damage = DamageValues.Touch
+&#9;&#9;end
+&#9;&#9;Mode = &quot;None&quot;
+&#9;end
+end
+
+function Activated()
+&#9;if not Tool.Enabled or Mode == &quot;Lunge&quot; or SpecialActive or Spinning then
+&#9;&#9;return
+&#9;end
+&#9;Tool.Enabled = false
+&#9;local Time = tick()
+&#9;local TimeDifference = (Time - LastAttack)
+&#9;LastAttack = Time
+&#9;Spawn(function()
+&#9;&#9;if LastAttack ~= 0 and TimeDifference &lt; 1 and Mode == &quot;Slash&quot; then
+&#9;&#9;&#9;Lunge()
+&#9;&#9;elseif Mode == &quot;None&quot; then
+&#9;&#9;&#9;Slash()
+&#9;&#9;end
+&#9;end)
+&#9;Tool.Enabled = true
+end
+
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Equipped()
+&#9;Character = Tool.Parent
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Idle)
+&#9;end)
+&#9;Spawn(function()
+&#9;&#9;CreateLeftHandle()
+&#9;end)
+&#9;Spawn(function()
+&#9;&#9;local RightArm = Character:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;if RightArm then
+&#9;&#9;&#9;local RightGrip = RightArm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;&#9;if RightGrip then
+&#9;&#9;&#9;&#9;table.insert(SwordConnections, Blow(Handle, RightGrip))
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;Sounds.Unsheath:Play()
+&#9;ToolEquipped = true
+end
+
+function Unequipped()
+&#9;Mode = &quot;None&quot;
+&#9;Tool.Grip = Grips.SwordUp
+&#9;for i, v in pairs({LeftSword, PoisonPuddlesModel}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;if SwordGripChanged then
+&#9;&#9;SwordGripChanged:disconnect()
+&#9;end
+&#9;for i, v in pairs(SwordConnections) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs(Sounds) do
+&#9;&#9;v:Stop()
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;CreateDisplayHandle()
+&#9;end)
+&#9;Spawn(function()
+&#9;&#9;StopSpin()
+&#9;end)
+&#9;ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+&#9;if player == Player and ToolEquipped and value and CheckIfAlive() then
+&#9;&#9;if mode == &quot;KeyPress&quot; then
+&#9;&#9;&#9;local Key = value.Key
+&#9;&#9;&#9;local ByteKey = string.byte(Key)
+&#9;&#9;&#9;local Down = value.Down
+&#9;&#9;&#9;if Key == &quot;e&quot; or Key == &quot;q&quot; or Key == &quot;z&quot; or Key == &quot;x&quot; then
+&#9;&#9;&#9;&#9;if Down then
+&#9;&#9;&#9;&#9;&#9;Spin()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+wait()
+CreateDisplayHandle()
+
+ServerControl.OnServerInvoke = OnServerInvoke
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+</ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX4EF60BEC143A4A8ABD9302C0A380EA6A">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">PoisonScript</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+Character = script.Parent
+Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+
+Creator = script:WaitForChild(&quot;Creator&quot;)
+
+Debris = game:GetService(&quot;Debris&quot;)
+
+Color = BrickColor.new(&quot;Br. yellowish green&quot;)
+
+function TagHumanoid(humanoid, player)
+&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
+&#9;Creator_Tag.Name = &quot;creator&quot;
+&#9;Creator_Tag.Value = player
+&#9;Debris:AddItem(Creator_Tag, 2)
+&#9;Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function Poison()
+
+&#9;local Parts = {}
+&#9;
+&#9;for i, v in pairs(Character:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;table.insert(Parts, {Part = v, Color = v.BrickColor})
+&#9;&#9;&#9;v.BrickColor = Color
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;wait(1)
+&#9;
+&#9;for i, v in pairs(Parts) do
+&#9;&#9;if v.Part and v.Part.Parent then
+&#9;&#9;&#9;v.Part.BrickColor = v.Color
+&#9;&#9;end
+&#9;end
+
+&#9;UntagHumanoid(Humanoid)
+&#9;TagHumanoid(Humanoid, Creator.Value)
+&#9;Humanoid:TakeDamage(Humanoid.MaxHealth / 16)
+
+end
+
+for i = 1, 5 do
+&#9;Poison()
+&#9;wait(0.1)
+end
+
+script:Destroy()</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXD13CBDFAD55E472B837913719F3C73DC">
+				<Properties>
+					<string name="Name">Functions</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+Functions = {}
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+ProjectileNames = {&quot;Water&quot;, &quot;Arrow&quot;, &quot;Projectile&quot;, &quot;Effect&quot;, &quot;Rail&quot;, &quot;Laser&quot;, &quot;Bullet&quot;}
+
+function Functions.IsTeamMate(Player1, Player2)
+&#9;return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function Functions.TagHumanoid(humanoid, player)
+&#9;local CreatorTag = Instance.new(&quot;ObjectValue&quot;)
+&#9;CreatorTag.Name = &quot;creator&quot;
+&#9;CreatorTag.Value = player
+&#9;Debris:AddItem(CreatorTag, 2)
+&#9;CreatorTag.Parent = humanoid
+end
+
+function Functions.UntagHumanoid(humanoid)
+&#9;for i, v in pairs(humanoid:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function CheckTableForString(Table, String)
+&#9;for i, v in pairs(Table) do
+&#9;&#9;if string.lower(v) == string.lower(String) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function CheckIntangible(Hit)
+&#9;if Hit and Hit.Parent then
+&#9;&#9;if Hit.Transparency &gt; 0.8 or CheckTableForString(ProjectileNames, Hit.Name) then
+&#9;&#9;&#9;return true
+&#9;&#9;end
+&#9;end
+&#9;return false
+end
+
+function Functions.CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+&#9;local Ignore = ((type(Ignore) == &quot;table&quot; and Ignore) or {Ignore})
+&#9;local RayHit, RayPos, RayNormal = game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+&#9;if RayHit and CheckIntangible(RayHit) then
+&#9;&#9;if DelayIfHit then
+&#9;&#9;&#9;wait()
+&#9;&#9;end
+&#9;&#9;RayHit, RayPos, RayNormal = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+&#9;end
+&#9;return RayHit, RayPos, RayNormal
+end
+
+return Functions</ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="LocalScript" referent="RBXAE37BB92DE274614895F404AC83B6AAF">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">DisableJump</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+Humanoid = script.Parent
+
+Humanoid.Changed:connect(function(Property)
+&#9;if Property == &quot;Jump&quot; then
+&#9;&#9;Humanoid.Jump = false
+&#9;end
+end)</ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBXE3C021DCA5BE4F91B9E4175B438D0DD2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
+ContextActionService = game:GetService(&quot;ContextActionService&quot;)
+UserInputService = game:GetService(&quot;UserInputService&quot;)
+
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ReloadCounter = 0
+
+ToolEquipped = false
+
+function SetAnimation(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == Value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;PlayerMouse = Player:GetMouse()
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+&#9;if UserInputService.TouchEnabled then
+&#9;&#9;ContextActionService:BindActionToInputTypes(&quot;Spin&quot;, function()
+&#9;&#9;&#9;spawn(function() InvokeServer(&quot;KeyPress&quot;, {Key = &quot;x&quot;, Down = true}) end)
+&#9;&#9;end, true, &quot;&quot;)
+&#9;&#9;ContextActionService:SetTitle(&quot;Spin&quot;, &quot;Spin&quot;)
+&#9;end
+end
+
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;LocalObjects = {}
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;if UserInputService.TouchEnabled then
+&#9;&#9;ContextActionService:UnbindAction(&quot;Spin&quot;)
+&#9;end
+&#9;Animations = {}
+end
+
+function InvokeServer(Mode, Value)
+&#9;pcall(function()
+&#9;&#9;local ServerReturn = ServerControl:InvokeServer(Mode, Value)
+&#9;&#9;return ServerReturn
+&#9;end)
+end
+
+function OnClientInvoke(Mode, Value)
+&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
+&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
+&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
+&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
+&#9;elseif Mode == &quot;PlaySound&quot; and Value then
+&#9;&#9;Value:Play()
+&#9;elseif Mode == &quot;StopSound&quot; and Value then
+&#9;&#9;Value:Stop()
+&#9;elseif Mode == &quot;MousePosition&quot; then
+&#9;&#9;return PlayerMouse.Hit.p
+&#9;end
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX3CED5A847A084CF282619AD39961739A">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
