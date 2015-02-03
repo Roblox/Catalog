@@ -19,6 +19,7 @@
 				<R21>-8.406181e-008</R21>
 				<R22>-0.974370062</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Pitchfork</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=100253786</url></Content>
 			<string name="ToolTip">Pitchfork</string>
@@ -173,165 +174,14 @@ Tool.Changed:connect(OnChanged)
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ClickTransmitter</string>
-				<ProtectedString name="Source">-- Waits for parent.child to exist, then returns it
-local function WaitForChild(parent, childName)
-&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
-end
-
-local Tool = script.Parent
-
-local MouseDownObject = WaitForChild(script, &apos;MouseDown&apos;)&#9;
-
-local TargetPosition = WaitForChild(script, &apos;TargetPosition&apos;)
-
-local HoldAniTrack
-local ThrowAniTrack
-local ChargeAniTrack
-local ChargeArmAniTrack
-
-local ChargeUpSound = WaitForChild(WaitForChild(Tool,&apos;Handle&apos;),&apos;ChargeUp&apos;)
-local SonicBoomSound = WaitForChild(WaitForChild(Tool,&apos;Handle&apos;),&apos;SonicBoom&apos;)
-
-
-local ChargeAniBaseLength=4
-local MaxChargeSpeed=15
-
-local BaseFire = Instance.new(&apos;Fire&apos;)
-BaseFire.Size = 4
-
-local ChargingThrust = false
-
-local function ChargeThrust()
-&#9;ChargingThrust = true
-&#9;local aniSpeed = 5
-&#9;Spawn(function() while ChargingThrust and MouseDownObject.Value do wait(1/30) end SonicBoomSound:Play() end)
-&#9;ChargeArmAniTrack:Play(0,1,.5)
-&#9;while ChargingThrust and MouseDownObject.Value and aniSpeed&lt;MaxChargeSpeed do
-&#9;&#9;ChargeAniTrack:Play(0,1,aniSpeed)
-&#9;&#9;ChargeUpSound:Play()
-&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
-&#9;&#9;if ChargingThrust then ChargeUpSound:Play() end
-&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
-&#9;&#9;aniSpeed=aniSpeed*1.3
-&#9;end
-&#9;
-&#9;local tfire1 = BaseFire:Clone()
-&#9;local tfire2 = BaseFire:Clone()
-
-&#9;if ChargingThrust and MouseDownObject.Value then 
-&#9;&#9;tfire2.Parent = Tool.Parent:FindFirstChild(&apos;Right Leg&apos;)
-&#9;&#9;tfire1.Parent = Tool.Parent:FindFirstChild(&apos;Left Leg&apos;)
-&#9;end
-
-&#9;while ChargingThrust and MouseDownObject.Value do
-&#9;&#9;ChargeAniTrack:Play(0,1,aniSpeed)
-&#9;&#9;ChargeUpSound:Play()
-&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
-&#9;&#9;if ChargingThrust then ChargeUpSound:Play() end
-&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
-&#9;end
-&#9;
-&#9;game.Debris:AddItem(tfire1,1)
-&#9;game.Debris:AddItem(tfire2,1)
-end
-
-local function OnMouseDown()
-&#9;if Tool.Enabled then
-&#9;&#9;HoldAniTrack:Play()
-&#9;&#9;Spawn(ChargeThrust)
-&#9;end
-end
-
-local function OnMouseUp()
-&#9;if Tool.Enabled then
-&#9;&#9;ChargingThrust = false
-&#9;&#9;HoldAniTrack:Stop()
-&#9;&#9;ChargeArmAniTrack:Stop()
-&#9;&#9;ThrowAniTrack:Play()
-&#9;end
-end
-
-
-local function OnEquipped(mouse)
-&#9;local MyChar = script.Parent.Parent
-
-&#9;HoldAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;HoldAni&apos;))
-&#9;ThrowAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;ThrowAni&apos;))
-&#9;ChargeAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;ChargeUpAni&apos;))
-&#9;ChargeArmAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;ChargeUpArm&apos;))
-&#9;
-&#9;
-
-&#9;mouse.TargetFilter=WaitForChild(Tool,&apos;Handle&apos;)
-&#9;mouse.Button1Down:connect(function() 
-&#9;&#9;if Tool.Enabled and not MouseDownObject.Value then
-&#9;&#9;&#9;MouseDownObject.Value = true 
-&#9;&#9;&#9;OnMouseDown()
-&#9;&#9;end
-&#9;end)
-&#9;mouse.Button1Up:connect(function()
-&#9;&#9;if MouseDownObject.Value then
-&#9;&#9;&#9;wait(0.01) --NOTE: Wait added to fix immediate down-up issue on iPad
-&#9;&#9;&#9;TargetPosition.Value=mouse.Hit.p --set this early to prevent lag problems
-&#9;&#9;&#9;MouseDownObject.Value = false
-&#9;&#9;&#9;OnMouseUp()
-&#9;&#9;end
-&#9;end)
-end
-
-local function OnUnequipped()
-&#9;MouseDownObject.Value = false
-&#9;ChargingThrust = false
-&#9;HoldAniTrack:Stop()
-&#9;ChargeArmAniTrack:Stop()
-end
-
--- Also activate when the Action Button is pressed
-local function OnChildAdded(child)
-&#9;if child.Name == &apos;ActionButtonData&apos; then
-&#9;&#9;child.Changed:connect(function(newValue)
-&#9;&#9;&#9;local bindable = child:FindFirstChild(&apos;GetTargetPosition&apos;)
-&#9;&#9;&#9;if bindable then
-&#9;&#9;&#9;&#9;if string.sub(newValue, 1, 1) == &apos;v&apos; then -- Button down
-&#9;&#9;&#9;&#9;&#9;OnMouseDown()
-&#9;&#9;&#9;&#9;elseif string.sub(newValue, 1, 1) == &apos;^&apos; then  -- Button up
-&#9;&#9;&#9;&#9;&#9;OnMouseUp()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Unequipped:connect(OnUnequipped)
-Tool.ChildAdded:connect(OnChildAdded)
-</ProtectedString>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.Button1Down:connect(function() script.Parent.Input:FireServer(&apos;Mouse1&apos;, true, mouse.Hit) end)
+&#9;mouse.Button1Up:connect(function() script.Parent.Input:FireServer(&apos;Mouse1&apos;, false, mouse.Hit) end)
+&#9;mouse.KeyDown:connect(function(key) script.Parent.Input:FireServer(&apos;Key&apos;, true, key) end)
+&#9;mouse.KeyUp:connect(function(key) script.Parent.Input:FireServer(&apos;Key&apos;, false, key) end)
+end)</ProtectedString>
 			</Properties>
-			<Item class="BoolValue" referent="RBX7">
-				<Properties>
-					<string name="Name">MouseDown</string>
-					<bool name="Value">false</bool>
-				</Properties>
-			</Item>
-			<Item class="BoolValue" referent="RBX8">
-				<Properties>
-					<string name="Name">DoDrop</string>
-					<bool name="Value">false</bool>
-				</Properties>
-			</Item>
-			<Item class="Vector3Value" referent="RBX9">
-				<Properties>
-					<string name="Name">TargetPosition</string>
-					<Vector3 name="Value">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-					</Vector3>
-				</Properties>
-			</Item>
 		</Item>
 		<Item class="Animation" referent="RBX10">
 			<Properties>
@@ -343,83 +193,6 @@ Tool.ChildAdded:connect(OnChildAdded)
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=100356641</url></Content>
 				<string name="Name">ThrowAni</string>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX12">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ModifierScript</string>
-				<ProtectedString name="Source">--this script modifies this weapon depending on if you have the according gamepass
-
-local function WaitForChild(parent, childName)
-&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
-&#9;while not parent:FindFirstChild(childName) do wait() end
-&#9;return parent[childName]
-end
-
-local Tool=script.Parent
-local Player=Tool.Parent.Parent
-local Handle=WaitForChild(Tool,&apos;Handle&apos;)
-local Mesh= WaitForChild(Handle,&apos;Mesh&apos;)
-
-local RedTexture= WaitForChild(Handle,&apos;RedTextureId&apos;)
-
-local MrBombModifierName = &apos;MrBomb&apos;
-
-local IsGold=WaitForChild(Tool,&apos;IsGoldBomb&apos;)
-
-local NormalTexture = &apos;http://www.roblox.com/asset/?id=94691681&apos;
-local MrBombTexture = &apos;http://www.roblox.com/asset/?id=98260356&apos;
-
-local MrBombRedTexture = &apos;http://www.roblox.com/asset/?id=98261349&apos;
-local NormalRedTexture = &apos;http://www.roblox.com/asset/?id=94691735&apos;
-
-local NormalMesh = &apos;http://www.roblox.com/asset/?id=94691640&apos;
-local MrBombMesh = &apos;http://www.roblox.com/asset/?id=98260446&apos;
-
-local NormalIcon = &apos;http://www.roblox.com/asset/?id=94690231&apos;
-local MrBombIcon = &apos;http://www.roblox.com/asset/?id=97923204&apos;
-
-
-function OnModifierAdded(nmodifier)
-&#9;print(&apos;modifier added&apos;)
-&#9;if nmodifier.Name == MrBombModifierName then
-&#9;&#9;IsGold.Value=true
-&#9;&#9;Mesh.TextureId=MrBombTexture
-&#9;&#9;Mesh.MeshId=MrBombMesh
-&#9;&#9;Tool.TextureId= MrBombIcon
-&#9;&#9;RedTexture.Value=MrBombRedTexture
-&#9;&#9;Tool.ToolTip= &apos;Professor Bomb&apos;
-&#9;end
-end
-
-function OnModifierRemoved(nmodifier)
-&#9;if nmodifier.Name == MrBombModifierName then
-&#9;&#9;IsGold.Value=false
-&#9;&#9;Mesh.TextureId= NormalTexture
-&#9;&#9;Mesh.MeshId=NormalMesh
-&#9;&#9;Tool.TextureId= NormalIcon
-&#9;&#9;RedTexture.Value=NormalRedTexture
-&#9;&#9;Tool.ToolTip= &apos;Bomb&apos;
-&#9;end
-end
-
-function OnPlayerChildAdded(nchild)
-&#9;if nchild.Name==&apos;PlayerModifiers&apos; then
-&#9;&#9;nchild.ChildAdded:connect(OnModifierAdded)
-&#9;&#9;for _,i in pairs(nchild:GetChildren()) do
-&#9;&#9;&#9;OnModifierAdded(i)
-&#9;&#9;end
-&#9;&#9;nchild.ChildRemoved:connect(OnModifierRemoved)
-&#9;end
-end
-
-Player.ChildAdded:connect(OnPlayerChildAdded)
-if Player:FindFirstChild(&apos;PlayerModifiers&apos;) then
-&#9;OnPlayerChildAdded(Player[&apos;PlayerModifiers&apos;])
-end
-</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Script" referent="RBX13">
@@ -592,7 +365,7 @@ local function OnUnequipped()
 end
 
 local ThrustDirection
-local cameraPos = WaitForChild(WaitForChild(script.Parent,&apos;CameraTransmitter&apos;),&apos;CameraCFrame&apos;)
+local cameraPos = WaitForChild(WaitForChild(script.Parent,&apos;CameraTransmitterReceiver&apos;),&apos;CameraCFrame&apos;)
 local MouseDown =false
 local function OnMouseDownChanged(down, targetOverride)
 &#9;local myTorso = MyModel:FindFirstChild(&apos;Torso&apos;)
@@ -677,12 +450,307 @@ Handle.Touched:connect(OnTouch)
 				<string name="Name">CameraTransmitter</string>
 				<ProtectedString name="Source">local myCamera = game.Workspace.CurrentCamera
 
-while not script:FindFirstChild(&apos;CameraCFrame&apos;) do wait() end
-
 while true do
-&#9;script.CameraCFrame.Value = myCamera.CoordinateFrame
 &#9;wait()
+&#9;script.Parent.TransmitCameraCFrame:FireServer(myCamera.CoordinateFrame)
 end</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX4E712C81EC0A4C589C0E5F130104A199">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>1.50419331</X>
+					<Y>6.0522933</Y>
+					<Z>-2.1978662</Z>
+					<R00>-0.999323845</R00>
+					<R01>-0.0007203524</R01>
+					<R02>-0.0367611498</R02>
+					<R10>-0</R10>
+					<R11>0.999808073</R11>
+					<R12>-0.0195917208</R12>
+					<R20>0.0367682055</R20>
+					<R21>-0.0195784736</R21>
+					<R22>-0.999131978</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>1.64999938</X>
+					<Y>6.13000011</Y>
+					<Z>1.76499975</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX777C60B8A9A54ECEABA45F404692050C">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ClickTransmitter</string>
+				<ProtectedString name="Source">-- Waits for parent.child to exist, then returns it
+local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+&#9;return parent[childName]
+end
+
+local Tool = script.Parent
+
+local MouseDownObject = WaitForChild(script, &apos;MouseDown&apos;)&#9;
+
+local TargetPosition = WaitForChild(script, &apos;TargetPosition&apos;)
+
+local HoldAniTrack
+local ThrowAniTrack
+local ChargeAniTrack
+local ChargeArmAniTrack
+
+local ChargeUpSound = WaitForChild(WaitForChild(Tool,&apos;Handle&apos;),&apos;ChargeUp&apos;)
+local SonicBoomSound = WaitForChild(WaitForChild(Tool,&apos;Handle&apos;),&apos;SonicBoom&apos;)
+
+
+local ChargeAniBaseLength=4
+local MaxChargeSpeed=15
+
+local BaseFire = Instance.new(&apos;Fire&apos;)
+BaseFire.Size = 4
+
+local ChargingThrust = false
+
+local function ChargeThrust()
+&#9;ChargingThrust = true
+&#9;local aniSpeed = 5
+&#9;Spawn(function() while ChargingThrust and MouseDownObject.Value do wait(1/30) end SonicBoomSound:Play() end)
+&#9;ChargeArmAniTrack:Play(0,1,.5)
+&#9;while ChargingThrust and MouseDownObject.Value and aniSpeed&lt;MaxChargeSpeed do
+&#9;&#9;ChargeAniTrack:Play(0,1,aniSpeed)
+&#9;&#9;ChargeUpSound:Play()
+&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
+&#9;&#9;if ChargingThrust then ChargeUpSound:Play() end
+&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
+&#9;&#9;aniSpeed=aniSpeed*1.3
+&#9;end
+&#9;
+&#9;local tfire1 = BaseFire:Clone()
+&#9;local tfire2 = BaseFire:Clone()
+
+&#9;if ChargingThrust and MouseDownObject.Value then 
+&#9;&#9;tfire2.Parent = Tool.Parent:FindFirstChild(&apos;Right Leg&apos;)
+&#9;&#9;tfire1.Parent = Tool.Parent:FindFirstChild(&apos;Left Leg&apos;)
+&#9;end
+
+&#9;while ChargingThrust and MouseDownObject.Value do
+&#9;&#9;ChargeAniTrack:Play(0,1,aniSpeed)
+&#9;&#9;ChargeUpSound:Play()
+&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
+&#9;&#9;if ChargingThrust then ChargeUpSound:Play() end
+&#9;&#9;wait((ChargeAniBaseLength/aniSpeed)/2)
+&#9;end
+&#9;
+&#9;game.Debris:AddItem(tfire1,1)
+&#9;game.Debris:AddItem(tfire2,1)
+end
+
+local function OnMouseDown()
+&#9;if Tool.Enabled then
+&#9;&#9;HoldAniTrack:Play()
+&#9;&#9;Spawn(ChargeThrust)
+&#9;end
+end
+
+local function OnMouseUp()
+&#9;if Tool.Enabled then
+&#9;&#9;ChargingThrust = false
+&#9;&#9;HoldAniTrack:Stop()
+&#9;&#9;ChargeArmAniTrack:Stop()
+&#9;&#9;ThrowAniTrack:Play()
+&#9;end
+end
+
+
+local function OnEquipped()
+&#9;local MyChar = script.Parent.Parent
+
+&#9;HoldAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;HoldAni&apos;))
+&#9;ThrowAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;ThrowAni&apos;))
+&#9;ChargeAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;ChargeUpAni&apos;))
+&#9;ChargeArmAniTrack = MyChar.Humanoid:LoadAnimation(WaitForChild(Tool,&apos;ChargeUpArm&apos;))
+end
+
+local function OnUnequipped()
+&#9;MouseDownObject.Value = false
+&#9;ChargingThrust = false
+&#9;HoldAniTrack:Stop()
+&#9;ChargeArmAniTrack:Stop()
+end
+
+-- Also activate when the Action Button is pressed
+local function OnChildAdded(child)
+&#9;if child.Name == &apos;ActionButtonData&apos; then
+&#9;&#9;child.Changed:connect(function(newValue)
+&#9;&#9;&#9;local bindable = child:FindFirstChild(&apos;GetTargetPosition&apos;)
+&#9;&#9;&#9;if bindable then
+&#9;&#9;&#9;&#9;if string.sub(newValue, 1, 1) == &apos;v&apos; then -- Button down
+&#9;&#9;&#9;&#9;&#9;OnMouseDown()
+&#9;&#9;&#9;&#9;elseif string.sub(newValue, 1, 1) == &apos;^&apos; then  -- Button up
+&#9;&#9;&#9;&#9;&#9;OnMouseUp()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+Tool.Input.OnServerEvent:connect(function(client, action, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if action == &apos;Mouse1&apos; then
+&#9;&#9;&#9;local down, hit = ...
+&#9;&#9;&#9;
+&#9;&#9;&#9;if down then
+&#9;&#9;&#9;&#9;if Tool.Enabled and not MouseDownObject.Value then
+&#9;&#9;&#9;&#9;&#9;MouseDownObject.Value = true 
+&#9;&#9;&#9;&#9;&#9;OnMouseDown()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;if MouseDownObject.Value then
+&#9;&#9;&#9;&#9;&#9;wait(0.01) --NOTE: Wait added to fix immediate down-up issue on iPad
+&#9;&#9;&#9;&#9;&#9;TargetPosition.Value=hit.p --set this early to prevent lag problems
+&#9;&#9;&#9;&#9;&#9;MouseDownObject.Value = false
+&#9;&#9;&#9;&#9;&#9;OnMouseUp()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+Tool.ChildAdded:connect(OnChildAdded)
+</ProtectedString>
+			</Properties>
+			<Item class="BoolValue" referent="RBX8">
+				<Properties>
+					<string name="Name">DoDrop</string>
+					<bool name="Value">false</bool>
+				</Properties>
+			</Item>
+			<Item class="BoolValue" referent="RBX7">
+				<Properties>
+					<string name="Name">MouseDown</string>
+					<bool name="Value">false</bool>
+				</Properties>
+			</Item>
+			<Item class="Vector3Value" referent="RBX9">
+				<Properties>
+					<string name="Name">TargetPosition</string>
+					<Vector3 name="Value">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX5C22FC6521084B5E9DDF736857F62731">
+			<Properties>
+				<string name="Name">Input</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX1C6B033CEC034C9EB82A331754E803AD">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">ModifierScript</string>
+				<ProtectedString name="Source">--this script modifies this weapon depending on if you have the according gamepass
+
+local function WaitForChild(parent, childName)
+&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
+&#9;while not parent:FindFirstChild(childName) do wait() end
+&#9;return parent[childName]
+end
+
+local Tool=script.Parent
+local Player=Tool.Parent.Parent
+local Handle=WaitForChild(Tool,&apos;Handle&apos;)
+local Mesh= WaitForChild(Handle,&apos;Mesh&apos;)
+
+local RedTexture= WaitForChild(Handle,&apos;RedTextureId&apos;)
+
+local MrBombModifierName = &apos;MrBomb&apos;
+
+local IsGold=WaitForChild(Tool,&apos;IsGoldBomb&apos;)
+
+local NormalTexture = &apos;http://www.roblox.com/asset/?id=94691681&apos;
+local MrBombTexture = &apos;http://www.roblox.com/asset/?id=98260356&apos;
+
+local MrBombRedTexture = &apos;http://www.roblox.com/asset/?id=98261349&apos;
+local NormalRedTexture = &apos;http://www.roblox.com/asset/?id=94691735&apos;
+
+local NormalMesh = &apos;http://www.roblox.com/asset/?id=94691640&apos;
+local MrBombMesh = &apos;http://www.roblox.com/asset/?id=98260446&apos;
+
+local NormalIcon = &apos;http://www.roblox.com/asset/?id=94690231&apos;
+local MrBombIcon = &apos;http://www.roblox.com/asset/?id=97923204&apos;
+
+
+function OnModifierAdded(nmodifier)
+&#9;print(&apos;modifier added&apos;)
+&#9;if nmodifier.Name == MrBombModifierName then
+&#9;&#9;IsGold.Value=true
+&#9;&#9;Mesh.TextureId=MrBombTexture
+&#9;&#9;Mesh.MeshId=MrBombMesh
+&#9;&#9;Tool.TextureId= MrBombIcon
+&#9;&#9;RedTexture.Value=MrBombRedTexture
+&#9;&#9;Tool.ToolTip= &apos;Professor Bomb&apos;
+&#9;end
+end
+
+function OnModifierRemoved(nmodifier)
+&#9;if nmodifier.Name == MrBombModifierName then
+&#9;&#9;IsGold.Value=false
+&#9;&#9;Mesh.TextureId= NormalTexture
+&#9;&#9;Mesh.MeshId=NormalMesh
+&#9;&#9;Tool.TextureId= NormalIcon
+&#9;&#9;RedTexture.Value=NormalRedTexture
+&#9;&#9;Tool.ToolTip= &apos;Bomb&apos;
+&#9;end
+end
+
+function OnPlayerChildAdded(nchild)
+&#9;if nchild.Name==&apos;PlayerModifiers&apos; then
+&#9;&#9;nchild.ChildAdded:connect(OnModifierAdded)
+&#9;&#9;for _,i in pairs(nchild:GetChildren()) do
+&#9;&#9;&#9;OnModifierAdded(i)
+&#9;&#9;end
+&#9;&#9;nchild.ChildRemoved:connect(OnModifierRemoved)
+&#9;end
+end
+
+Player.ChildAdded:connect(OnPlayerChildAdded)
+if Player:FindFirstChild(&apos;PlayerModifiers&apos;) then
+&#9;OnPlayerChildAdded(Player[&apos;PlayerModifiers&apos;])
+end
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXACA3209F6FF34721A822D2C156C7FC96">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">CameraTransmitterReceiver</string>
+				<ProtectedString name="Source">script.Parent.TransmitCameraCFrame.OnServerEvent:connect(function(client, cf)
+&#9;if client.Character == script.Parent.Parent then
+&#9;&#9;script.CameraCFrame.Value = cf
+&#9;end
+end)</ProtectedString>
 			</Properties>
 			<Item class="CFrameValue" referent="RBX17">
 				<Properties>
@@ -704,40 +772,9 @@ end</ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX18">
+		<Item class="RemoteEvent" referent="RBX83FD43F1AC7D44478CA6E23AFE30A5A7">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>0.796298027</X>
-					<Y>6.81496334</Y>
-					<Z>5.38983345</Z>
-					<R00>0.992114902</R00>
-					<R01>0.011140421</R01>
-					<R02>-0.124835372</R02>
-					<R10>-9.31322575e-010</R10>
-					<R11>0.996041656</R11>
-					<R12>0.0888876468</R12>
-					<R20>0.125331476</R20>
-					<R21>-0.0881867558</R21>
-					<R22>0.98818779</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>1.04596889</X>
-					<Y>6.63718796</Y>
-					<Z>3.41345692</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<string name="Name">TransmitCameraCFrame</string>
 			</Properties>
 		</Item>
 	</Item>
