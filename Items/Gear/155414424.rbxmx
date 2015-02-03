@@ -19,6 +19,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">DarkWizardStaff</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=155304048</url></Content>
 			<string name="ToolTip"></string>
@@ -156,6 +157,53 @@ Tool.Changed:connect(OnChanged)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.Button1Down:connect(function() script.Parent.Input:FireServer(&apos;Mouse1&apos;, true, mouse.Hit) end)
+&#9;mouse.Button1Up:connect(function() script.Parent.Input:FireServer(&apos;Mouse1&apos;, false, mouse.Hit) end)
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX1FCF3116DFFB4A69B32F83FE7C11B10B">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-13.8865099</X>
+					<Y>102.725998</Y>
+					<Z>50.7470436</Z>
+					<R00>0.98384887</R00>
+					<R01>0.000946582237</R01>
+					<R02>0.178998858</R02>
+					<R10>-0</R10>
+					<R11>0.999986053</R11>
+					<R12>-0.00528812874</R12>
+					<R20>-0.179001361</R20>
+					<R21>0.00520271948</R21>
+					<R22>0.983835101</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-14.1729078</X>
+					<Y>102.734459</Y>
+					<Z>49.1729088</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXCB81D0448A404D5FBC27359B2C66D143">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
 				<ProtectedString name="Source">--Made by Luckymaxer
 
 Tool = script.Parent
@@ -243,7 +291,7 @@ function Fire(Direction, Projectile, Velocity, Damage, Duration)
 &#9;end)
 end
 
-function Equipped(Mouse)
+function Equipped()
 &#9;Character = Tool.Parent
 &#9;Player = Players:GetPlayerFromCharacter(Character)
 &#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
@@ -298,48 +346,56 @@ function Equipped(Mouse)
 &#9;&#9;&#9;wait()
 &#9;&#9;end
 &#9;end)
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;if Tool.Enabled and not MouseDown then
-&#9;&#9;&#9;MouseDown = true
-&#9;&#9;&#9;if Pellet and Pellet.Parent then
-&#9;&#9;&#9;&#9;Pellet:Destroy()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;Pellet = BasePellet:Clone()
-&#9;&#9;&#9;BodyPosition = Instance.new(&quot;BodyPosition&quot;)
-&#9;&#9;&#9;BodyPosition.maxForce = Vector3.new(((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2))
-&#9;&#9;&#9;BodyPosition.Parent = Pellet
-&#9;&#9;&#9;Pellet.CFrame = Torso.CFrame + Vector3.new(0, (Torso.Size.Y * 2), 0)
-&#9;&#9;&#9;BodyAngularVelocity = Instance.new(&quot;BodyAngularVelocity&quot;)
-&#9;&#9;&#9;BodyAngularVelocity.maxTorque = Vector3.new(((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2))
-&#9;&#9;&#9;BodyAngularVelocity.angularvelocity = Vector3.new((math.random() - 0.5), (math.random() - 0.5), ((math.random() - 0.5) * 3))
-&#9;&#9;&#9;BodyAngularVelocity.Parent = Pellet
-
-&#9;&#9;&#9;Pellet.Parent = Character
-&#9;&#9;&#9;while MouseDown do
-&#9;&#9;&#9;&#9;local SpawnLocation = Mouse.Hit.p
-&#9;&#9;&#9;&#9;local SpawnDistance = 10
-&#9;&#9;&#9;&#9;if (SpawnLocation - Torso.Position).magnitude &gt; SpawnDistance then
-&#9;&#9;&#9;&#9;&#9;SpawnLocation = Torso.Position + (SpawnLocation - Torso.Position).unit * SpawnDistance
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;BodyPosition.position = SpawnLocation
-&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-&#9;Mouse.Button1Up:connect(function()
-&#9;&#9;if Pellet then
-&#9;&#9;&#9;MouseDown = false
-&#9;&#9;&#9;Tool.Enabled = false
-&#9;&#9;&#9;Pellet.CanCollide = true
-&#9;&#9;&#9;BodyAngularVelocity:Destroy()
-&#9;&#9;&#9;BodyPosition:Destroy()
-&#9;&#9;&#9;Fire(CFrame.new(Torso.Position, Humanoid.TargetPoint).lookVector, Pellet, 200, 35, 0.75)
-&#9;&#9;&#9;Pellet = nil
-&#9;&#9;&#9;wait(ReloadTime)
-&#9;&#9;&#9;Tool.Enabled = true
-&#9;&#9;end
-&#9;end)
 end
+
+Tool.Input.OnServerEvent:connect(function(client, action, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if action == &apos;Mouse1&apos; then
+&#9;&#9;&#9;local down, hit = ...
+&#9;&#9;&#9;
+&#9;&#9;&#9;if down then
+&#9;&#9;&#9;&#9;if Tool.Enabled and not MouseDown then
+&#9;&#9;&#9;&#9;&#9;MouseDown = true
+&#9;&#9;&#9;&#9;&#9;if Pellet and Pellet.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;Pellet:Destroy()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;Pellet = BasePellet:Clone()
+&#9;&#9;&#9;&#9;&#9;BodyPosition = Instance.new(&quot;BodyPosition&quot;)
+&#9;&#9;&#9;&#9;&#9;BodyPosition.maxForce = Vector3.new(((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2))
+&#9;&#9;&#9;&#9;&#9;BodyPosition.Parent = Pellet
+&#9;&#9;&#9;&#9;&#9;Pellet.CFrame = Torso.CFrame + Vector3.new(0, (Torso.Size.Y * 2), 0)
+&#9;&#9;&#9;&#9;&#9;BodyAngularVelocity = Instance.new(&quot;BodyAngularVelocity&quot;)
+&#9;&#9;&#9;&#9;&#9;BodyAngularVelocity.maxTorque = Vector3.new(((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2), ((Pellet:GetMass() ^ 2) ^ 2))
+&#9;&#9;&#9;&#9;&#9;BodyAngularVelocity.angularvelocity = Vector3.new((math.random() - 0.5), (math.random() - 0.5), ((math.random() - 0.5) * 3))
+&#9;&#9;&#9;&#9;&#9;BodyAngularVelocity.Parent = Pellet
+&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;Pellet.Parent = workspace
+&#9;&#9;&#9;&#9;&#9;while MouseDown do
+&#9;&#9;&#9;&#9;&#9;&#9;local SpawnLocation = hit.p
+&#9;&#9;&#9;&#9;&#9;&#9;local SpawnDistance = 10
+&#9;&#9;&#9;&#9;&#9;&#9;if (SpawnLocation - Torso.Position).magnitude &gt; SpawnDistance then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;SpawnLocation = Torso.Position + (SpawnLocation - Torso.Position).unit * SpawnDistance
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;BodyPosition.position = SpawnLocation
+&#9;&#9;&#9;&#9;&#9;&#9;wait()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;if Pellet then
+&#9;&#9;&#9;&#9;&#9;MouseDown = false
+&#9;&#9;&#9;&#9;&#9;Tool.Enabled = false
+&#9;&#9;&#9;&#9;&#9;Pellet.CanCollide = true
+&#9;&#9;&#9;&#9;&#9;BodyAngularVelocity:Destroy()
+&#9;&#9;&#9;&#9;&#9;BodyPosition:Destroy()
+&#9;&#9;&#9;&#9;&#9;Fire(CFrame.new(Torso.Position, hit.p).lookVector, Pellet, 200, 35, 0.75)
+&#9;&#9;&#9;&#9;&#9;Pellet = nil
+&#9;&#9;&#9;&#9;&#9;wait(ReloadTime)
+&#9;&#9;&#9;&#9;&#9;Tool.Enabled = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end)
 
 function Unequipped()
 &#9;Equipped = false
@@ -357,40 +413,9 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX5">
+		<Item class="RemoteEvent" referent="RBXF2EC09B7D30C4C128A1300DFCCAA6832">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-13.7951269</X>
-					<Y>102.833923</Y>
-					<Z>51.1375809</Z>
-					<R00>0.983848751</R00>
-					<R01>0.000945042644</R01>
-					<R02>0.178999171</R02>
-					<R10>1.16415322e-010</R10>
-					<R11>0.999985993</R11>
-					<R12>-0.0052795196</R12>
-					<R20>-0.179001659</R20>
-					<R21>0.00519424863</R21>
-					<R22>0.983835042</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-14.1531267</X>
-					<Y>102.844482</Y>
-					<Z>49.1699028</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<string name="Name">Input</string>
 			</Properties>
 		</Item>
 	</Item>
