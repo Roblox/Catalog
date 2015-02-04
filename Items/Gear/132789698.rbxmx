@@ -1,14 +1,14 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX2035DC23B7A94FBF912918EC2A23DEA2">
 		<Properties>
-			<bool name="CanBeDropped">false</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>1.40000021</X>
-				<Y>1.96000028</Y>
-				<Z>-1.4000001</Z>
+				<X>1.39999998</X>
+				<Y>2</Y>
+				<Z>0</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -19,11 +19,883 @@
 				<R21>3.9340253e-007</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">HalloweenRotocycle</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">HalloCycle</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=132644813 </url></Content>
 			<string name="ToolTip">BONE TO BE WILD</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Animation" referent="RBXFF45CFADBDC249958866D7FA9F481E3A">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=104506550</url></Content>
+				<string name="Name">Hold</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXA36DDFCCF8B9414DAC901C541D8B4823">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+Assets = require(Tool:WaitForChild(&quot;Assets&quot;))
+Data = Assets.Data
+
+BaseUrl = Assets.BaseUrl
+
+BasePart = Instance.new(&quot;Part&quot;)
+BasePart.Material = Enum.Material.Plastic
+BasePart.Shape = Enum.PartType.Block
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.Anchored = false
+BasePart.CanCollide = true
+BasePart.Locked = true
+
+Animations = {
+&#9;Hold = {Animation = Tool:WaitForChild(&quot;Hold&quot;), FadeTime = nil, Weight = nil, Speed = nil}
+}
+
+Sounds = {
+&#9;Honk = Handle:WaitForChild(&quot;Honk&quot;),
+&#9;Engine = Handle:WaitForChild(&quot;Running&quot;)
+}
+
+Controls = {
+&#9;Forward = {Key = &quot;w&quot;, ByteKey = 17, Mode = false},
+&#9;Backward = {Key = &quot;s&quot;, ByteKey = 18, Mode = false},
+&#9;Left = {Key = &quot;a&quot;, ByteKey = 20, Mode = false},
+&#9;Right = {Key = &quot;d&quot;, ByteKey = 19, Mode = false}
+}
+&#9;
+Rate = (1 / 60)
+&#9;
+Gravity = 196.20
+&#9;
+PoseOffset = CFrame.new(0, -1.1, -0.9) * CFrame.Angles(0, 0, 0) --The offset your character is from the center of the vehicle.
+
+SpeedBoost = {
+&#9;Allowed = false,
+&#9;Active = false,
+&#9;Enabled = true,
+&#9;Duration = 10,
+&#9;ReloadTime = 30
+}
+
+Special = {
+&#9;Allowed = false,
+&#9;Enabled = true,
+&#9;Active = false,
+&#9;Duration = 0,
+&#9;ReloadTime = 60
+}
+
+Speed = {
+&#9;Acceleration = {
+&#9;&#9;Normal = 20,
+&#9;&#9;Boost = 20
+&#9;},
+&#9;Deceleration = {
+&#9;&#9;Normal = 20,
+&#9;&#9;Boost = 20
+&#9;},
+&#9;MovementSpeed = {
+&#9;&#9;Normal = {Min = 20, Max = 70},
+&#9;&#9;Boost = {Min = 20, Max = 70}
+&#9;},
+&#9;TurnSpeed = {
+&#9;&#9;Speed = {Min = 5, Max = 5},
+&#9;&#9;TurnAlpha = 0.30,
+&#9;&#9;AlphaDampening = 0.2
+&#9;},
+}
+
+MaxSpeed = { --Maximum speed which the vehicle can move and turn at.
+&#9;Movement = Speed.MovementSpeed.Normal,
+&#9;Turn = Speed.TurnSpeed.Speed,
+&#9;Acceleration = Speed.Acceleration.Normal,
+&#9;Deceleration = Speed.Deceleration.Normal
+}
+
+CurrentSpeed = { --The speed which the vehicle is moving and turning at.
+&#9;Movement = 0,
+&#9;Turn = 0
+}
+
+Honk = {
+&#9;Honking = false,
+&#9;LastHonk = 0,
+&#9;ReloadTime = 1
+}
+
+Jump = {
+&#9;Jumping = false,
+&#9;LastJump = 0,
+&#9;ReloadTime = 1.9,
+&#9;JumpForce = 30
+}
+
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+Tool.Enabled = true
+
+function RayCast(Position, Direction, MaxDistance, IgnoreList)
+&#9;local IgnoreList = ((type(IgnoreList) == &quot;table&quot; and IgnoreList) or {IgnoreList})
+&#9;return game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(Position, Direction.unit * (MaxDistance or 999.999)), IgnoreList)
+end
+
+function GetAllConnectedParts(Object)
+&#9;local Parts = {}
+&#9;local function GetConnectedParts(Object)
+&#9;&#9;for i, v in pairs(Object:GetConnectedParts()) do
+&#9;&#9;&#9;local Ignore = false
+&#9;&#9;&#9;for ii, vv in pairs(Parts) do
+&#9;&#9;&#9;&#9;if v == vv then
+&#9;&#9;&#9;&#9;&#9;Ignore = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not Ignore then
+&#9;&#9;&#9;&#9;table.insert(Parts, v)
+&#9;&#9;&#9;&#9;GetConnectedParts(v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;GetConnectedParts(Object)
+&#9;return Parts
+end
+
+function EnableFirstPersonView()
+&#9;if not CheckIfAlive() or not ToolEquipped then
+&#9;&#9;return
+&#9;end
+&#9;local Limbs = {&quot;Left Arm&quot;, &quot;Right Arm&quot;}
+&#9;for i, v in pairs(Limbs) do
+&#9;&#9;local Limb = Character:FindFirstChild(v)
+&#9;&#9;if Limb:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;InvokeClient(&quot;SetLocalTransparencyModifier&quot;, {Object = Limb, Transparency = 0, AutoUpdate = false})
+&#9;&#9;&#9;end)
+&#9;&#9;end
+&#9;end
+end
+
+function ThrustUpdater()
+&#9;
+&#9;for i, v in pairs(CurrentSpeed) do
+&#9;&#9;CurrentSpeed[i] = 0
+&#9;end
+&#9;for i, v in pairs(Controls) do
+&#9;&#9;Controls[i].Mode = false
+&#9;end
+
+&#9;while ToolEquipped and Body and Body.Parent and CheckIfAlive() and RotationForce and RotationForce.Parent and ThrustForce and ThrustForce.Parent and TurnGyro and TurnGyro.Parent do
+&#9;&#9;
+&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, CurrentSpeed.Turn, 0)
+&#9;&#9;if math.abs(CurrentSpeed.Turn) &gt; Speed.TurnSpeed.AlphaDampening then
+&#9;&#9;&#9;CurrentSpeed.Turn = (CurrentSpeed.Turn - (Speed.TurnSpeed.AlphaDampening * (math.abs(CurrentSpeed.Turn) / CurrentSpeed.Turn)))
+&#9;&#9;else 
+&#9;&#9;&#9;CurrentSpeed.Turn = 0&#9;&#9;
+&#9;&#9;end
+&#9;&#9;&#9;&#9;
+&#9;&#9;if not Controls.Forward.Mode or Controls.Backward.Mode then --Slow down if not controlling.
+&#9;&#9;&#9;CurrentSpeed.Movement = (CurrentSpeed.Movement * 0.99)
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;local MySpeed = Vector3.new(Body.Velocity.X, 0, Body.Velocity.Z).magnitude
+&#9;&#9;local VelocityDifference = math.abs((MySpeed - (ThrustForce.velocity.magnitude)))
+&#9;&#9;if MySpeed &gt; 3 and ThrustForce.velocity.magnitude &gt; 3 and VelocityDifference &gt; (0.7 * ThrustForce.velocity.magnitude) then
+&#9;&#9;&#9;CurrentSpeed.Movement = (CurrentSpeed.Movement * 0.9)
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;if Controls.Forward.Mode then --Handle acceleration
+&#9;&#9;&#9;CurrentSpeed.Movement = math.min(MaxSpeed.Movement.Max, (CurrentSpeed.Movement + (MaxSpeed.Acceleration * Rate)))
+&#9;&#9;end
+&#9;&#9;if Controls.Backward.Mode then --Handle deceleration, if speed is more than 0, decrease quicker.
+&#9;&#9;&#9;CurrentSpeed.Movement = math.max(-MaxSpeed.Movement.Min, (CurrentSpeed.Movement - (MaxSpeed.Deceleration * ((CurrentSpeed.Movement &gt; 0 and 2.8) or 1) * Rate)))
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;if Controls.Left.Mode then --Handle left turn speed
+&#9;&#9;&#9;CurrentSpeed.Turn = math.min(Speed.TurnSpeed.Speed.Max, (CurrentSpeed.Turn + (Speed.TurnSpeed.TurnAlpha)))
+&#9;&#9;end
+&#9;&#9;if Controls.Right.Mode then --Handle right turn speed
+&#9;&#9;&#9;CurrentSpeed.Turn = math.max(-Speed.TurnSpeed.Speed.Min, (CurrentSpeed.Turn - (Speed.TurnSpeed.TurnAlpha)))
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;local Direction = Torso.CFrame.lookVector
+&#9;&#9;Direction = Vector3.new(Direction.x, 0, Direction.z).unit
+&#9;&#9;
+&#9;&#9;local Velocity = (Direction * CurrentSpeed.Movement) --The thrust force which you move.
+&#9;&#9;ThrustForce.velocity = Vector3.new(Velocity.X, ThrustForce.velocity.Y, Velocity.Z)
+&#9;&#9;
+&#9;&#9;local LeanAmount = (-CurrentSpeed.Turn * (math.pi / 6) / 4) --Amount your character leans over.
+&#9;&#9;local XZAngle = math.atan2(Torso.CFrame.lookVector.z, 0, Torso.CFrame.lookVector.x) --Handle rotation
+&#9;&#9;TurnGyro.cframe = CFrame.Angles((LeanAmount * Direction.x), 0, (LeanAmount * Direction.z))
+&#9;&#9;
+&#9;&#9;--Wheel animation
+&#9;&#9;local DesiredAngle = (999999999 * (-CurrentSpeed.Movement / math.abs(CurrentSpeed.Movement)))
+&#9;&#9;local MaxVelocity = (CurrentSpeed.Movement / 250)
+&#9;&#9;for i, v in pairs({FrontMotor, BackMotor}) do
+&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;v.DesiredAngle = DesiredAngle
+&#9;&#9;&#9;&#9;v.MaxVelocity = MaxVelocity
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;--Smoke exhaust from vehicle running.
+&#9;&#9;for i, v in pairs(ExhaustSmoke) do
+&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;v.Opacity = ((math.min(math.abs(CurrentSpeed.Movement), 10) / 10) * 0.5)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;
+&#9;&#9;--Engine running sound which pitch changes while in motion.
+&#9;&#9;Sounds.Engine.Pitch = (1 + (math.abs(CurrentSpeed.Movement / MaxSpeed.Movement.Max) * 1))
+&#9;&#9;
+&#9;&#9;wait(Rate)
+&#9;&#9;
+&#9;end
+end
+
+function SpawnVehicle()
+&#9;
+&#9;Handle.Transparency = 1
+&#9;
+&#9;Spawn(function()
+&#9;&#9;InvokeClient(&quot;PlaySound&quot;, Sounds.Engine)
+&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Hold)
+&#9;end)&#9;
+&#9;
+&#9;Humanoid.PlatformStand = true
+&#9;
+&#9;local VehicleData = Assets.CreateVehicle()
+&#9;Body = VehicleData.Vehicle
+&#9;local ParticleTable = VehicleData.Tables
+&#9;
+&#9;FrontMotor = Body.FrontMotor
+&#9;BackMotor = Body.BackMotor
+&#9;
+&#9;ExhaustSmoke = ParticleTable.ExhaustSmoke
+&#9;Lights = ParticleTable.Lights
+&#9;Sparkles = ParticleTable.Sparkles
+&#9;
+&#9;if SpeedBoost.Active then
+&#9;&#9;for i, v in pairs(Sparkles) do
+&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;v.Enabled = true
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;local TorsoWeld = Instance.new(&quot;Weld&quot;)
+&#9;TorsoWeld.C0 = PoseOffset
+&#9;TorsoWeld.Part0 = Torso
+&#9;TorsoWeld.Part1 = Body
+&#9;TorsoWeld.Parent = Body
+&#9;
+&#9;Body.CanCollide = true
+
+&#9;RotationForce = Instance.new(&quot;BodyAngularVelocity&quot;)
+&#9;RotationForce.maxTorque = Vector3.new(0, math.huge, 0)
+&#9;RotationForce.angularvelocity = Vector3.new(0, 0, 0)
+&#9;RotationForce.Parent = Torso
+&#9;
+&#9;ThrustForce = Instance.new(&quot;BodyVelocity&quot;)
+&#9;ThrustForce.maxForce = Vector3.new(math.huge, 0, math.huge)
+&#9;ThrustForce.velocity = Vector3.new(0, 0, 0)
+&#9;ThrustForce.P = 100
+&#9;ThrustForce.Parent = Torso
+&#9;
+&#9;TurnGyro = Instance.new(&quot;BodyGyro&quot;)
+&#9;TurnGyro.maxTorque = Vector3.new(5000, 0, 5000)
+&#9;TurnGyro.P = 300
+&#9;TurnGyro.D = 100
+&#9;TurnGyro.Parent = Torso
+&#9;
+&#9;Body.Parent = Tool
+&#9;
+&#9;local RayHit, RayPos, RayNormal = RayCast(Torso.Position, Vector3.new(0, -1, 0), (Torso.Size.Y * 2), {Character})
+&#9;if RayHit then
+&#9;&#9;Torso.CFrame = Torso.CFrame + Vector3.new(0, ((Character:GetModelSize().Y / 2) + 1.5), 0)
+&#9;end
+&#9;
+&#9;Spawn(ThrustUpdater)
+&#9;
+end
+
+function FreezePlayer()
+&#9;if CheckIfAlive() then
+&#9;&#9;local FreezePart = BasePart:Clone()
+&#9;&#9;FreezePart.Name = &quot;FreezePart&quot;
+&#9;&#9;FreezePart.Transparency = 1
+&#9;&#9;FreezePart.Anchored = true
+&#9;&#9;FreezePart.CanCollide = false
+&#9;&#9;local FreezeWeld = Instance.new(&quot;Weld&quot;)
+&#9;&#9;FreezeWeld.Part0 = Torso
+&#9;&#9;FreezeWeld.Part1 = FreezePart
+&#9;&#9;FreezeWeld.Parent = FreezePart
+&#9;&#9;Debris:AddItem(FreezePart, 0.125)
+&#9;&#9;FreezePart.Parent = Character
+&#9;&#9;Torso.Velocity = Vector3.new(0, -25, 0)
+&#9;&#9;Torso.RotVelocity = Vector3.new(0, 0, 0)
+&#9;end
+end
+
+function CleanUp()
+&#9;Handle.Velocity = Vector3.new(0, 0, 0)
+&#9;Handle.RotVelocity = Vector3.new(0, 0, 0)
+&#9;for i, v in pairs({}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs({Body, RotationForce, ThrustForce, TurnGyro}) do
+&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs(Tool:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) and v ~= Handle then
+&#9;&#9;&#9;v:Destroy()
+&#9;&#9;end
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;Spawn(CleanUp)
+&#9;Spawn(EnableFirstPersonView)
+&#9;Spawn(SpawnVehicle)
+&#9;ToolEquipped = true
+end
+
+function Unequipped()
+&#9;Spawn(CleanUp)
+&#9;Spawn(FreezePlayer)
+&#9;for i, v in pairs(Sounds) do
+&#9;&#9;v:Stop()
+&#9;&#9;Spawn(function()
+&#9;&#9;&#9;InvokeClient(&quot;StopSound&quot;, v)
+&#9;&#9;end)
+&#9;end
+&#9;if CheckIfAlive() then
+&#9;&#9;Humanoid.PlatformStand = false
+&#9;end
+&#9;Handle.Transparency = 0
+&#9;ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+&#9;if player == Player and ToolEquipped and value and CheckIfAlive() then
+&#9;&#9;if mode == &quot;KeyPress&quot; then
+&#9;&#9;&#9;local Down = value.Down
+&#9;&#9;&#9;local Key = value.Key
+&#9;&#9;&#9;local ByteKey = string.byte(Key)
+&#9;&#9;&#9;for i, v in pairs(Controls) do
+&#9;&#9;&#9;&#9;if Key == v.Key or ByteKey == v.ByteKey then
+&#9;&#9;&#9;&#9;&#9;Controls[i].Mode = Down
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if Key == &quot; &quot; and Down then --Jump controller
+&#9;&#9;&#9;&#9;if math.abs(tick() - Jump.LastJump) &gt; Jump.ReloadTime and not Jump.Jumping and ThrustForce and ThrustForce.Parent then
+&#9;&#9;&#9;&#9;&#9;Jump.Jumping = true
+&#9;&#9;&#9;&#9;&#9;local Parts = GetAllConnectedParts(Body)
+&#9;&#9;&#9;&#9;&#9;local Mass = 0
+&#9;&#9;&#9;&#9;&#9;for i, v in pairs(Parts) do
+&#9;&#9;&#9;&#9;&#9;&#9;Mass = (Mass + v:GetMass())
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;ThrustForce.maxForce = Vector3.new(ThrustForce.maxForce.X, ((Mass * Gravity) * 100), ThrustForce.maxForce.Z)
+&#9;&#9;&#9;&#9;&#9;ThrustForce.velocity = (Vector3.new(0, 1, 0) * Jump.JumpForce) + Vector3.new(ThrustForce.velocity.X, 0, ThrustForce.velocity.Z)
+&#9;&#9;&#9;&#9;&#9;wait(0.1)
+&#9;&#9;&#9;&#9;&#9;ThrustForce.maxForce = Vector3.new(ThrustForce.maxForce.X, 0, ThrustForce.maxForce.Z)
+&#9;&#9;&#9;&#9;&#9;ThrustForce.velocity = Vector3.new(ThrustForce.velocity.X, 0, ThrustForce.velocity.Z)
+&#9;&#9;&#9;&#9;&#9;Jump.LastJump = tick()
+&#9;&#9;&#9;&#9;&#9;Jump.Jumping = false
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;elseif Key == &quot;x&quot; and Down then --Toggle light(s) on/off.
+&#9;&#9;&#9;&#9;for i, v in pairs(Lights) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;v.Enabled = not v.Enabled
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;elseif Key == &quot;h&quot; and Down then --Play honk sound.
+&#9;&#9;&#9;&#9;local Sound = Sounds.Honk
+&#9;&#9;&#9;&#9;if (tick() - Honk.LastHonk) &gt;= (Sound.TimeLength + Honk.ReloadTime) and not Honk.Honking then
+&#9;&#9;&#9;&#9;&#9;Honk.Honking = true
+&#9;&#9;&#9;&#9;&#9;local TempSound = Sound:Clone()
+&#9;&#9;&#9;&#9;&#9;Debris:AddItem(TempSound, Sound.TimeLength)
+&#9;&#9;&#9;&#9;&#9;TempSound.Parent = Body
+&#9;&#9;&#9;&#9;&#9;TempSound:Play()
+&#9;&#9;&#9;&#9;&#9;Honk.LastHonk = tick()
+&#9;&#9;&#9;&#9;&#9;Honk.Honking = false
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;elseif Key == &quot;q&quot; and Down then --Activate special.
+&#9;&#9;&#9;&#9;if not Special.Allowed or not Special.Enabled or Special.Active then
+&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;Special.Enabled = false
+&#9;&#9;&#9;&#9;Special.Active = true
+&#9;&#9;&#9;&#9;wait(Special.Duration)
+&#9;&#9;&#9;&#9;Special.Active = false
+&#9;&#9;&#9;&#9;wait(Special.ReloadTime)
+&#9;&#9;&#9;&#9;Special.Enabled = true
+&#9;&#9;&#9;elseif ByteKey == 48 and Down then --Activate speed boost.
+&#9;&#9;&#9;&#9;if not SpeedBoost.Allowed or not SpeedBoost.Enabled or SpeedBoost.Active then
+&#9;&#9;&#9;&#9;&#9;return
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;SpeedBoost.Enabled = false
+&#9;&#9;&#9;&#9;SpeedBoost.Active = true
+&#9;&#9;&#9;&#9;for i, v in pairs(Sparkles) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;v.Enabled = true
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;MaxSpeed.Acceleration = Speed.Acceleration.Boost
+&#9;&#9;&#9;&#9;MaxSpeed.Deceleration = Speed.Deceleration.Boost
+&#9;&#9;&#9;&#9;MaxSpeed.Movement = Speed.MovementSpeed.Boost
+&#9;&#9;&#9;&#9;wait(SpeedBoost.Duration)
+&#9;&#9;&#9;&#9;MaxSpeed.Acceleration = Speed.Acceleration.Normal
+&#9;&#9;&#9;&#9;MaxSpeed.Deceleration = Speed.Deceleration.Normal
+&#9;&#9;&#9;&#9;MaxSpeed.Movement = Speed.MovementSpeed.Normal
+&#9;&#9;&#9;&#9;for i, v in pairs(Sparkles) do
+&#9;&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;v.Enabled = false
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;SpeedBoost.Active = false
+&#9;&#9;&#9;&#9;wait(SpeedBoost.ReloadTime)
+&#9;&#9;&#9;&#9;SpeedBoost.Enabled = true
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+Spawn(CleanUp)
+
+ServerControl.OnServerInvoke = OnServerInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX4BFF9552516D480FB00C92C2BD97F70C">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
+
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+&#9;if mode == &quot;PlayAnimation&quot; and value and ToolEquipped and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+&#9;elseif mode == &quot;StopAnimation&quot; and value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function DisableJump(Boolean)
+&#9;if PreventJump then
+&#9;&#9;PreventJump:disconnect()
+&#9;end
+&#9;if Boolean then
+&#9;&#9;PreventJump = Humanoid.Changed:connect(function(Property)
+&#9;&#9;&#9;if Property ==  &quot;Jump&quot; then
+&#9;&#9;&#9;&#9;Humanoid.Jump = false
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;PlayerMouse = Player:GetMouse()
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+&#9;Mouse.Move:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseMove&quot;, {Position = Mouse.Hit.p, Target = Mouse.Target})
+&#9;end)
+&#9;Humanoid:ChangeState(Enum.HumanoidStateType.None)
+end
+
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;LocalObjects = {}
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs({PreventJump, ObjectLocalTransparencyModifier}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;Humanoid:ChangeState(Enum.HumanoidStateType.Freefall) --Prevent the ability to fly by constantly equipping and unequipping the tool.
+&#9;Animations = {}
+end
+
+function InvokeServer(mode, value)
+&#9;pcall(function()
+&#9;&#9;local ServerReturn = ServerControl:InvokeServer(mode, value)
+&#9;&#9;return ServerReturn
+&#9;end)
+end
+
+function OnClientInvoke(mode, value)
+&#9;if mode == &quot;PlayAnimation&quot; and value and ToolEquipped and Humanoid then
+&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, value)
+&#9;elseif mode == &quot;StopAnimation&quot; and value then
+&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, value)
+&#9;elseif mode == &quot;PlaySound&quot; and value then
+&#9;&#9;value:Play()
+&#9;elseif mode == &quot;StopSound&quot; and value then
+&#9;&#9;value:Stop()
+&#9;elseif mode == &quot;MousePosition&quot; then
+&#9;&#9;return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+&#9;elseif mode == &quot;DisableJump&quot; then
+&#9;&#9;DisableJump(value)
+&#9;elseif mode == &quot;SetLocalTransparencyModifier&quot; and value and ToolEquipped then
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;local ObjectFound = false
+&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;if v == value then
+&#9;&#9;&#9;&#9;&#9;ObjectFound = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not ObjectFound then
+&#9;&#9;&#9;&#9;table.insert(LocalObjects, value)
+&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
+&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local CurrentTransparency = v.Object.LocalTransparencyModifier
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ((not v.AutoUpdate and (CurrentTransparency == 1 or  CurrentTransparency == 0)) or v.AutoUpdate) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(LocalObjects, i)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX17A5658C44B9469993059B439AF6556A">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="ModuleScript" referent="RBX2A7EF303A435483082673CBC1FD4B34F">
+			<Properties>
+				<string name="Name">Assets</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+BaseUrl = &quot;http://www.roblox.com/asset/?id=&quot;
+
+RbxUtility = LoadLibrary(&quot;RbxUtility&quot;)
+Create = RbxUtility.Create
+
+BasePart = Create(&quot;Part&quot;){
+&#9;Material = Enum.Material.Plastic,
+&#9;Shape = Enum.PartType.Block,
+&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;Size = Vector3.new(0.2, 0.2, 0.2),
+&#9;Anchored = false,
+&#9;CanCollide = true,
+&#9;Locked = true
+}
+
+MeshData = {
+&#9;Meshes = {
+&#9;&#9;Body = 122185640,
+&#9;&#9;Wheel = 122202439
+&#9;},
+&#9;TextureId = 132642245
+}
+
+function CreateVehicle()
+
+&#9;local ExhaustSmoke = {}
+&#9;local Lights = {}
+&#9;local Sparkles = {}
+&#9;
+&#9;local Fire = Create(&quot;Fire&quot;){
+&#9;&#9;Color = Color3.new((255 / 255), (0 / 255), (0 / 255)),
+&#9;&#9;SecondaryColor = Color3.new((255 / 255), (255 / 255), (255 / 255)),
+&#9;&#9;Heat = 9,
+&#9;&#9;Size = 5,
+&#9;&#9;Enabled = true
+&#9;}
+
+&#9;local Body = BasePart:Clone()
+&#9;Body.Name = &quot;Body&quot;
+&#9;Body.Size = Vector3.new(1, 4.9, 6)
+&#9;Fire:Clone().Parent = Body
+&#9;local BodyMesh = Create(&quot;SpecialMesh&quot;){
+&#9;&#9;MeshType = Enum.MeshType.FileMesh,
+&#9;&#9;MeshId = MeshData.Meshes.Body,
+&#9;&#9;TextureId = MeshData.TextureId,
+&#9;&#9;Scale = Vector3.new(2.5, 2.5, 2.5),
+&#9;&#9;VertexColor = Vector3.new(1, 1, 1),
+&#9;&#9;Offset = Vector3.new(0, 0, 0),
+&#9;&#9;Parent = Body
+&#9;}
+&#9;
+&#9;local BaseWheel = BasePart:Clone()
+&#9;BaseWheel.Size = Vector3.new(0.5, 1, 1)
+&#9;BaseWheel.CanCollide = false
+&#9;Fire:Clone().Parent = BaseWheel
+&#9;local WheelMesh = Create(&quot;SpecialMesh&quot;){
+&#9;&#9;MeshType = Enum.MeshType.FileMesh,
+&#9;&#9;MeshId = &quot;&quot;,
+&#9;&#9;TextureId = MeshData.TextureId,
+&#9;&#9;Scale = Vector3.new(2.5, 2.5, 2.5),
+&#9;&#9;VertexColor = Vector3.new(1, 1, 1),
+&#9;&#9;Offset = Vector3.new(0, 0, 0),
+&#9;&#9;Parent = BaseWheel,
+&#9;}
+
+&#9;local BaseFrontWheel = BaseWheel:Clone()
+&#9;BaseFrontWheel.Name = &quot;FrontWheel&quot;
+&#9;BaseFrontWheel.Mesh.MeshId = MeshData.Meshes.Wheel
+&#9;
+&#9;local BaseBackWheel = BaseWheel:Clone()
+&#9;BaseBackWheel.Name = &quot;BackWheel&quot;
+&#9;BaseBackWheel.Mesh.MeshId = MeshData.Meshes.Wheel
+
+&#9;local BaseSmokePart = BasePart:Clone()
+&#9;BaseSmokePart.Name = &quot;SmokePart&quot;
+&#9;BaseSmokePart.Transparency = 1
+&#9;Fire:Clone().Parent = BaseSmokePart
+&#9;local BaseExhaustSmoke = Create(&quot;Smoke&quot;){
+&#9;&#9;Name = &quot;ExhaustSmoke&quot;,
+&#9;&#9;Size = 0.1,
+&#9;&#9;RiseVelocity = 0.01,
+&#9;&#9;Color = Color3.new((127 / 255), (127 / 255), (127 / 255)),
+&#9;&#9;Enabled = true,
+&#9;&#9;Parent = BaseSmokePart,
+&#9;}
+
+&#9;local BaseLightPart = BasePart:Clone()
+&#9;BaseLightPart.Name = &quot;LightPart&quot;
+&#9;BaseLightPart.Transparency = 1
+&#9;local Light = Create(&quot;SpotLight&quot;){
+&#9;&#9;Name = &quot;Light&quot;,
+&#9;&#9;Brightness = 5,
+&#9;&#9;Angle = 45,
+&#9;&#9;Color = Color3.new(255 / 255, 252 / 255, 153 / 255),
+&#9;&#9;Range = 40,
+&#9;&#9;Shadows = false,
+&#9;&#9;Enabled = false,
+&#9;&#9;Parent = BaseLightPart,
+&#9;}
+&#9;&#9;&#9;
+&#9;local FrontWheel = BaseFrontWheel:Clone()
+&#9;FrontWheel.Parent = Body
+&#9;
+&#9;local FrontMotor = Create(&quot;Motor6D&quot;){
+&#9;&#9;Name = &quot;FrontMotor&quot;,
+&#9;&#9;Part0 = Body,
+&#9;&#9;Part1 = FrontWheel,
+&#9;&#9;C0 = CFrame.new(0, -1.1, -3.6) * CFrame.Angles(0, (math.pi / 2), 0),
+&#9;&#9;C1 = CFrame.new() * CFrame.Angles(0, -(math.pi / 2), 0),
+&#9;&#9;Parent = Body
+&#9;}
+&#9;
+&#9;local BackWheel = BaseBackWheel:Clone()
+&#9;BackWheel.Parent = Body
+&#9;
+&#9;local BackMotor = Create(&quot;Motor6D&quot;){
+&#9;&#9;Name = &quot;BackMotor&quot;,
+&#9;&#9;Part0 = Body,
+&#9;&#9;Part1 = BackWheel,
+&#9;&#9;C0 = CFrame.new(0, -1.1, 2.8) * CFrame.Angles(0, (math.pi / 2), 0),
+&#9;&#9;C1 = CFrame.new() * CFrame.Angles(0, -(math.pi / 2), 0),
+&#9;&#9;Parent = Body
+&#9;}
+&#9;
+&#9;local HeadLight = BaseLightPart:Clone()
+&#9;HeadLight.Parent = Body
+&#9;table.insert(Lights, HeadLight.Light)
+&#9;for i, v in pairs(HeadLight:GetChildren()) do
+&#9;&#9;if v:IsA(&quot;Sparkles&quot;) then
+&#9;&#9;&#9;table.insert(Sparkles, v)
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;local LightWeld = Create(&quot;Weld&quot;){
+&#9;&#9;Part0 = Body,
+&#9;&#9;Part1 = HeadLight,
+&#9;&#9;C0 = CFrame.new(0, 0.75, -2.5) * CFrame.Angles(0, 0, 0),
+&#9;&#9;Parent = HeadLight
+&#9;}
+&#9;
+&#9;local ExhaustPipe = BaseSmokePart:Clone()
+&#9;ExhaustPipe.Name = &quot;ExhaustPipe&quot;
+&#9;ExhaustPipe.Parent = Body
+&#9;table.insert(ExhaustSmoke, ExhaustPipe.ExhaustSmoke)
+&#9;
+&#9;local SmokeWeld = Create(&quot;Weld&quot;){
+&#9;&#9;C0 = CFrame.new(0, 1, -2.7) * CFrame.Angles(0, 0, 0),
+&#9;&#9;Part0 = ExhaustPipe,
+&#9;&#9;Part1 = Body,
+&#9;&#9;Parent = ExhaustPipe
+&#9;}
+
+&#9;local Tables = {
+&#9;&#9;ExhaustSmoke = ExhaustSmoke,
+&#9;&#9;Lights = Lights,
+&#9;&#9;Sparkles = Sparkles
+&#9;}
+&#9;
+&#9;return {
+&#9;&#9;Vehicle = Body,
+&#9;&#9;Tables = Tables
+&#9;}
+&#9;
+end
+
+for i, v in pairs(MeshData) do
+&#9;if type(v) == &quot;table&quot; then
+&#9;&#9;for ii, vv in pairs(v) do
+&#9;&#9;&#9;if type(vv) == &quot;string&quot; or type(vv) == &quot;number&quot; then
+&#9;&#9;&#9;&#9;MeshData[i][ii] = (BaseUrl .. tostring(vv))
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;elseif type(v) == &quot;string&quot; or type(v) == &quot;number&quot; then
+&#9;&#9;MeshData[i] = (BaseUrl .. tostring(v))
+&#9;end
+end
+
+return {
+&#9;BaseUrl = BaseUrl,
+&#9;MeshData = MeshData,
+&#9;CreateVehicle = CreateVehicle
+}</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX62CC92A8A16B4684A5233D42C625A1D1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -39,19 +911,19 @@
 					<X>0</X>
 					<Y>17</Y>
 					<Z>22</Z>
-					<R00>-0</R00>
+					<R00>0</R00>
 					<R01>0</R01>
 					<R02>1</R02>
-					<R10>-0</R10>
+					<R10>0</R10>
 					<R11>1</R11>
-					<R12>0</R12>
+					<R12>-0</R12>
 					<R20>-1</R20>
 					<R21>0</R21>
 					<R22>0</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<float name="Elasticity">0</float>
-				<float name="Friction">0</float>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
 				<token name="FrontSurface">0</token>
@@ -60,7 +932,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -86,12 +958,22 @@
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.200000003</X>
-					<Y>0.200000003</Y>
-					<Z>7.91000128</Z>
+					<X>1</X>
+					<Y>4.9000001</Y>
+					<Z>8</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="Sound" referent="RBX783130D28F8442C7BF8F3D335DB6154E">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Running</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=122292723</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="SpecialMesh" referent="RBXB7F4C751DA304351A81DD32EF406DDE4">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -108,7 +990,7 @@
 						<Y>2.5</Y>
 						<Z>2.5</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=132642245 </url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=132642245</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -116,445 +998,40 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX5FBA69CDBB264AF98A40F50597473E44">
 				<Properties>
-					<bool name="Looped">true</bool>
-					<string name="Name">Running</string>
+					<bool name="Looped">false</bool>
+					<string name="Name">Honk</string>
 					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=122292723</url></Content>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=184997015</url></Content>
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX4">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=104506550</url></Content>
-				<string name="Name">holdAni</string>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX5">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ThumbnailFixer</string>
-				<ProtectedString name="Source">function WaitForChild(parent,child)
-&#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
-&#9;return parent[child]
-end
-
-local handle = WaitForChild(script.Parent,&apos;Handle&apos;)
-
-script.Parent.Grip = CFrame.new(1.40000021, 1.96000028, -1.4000001, 1, 0, 0, 0, 1, -3.9340253e-007, 0, 3.9340253e-007, 1)
-
-handle.Size = Vector3.new(0.2, 4.89, 6.08)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX6">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">continuumScript</string>
-				<ProtectedString name="Source">function WaitForChild(parent,child)
-&#9;while not parent:FindFirstChild(child) do print(&quot;roped waiting for &quot; .. child) wait() end
-&#9;return parent[child]
-end
-
-local handle = WaitForChild(script.Parent,&apos;Handle&apos;)
-
-local EngineSound = WaitForChild(handle,&apos;Running&apos;)
-
-local HoldAni = WaitForChild(script.Parent,&apos;holdAni&apos;)
-
-local left=false
-local right=false
-local up=false
-local down=false
-local mouse
-local Character
-local key_down_connect
-local key_up_connect
-
-local thrustForce
-local thrustMagnitude
-local thrustDirection
-local RotationForce
-local TurnGyro
-
-local HoldAniTrack
-
-local torsoWeld
-
-local SmokePart = Instance.new(&apos;Part&apos;)
-SmokePart.Transparency = 1
-SmokePart.Size = Vector3.new(0,0,0)
-local ExhaustSmoke = Instance.new(&apos;Smoke&apos;)
-ExhaustSmoke.Parent = SmokePart
-ExhaustSmoke.Size = .1
-ExhaustSmoke.RiseVelocity = .01
-ExhaustSmoke.Color = Color3.new(.5,.5,.5)
-
-local acceleration = 10
-local deceleration = 10
-local turnAlpha = .30
-local alphaDampening = .2
-
-local Equipped = false
-
-local LastPosition = nil
-local ActualVelocity = Vector3.new(0,0,0)
-
-local FakeHandle = nil
-local FrontWheel = Instance.new(&apos;Part&apos;)
-FrontWheel.FormFactor = &apos;Custom&apos;
-FrontWheel.CanCollide = false
-FrontWheel.Size = Vector3.new(0,0,0)
-
-local Fire = Instance.new(&apos;Fire&apos;)
-Fire.Color = Color3.new(1, 0, 0)
-Fire.SecondaryColor = Color3.new(1, 1, 1)
-Fire.Parent = FrontWheel
-
-local WheelMesh = Instance.new(&apos;SpecialMesh&apos;)
-WheelMesh.MeshId = &quot;http://www.roblox.com/asset/?id=122202439&quot;
-WheelMesh.TextureId = &quot;http://www.roblox.com/asset/?id=122185866&quot;
-WheelMesh.Scale = Vector3.new(2.5,2.5,2.5)
-&#9;
-local Light = FrontWheel:Clone()
-local LightWeld = nil
-
-local FrontMotor = nil
-local BackWheel = FrontWheel:Clone()
-local BackMotor = nil
-
-local CurrentSpeed=0
-local turnSpeed=0
-local turnSpeedAim=5
-function ThrustUpdater()
-&#9;while Equipped do
-&#9;&#9;local direction = Character:FindFirstChild(&quot;Torso&quot;).CFrame.lookVector
-&#9;&#9;direction = Vector3.new(direction.x,0,direction.z).unit
-&#9;&#9;thrustForce.velocity = direction*(CurrentSpeed)
-&#9;&#9;EngineSound.Pitch =&#9;1+(math.abs(CurrentSpeed/50)*1)
-&#9;&#9;
-&#9;&#9;if FrontMotor then
-&#9;&#9;&#9;FrontMotor.DesiredAngle=(999999999)*&#9;(-CurrentSpeed/math.abs(CurrentSpeed))
-&#9;&#9;&#9;FrontMotor.MaxVelocity = CurrentSpeed/250
-&#9;&#9;&#9;if BackMotor then 
-&#9;&#9;&#9;&#9;BackMotor.DesiredAngle = FrontMotor.DesiredAngle
-&#9;&#9;&#9;&#9;BackMotor.MaxVelocity = FrontMotor.MaxVelocity&#9;
-&#9;&#9;&#9;end&#9;
-&#9;&#9;end
-&#9;&#9;
-&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, turnSpeed, 0)
-&#9;&#9;if math.abs(turnSpeed)&gt;alphaDampening&#9; then
-&#9;&#9;&#9;turnSpeed= turnSpeed-((alphaDampening)*(math.abs(turnSpeed)/turnSpeed))
-&#9;&#9;else 
-&#9;&#9;&#9;turnSpeed = 0&#9;&#9;
-&#9;&#9;end
-&#9;&#9;local leanAmount= -turnSpeed*(math.pi/6)/4
-&#9;&#9;
-&#9;&#9;if not forwards or back then
-&#9;&#9;&#9;CurrentSpeed = CurrentSpeed*.99&#9;&#9;&#9;
-&#9;&#9;end&#9;&#9;
-&#9;&#9;
-&#9;&#9;local xzAngle = math.atan2(Character.Torso.CFrame.lookVector.z,0, Character.Torso.CFrame.lookVector.x)
-&#9;&#9;TurnGyro.cframe=CFrame.Angles(leanAmount*direction.x,0,leanAmount*direction.z)
-&#9;&#9;ExhaustSmoke.Opacity = (math.min(math.abs(CurrentSpeed),10)/10)*.5
-&#9;&#9;if LastPosition then
-&#9;&#9;&#9;local npos = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
-&#9;&#9;&#9;--(npos-LastPosition).magnitude
-&#9;&#9;&#9;local myspeed =Vector3.new(FakeHandle.Velocity.X,0,FakeHandle.Velocity.Z).magnitude
-&#9;&#9;&#9;local velocityDifference = math.abs((myspeed - (thrustForce.velocity.magnitude)))
-&#9;&#9;&#9;if myspeed&gt;3 and thrustForce.velocity.magnitude&gt;3 and velocityDifference&gt; .7*thrustForce.velocity.magnitude then
-&#9;&#9;&#9;&#9;print(&apos;stopping: &apos;..myspeed..&quot; : &quot; .. thrustForce.velocity.magnitude)
-&#9;&#9;&#9;&#9;CurrentSpeed=CurrentSpeed*.9
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;end
-&#9;&#9;LastPosition = Vector3.new(Character.Torso.CFrame.p.x,0,Character.Torso.CFrame.p.z)
-&#9;&#9;wait(1/60)
-&#9;end
-&#9;
-end
-
-
-function onEquipped(nmouse)
-&#9;print(&apos;got to equipped&apos;)
-&#9;Spawn(function()
-&#9;&#9;if Equipped then
-&#9;&#9;&#9;return
-&#9;&#9;end
-&#9;&#9;--
-&#9;&#9;&#9;Character=script.Parent.Parent
-&#9;&#9;&#9;local myTorso = WaitForChild(Character,&apos;Torso&apos;)
-&#9;&#9;&#9;if not FakeHandle then
-&#9;&#9;&#9;&#9;FakeHandle = handle:Clone()
-&#9;&#9;&#9;&#9;FakeHandle.Name = &apos;FakeHandle&apos;
-&#9;&#9;&#9;&#9;FakeHandle.Size = Vector3.new(1, 4.89, 6.08)
-&#9;&#9;&#9;&#9;FakeHandle:WaitForChild(&apos;Mesh&apos;).MeshId = &quot;http://www.roblox.com/asset/?id=122185640&quot;
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;end
-&#9;&#9;&#9;FakeHandle.Parent = script.Parent
-&#9;&#9;&#9;FakeHandle.CFrame = myTorso.CFrame
-&#9;&#9;&#9;handle.Transparency = 1
-
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;frontwheel = FrontWheel:Clone() --Fix implemented by Luckymaxer
-&#9;&#9;&#9;&#9;frontwheel.Parent = FakeHandle
-&#9;&#9;&#9;&#9;&#9;FrontMotor = Instance.new(&apos;Motor6D&apos;)
-&#9;&#9;&#9;&#9;&#9;FrontMotor.C0 = CFrame.Angles(0,math.pi/2,0)+Vector3.new(0,-1.1,-3.6)
-&#9;&#9;&#9;&#9;&#9;FrontMotor.C1 = CFrame.Angles(0,-math.pi/2,0)
-&#9;&#9;&#9;&#9;&#9;FrontMotor.Part0 = FakeHandle
-&#9;&#9;&#9;&#9;&#9;FrontMotor.Part1 = frontwheel
-&#9;&#9;&#9;&#9;&#9;FrontMotor.Parent =FakeHandle
-&#9;&#9;&#9;&#9;WheelMesh:Clone().Parent = frontwheel
-&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;backwheel = BackWheel:Clone()
-&#9;&#9;&#9;&#9;backwheel.Parent = FakeHandle
-&#9;&#9;&#9;&#9;&#9;BackMotor = Instance.new(&apos;Motor6D&apos;)
-&#9;&#9;&#9;&#9;&#9;BackMotor.C0 = CFrame.Angles(0,math.pi/2,0)+Vector3.new(0,-1.1,2.8)
-&#9;&#9;&#9;&#9;&#9;BackMotor.C1 = CFrame.Angles(0,-math.pi/2,0)
-&#9;&#9;&#9;&#9;&#9;BackMotor.Part0 = FakeHandle
-&#9;&#9;&#9;&#9;&#9;BackMotor.Part1 = backwheel
-&#9;&#9;&#9;&#9;&#9;BackMotor.Parent =FakeHandle
-&#9;&#9;&#9;&#9;WheelMesh:Clone().Parent = backwheel
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;light = Light:Clone()
-&#9;&#9;&#9;&#9;light.Parent = FakeHandle
-&#9;&#9;&#9;&#9;&#9;LightWeld = Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;&#9;&#9;LightWeld.C0 = CFrame.new(0, 0, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
-&#9;&#9;&#9;&#9;&#9;LightWeld.C1 = CFrame.new(-0.140708923, -0.749996185, -0.9377985, -1.63912773e-007, -1.27675008e-008, -1.00000024, -2.05633661e-008, 0.99999994, 3.65663944e-009, 0.999999881, 5.65337004e-008, -7.4505806e-008)
-&#9;&#9;&#9;&#9;&#9;LightWeld.Part0 = FakeHandle
-&#9;&#9;&#9;&#9;&#9;LightWeld.Part1 = light
-&#9;&#9;&#9;&#9;&#9;LightWeld.Parent = FakeHandle
-&#9;&#9;&#9;&#9;&#9;local tlight = Instance.new(&apos;SpotLight&apos;)
-&#9;&#9;&#9;&#9;&#9;tlight.Brightness = 5
-&#9;&#9;&#9;&#9;&#9;tlight.Angle=45
-&#9;&#9;&#9;&#9;&#9;tlight.Color = Color3.new(255/255,252/255,153/255)
-&#9;&#9;&#9;&#9;&#9;tlight.Parent = light
-&#9;&#9;&#9;&#9;&#9;tlight.Range = 40
-&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;
-&#9;&#9;&#9;CurrentSpeed=0
-&#9;&#9;&#9;turnSpeed=0
-&#9;&#9;&#9;print(&apos;got in if&apos;)
-&#9;&#9;&#9;mouse=nmouse
-&#9;&#9;&#9;Equipped = true
-&#9;&#9;&#9;
-&#9;&#9;&#9;handle.CFrame = myTorso.CFrame
-&#9;&#9;&#9;WaitForChild(Character,&apos;Humanoid&apos;).PlatformStand = true
-&#9;&#9;&#9;
-&#9;&#9;&#9;if RotationForce then RotationForce:Destroy() end
-&#9;&#9;&#9;RotationForce = Instance.new(&apos;BodyAngularVelocity&apos;)
-&#9;&#9;&#9;RotationForce.maxTorque = Vector3.new(0, math.huge, 0)
-&#9;&#9;&#9;RotationForce.angularvelocity = Vector3.new(0, 0, 0)
-&#9;&#9;&#9;RotationForce.Parent = myTorso
-&#9;&#9;&#9;
-&#9;&#9;&#9;if thrustForce then thrustForce:Destroy() end
-&#9;&#9;&#9;thrustForce = Instance.new(&apos;BodyVelocity&apos;)
-&#9;&#9;&#9;thrustForce.maxForce = Vector3.new(math.huge,0,math.huge)
-&#9;&#9;&#9;thrustForce.velocity = Vector3.new(0,0,0)
-&#9;&#9;&#9;thrustForce.P = 100
-&#9;&#9;&#9;thrustForce.Parent = FakeHandle--myTorso
-&#9;&#9;&#9;
-&#9;&#9;&#9;if TurnGyro then TurnGyro:Destroy() end
-&#9;&#9;&#9;TurnGyro = Instance.new(&apos;BodyGyro&apos;)
-&#9;&#9;&#9;TurnGyro.maxTorque = Vector3.new(5000,0,5000)
-&#9;&#9;&#9;TurnGyro.P = 300
-&#9;&#9;&#9;TurnGyro.D=100
-&#9;&#9;&#9;TurnGyro.Parent = myTorso
-&#9;&#9;&#9;
-&#9;&#9;&#9;Spawn(ThrustUpdater)
-&#9;&#9;&#9;if HoldAniTrack then HoldAniTrack:Stop() end
-&#9;&#9;&#9;HoldAniTrack = WaitForChild(Character,&apos;Humanoid&apos;):LoadAnimation(HoldAni)
-&#9;&#9;&#9;HoldAniTrack:Play()
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;myTorso.Anchored = true
-&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;if torsoWeld then torsoWeld:Destroy() end
-&#9;&#9;&#9;&#9;torsoWeld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;&#9;torsoWeld.C0 = CFrame.Angles(0,0,0) + Vector3.new(0, -1.6, -0.7)
-&#9;&#9;&#9;&#9;torsoWeld.Part0 = myTorso
-&#9;&#9;&#9;&#9;torsoWeld.Part1 = FakeHandle
-&#9;&#9;&#9;&#9;torsoWeld.Parent = FakeHandle
-&#9;&#9;&#9;&#9;FakeHandle.CanCollide = true
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;wait(.1)
-&#9;&#9;&#9;&#9;FakeHandle.CanCollide = true
-&#9;&#9;&#9;&#9;myTorso.Anchored = false
-&#9;&#9;&#9;&#9;myTorso.CFrame = myTorso.CFrame+Vector3.new(0,3,0)
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;
-&#9;&#9;&#9;if key_down_connect then
-&#9;&#9;&#9;&#9;key_down_connect:disconnect()
-&#9;&#9;&#9;&#9;key_up_connect:disconnect()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;key_down_connect=mouse.KeyDown:connect(keyDownFunc)
-&#9;&#9;&#9;key_up_connect=mouse.KeyUp:connect(keyUpFunc)
-&#9;&#9;
-&#9;&#9;&#9;SmokePart.Parent = FakeHandle
-
-&#9;&#9;&#9;local tweld=Instance.new(&apos;Weld&apos;)
-&#9;&#9;&#9;tweld.C0 = CFrame.new(0.600000024, 1.10000014, -2.20000005, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-&#9;&#9;&#9;tweld.Part0 = SmokePart
-&#9;&#9;&#9;tweld.Part1 = FakeHandle
-&#9;&#9;&#9;tweld.Parent = SmokePart
-&#9;&#9;&#9;
-&#9;&#9;&#9;EngineSound:Play()
-&#9;&#9;&#9;Character.Humanoid.WalkSpeed = 0
-&#9;&#9;--end
-&#9;end)
-end
-
-
-function onUnequipped()
-&#9;Equipped = false
-&#9;if SmokePart then
-&#9;&#9;SmokePart.Parent = nil
-&#9;end
-&#9;if FakeHandle then
-&#9;&#9;FakeHandle:Remove()
-&#9;&#9;FakeHandle = nil
-&#9;end
-&#9;handle.Transparency = 0
-&#9;--handle.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;forwards = false
-&#9;left = false
-&#9;back = false
-&#9;right = false&#9;
-&#9;if RotationForce then
-&#9;&#9;RotationForce:Destroy()
-&#9;&#9;RotationForce=nil
-&#9;end
-&#9;if thrustForce then
-&#9;&#9;thrustForce:Destroy()
-&#9;&#9;thrustForce=nil
-&#9;end
-&#9;if TurnGyro then
-&#9;&#9;TurnGyro:Destroy()
-&#9;&#9;TurnGyro=nil
-&#9;end
-&#9;if HoldAniTrack then
-&#9;&#9;HoldAniTrack:Stop()
-&#9;end
-&#9;if torsoWeld then
-&#9;&#9;torsoWeld:Destroy()
-&#9;&#9;torsoWeld=nil
-&#9;end 
-&#9;if key_down_connect then
-&#9;&#9;key_down_connect:disconnect()
-&#9;&#9;key_down_connect=nil
-&#9;end
-&#9;if key_up_connect then
-&#9;&#9;key_up_connect:disconnect()
-&#9;&#9;key_up_connect=nil
-&#9;end
-&#9;if EngineSound then
-&#9;&#9;EngineSound:Stop()
-&#9;end
-&#9;if Character and Character:FindFirstChild(&apos;Humanoid&apos;) then
-&#9;&#9;Character.Humanoid.WalkSpeed = 16
-&#9;&#9;Character.Humanoid.PlatformStand = false
-&#9;end
-&#9;print(&quot;I unequipped!&quot;)
-end
-
-
-
-
-function keyUpFunc(key)&#9;
-&#9;if key == nil then return end
-&#9;local key = key:lower()
-&#9;if key == &quot;w&quot; then
-&#9;&#9;forwards = false
-&#9;elseif key == &quot;a&quot; then
-&#9;&#9;left = false
-&#9;elseif key == &quot;s&quot; then
-&#9;&#9;back = false
-&#9;elseif key == &quot;d&quot; then
-&#9;&#9;right = false&#9;
-&#9;end
-end
-local LastSpace = tick()
-function keyDownFunc(key)&#9;
-&#9;if key == nil then return end
-&#9;if inIntro then return end
-&#9;local key = key:lower()
-&#9;if key == &quot;w&quot; then
-&#9;&#9;forwards = true
-&#9;&#9;while forwards do
-&#9;&#9;&#9;CurrentSpeed = math.min(70,CurrentSpeed+(acceleration*(1/30)))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &quot;a&quot; then
-&#9;&#9;left = true
-&#9;&#9;while left do
-&#9;&#9;&#9;turnSpeed= math.min(5,turnSpeed+(turnAlpha))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &quot;s&quot; then
-&#9;&#9;back = true
-&#9;&#9;while back do
-&#9;&#9;&#9;if CurrentSpeed&gt;0 then
-&#9;&#9;&#9;&#9;CurrentSpeed = math.max(-20,CurrentSpeed-(deceleration*2.8*(1/30)))
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;CurrentSpeed = math.max(-20,CurrentSpeed-(deceleration*(1/30)))
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &quot;d&quot; then
-&#9;&#9;right = true
-
-&#9;&#9;while right do
-&#9;&#9;&#9;turnSpeed= math.max(-5,turnSpeed-(turnAlpha))
-&#9;&#9;&#9;wait(1/30)
-&#9;&#9;end
-&#9;elseif key == &apos; &apos; then
-&#9;&#9;if tick()-LastSpace&gt;1.9 then
-&#9;&#9;&#9;LastSpace = tick()
-&#9;&#9;&#9;local bforce = Instance.new(&apos;BodyForce&apos;)
-&#9;&#9;&#9;bforce.force = Vector3.new(0,25000,0)
-&#9;&#9;&#9;bforce.Parent = FakeHandle
-&#9;&#9;&#9;wait(.1)
-&#9;&#9;&#9;bforce:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-script.Parent.Unequipped:connect(onUnequipped)
-script.Parent.Equipped:connect(onEquipped)
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="Camera" referent="RBXECAB788B2F0D4CD6A69CD9C7DCBA3CA8">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-5.5857811</X>
-					<Y>19.3977242</Y>
-					<Z>26.0351524</Z>
-					<R00>0.676336884</R00>
-					<R01>0.223950043</R01>
-					<R02>-0.701722682</R02>
-					<R10>1.4901163e-008</R10>
-					<R11>0.952660799</R11>
-					<R12>0.304035217</R12>
-					<R20>0.736592472</R20>
-					<R21>-0.205630243</R21>
-					<R22>0.644319594</R22>
+					<X>-5.33342743</X>
+					<Y>18.9051781</Y>
+					<Z>25.930954</Z>
+					<R00>0.709634244</R00>
+					<R01>0.242114857</R01>
+					<R02>-0.661664307</R02>
+					<R10>-0</R10>
+					<R11>0.939103365</R11>
+					<R12>0.343634814</R12>
+					<R20>0.704570234</R20>
+					<R21>-0.243855029</R21>
+					<R22>0.666419864</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-4.18233585</X>
-					<Y>18.7896538</Y>
-					<Z>24.7465134</Z>
+					<X>-4.2747674</X>
+					<Y>18.3553638</Y>
+					<Z>24.8646851</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
