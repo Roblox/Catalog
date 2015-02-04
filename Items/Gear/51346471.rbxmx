@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX750F297FA0D5468695F2B6D008DD4322">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>0</R21>
 				<R22>-1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Kodachi</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id= 51274893 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX5CA63DFE4F5548169D38C525EA13D4E7">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -39,11 +40,11 @@
 					<X>-9.00500107</X>
 					<Y>35.2500496</Y>
 					<Z>24.005024</Z>
-					<R00>1</R00>
-					<R01>0</R01>
+					<R00>0.711067379</R00>
+					<R01>0.70312345</R01>
 					<R02>0</R02>
-					<R10>0</R10>
-					<R11>-1</R11>
+					<R10>0.70312345</R10>
+					<R11>-0.711067379</R11>
 					<R12>0</R12>
 					<R20>0</R20>
 					<R21>0</R21>
@@ -91,7 +92,7 @@
 					<Z>0.419998407</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX8FE0E911E6C1406898F5EF3B0D6DD8C1">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,7 +118,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
+		<Item class="LocalScript" referent="RBX2A998A3A06C84956A22EF3DAC55F1D3B">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -155,17 +156,23 @@ Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBXAE9C8D1307C84FF6B012857B688C7C16">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">KodachiScript</string>
-				<ProtectedString name="Source">-- Right Sword 51288759 
+				<ProtectedString name="Source">--[[
+&#9;Fixed by ArceusInator.  Now works with FE and has a mobile button for equipping the second kodachi.  Fixed teamkilling.  Fixed an issue with the animation freezing.
+--]]
+
+-- Right Sword 51288759 
 -- Left Sword 51286923
 -- Kodachi without Right Sword 51287154 
 -- Sheath Only 51286751
 -- Full Kodachi 51237272
 -- Texture 51237309
+
+local GLib = require(206209239)
 
 local Tool = script.Parent
 local Kodachi = Tool.Handle
@@ -192,7 +199,8 @@ function blow(hit)
 &#9;vCharacter = Tool.Parent
 &#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
 &#9;vPlayer = game.Players:GetPlayerFromCharacter(vCharacter)
-&#9;if humanoid ~= nil and humanoid ~= myHumanoid and myHumanoid ~= nil then 
+&#9;local tPlayer = GLib.GetPlayerFromPart(hit)
+&#9;if humanoid ~= nil and humanoid ~= myHumanoid and myHumanoid ~= nil and (not tPlayer or not GLib.IsTeammate(tPlayer, vPlayer)) then 
 &#9;&#9;rightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
 &#9;&#9;if rightArm then 
 &#9;&#9;&#9;rightGrip = rightArm:FindFirstChild(&quot;RightGrip&quot;)
@@ -319,7 +327,93 @@ Tool.Unequipped:connect(onUnequipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBX668E935B58F84CB29CEB4EB7CE52E738">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">local CAS, UIS = game:GetService&apos;ContextActionService&apos;, game:GetService&apos;UserInputService&apos;
+
+script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.Button1Down:connect(function() script.Parent.Input:FireServer(&apos;Mouse1&apos;, true, mouse.Hit.p) end)
+&#9;mouse.Button1Up:connect(function() script.Parent.Input:FireServer(&apos;Mouse1&apos;, false, mouse.Hit.p) end)
+&#9;mouse.KeyDown:connect(function(key) script.Parent.Input:FireServer(&apos;KeyDown&apos;, key) end)
+&#9;
+&#9;if UIS.TouchEnabled then
+&#9;&#9;CAS:BindActionToInputTypes(
+&#9;&#9;&#9;&apos;TwinKodachi_DualWeild&apos;,
+&#9;&#9;&#9;function(action, state, input)
+&#9;&#9;&#9;&#9;if state == Enum.UserInputState.Begin then
+&#9;&#9;&#9;&#9;&#9;script.Parent.Input:FireServer(&apos;KeyDown&apos;, &apos;q&apos;)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end,
+&#9;&#9;&#9;true,
+&#9;&#9;&#9;&apos;&apos;
+&#9;&#9;)
+&#9;&#9;CAS:SetTitle(&apos;TwinKodachi_DualWeild&apos;, &apos;Dual Weild&apos;)
+&#9;end
+end)
+
+script.Parent.Unequipped:connect(function()
+&#9;if UIS.TouchEnabled then
+&#9;&#9;CAS:UnbindAction(&apos;TwinKodachi_DualWeild&apos;)
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX209A90F48364464B9A00EBDA5D705FA4">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=49867748</url></Content>
+				<string name="Name">KodachiWalk</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXDB8870BBAFE6467AAF133F822DF76F4E">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=211953288</url></Content>
+				<string name="Name">SlashAnim</string>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBX33520E5E5F5B4F008D812CF85F72E492">
+			<Properties>
+				<string name="Name">SwordActive</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBX7AB065053FD04D3F828AA26394C62139">
+			<Properties>
+				<string name="Name">HiddenBladeActive</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXD4736285ADD04483A75AECB329338A67">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=51343043</url></Content>
+				<string name="Name">Battojutsu</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXA2348F5EE024496DB4AB8F7AA0673389">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=51343632</url></Content>
+				<string name="Name">DualSlash</string>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBXC9CE51A82D9043F281B90CB5CFBC1BE1">
+			<Properties>
+				<string name="Name">Batto</string>
+				<double name="Value">0</double>
+			</Properties>
+		</Item>
+		<Item class="Sound" referent="RBXB5015281C1BE4AC1AE6827C208E62D0F">
+			<Properties>
+				<bool name="Looped">false</bool>
+				<string name="Name">DualSlashSound</string>
+				<float name="Pitch">2</float>
+				<bool name="PlayOnRemove">false</bool>
+				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=48156432 </url></Content>
+				<float name="Volume">1</float>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX5CBEB793625E437C89CF19AFD1CBC7B7">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -388,7 +482,7 @@ function untagHumanoid(humanoid)
 end
 
 function initiateHiddenBlade(key)
-&#9;key = key:lower()
+&#9;key = key:lower() print(&apos;onkey&apos;,key==&apos;q&apos;,key==&apos;w&apos;)
 &#9;if key == &quot;q&quot; then&#9;&#9;
 &#9;&#9;vChar = Tool.Parent
 &#9;&#9;myHumanoid = vChar:FindFirstChild(&quot;Humanoid&quot;)
@@ -442,7 +536,7 @@ function initiateHiddenBlade(key)
 end
 
 function onActivatedLocal()
-&#9;vCharacter = game.Players.LocalPlayer.Character
+&#9;vCharacter = Tool.Parent
 
 &#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
 &#9;if myHumanoid == nil then 
@@ -456,10 +550,11 @@ function onActivatedLocal()
 &#9;rightGrip = rightArm:FindFirstChild(&quot;RightGrip&quot;)
 &#9;rightGrip=rightArm:WaitForChild(&quot;RightGrip&quot;)
 &#9;print(&quot;FOUND GRIP&quot;)
+&#9;if slashAnim then slashAnim:Stop() end
 &#9;if batto.Value == 0.0 then
 &#9;&#9;print(&quot;Playing Battojutsu&quot;)
-&#9;&#9;slashAnim = myHumanoid:LoadAnimation(Tool.Battojutsu)
-&#9;&#9;if slashAnim then slashAnim:Play() &#9;end
+&#9;&#9;stabAnim = myHumanoid:LoadAnimation(Tool.SlashAnim)
+&#9;&#9;if stabAnim then stabAnim:Play() end
 &#9;elseif hiddenBladeActive.Value == 0.0 then
 &#9;&#9;stabAnim = myHumanoid:LoadAnimation(Tool.SlashAnim)
 &#9;&#9;if stabAnim then stabAnim:Play() &#9;end
@@ -475,17 +570,26 @@ function onActivatedLocal()
 &#9;&#9;wait()
 &#9;end
 end
-function onEquippedLocal(mouse)
-&#9;vCharacter = game.Players.LocalPlayer.Character
+function onEquippedLocal()
+&#9;vCharacter = Tool.Parent
 &#9;if vCharacter then
 &#9;&#9;myHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;if myHumanoid then 
 &#9;&#9;&#9;walkAnim = myHumanoid:LoadAnimation(Tool:WaitForChild(&quot;KodachiWalk&quot;))
 &#9;&#9;&#9;walkAnim:Play()
 &#9;&#9;end
-&#9;&#9;mouse.KeyDown:connect(initiateHiddenBlade)
 &#9;end
 end
+
+Tool.Input.OnServerEvent:connect(function(client, action, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if action == &apos;KeyDown&apos; then
+&#9;&#9;&#9;local key = ...
+&#9;&#9;&#9;
+&#9;&#9;&#9;initiateHiddenBlade(key)
+&#9;&#9;end
+&#9;end
+end)
 
 function onUnequippedLocal()
 &#9;if walkAnim then walkAnim:Stop() end
@@ -507,84 +611,38 @@ Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)
 
 Tool.Activated:connect(onActivatedLocal)
-</ProtectedString>
+
+print&apos;asdf&apos;</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX6">
+		<Item class="RemoteEvent" referent="RBX6BEB5D98683D4FA4B31CAE1FCCEB6378">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=49867748</url></Content>
-				<string name="Name">KodachiWalk</string>
+				<string name="Name">Input</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX7">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=51298927</url></Content>
-				<string name="Name">SlashAnim</string>
-			</Properties>
-		</Item>
-		<Item class="NumberValue" referent="RBX8">
-			<Properties>
-				<string name="Name">SwordActive</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="NumberValue" referent="RBX9">
-			<Properties>
-				<string name="Name">HiddenBladeActive</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX10">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=51343043</url></Content>
-				<string name="Name">Battojutsu</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX11">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=51343632</url></Content>
-				<string name="Name">DualSlash</string>
-			</Properties>
-		</Item>
-		<Item class="NumberValue" referent="RBX12">
-			<Properties>
-				<string name="Name">Batto</string>
-				<double name="Value">0</double>
-			</Properties>
-		</Item>
-		<Item class="Sound" referent="RBX13">
-			<Properties>
-				<bool name="Looped">false</bool>
-				<string name="Name">DualSlashSound</string>
-				<float name="Pitch">2</float>
-				<bool name="PlayOnRemove">false</bool>
-				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=48156432 </url></Content>
-				<float name="Volume">1</float>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX14">
+		<Item class="Camera" referent="RBXB9E8D4BDFAA44E6799712860E3DA4C85">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-9.06987762</X>
-					<Y>34.2400246</Y>
-					<Z>19.213562</Z>
-					<R00>-0.999902427</R00>
-					<R01>-0.00214594346</R01>
-					<R02>-0.0138063515</R02>
+					<X>-8.6599617</X>
+					<Y>34.6394997</Y>
+					<Z>21.0365124</Z>
+					<R00>-0.999902725</R00>
+					<R01>0.00145801937</R01>
+					<R02>0.0138722686</R02>
 					<R10>-0</R10>
-					<R11>0.988135159</R11>
-					<R12>-0.153587431</R12>
-					<R20>0.0139721297</R20>
-					<R21>-0.15357244</R21>
-					<R22>-0.988038659</R22>
+					<R11>0.994522035</R11>
+					<R12>-0.104527414</R12>
+					<R20>-0.013948679</R20>
+					<R21>-0.104517244</R21>
+					<R22>-0.994425297</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-9.04226494</X>
-					<Y>34.5471992</Y>
-					<Z>21.1896381</Z>
+					<X>-8.70215225</X>
+					<Y>34.9574051</Y>
+					<Z>24.0609169</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
