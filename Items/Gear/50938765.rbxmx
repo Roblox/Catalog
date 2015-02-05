@@ -19,6 +19,7 @@
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">ScytheOfSingularity</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=50880017 </url></Content>
 			<string name="ToolTip"></string>
@@ -39,12 +40,12 @@
 					<X>-1.29999995</X>
 					<Y>30.2000008</Y>
 					<Z>21.8999996</Z>
-					<R00>1</R00>
-					<R01>-0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>-0</R11>
-					<R12>1</R12>
+					<R00>0.78842169</R00>
+					<R01>0</R01>
+					<R02>-0.615135252</R02>
+					<R10>0.615135252</R10>
+					<R11>0</R11>
+					<R12>0.78842169</R12>
 					<R20>0</R20>
 					<R21>-1</R21>
 					<R22>0</R22>
@@ -152,6 +153,8 @@ Players = game:GetService(&quot;Players&quot;)
 ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
 ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
 
+local UIS, CAS = game:GetService&apos;UserInputService&apos;, game:GetService&apos;ContextActionService&apos;
+
 Animations = {}
 Sounds = {}
 
@@ -200,6 +203,22 @@ function Equipped(Mouse)
 &#9;&#9;Key = Key:lower()
 &#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
 &#9;end)
+&#9;
+&#9;if UIS.TouchEnabled then
+&#9;&#9;CAS:BindActionToInputTypes(
+&#9;&#9;&#9;&apos;ScytheOfSingularity_SpinnyPully&apos;,
+&#9;&#9;&#9;function(name, state, input)
+&#9;&#9;&#9;&#9;if state == Enum.UserInputState.Begin then
+&#9;&#9;&#9;&#9;&#9;InvokeServer(&apos;KeyPress&apos;, {Key = &apos;w&apos;, Down = true})
+&#9;&#9;&#9;&#9;&#9;InvokeServer(&apos;KeyPress&apos;, {Key = &apos;w&apos;, Down = true})
+&#9;&#9;&#9;&#9;&#9;InvokeServer(&quot;Click&quot;, true)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end,
+&#9;&#9;&#9;true,
+&#9;&#9;&#9;&apos;&apos;
+&#9;&#9;)
+&#9;&#9;CAS:SetTitle(&apos;ScytheOfSingularity_SpinnyPully&apos;, &apos;Singularity&apos;)
+&#9;end
 end
 
 function Unequipped()&#9;
@@ -215,6 +234,10 @@ function Unequipped()&#9;
 &#9;end
 &#9;Animations = {}
 &#9;Sounds = {}&#9;
+&#9;
+&#9;if UIS.TouchEnabled then
+&#9;&#9;CAS:UnbindAction(&apos;ScytheOfSingularity_SpinnyPully&apos;)
+&#9;end
 end
 
 Tool.Equipped:connect(Equipped)
@@ -239,6 +262,10 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
 				<ProtectedString name="Source">--Rescripted by Luckymaxer
+--[[
+&#9;Fixed by ArceusInator
+--]]
+local GLib = require(206209239)
 
 Tool = script.Parent
 Handle = Tool:WaitForChild(&quot;Handle&quot;)
@@ -311,24 +338,28 @@ function UntagHumanoid(humanoid)
 end
 
 function Blow(Hit)
-&#9;if not Hit or not Hit.Parent or not Equipped or not Humanoid or not Humanoid.Parent or Humanoid.Health == 0 then
-&#9;&#9;return
+&#9;local ownerPlayer, targetPlayer = GLib.GetPlayerFromPart(script), GLib.GetPlayerFromPart(Hit)
+&#9;
+&#9;if not GLib.IsTeammate(ownerPlayer, targetPlayer) then
+&#9;&#9;if not Hit or not Hit.Parent or not Equipped or not Humanoid or not Humanoid.Parent or Humanoid.Health == 0 then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local humanoid = Hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if not humanoid or humanoid == Humanoid then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local RightArm = Character:FindFirstChild(&quot;Right Arm&quot;)
+&#9;&#9;if not RightArm then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;local RightGrip = RightArm:FindFirstChild(&quot;RightGrip&quot;)
+&#9;&#9;if not RightGrip and (RightGrip.Part0 ~= Handle and RightGrip.Part1 ~= Handle) then
+&#9;&#9;&#9;return
+&#9;&#9;end
+&#9;&#9;UntagHumanoid(humanoid)
+&#9;&#9;TagHumanoid(humanoid, Player)&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;humanoid:TakeDamage(Damage)
 &#9;end
-&#9;local humanoid = Hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if not humanoid or humanoid == Humanoid then
-&#9;&#9;return
-&#9;end
-&#9;local RightArm = Character:FindFirstChild(&quot;Right Arm&quot;)
-&#9;if not RightArm then
-&#9;&#9;return
-&#9;end
-&#9;local RightGrip = RightArm:FindFirstChild(&quot;RightGrip&quot;)
-&#9;if not RightGrip and (RightGrip.Part0 ~= Handle and RightGrip.Part1 ~= Handle) then
-&#9;&#9;return
-&#9;end
-&#9;UntagHumanoid(humanoid)
-&#9;TagHumanoid(humanoid, Player)&#9;&#9;&#9;&#9;&#9;
-&#9;humanoid:TakeDamage(Damage)
 end
 
 function SlashIt(myHumanoid, Torso)&#9;
@@ -482,29 +513,29 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX9">
+		<Item class="Camera" referent="RBXDA09E8296FB14196B57D75B13DB1BB85">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.2380805</X>
-					<Y>32.5822449</Y>
-					<Z>18.0456409</Z>
-					<R00>-0.997599661</R00>
-					<R01>-0.0261163116</R01>
-					<R02>0.0641323775</R02>
-					<R10>-0</R10>
-					<R11>0.926151335</R11>
-					<R12>0.377152026</R12>
-					<R20>-0.0692461133</R20>
-					<R21>0.376246721</R21>
-					<R22>-0.923928201</R22>
+					<X>-1.34622037</X>
+					<Y>30.4002438</Y>
+					<Z>17.8918438</Z>
+					<R00>-0.999994099</R00>
+					<R01>-2.04512702e-007</R01>
+					<R02>0.00343799544</R02>
+					<R10>1.42108547e-014</R10>
+					<R11>1</R11>
+					<R12>5.94860358e-005</R12>
+					<R20>-0.00343799544</R20>
+					<R21>5.94856865e-005</R21>
+					<R22>-0.999994099</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-1.34069228</X>
-					<Y>31.9788017</Y>
-					<Z>19.5239258</Z>
+					<X>-1.35999978</X>
+					<Y>30.4000053</Y>
+					<Z>21.8997955</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
