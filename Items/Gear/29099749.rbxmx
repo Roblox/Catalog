@@ -3,6 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -18,9 +19,10 @@
 				<R21>0</R21>
 				<R22>-1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Transmorpher</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=28910004</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -42,16 +44,14 @@
 					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
+					<R11>0.774110794</R11>
+					<R12>0.633050203</R12>
 					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<R21>-0.633050203</R21>
+					<R22>0.774110794</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">1</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -84,7 +84,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">1</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1</X>
@@ -115,7 +115,6 @@
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="Sound" referent="RBX3">
@@ -123,11 +122,9 @@
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
 					<float name="Pitch">0.699999988</float>
-					<int name="PlayCount">-1</int>
 					<bool name="PlayOnRemove">false</bool>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=28912774</url></Content>
 					<float name="Volume">1</float>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 		</Item>
@@ -136,7 +133,11 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SnowballLauncher</string>
-				<ProtectedString name="Source">Tool = script.Parent
+				<ProtectedString name="Source">--[[
+&#9;Fixed by ArceusInator.  No longer fires at origin.  No longer makes the HumanoidRootPart visible.  No longer removes player&apos;s faces.
+--]]
+
+Tool = script.Parent
 VELOCITY = 50 -- constant
 loaded=false
 
@@ -165,48 +166,48 @@ script.Parent.TransmorphScript:clone().Parent = Pellet
 function fire(v, shootDirect)
 
 -- find player&apos;s head pos
-	local vCharacter = Tool.Parent
-	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+&#9;local vCharacter = Tool.Parent
+&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
 
-	local head = vCharacter:findFirstChild(&quot;Head&quot;)
-	if head == nil then return end
+&#9;local head = vCharacter:findFirstChild(&quot;Head&quot;)
+&#9;if head == nil then return end
 
-	Tool.Handle.Fire:Play()
-	local launch = head.Position + 10 * v
+&#9;Tool.Handle.Fire:Play()
+&#9;local launch = head.Position + 10 * v
 
-	local missile = Pellet:clone()
-	missile.CFrame = CFrame.new(launch,shootDirect)
-	missile.Position = launch
-	missile.Velocity = v * 200
+&#9;local missile = Pellet:clone()
+&#9;missile.CFrame = CFrame.new(launch,shootDirect)
+&#9;missile.Position = launch
+&#9;missile.Velocity = v * 200
 
-	local force = Instance.new(&quot;BodyForce&quot;)
-	force.force = Vector3.new(0,780,0)
-	force.Parent = missile
+&#9;local force = Instance.new(&quot;BodyForce&quot;)
+&#9;force.force = Vector3.new(0,780,0)
+&#9;force.Parent = missile
 
-	missile.SnowballScript.Disabled = false
-	missile.RaySound:Play()
+&#9;missile.SnowballScript.Disabled = false
+&#9;missile.RaySound:Play()
 
-	missile.Parent = game.Workspace
+&#9;missile.Parent = game.Workspace
 
 end
 
 function gunUp()
-	Tool.GripPos = Vector3.new(0,-0.3,-1)
+&#9;Tool.GripPos = Vector3.new(0,-0.3,-1)
 end
 
 function gunOut()
-	Tool.GripPos = Vector3.new(0,-0.3,-0.8)
+&#9;Tool.GripPos = Vector3.new(0,-0.3,-0.8)
 end
 
 function onEquipped()
 
-	Tool.Handle.Fire:Stop()
+&#9;Tool.Handle.Fire:Stop()
 
 end
 
 function onUnequipped()
 
-	Tool.Handle.Fire:Stop()
+&#9;Tool.Handle.Fire:Stop()
 
 end
 
@@ -215,39 +216,42 @@ Tool.Unequipped:connect(onUnequipped)
 
 
 enabled = true
-function onActivated()
-	if not enabled  then
-		return
-	end
+function onActivated(p)
+&#9;if not enabled  then
+&#9;&#9;return
+&#9;end
 
-	enabled = false
+&#9;enabled = false
 
-	local character = Tool.Parent;
-	local humanoid = character.Humanoid
-	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
-		return 
-	end
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;return 
+&#9;end
 
-	local targetPos = humanoid.TargetPoint
-	local lookAt = (targetPos - character.Head.Position).unit
-	shootDirect = targetPos
+&#9;local targetPos = p
+&#9;local lookAt = (targetPos - character.Head.Position).unit
+&#9;shootDirect = targetPos
 
-	local reload = 0.6
+&#9;local reload = 0.6
 
-	gunUp()
-	fire(lookAt, shootDirect)
-	wait(reload)
-	gunOut()
-	wait(reload)
+&#9;gunUp()
+&#9;fire(lookAt, shootDirect)
+&#9;wait(reload)
+&#9;gunOut()
+&#9;wait(reload)
 
-	enabled = true
+&#9;enabled = true
 
 end
 
-script.Parent.Activated:connect(onActivated)
+script.Parent.Mouse1.OnServerEvent:connect(function(client, down, hit)
+&#9;if client.Character == Tool.Parent and down then
+&#9;&#9;onActivated(hit)
+&#9;end
+end)
 </ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 		<Item class="Script" referent="RBX5">
@@ -267,25 +271,25 @@ HitSound.Volume = 1
 
 function onTouched(hit)
 
-	arrow.RaySound.Looped = false
-	arrow.RaySound:Stop()
-	if hit.Parent ~= nil then
-		HitSound:Play()
-		humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-		if humanoid ~= nil then
-			local transmorpher = arrow.TransmorphScript:clone()
-			transmorpher.Parent = humanoid.Parent
-			transmorpher.Disabled = false
-		else
-			local e = Instance.new(&quot;Explosion&quot;)
-			e.BlastPressure = 0
-			e.BlastRadius = 2
-			e.Position = arrow.Position
-			e.Parent = game.Workspace
-		end
-		arrow:remove()
-	end
-	
+&#9;arrow.RaySound.Looped = false
+&#9;arrow.RaySound:Stop()
+&#9;if hit.Parent ~= nil then
+&#9;&#9;HitSound:Play()
+&#9;&#9;humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if humanoid ~= nil then
+&#9;&#9;&#9;local transmorpher = arrow.TransmorphScript:clone()
+&#9;&#9;&#9;transmorpher.Parent = humanoid.Parent
+&#9;&#9;&#9;transmorpher.Disabled = false
+&#9;&#9;else
+&#9;&#9;&#9;local e = Instance.new(&quot;Explosion&quot;)
+&#9;&#9;&#9;e.BlastPressure = 0
+&#9;&#9;&#9;e.BlastRadius = 2
+&#9;&#9;&#9;e.Position = arrow.Position
+&#9;&#9;&#9;e.Parent = game.Workspace
+&#9;&#9;end
+&#9;&#9;arrow:remove()
+&#9;end
+&#9;
 end
 
 
@@ -293,7 +297,6 @@ end
 connection = arrow.Touched:connect(onTouched)
 
 debris:AddItem(arrow,30)</ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX6">
@@ -303,15 +306,15 @@ debris:AddItem(arrow,30)</ProtectedString>
 				<string name="Name">Local Gui</string>
 				<ProtectedString name="Source">Tool=script.Parent
 function onEquippedLocal(mouse)
-	if mouse == nil then
-		print(&quot;Mouse not found&quot;)
-		return 
-	end
-	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;if mouse == nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;mouse.Button1Down:connect(function() Tool.Mouse1:FireServer(true, mouse.Hit.p) end)
 end
 
 Tool.Equipped:connect(onEquippedLocal)</ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 		<Item class="Script" referent="RBX7">
@@ -328,7 +331,7 @@ local face = nil
 local decals = {}
 
 for i = 1,10 do
-	meshArray[i] = {0,0}
+&#9;meshArray[i] = {0,0}
 end
 
 -- various meshes to transform into
@@ -344,23 +347,22 @@ meshArray[9] = {&quot;http://www.roblox.com/asset/?id=19380188&quot;,&quot;http:
 meshArray[10] = {&quot;http://www.roblox.com/asset/?id=25646277&quot;,&quot;http://www.roblox.com/asset/?id=26415302&quot;}
 
 for j = 1,10 do
-	for i = 1, #playerStuff do
-		
-		local thing = playerStuff[i]
-		if playerStuff[i].className == &quot;Part&quot; then
-			playerStuff[i].Transparency = playerStuff[i].Transparency + transparencyFader
-			if thing.Name == &quot;Head&quot; and thing:FindFirstChild(&quot;face&quot;) ~= nil then
-				face = thing.face
-				thing.face.Parent = nil
-			end
-		elseif playerStuff[i].className == &quot;Hat&quot; then
-			playerStuff[i].Handle.Transparency = playerStuff[i].Handle.Transparency + transparencyFader
-		elseif playerStuff[i].className == &quot;Tool&quot; then
-			playerStuff[i].Handle.Transparency = playerStuff[i].Handle.Transparency + transparencyFader
-		end
+&#9;for i = 1, #playerStuff do
+&#9;&#9;
+&#9;&#9;local thing = playerStuff[i]
+&#9;&#9;if playerStuff[i].className == &quot;Part&quot; then
+&#9;&#9;&#9;playerStuff[i].Transparency = playerStuff[i].Transparency + transparencyFader
+&#9;&#9;&#9;if thing.Name == &quot;Head&quot; and thing:FindFirstChild(&quot;face&quot;) ~= nil then
+&#9;&#9;&#9;&#9;thing.face.Transparency = thing.Transparency
+&#9;&#9;&#9;end
+&#9;&#9;elseif playerStuff[i].className == &quot;Hat&quot; then
+&#9;&#9;&#9;playerStuff[i].Handle.Transparency = playerStuff[i].Handle.Transparency + transparencyFader
+&#9;&#9;elseif playerStuff[i].className == &quot;Tool&quot; then
+&#9;&#9;&#9;playerStuff[i].Handle.Transparency = playerStuff[i].Handle.Transparency + transparencyFader
+&#9;&#9;end
 
-	end
-	wait()
+&#9;end
+&#9;wait()
 end
 
 local torso = Player:FindFirstChild(&quot;Torso&quot;)
@@ -381,21 +383,21 @@ part.Name = &quot;Transmorph&quot;
 local weld = nil
 
 if rightLeg ~= nil then
-	weld = Instance.new(&quot;Weld&quot;)
-	weld.Parent = part
-	weld.Part0 = part
-	weld.Part1 = torso
-	if meshToUse == 2 then
-		weld.C0 = CFrame.new(0,0,1.8) * CFrame.Angles(math.pi/2,math.pi/2,0)
-	elseif meshToUse == 3 then
-		weld.C0 = CFrame.new(0,2,0)
-	elseif meshToUse == 7 then
-		weld.C0 = CFrame.new(0,0,2.5) * CFrame.Angles(math.pi/2,0,0)
-	elseif meshToUse == 10 then
-		weld.C0 = CFrame.new(0,1,0) * CFrame.Angles(0,math.pi/2,0)
-	else
-		weld.C0 = CFrame.new(0,2.5,0)
-	end
+&#9;weld = Instance.new(&quot;Weld&quot;)
+&#9;weld.Parent = part
+&#9;weld.Part0 = part
+&#9;weld.Part1 = torso
+&#9;if meshToUse == 2 then
+&#9;&#9;weld.C0 = CFrame.new(0,0,1.8) * CFrame.Angles(math.pi/2,math.pi/2,0)
+&#9;elseif meshToUse == 3 then
+&#9;&#9;weld.C0 = CFrame.new(0,2,0)
+&#9;elseif meshToUse == 7 then
+&#9;&#9;weld.C0 = CFrame.new(0,0,2.5) * CFrame.Angles(math.pi/2,0,0)
+&#9;elseif meshToUse == 10 then
+&#9;&#9;weld.C0 = CFrame.new(0,1,0) * CFrame.Angles(0,math.pi/2,0)
+&#9;else
+&#9;&#9;weld.C0 = CFrame.new(0,2.5,0)
+&#9;end
 end
 
 wait(15)
@@ -404,47 +406,48 @@ part.Parent = nil
 part:remove()
 
 function recursive(root,class,func)
-	for i,v in pairs(root:children()) do
-		if v:IsA(class) then
-			func(v)
-		end
-		recursive(v,class,func)
-	end
+&#9;for i,v in pairs(root:children()) do
+&#9;&#9;if v:IsA(class) and v.Name~=&apos;HumanoidRootPart&apos; then
+&#9;&#9;&#9;func(v)
+&#9;&#9;end
+&#9;&#9;recursive(v,class,func)
+&#9;end
 end
 
 for i=1,0,-0.1 do --Count backwards ftw
-	wait()
-	recursive(Player,&quot;Part&quot;,function(c) c.Transparency=i end)
+&#9;wait()
+&#9;recursive(Player,&quot;Part&quot;,function(c) c.Transparency=i end)
+&#9;recursive(Player,&quot;Decal&quot;,function(c) c.Transparency=i end)
 end
 
 script:remove()
 
 </ProtectedString>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX8">
+		<Item class="Camera" referent="RBXF3FA4CE1BF85484593ADB6B20EBF4EE4">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>12.3307362</X>
-					<Y>1.50167382</Y>
-					<Z>-4.74110985</Z>
-					<R00>-0.0836863369</R00>
-					<R01>0.107010059</R01>
-					<R02>-0.99072969</R02>
+					<X>15.6406813</X>
+					<Y>1.03375721</Y>
+					<Z>-5.03899431</Z>
+					<R00>-0.0139709953</R00>
+					<R01>0.0395119376</R01>
+					<R02>-0.999121428</R02>
 					<R10>-0</R10>
-					<R11>0.994217277</R11>
-					<R12>0.107386753</R12>
-					<R20>0.996492147</R20>
-					<R21>0.0089868037</R21>
-					<R22>-0.0832023993</R22>
+					<R11>0.999218941</R11>
+					<R12>0.0395157933</R12>
+					<R20>0.999902427</R20>
+					<R21>0.000552074984</R21>
+					<R22>-0.0139600839</R22>
 				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>32.1453362</X>
-					<Y>-0.646061778</Y>
-					<Z>-3.07706141</Z>
+					<X>16.9994888</X>
+					<Y>0.980015635</Y>
+					<Z>-5.02000856</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -456,7 +459,11 @@ script:remove()
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
-				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX6EC4FF11C251495B914DAAA0C015BF28">
+			<Properties>
+				<string name="Name">Mouse1</string>
 			</Properties>
 		</Item>
 	</Item>
