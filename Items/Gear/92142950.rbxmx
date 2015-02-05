@@ -19,9 +19,10 @@
 				<R21>0.803767562</R21>
 				<R22>0.333753556</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Glider</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=92164156</url></Content>
-			<string name="ToolTip">Hang Gliding Bomber</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=161928365 </url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Animation" referent="RBX1">
 			<Properties>
@@ -46,7 +47,11 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Glider_LocalMain</string>
-				<ProtectedString name="Source">--imports
+				<ProtectedString name="Source">--[[
+&#9;Fixed by ArceusInator.  Now replicates, follows mouse cursor, drops bombs properly.
+--]]
+
+--imports
 local RbxUtility = LoadLibrary(&apos;RbxUtility&apos;)
 local Create = RbxUtility.Create
 
@@ -54,6 +59,7 @@ local Create = RbxUtility.Create
 local Tool = script.Parent
 local Equipped = false
 local Flying = false
+local UIS, CAS = game:GetService&apos;UserInputService&apos;, game:GetService&apos;ContextActionService&apos;
 
 --character stuff
 local Character, Player, Humanoid, Torso;
@@ -95,7 +101,7 @@ local function BeginFlight()
 &#9;end)
 &#9;GliderFly:Play(0.3)
 &#9;DesiredFlightCFrame = (Torso.CFrame - Torso.CFrame.p)*CFrame.Angles(0, 0, 0.01)
-&#9;Gui.Frame.Message.Text = 
+&#9;Gui.Frame.Message.Text = --Fix implemented by Luckymaxer
 &#9;&#9;&quot;Click and Hold to direct yourself.\n&quot;..
 &#9;&#9;&quot;Press Q to drop bombs.\n&quot;..
 &#9;&#9;&quot;Jump to stop gliding.&quot;
@@ -138,30 +144,7 @@ local function DropBomb()
 &#9;&#9;--
 &#9;&#9;GliderBomb:Play()
 &#9;&#9;--
-&#9;&#9;local bomb = Create&apos;Part&apos;{
-&#9;&#9;&#9;Size = Vector3.new(1,2,1);
-&#9;&#9;&#9;TopSurface = &apos;Smooth&apos;;
-&#9;&#9;&#9;BottomSurface = &apos;Smooth&apos;;
-&#9;&#9;&#9;Archivable = false;
-&#9;&#9;&#9;Position = (Character[&apos;Left Arm&apos;].CFrame*CFrame.new(0,-1,0)).p - Vector3.new(0,2,0);
-&#9;&#9;&#9;--
-&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{
-&#9;&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=90793198&apos;;
-&#9;&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=90793278&apos;;
-&#9;&#9;&#9;};
-&#9;&#9;&#9;--
-&#9;&#9;&#9;Create&apos;Sound&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;ExplodeSound&apos;;
-&#9;&#9;&#9;&#9;SoundId = &apos;rbxasset://sounds//Rocket shot.wav&apos;;
-&#9;&#9;&#9;};
-&#9;&#9;}
-&#9;&#9;--
-&#9;&#9;local sc = Tool.MineScript:Clone()
-&#9;&#9;sc.Disabled = false
-&#9;&#9;sc.creator.Value = Player
-&#9;&#9;sc.Parent = bomb
-&#9;&#9;--
-&#9;&#9;bomb.Parent = game.Workspace
+&#9;&#9;Tool.DropBomb:FireServer()
 &#9;end
 end
 
@@ -196,6 +179,20 @@ Tool.Equipped:connect(function(mouse)
 &#9;GliderHold = Humanoid:LoadAnimation(Tool.ANIM_Hold)
 &#9;GliderFly =  Humanoid:LoadAnimation(Tool.ANIM_Fly )
 &#9;GliderBomb = Humanoid:LoadAnimation(Tool.ANIM_Bomb)
+&#9;
+&#9;if UIS.TouchEnabled then
+&#9;&#9;CAS:BindActionToInputTypes(
+&#9;&#9;&#9;&apos;SummerHangGlider_DropBomb&apos;,
+&#9;&#9;&#9;function(name, state, input)
+&#9;&#9;&#9;&#9;if state == Enum.UserInputState.Begin then
+&#9;&#9;&#9;&#9;&#9;DropBomb()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end,
+&#9;&#9;&#9;true,
+&#9;&#9;&#9;&apos;&apos;
+&#9;&#9;)
+&#9;&#9;CAS:SetTitle(&apos;SummerHangGlider_DropBomb&apos;, &apos;Drop Bomb&apos;)
+&#9;end
 &#9;--
 &#9;GliderHold:Play()
 &#9;--
@@ -251,6 +248,7 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;if Flying then
 &#9;&#9;&#9;--make me fly
 &#9;&#9;&#9;local moveDir = game.Workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(0.6, 0, 0)
+&#9;&#9;&#9;local moveDir = CFrame.new(workspace.CurrentCamera.CoordinateFrame.p, workspace.CurrentCamera.CoordinateFrame.p+mouse.UnitRay.Direction)
 &#9;&#9;&#9;if MouseDown then
 &#9;&#9;&#9;&#9;local theta = math.acos(DesiredFlightCFrame.lookVector:Dot(moveDir.lookVector))
 &#9;&#9;&#9;&#9;local frac = math.min(1, 1.5*dt/theta)
@@ -293,7 +291,7 @@ Tool.Equipped:connect(function(mouse)
 &#9;&#9;&#9;--print(string.format(&quot;RotVelocity: %.1f, Velo: %.2f&quot;,
 &#9;&#9;&#9;--                    Torso.RotVelocity.y, velo.magnitude))
 &#9;&#9;end
-&#9;&#9;wait()
+&#9;&#9;game:GetService&apos;RunService&apos;.RenderStepped:wait()
 &#9;end
 end)
 
@@ -308,92 +306,12 @@ Tool.Unequipped:connect(function()
 &#9;GliderHold:Stop()
 &#9;GliderFly:Stop()
 &#9;GliderBomb:Stop()
+&#9;
+&#9;if UIS.TouchEnabled then
+&#9;&#9;CAS:UnbindAction&apos;SummerHangGlider_DropBomb&apos;
+&#9;end
 end)</ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX5">
-				<Properties>
-					<bool name="Disabled">false</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">MotorizeRightGrip</string>
-					<ProtectedString name="Source">function Create(ty)
-&#9;return function(data)
-&#9;&#9;local obj = Instance.new(ty)
-&#9;&#9;for k, v in pairs(data) do
-&#9;&#9;&#9;if type(k) == &apos;number&apos; then
-&#9;&#9;&#9;&#9;v.Parent = obj
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;obj[k] = v
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return obj
-&#9;end
-end
-
-local Tool = script.Parent.Parent
-
-local armChildRemovedConn = nil
-local Motor6DGrip = nil
-local EquippedNum = 0
-
-Tool.Equipped:connect(function()
-&#9;EquippedNum = EquippedNum + 1
-&#9;local myEquip = EquippedNum
-&#9;--some vars
-&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
-&#9;local Character = Player.Character
-
-&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
-&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
-&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
-&#9;&#9;local handle = rightGrip.Part1
-
-&#9;&#9;--kill my joint when the normal joint is removed
-&#9;&#9;--this must be done here so that the joint is removed 
-&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
-&#9;&#9;--glitch up.
-&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
-&#9;&#9;&#9;if ch == rightGrip then
-&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
-&#9;&#9;&#9;&#9;Motor6DGrip = nil
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
-&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
-&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
-&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
-&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
-&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
-&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-
-&#9;&#9;--make my new joint
-&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
-&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
-&#9;&#9;&#9;Part0 = rightarm,
-&#9;&#9;&#9;Part1 = handle,
-&#9;&#9;}
-&#9;&#9;--kill the old weld
-&#9;&#9;rightGrip.Part1 = nil
-&#9;&#9;rightGrip.Part0 = nil
-&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
-&#9;end
-end)
-
-Tool.Unequipped:connect(function()
-&#9;EquippedNum = EquippedNum + 1
-&#9;if armChildRemovedConn then
-&#9;&#9;armChildRemovedConn:disconnect()
-&#9;&#9;armChildRemovedConn = nil
-&#9;end
-end)
-</ProtectedString>
-				</Properties>
-			</Item>
 		</Item>
 		<Item class="Script" referent="RBX6">
 			<Properties>
@@ -519,9 +437,9 @@ end)
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-2.5</X>
-					<Y>3.29999995</Y>
-					<Z>-2</Z>
+					<X>0</X>
+					<Y>17</Y>
+					<Z>22</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -574,7 +492,7 @@ end)
 					<Z>2</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX9">
+			<Item class="SpecialMesh" referent="RBX61E48FAE499942C880249BEAF1C61FF4">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -600,29 +518,29 @@ end)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX10">
+		<Item class="Camera" referent="RBXBEBC0D533B6641958E585B4A369D688A">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-7.77951527</X>
-					<Y>9.17206287</Y>
-					<Z>-6.48587084</Z>
-					<R00>-0.851064444</R00>
-					<R01>0.287117928</R01>
-					<R02>-0.439605236</R02>
-					<R10>-1.4901163e-008</R10>
-					<R11>0.837245464</R11>
-					<R12>0.546827316</R12>
-					<R20>0.525061429</R20>
-					<R21>0.465385288</R21>
-					<R22>-0.712549686</R22>
+					<X>5.60490656</X>
+					<Y>20.648243</Y>
+					<Z>26.829174</Z>
+					<R00>0.591913879</R00>
+					<R01>-0.622133851</R01>
+					<R02>0.512432873</R02>
+					<R10>-0</R10>
+					<R11>0.635771871</R11>
+					<R12>0.771876991</R12>
+					<R20>-0.806001306</R20>
+					<R21>-0.456884712</R21>
+					<R22>0.37632215</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-6.90030479</X>
-					<Y>8.07840824</Y>
-					<Z>-5.06077147</Z>
+					<X>1.73096609</X>
+					<Y>14.8129311</Y>
+					<Z>23.9842167</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -634,6 +552,133 @@ end)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MotorizeRightGrip</string>
+				<ProtectedString name="Source">function Create(ty)
+&#9;return function(data)
+&#9;&#9;local obj = Instance.new(ty)
+&#9;&#9;for k, v in pairs(data) do
+&#9;&#9;&#9;if type(k) == &apos;number&apos; then
+&#9;&#9;&#9;&#9;v.Parent = obj
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;obj[k] = v
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;return obj
+&#9;end
+end
+
+local Tool = script.Parent
+
+local armChildRemovedConn = nil
+local Motor6DGrip = nil
+local EquippedNum = 0
+
+Tool.Equipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;local myEquip = EquippedNum
+&#9;--some vars
+&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+&#9;local Character = Player.Character
+
+&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
+&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
+&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
+&#9;&#9;local handle = rightGrip.Part1
+
+&#9;&#9;--kill my joint when the normal joint is removed
+&#9;&#9;--this must be done here so that the joint is removed 
+&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
+&#9;&#9;--glitch up.
+&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+&#9;&#9;&#9;if ch == rightGrip then
+&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
+&#9;&#9;&#9;&#9;Motor6DGrip = nil
+&#9;&#9;&#9;&#9;--
+&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
+&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
+&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
+&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
+&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
+&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
+&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+
+&#9;&#9;--make my new joint
+&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
+&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
+&#9;&#9;&#9;Part0 = rightarm,
+&#9;&#9;&#9;Part1 = handle,
+&#9;&#9;}
+&#9;&#9;--kill the old weld
+&#9;&#9;rightGrip.Part1 = nil
+&#9;&#9;rightGrip.Part0 = nil
+&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
+&#9;end
+end)
+
+Tool.Unequipped:connect(function()
+&#9;EquippedNum = EquippedNum + 1
+&#9;if armChildRemovedConn then
+&#9;&#9;armChildRemovedConn:disconnect()
+&#9;&#9;armChildRemovedConn = nil
+&#9;end
+end)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXE696738CBCBD4A08B4AFB1FEF05F97DF">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">local RbxUtility = LoadLibrary(&apos;RbxUtility&apos;)
+local Create = RbxUtility.Create
+
+script.Parent.DropBomb.OnServerEvent:connect(function(client)
+&#9;if client.Character == script.Parent.Parent then
+&#9;&#9;local bomb = Create&apos;Part&apos;{
+&#9;&#9;&#9;Size = Vector3.new(1,2,1);
+&#9;&#9;&#9;TopSurface = &apos;Smooth&apos;;
+&#9;&#9;&#9;BottomSurface = &apos;Smooth&apos;;
+&#9;&#9;&#9;Archivable = false;
+&#9;&#9;&#9;Position = (client.Character[&apos;Left Arm&apos;].CFrame*CFrame.new(0,-1,0)).p - Vector3.new(0,2,0);
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{
+&#9;&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=90793198&apos;;
+&#9;&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=90793278&apos;;
+&#9;&#9;&#9;};
+&#9;&#9;&#9;--
+&#9;&#9;&#9;Create&apos;Sound&apos;{
+&#9;&#9;&#9;&#9;Name = &apos;ExplodeSound&apos;;
+&#9;&#9;&#9;&#9;SoundId = &apos;rbxasset://sounds//Rocket shot.wav&apos;;
+&#9;&#9;&#9;};
+&#9;&#9;}
+&#9;&#9;--
+&#9;&#9;local sc = script.Parent.MineScript:Clone()
+&#9;&#9;sc.Disabled = false
+&#9;&#9;sc.creator.Value = client
+&#9;&#9;sc.Parent = bomb
+&#9;&#9;--
+&#9;&#9;bomb.Parent = game.Workspace
+&#9;end
+end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX611EE7E998F1470297231336348A0F43">
+			<Properties>
+				<string name="Name">DropBomb</string>
 			</Properties>
 		</Item>
 	</Item>
