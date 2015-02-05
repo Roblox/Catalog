@@ -1,16 +1,16 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXA23F84273A6C41CB8D87109B359AEF94">
 		<Properties>
-			<bool name="Archivable">true</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0.300000012</X>
 				<Y>0</Y>
 				<Z>-1.20000005</Z>
 				<R00>1</R00>
-				<R01>-0</R01>
+				<R01>0</R01>
 				<R02>0</R02>
 				<R10>0</R10>
 				<R11>0</R11>
@@ -19,13 +19,14 @@
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">AlienDoll</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=61364777 </url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX5553DAB9E3B948059CF3289DC560C1B8">
 			<Properties>
 				<bool name="Anchored">false</bool>
-				<bool name="Archivable">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
 				<token name="BackSurface">0</token>
@@ -40,18 +41,17 @@
 					<Y>20.3748627</Y>
 					<Z>7.04501152</Z>
 					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>0</R11>
-					<R12>1</R12>
-					<R20>0</R20>
-					<R21>-1</R21>
-					<R22>0</R22>
+					<R01>4.83164619e-008</R01>
+					<R02>5.96488803e-007</R02>
+					<R10>-5.98123279e-007</R10>
+					<R11>0.0481482483</R11>
+					<R12>0.998840094</R12>
+					<R20>1.954065e-008</R20>
+					<R21>-0.998840094</R21>
+					<R22>0.0481482483</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">3</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -84,6 +84,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1.46999943</X>
@@ -91,9 +92,8 @@
 					<Z>2.67000365</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX17AE81DCE92A4606903406A8CD3E5B8B">
 				<Properties>
-					<bool name="Archivable">true</bool>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
 					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=61365567 </url></Content>
@@ -118,9 +118,8 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
+		<Item class="LocalScript" referent="RBXCC5DFD7E1B1448B29A8B7258FEE507A2">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
@@ -157,14 +156,19 @@ Tool.Equipped:connect(onEquippedLocal)
 Tool.Unequipped:connect(onUnequippedLocal)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX214A473F23B14FB3859D75302BB84249">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">DollScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
+				<ProtectedString name="Source">--[[
+&#9;Fixed by ArceusInator.  Uses new spawning that works no matter where the player is.  Fixed teamkilling.
+--]]
+
+local Tool = script.Parent
 local Doll = Tool.Handle
+
+local GLib = require(206209239)
 
 local vCharacter
 local myHumanoid
@@ -229,7 +233,9 @@ function follow()&#9;
 end
 
 function blow(ray, hit)
-&#9;if ray and hit and hit.Parent and hit.Parent ~= vCharacter then 
+&#9;local owner, target = GLib.GetPlayerFromPart(script), GLib.GetPlayerFromPart(hit)
+&#9;
+&#9;if ray and hit and hit.Parent and hit.Parent ~= vCharacter and not GLib.IsTeammate(owner, target) then 
 &#9;&#9;humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
 &#9;&#9;if humanoid then 
 &#9;&#9;&#9;humanoid:TakeDamage(30)
@@ -269,11 +275,11 @@ end
 
 function attack()
 &#9;if myHumanoid == nil then return end
-&#9;if myHumanoid.Health &lt; prevHealth and dollClone and not attacking then 
+&#9;if myHumanoid.Health &lt; prevHealth and dollClone and not attacking then
 &#9;&#9;prevHealth = myHumanoid.Health
-&#9;&#9;local tag = myHumanoid:FindFirstChild(&quot;creator&quot;)
-&#9;&#9;if tag and tag.Value then 
-&#9;&#9;&#9;local playr = tag.Value 
+&#9;&#9;local owner = GLib.GetPlayerFromPart(myHumanoid)
+&#9;&#9;if owner then 
+&#9;&#9;&#9;local playr = owner 
 &#9;&#9;&#9;if playr:IsA(&quot;Player&quot;) then 
 &#9;&#9;&#9;&#9;local character = playr.Character
 &#9;&#9;&#9;&#9;if character and character:FindFirstChild(&quot;Torso&quot;) then 
@@ -326,8 +332,9 @@ function onActivated()
 &#9;&#9;dollFire.Color = Color3.new(0, 153/255, 0)
 &#9;&#9;dollFire.SecondaryColor = Color3.new(102/255, 51/255, 0)
 
-&#9;&#9;dollClone.CFrame = CFrame.Angles(0, math.pi/2, math.pi/2) * (myTorso.CFrame - myTorso.CFrame.lookVector * 3.0) + Vector3.new(0, 3, 0)
-&#9;&#9;dollClone.CFrame = dollClone.CFrame * CFrame.Angles(-math.pi/2, 0, 0)
+--&#9;&#9;dollClone.CFrame = CFrame.Angles(0, math.pi/2, math.pi/2) * (myTorso.CFrame - myTorso.CFrame.lookVector * 3.0) + Vector3.new(0, 3, 0)
+--&#9;&#9;dollClone.CFrame = dollClone.CFrame * CFrame.Angles(-math.pi/2, 0, 0)
+&#9;&#9;dollClone.CFrame = myTorso.CFrame * CFrame.new(0, 20, 20) * CFrame.Angles(-math.pi/2, 0, 0)
 
 &#9;&#9;local dollFloat = Instance.new(&quot;BodyForce&quot;)
 &#9;&#9;dollFloat.Name = &quot;DollFloat&quot;
@@ -344,6 +351,7 @@ function onActivated()
 &#9;&#9;coroutine.resume(dollCo)
 &#9;else 
 &#9;&#9;-- make the doll Attack
+&#9;&#9;attack()
 &#9;end
 
 &#9;wait(2.0)
@@ -367,9 +375,8 @@ Tool.Unequipped:connect(onUnequipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBXE3045DF9CD1B40E4939F4A631F27C51A">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">DollLocalScript</string>
@@ -404,9 +411,8 @@ Tool.Equipped:connect(onEquipped)
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Sound" referent="RBX6">
+		<Item class="Sound" referent="RBX69EF68276F5C414786D01C01B12A9C54">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Looped">false</bool>
 				<string name="Name">ShootSound</string>
 				<float name="Pitch">2</float>
@@ -415,9 +421,8 @@ Tool.Equipped:connect(onEquipped)
 				<float name="Volume">1</float>
 			</Properties>
 		</Item>
-		<Item class="Sound" referent="RBX7">
+		<Item class="Sound" referent="RBXE8E562D018394D239C040950AB056802">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<bool name="Looped">false</bool>
 				<string name="Name">AlienSound</string>
 				<float name="Pitch">2</float>
@@ -426,29 +431,29 @@ Tool.Equipped:connect(onEquipped)
 				<float name="Volume">1</float>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX8">
+		<Item class="Camera" referent="RBX7DDB214197B142B2915FED7730E30763">
 			<Properties>
-				<bool name="Archivable">true</bool>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.160321236</X>
-					<Y>21.2895241</Y>
-					<Z>2.66305923</Z>
-					<R00>-0.978146017</R00>
-					<R01>0.0559137799</R01>
-					<R02>-0.20025979</R02>
+					<X>0.410812795</X>
+					<Y>21.3067169</Y>
+					<Z>5.05348969</Z>
+					<R00>-0.950312853</R00>
+					<R01>0.109809317</R01>
+					<R02>-0.291285604</R02>
 					<R10>-0</R10>
-					<R11>0.963162243</R11>
-					<R12>0.268920898</R12>
-					<R20>0.207919061</R20>
-					<R21>0.26304391</R21>
-					<R22>-0.94211334</R22>
+					<R11>0.93571806</R11>
+					<R12>0.352748573</R12>
+					<R20>0.311296284</R20>
+					<R21>0.335221499</R21>
+					<R22>-0.889225006</R22>
 				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>3.84487438</X>
-					<Y>15.9111061</Y>
-					<Z>21.5053253</Z>
+					<X>1.08108425</X>
+					<Y>20.4950142</Y>
+					<Z>7.09966755</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
