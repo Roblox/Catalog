@@ -3,8 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<int name="ActivationState">0</int>
-			<int name="BackendToolState">2</int>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -20,9 +19,10 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">StaffOfTheWoodlands</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=11384456</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
 		<Item class="Part" referent="RBX1">
 			<Properties>
@@ -51,9 +51,7 @@
 					<R22>0.000796274282</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">2</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -86,7 +84,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">2</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>1</X>
@@ -98,11 +96,10 @@
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">EquipSound</string>
-					<int name="PlayCount">-1</int>
+					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=10548108</url></Content>
 					<float name="Volume">0.5</float>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 			<Item class="SpecialMesh" referent="RBX3">
@@ -128,7 +125,6 @@
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 		</Item>
@@ -137,7 +133,11 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">WoodlandsStaff</string>
-				<string name="Source">local Tool = script.Parent;
+				<ProtectedString name="Source">--[[
+&#9;Fixed by ArceusInator.  Can no longer be used with Noir Peri to get permanent invisibility.
+--]]
+
+local Tool = script.Parent;
 
 enabled = true
 
@@ -154,98 +154,97 @@ WoodWalk.Volume = .7
 WoodWalk.Parent = Tool.Handle
 
 function setTrans(root, trans, character)
-	if (root:IsDescendantOf(character) == false and root ~= character) then return end
-	local c = root:GetChildren()
-	for i=1,#c do
-		setTrans(c[i], trans, character)
-		if (c[i].className == &quot;Part&quot; and c[i]:IsDescendantOf(character)) then -- concurrency hell
-			p[c[i]] = c[i].Transparency 
-			c[i].Transparency = trans
-		end
-	end
+&#9;if (root:IsDescendantOf(character) == false and root ~= character) then return end
+&#9;local c = root:GetChildren()
+&#9;for i=1,#c do
+&#9;&#9;setTrans(c[i], trans, character)
+&#9;&#9;if (c[i].className == &quot;Part&quot; and c[i]:IsDescendantOf(character)) then -- concurrency hell
+&#9;&#9;&#9;p[c[i]] = c[i].Transparency 
+&#9;&#9;&#9;c[i].Transparency = trans
+&#9;&#9;end
+&#9;end
 end
 
 function resetTrans()
-	WoodWalk:Stop()
-	for k,v in pairs(p) do 
-		k.Transparency = v
-	end
+&#9;WoodWalk:Stop()
+&#9;for k,v in pairs(p) do 
+&#9;&#9;k.Transparency = 0--v
+&#9;end
 end
 
 function SetTransparency(root, trans, character)
-	p = {}
-	setTrans(root, trans, character)
-	WoodWalk:Play()
+&#9;p = {}
+&#9;setTrans(root, trans, character)
+&#9;WoodWalk:Play()
 end
 
 
 
 function staffUp()
-	Tool.GripForward = Vector3.new(0,0,-1)
-	Tool.GripRight = Vector3.new(1,0,0)
-	Tool.GripUp = Vector3.new(0,1,0)
+&#9;Tool.GripForward = Vector3.new(0,0,-1)
+&#9;Tool.GripRight = Vector3.new(1,0,0)
+&#9;Tool.GripUp = Vector3.new(0,1,0)
 end
 
 function staffOut()
-	Tool.GripForward = Vector3.new(.0976, .00976, -.995)
-	Tool.GripRight = Vector3.new(.195, -.981, .00952)
-	Tool.GripUp = Vector3.new(.976, .195, .0976)
+&#9;Tool.GripForward = Vector3.new(.0976, .00976, -.995)
+&#9;Tool.GripRight = Vector3.new(.195, -.981, .00952)
+&#9;Tool.GripUp = Vector3.new(.976, .195, .0976)
 end
 
 function isTurbo(character)
-	return character:FindFirstChild(&quot;TreeHelm&quot;) ~= nil
+&#9;return character:FindFirstChild(&quot;TreeHelm&quot;) ~= nil
 end
 
 
 Tool.Enabled = true
 function onActivated()
-	if Tool.Enabled == false  then
-		return
-	end
+&#9;if Tool.Enabled == false  then
+&#9;&#9;return
+&#9;end
 
-	Tool.Enabled = false
-
-
-	local character = Tool.Parent;
-	local humanoid = character.Humanoid
-	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
-		return 
-	end
+&#9;Tool.Enabled = false
 
 
-	local trans = .94
-	if (isTurbo(character) == true) then trans = .97 end
+&#9;local character = Tool.Parent;
+&#9;local humanoid = character.Humanoid
+&#9;if humanoid == nil then
+&#9;&#9;print(&quot;Humanoid not found&quot;)
+&#9;&#9;return 
+&#9;end
 
-	staffOut()
-	wait(.5)
-	staffUp()
-	print(Tool.Parent, &quot;  &quot;, character)
-	SetTransparency(Tool.Parent, trans, character)
-	wait(8)
-	resetTrans()
-	wait(3)
 
-	Tool.Enabled = true
+&#9;local trans = .94
+&#9;if (isTurbo(character) == true) then trans = .97 end
+
+&#9;staffOut()
+&#9;wait(.5)
+&#9;staffUp()
+&#9;print(Tool.Parent, &quot;  &quot;, character)
+&#9;SetTransparency(Tool.Parent, trans, character)
+&#9;wait(8)
+&#9;resetTrans()
+&#9;wait(3)
+
+&#9;Tool.Enabled = true
 
 end
 
 function onEquipped()
-	Tool.Handle.EquipSound:play()
+&#9;Tool.Handle.EquipSound:play()
 end
 
 function onUnequipped()
 
-	resetTrans()
-	
+&#9;resetTrans()
+&#9;
 
 end
 
 script.Parent.Activated:connect(onActivated)
 script.Parent.Equipped:connect(onEquipped)
 script.Parent.Unequipped:connect(onUnequipped)
-</string>
-				<bool name="archivable">true</bool>
+</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX5">
@@ -253,38 +252,73 @@ script.Parent.Unequipped:connect(onUnequipped)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
-				<string name="Source">local Tool = script.Parent;
+				<ProtectedString name="Source">local Tool = script.Parent;
 
 enabled = true
 function onButton1Down(mouse)
-	if not enabled then
-		return
-	end
+&#9;if not enabled then
+&#9;&#9;return
+&#9;end
 
-	enabled = false
-	mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+&#9;enabled = false
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
 
-	wait(1)
-	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-	enabled = true
+&#9;wait(1)
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;enabled = true
 
 end
 
 function onEquippedLocal(mouse)
 
-	if mouse == nil then
-		print(&quot;Mouse not found&quot;)
-		return 
-	end
+&#9;if mouse == nil then
+&#9;&#9;print(&quot;Mouse not found&quot;)
+&#9;&#9;return 
+&#9;end
 
-	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+&#9;mouse.Button1Down:connect(function() onButton1Down(mouse) end)
 end
 
 
 Tool.Equipped:connect(onEquippedLocal)
-</string>
-				<bool name="archivable">true</bool>
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX6812EEDFB136451997FFA595FDED194F">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>24.8843441</X>
+					<Y>19.0689735</Y>
+					<Z>111.807846</Z>
+					<R00>-0.999719322</R00>
+					<R01>0.000214918502</R01>
+					<R02>-0.0236894991</R02>
+					<R10>-1.45519135e-011</R10>
+					<R11>0.999958932</R11>
+					<R12>0.00907193869</R12>
+					<R20>0.0236904733</R20>
+					<R21>0.00906939246</R21>
+					<R22>-0.999678254</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>24.9600201</X>
+					<Y>19.0399933</Y>
+					<Z>115.001312</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
