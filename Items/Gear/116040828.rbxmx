@@ -1,582 +1,30 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX8D4F7F52860544F282E3F3CA858D0D20">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>1.60000002</X>
-				<Y>-18</Y>
-				<Z>-2.0999999</Z>
-				<R00>1</R00>
-				<R01>0</R01>
-				<R02>0</R02>
-				<R10>0</R10>
-				<R11>1</R11>
-				<R12>0</R12>
-				<R20>0</R20>
-				<R21>0</R21>
-				<R22>1</R22>
+				<X>1.29999995</X>
+				<Y>0.699999988</Y>
+				<Z>0.899999976</Z>
+				<R00>0.952197015</R00>
+				<R01>0.170625895</R01>
+				<R02>-0.25339222</R02>
+				<R10>-0.183603093</R10>
+				<R11>0.982593119</R11>
+				<R12>-0.0282980744</R12>
+				<R20>0.244153067</R20>
+				<R21>0.0734689459</R21>
+				<R22>0.966949642</R22>
 			</CoordinateFrame>
-			<string name="Name">AirBalloon</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=115983479</url></Content>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">ROBLOXWorldTourHotAirBalloon</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=213023668</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">AirBalloon_Main</string>
-				<ProtectedString name="Source">print(&quot;Run&quot;)
-
---imports
-local RbxUtility = LoadLibrary(&apos;RbxUtility&apos;)
-local Create = RbxUtility.Create
-
---main vars
-local Tool = script.Parent
-local Handle = Tool:WaitForChild(&apos;Handle&apos;)
-local NextBalloonAt = Tool:WaitForChild(&apos;NextBalloonAt&apos;)
-local DeploySound = Handle:WaitForChild(&apos;SOUND_Deploy&apos;)
-DeploySound.SoundId = &apos;SOUND_Deploy&apos;
-local Equipped = false
-
---character stuff
-local Character, Player, Humanoid, Torso, HumanoidRootPart;
-
---anim tracks
-local GliderHold, GliderFly, GliderBomb;
-
-
----========================== main code ==========================--
-
-local MIN_TIME_BETWEEN_BALLOONS = 15
-
-local Flying = false
-local CurrentBalloon;
-local FlyingGyro;
-local FlyingForce;
-local Fire1, Fire2;
-local CurrentVelocity;
-
-local DesiredFlightCFrame;
-
-local Gui;
-
-local function CreateBalloon()
-&#9;model = Create&apos;Model&apos;{
-&#9;&#9;Name = &apos;BalloonGear_AirBalloon&apos;;
-&#9;&#9;--
-&#9;&#9;Create&apos;ObjectValue&apos;{
-&#9;&#9;&#9;Name = &apos;AirBalloonGearTag&apos;;
-&#9;&#9;};
-&#9;&#9;Create&apos;CFrameValue&apos;{
-&#9;&#9;&#9;Name = &apos;CurrentHeading&apos;;
-&#9;&#9;&#9;Value = CFrame.new();
-&#9;&#9;};
-&#9;&#9;Create&apos;NumberValue&apos;{
-&#9;&#9;&#9;Name = &apos;CurrentVelocity&apos;;
-&#9;&#9;&#9;Value = 0;
-&#9;&#9;};
-&#9;&#9;Create&apos;Part&apos;{
-&#9;&#9;&#9;Name = &apos;MainPart&apos;;
-&#9;&#9;&#9;FormFactor = &apos;Custom&apos;;
-&#9;&#9;&#9;Size = Vector3.new(6,1,6);
-&#9;&#9;&#9;Create&apos;Weld&apos;{Name = &apos;RightWeld&apos;; };
-&#9;&#9;&#9;Create&apos;Weld&apos;{Name = &apos;LeftWeld&apos;;  };
-&#9;&#9;&#9;Create&apos;Weld&apos;{Name = &apos;TopWeld&apos;;   };
-&#9;&#9;&#9;Create&apos;Weld&apos;{Name = &apos;Fire1&apos;;     };
-&#9;&#9;&#9;Create&apos;Weld&apos;{Name = &apos;Fire2&apos;;     };
-&#9;&#9;&#9;Create&apos;BodyGyro&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;FlyingGyro&apos;;
-&#9;&#9;&#9;&#9;maxTorque = Vector3.new(100,10000,100);
-&#9;&#9;&#9;&#9;cframe = CFrame.new();
-&#9;&#9;&#9;};
-&#9;&#9;&#9;Create&apos;BodyVelocity&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;FlyingForce&apos;;
-&#9;&#9;&#9;&#9;velocity = Vector3.new();
-&#9;&#9;&#9;&#9;maxForce = Vector3.new(10000,10000,10000)
-&#9;&#9;&#9;};
-&#9;&#9;};
-&#9;&#9;Create&apos;Seat&apos;{
-&#9;&#9;&#9;Name = &apos;RightSeat&apos;;
-&#9;&#9;&#9;FormFactor = &apos;Custom&apos;;
-&#9;&#9;&#9;Size = Vector3.new(3, 0.6, 2);
-&#9;&#9;&#9;BrickColor = BrickColor.new(&apos;Really black&apos;);
-&#9;&#9;&#9;TopSurface = &apos;Weld&apos;;
-&#9;&#9;};
-&#9;&#9;Create&apos;Seat&apos;{
-&#9;&#9;&#9;Name = &apos;LeftSeat&apos;;
-&#9;&#9;&#9;FormFactor = &apos;Custom&apos;;
-&#9;&#9;&#9;Size = Vector3.new(3, 0.6, 2);
-&#9;&#9;&#9;BrickColor = BrickColor.new(&apos;Really black&apos;);
-&#9;&#9;&#9;TopSurface = &apos;Weld&apos;;
-&#9;&#9;};
-&#9;&#9;Create&apos;Part&apos;{
-&#9;&#9;&#9;Name = &apos;FirePart1&apos;;
-&#9;&#9;&#9;Transparency = 1;
-&#9;&#9;&#9;Create&apos;Fire&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;Fire&apos;;
-&#9;&#9;&#9;};
-&#9;&#9;&#9;Create&apos;Sound&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;FireSound&apos;;
-&#9;&#9;&#9;&#9;SoundId = &apos;http://www.roblox.com/asset/?id=30624426&apos;;
-&#9;&#9;&#9;};
-&#9;&#9;};
-&#9;&#9;Create&apos;Part&apos;{
-&#9;&#9;&#9;Name = &apos;FirePart2&apos;;
-&#9;&#9;&#9;Transparency = 1;
-&#9;&#9;&#9;Create&apos;Fire&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;Fire&apos;;
-&#9;&#9;&#9;};
-&#9;&#9;};
-&#9;&#9;Create&apos;Part&apos;{
-&#9;&#9;&#9;Name = &apos;Balloon&apos;;
-&#9;&#9;&#9;Size = Vector3.new(1,1,1);
-&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;Mesh&apos;;
-&#9;&#9;&#9;&#9;MeshType = &apos;FileMesh&apos;;
-&#9;&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=116077800&apos;, --115983648&apos;;
-&#9;&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=115983592&apos;;
-&#9;&#9;&#9;&#9;Scale = Vector3.new(2.1, 1.8, 2.1);
-&#9;&#9;&#9;};
-&#9;&#9;};
-&#9;}
-&#9;--
-&#9;local rightw = model.MainPart.RightWeld
-&#9;rightw.Part0 = rightw.Parent
-&#9;rightw.Part1 = model.RightSeat
-&#9;rightw.C0 = CFrame.new(2,0.6,0)
-&#9;--
-&#9;local leftw = model.MainPart.LeftWeld
-&#9;leftw.Part0 = leftw.Parent
-&#9;leftw.Part1 = model.LeftSeat
-&#9;leftw.C0 = CFrame.new(-2,0.6,0)
-&#9;--
-&#9;local topw = model.MainPart.TopWeld
-&#9;topw.Part0 = topw.Parent
-&#9;topw.Part1 = model.Balloon
-&#9;topw.C0 = CFrame.new(0, 26, 0)
-&#9;--
-&#9;local fire1 = model.MainPart.Fire1
-&#9;fire1.Part0 = fire1.Parent
-&#9;fire1.Part1 = model.FirePart1
-&#9;fire1.C0 = CFrame.new(-1.5, 14, 0)
-&#9;--
-&#9;local fire2 = model.MainPart.Fire2
-&#9;fire2.Part0 = fire2.Parent
-&#9;fire2.Part1 = model.FirePart2
-&#9;fire2.C0 = CFrame.new(1.5, 14, 0)
-&#9;--
-&#9;local sc = script.AirBalloon_Script:Clone()
-&#9;sc.Parent = model
-&#9;sc.Disabled = false
-&#9;--
-&#9;return model
-end
-
-local function BeginFlight(balloon)
-&#9;if Flying then return end
-&#9;--
-&#9;Handle.Transparency = 1
-&#9;--
-&#9;MainPart = balloon:FindFirstChild(&apos;MainPart&apos;)
-&#9;if not MainPart then return end
-&#9;FlyingGyro = MainPart:FindFirstChild(&apos;FlyingGyro&apos;)
-&#9;FlyingForce = MainPart:FindFirstChild(&apos;FlyingForce&apos;)
-&#9;if not FlyingForce or not FlyingGyro then return end
-&#9;Fire1 = balloon:FindFirstChild(&apos;FirePart1&apos;):FindFirstChild(&apos;Fire&apos;)
-&#9;Fire2 = balloon:FindFirstChild(&apos;FirePart2&apos;):FindFirstChild(&apos;Fire&apos;)
-
-&#9;--
-&#9;game.Workspace.CurrentCamera.CameraSubject = balloon.MainPart
-&#9;game.Workspace.CurrentCamera.CameraType = &apos;Track&apos;
-&#9;--
-&#9;CurrentBalloon = balloon
-&#9;Flying = true
-&#9;CurrentVelocity = math.min(15, FlyingForce.velocity.magnitude)
-&#9;--
-&#9;DesiredFlightCFrame = balloon.MainPart.CFrame
-&#9;--
-&#9;Gui.Frame.Message.Text = 
-&#9;&#9;&quot;Click and Hold to direct the balloon in the\n&quot;..
-&#9;&#9;&quot;direction you are looking. Holding with both\n&quot;..
-&#9;&#9;&quot;mouse buttons gives easy free flight.&quot;
-end
-
-local function EndFlight()
-&#9;if not Flying then return end
-&#9;--
-&#9;Handle.Transparency = 0
-&#9;--
-&#9;game.Workspace.CurrentCamera.CameraSubject = Character
-&#9;game.Workspace.CurrentCamera.CameraType = &apos;Custom&apos;
-&#9;--
-&#9;if Fire1.Parent then
-&#9;&#9;Fire1.Parent.FireSound:Stop()
-&#9;end
-&#9;Fire1.Enabled = false
-&#9;Fire2.Enabled = false
-&#9;--
-&#9;Flying = false
-&#9;--
-&#9;Gui.Frame.Message.Text = &quot;Click to place a balloon.\n&quot;..
-&#9;                         &quot;Get into a balloon to fly it.&quot;
-end
-
-local function GetMassOf(model)
-&#9;if model:IsA(&apos;BasePart&apos;) then
-&#9;&#9;return model:GetMass()
-&#9;else
-&#9;&#9;local mass = 0
-&#9;&#9;for _, ch in pairs(model:GetChildren()) do
-&#9;&#9;&#9;mass = mass + GetMassOf(ch)
-&#9;&#9;end
-&#9;&#9;return mass
-&#9;end
-end
-
-
-
-local function Slerp(t, a, b)
-&#9;local om = math.acos(math.min(1, a:Dot(b)))
-&#9;if om &lt; 0.01 then
-&#9;&#9;return (1-t)*a +
-&#9;&#9;          t *b
-&#9;else
-&#9;&#9;return (math.sin((1-t)*om)/math.sin(om))*a +
-&#9;&#9;       (math.sin(   t *om)/math.sin(om))*b
-&#9;end
-end
-
-
-local ConnectionList = {}
-
-
-Tool.Equipped:connect(function(mouse)
-&#9;Character = Tool.Parent
-&#9;Player = game.Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
-&#9;HumanoidRootPart = Character:WaitForChild(&apos;HumanoidRootPart&apos;)
-&#9;--
-&#9;Equipped = true
-
-&#9;-- set up the GUI
-&#9;Gui = Create&apos;ScreenGui&apos;{
-&#9;&#9;Parent = Player.PlayerGui;
-&#9;&#9;Create&apos;Frame&apos;{
-&#9;&#9;&#9;Name = &apos;Frame&apos;;
-&#9;&#9;&#9;Style = &apos;RobloxRound&apos;;
-&#9;&#9;&#9;Position = UDim2.new(0.5, -135, 1, -180);
-&#9;&#9;&#9;Size = UDim2.new(0, 270, 0, 80);
-&#9;&#9;&#9;Create&apos;TextLabel&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;Message&apos;;
-&#9;&#9;&#9;&#9;TextWrapped = true;
-&#9;&#9;&#9;&#9;BackgroundTransparency = 1;
-&#9;&#9;&#9;&#9;Font = &apos;Arial&apos;;
-&#9;&#9;&#9;&#9;FontSize = &apos;Size14&apos;;
-&#9;&#9;&#9;&#9;TextColor3 = Color3.new(0.9, 0.9, 0.9);
-&#9;&#9;&#9;&#9;Text = &quot;Click to create a balloon.\n&quot;..
-&#9;&#9;&#9;&#9;       &quot;Get into a balloon to fly it.&quot;;
-&#9;&#9;&#9;&#9;Size = UDim2.new(1,0,1,0);
-&#9;&#9;&#9;};
-&#9;&#9;};
-&#9;}
-
-&#9;
-&#9;-- set up tracking of balloons
-&#9;TrackedBalloons = {}
-&#9;local function trackBalloon(o)
-&#9;&#9;-- make sure it&apos;s actually a balloon
-&#9;&#9;if not o:FindFirstChild(&apos;RightSeat&apos;) or 
-&#9;&#9;   not o:FindFirstChild(&apos;LeftSeat&apos;) then return end
-
-&#9;&#9;-- track it
-&#9;&#9;TrackedBalloons[o] = {}
-&#9;&#9;TrackedBalloons[o][1] = o.RightSeat.ChildAdded:connect(function(ch)
-&#9;&#9;&#9;if ch.Name == &apos;SeatWeld&apos; and ch.Part1 == HumanoidRootPart then
-&#9;&#9;&#9;&#9;BeginFlight(o)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;ConnectionList[TrackedBalloons[o][1]] = true
-&#9;&#9;TrackedBalloons[o][2] = o.LeftSeat.ChildAdded:connect(function(ch)
-&#9;&#9;&#9;if ch.Name == &apos;SeatWeld&apos; and ch.Part1 == HumanoidRootPart then
-&#9;&#9;&#9;&#9;BeginFlight(o)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;ConnectionList[TrackedBalloons[o][2]] = true
-
-&#9;&#9;-- also begin flight if we&apos;re already in a balloon when we select
-&#9;&#9;-- the tool.
-&#9;&#9;for _, ch in pairs(o.RightSeat:GetChildren()) do
-&#9;&#9;&#9;if ch.Name == &apos;SeatWeld&apos; and ch.Part1 == HumanoidRootPart then
-&#9;&#9;&#9;&#9;BeginFlight(o)
-&#9;&#9;&#9;end&#9;&#9;
-&#9;&#9;end
-&#9;&#9;for _, ch in pairs(o.LeftSeat:GetChildren()) do
-&#9;&#9;&#9;if ch.Name == &apos;SeatWeld&apos; and ch.Part1 == HumanoidRootPart then
-&#9;&#9;&#9;&#9;BeginFlight(o)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;local function untrackBalloon(o)
-&#9;&#9;if TrackedBalloons[o] then
-&#9;&#9;&#9;TrackedBalloons[o][1]:disconnect()
-&#9;&#9;&#9;TrackedBalloons[o][2]:disconnect()
-&#9;&#9;&#9;TrackedBalloons[o] = nil
-&#9;&#9;end
-&#9;end
-&#9;for _, o in pairs(game.Workspace:GetChildren()) do
-&#9;&#9;if o.Name == &apos;BalloonGear_AirBalloon&apos; then
-&#9;&#9;&#9;trackBalloon(o)
-&#9;&#9;end
-&#9;end
-&#9;ConnectionList[game.Workspace.ChildAdded:connect(function(o)
-&#9;&#9;if o.Name == &apos;BalloonGear_AirBalloon&apos; then
-&#9;&#9;&#9;trackBalloon(o)
-&#9;&#9;end
-&#9;end)] = true
-&#9;ConnectionList[game.Workspace.ChildRemoved:connect(function(o)
-&#9;&#9;if o.Name == &apos;BalloonGear_AirBalloon&apos; then
-&#9;&#9;&#9;untrackBalloon(o)
-&#9;&#9;end
-&#9;end)] = true
-
-
-&#9;-- end flight on jump out of seat
-&#9;ConnectionList[Humanoid.Jumping:connect(function()
-&#9;&#9;EndFlight()
-&#9;end)] = true
-
-
-&#9;-- setup mousedown tracking
-&#9;local MouseDown = false
-&#9;mouse.Button1Down:connect(function()
-&#9;&#9;MouseDown = true
-
-&#9;&#9;-- see if we recently made a balloon
-&#9;&#9;if game.Workspace.DistributedGameTime &lt; NextBalloonAt.Value then return end
-
-&#9;&#9;-- see if there are any balloons nearby
-&#9;&#9;for balloon, _ in pairs(TrackedBalloons) do
-&#9;&#9;&#9;if balloon:FindFirstChild(&apos;MainPart&apos;) and
-&#9;&#9;&#9;&#9;(balloon.MainPart.Position - Torso.Position).magnitude &lt; 30 then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end 
-&#9;&#9;end
-
-&#9;&#9;-- no balloons nearby, create one in the direction we clicked
-&#9;&#9;local balloon = CreateBalloon()
-&#9;&#9;local dir = (mouse.Hit.p - Torso.Position)
-&#9;&#9;      dir = Vector3.new(dir.x, 0, dir.z).unit
-&#9;&#9;balloon.Parent = game.Workspace
-&#9;&#9;balloon:MoveTo(Torso.Position + dir*10)
-
-&#9;&#9;-- play sound
-&#9;&#9;DeploySound:Play()
-
-&#9;&#9;-- set when we can make the next balloon
-&#9;&#9;NextBalloonAt.Value = game.Workspace.DistributedGameTime + MIN_TIME_BETWEEN_BALLOONS
-&#9;end)
-&#9;mouse.Button1Up:connect(function()
-&#9;&#9;MouseDown = false
-&#9;end)
-
-
-&#9;-- main loop
-&#9;local LastTime = tick()
-&#9;while Equipped do
-&#9;&#9;local Now = tick()
-&#9;&#9;local dt = Now - LastTime
-&#9;&#9;LastTime = Now
-&#9;&#9;--
-&#9;&#9;if Flying then
-&#9;&#9;&#9;--make me fly
-&#9;&#9;&#9;local moveDir = game.Workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(0.6, 0, 0)
-&#9;&#9;&#9;if MouseDown then
-&#9;&#9;&#9;&#9;local theta = math.acos(DesiredFlightCFrame.lookVector:Dot(moveDir.lookVector))
-&#9;&#9;&#9;&#9;local frac = math.min(0.7, 0.7*dt/theta)
-&#9;&#9;&#9;&#9;local unit = Slerp(frac, DesiredFlightCFrame.lookVector, moveDir.lookVector)
-&#9;&#9;&#9;&#9;DesiredFlightCFrame = CFrame.new(Vector3.new(0,0,0), unit)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;--
-&#9;&#9;&#9;local dir = DesiredFlightCFrame.lookVector
-&#9;&#9;&#9;local dirXZ = Vector3.new(dir.x, 0, dir.z).unit
-&#9;&#9;&#9;--
-&#9;&#9;&#9;FlyingGyro.cframe = CFrame.new(Vector3.new(), dirXZ)*
-&#9;&#9;&#9;                    CFrame.Angles(0, 0, CurrentBalloon.MainPart.RotVelocity.y/3 * (1-math.abs(dir.y)^2))
-&#9;&#9;&#9;FlyingGyro.maxTorque = Vector3.new(100,10000,100)
-&#9;&#9;&#9;FlyingGyro.P = 5000
-&#9;&#9;&#9;FlyingGyro.D = 500
-&#9;&#9;&#9;--
-&#9;&#9;&#9;if MouseDown then
-&#9;&#9;&#9;&#9;if CurrentVelocity &lt; 15 then
-&#9;&#9;&#9;&#9;&#9;CurrentVelocity = math.min(CurrentVelocity + 8*dt, 15)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;--show / hide thrust
-&#9;&#9;&#9;&#9;if dir.y &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;if not Fire1.Parent.FireSound.IsPlaying then
-&#9;&#9;&#9;&#9;&#9;&#9;Fire1.Parent.FireSound:Play()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;Fire1.Enabled = true
-&#9;&#9;&#9;&#9;&#9;Fire2.Enabled = true
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;Fire1.Parent.FireSound:Stop()
-&#9;&#9;&#9;&#9;&#9;Fire1.Enabled = false
-&#9;&#9;&#9;&#9;&#9;Fire2.Enabled = false
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;if CurrentVelocity &gt; 2 then
-&#9;&#9;&#9;&#9;&#9;CurrentVelocity = math.max(0, CurrentVelocity - 3*dt)
-&#9;&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;&#9;--show / hide thrust
-&#9;&#9;&#9;&#9;&#9;if dir.y &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;if not Fire1.Parent.FireSound.IsPlaying then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Fire1.Parent.FireSound:Play()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;Fire1.Enabled = true
-&#9;&#9;&#9;&#9;&#9;&#9;Fire2.Enabled = true
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;Fire1.Parent.FireSound:Stop()
-&#9;&#9;&#9;&#9;&#9;&#9;Fire1.Enabled = false
-&#9;&#9;&#9;&#9;&#9;&#9;Fire2.Enabled = false
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;-- hide the thrust
-&#9;&#9;&#9;&#9;&#9;Fire1.Parent.FireSound:Stop()
-&#9;&#9;&#9;&#9;&#9;Fire1.Enabled = false
-&#9;&#9;&#9;&#9;&#9;Fire2.Enabled = false
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local slowdownFactor = math.abs(CurrentBalloon.MainPart.RotVelocity.y/3)
-&#9;&#9;&#9;FlyingForce.velocity = dir.unit*(CurrentVelocity - slowdownFactor)*(1-dir.y^2)
-&#9;&#9;&#9;FlyingForce.maxForce = Vector3.new(50000,50000,50000)
-&#9;&#9;&#9;FlyingForce.P = 1000
-&#9;&#9;end
-&#9;&#9;wait()
-&#9;end
-end)
-
-Tool.Unequipped:connect(function()
-&#9;if Flying then EndFlight() end
-&#9;Equipped = false
-&#9;--
-&#9;-- kill connections
-&#9;for cn, _ in pairs(ConnectionList) do
-&#9;&#9;cn:disconnect()
-&#9;end
-&#9;ConnectionList = {}
-&#9;--
-&#9;if Gui then
-&#9;&#9;Gui:Destroy()
-&#9;end
-end)
-
-
-script.Parent:WaitForChild(&apos;Handle&apos;):WaitForChild(&apos;Mesh&apos;).MeshId = &apos;http://www.roblox.com/asset/?id=115990730&apos;
-script.Parent.Handle.Mesh.Scale = Vector3.new(0.7,0.7,0.7)
-script.Parent.Grip = CFrame.new(1.2,0.8,0.2)*CFrame.Angles(0.1,0.1,-0.2)</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX2">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">AirBalloon_Script</string>
-					<ProtectedString name="Source">local DESPAWN_DELAY = 20
-
--- failsafe
-local Initialized = false
-Delay(1, function()
-&#9;if not Initialized then
-&#9;&#9;script.Parent:Destroy()
-&#9;end
-end)
-
--- setup
-local Balloon = script.Parent
-local MainPart = Balloon:WaitForChild(&apos;MainPart&apos;)
-local RightSeat = Balloon:WaitForChild(&apos;RightSeat&apos;)
-local LeftSeat = Balloon:WaitForChild(&apos;LeftSeat&apos;)
-local FlyingForce = MainPart:WaitForChild(&apos;FlyingForce&apos;)
-local Fire1 = Balloon:WaitForChild(&apos;FirePart1&apos;):WaitForChild(&apos;Fire&apos;)
-local Fire2 = Balloon:WaitForChild(&apos;FirePart2&apos;):WaitForChild(&apos;Fire&apos;)
-local FireSound = Balloon:WaitForChild(&apos;FirePart1&apos;):WaitForChild(&apos;FireSound&apos;)
-
-
--- despawner task
-Spawn(function()
-&#9;local LastSeatedAt = tick()
-
-&#9;while true do
-&#9;&#9;wait(1)
-&#9;&#9;if tick() - LastSeatedAt &gt; DESPAWN_DELAY then
-&#9;&#9;&#9;if RightSeat:FindFirstChild(&apos;SeatWeld&apos;) or
-&#9;&#9;&#9;   LeftSeat:FindFirstChild(&apos;SeatWeld&apos;) 
-&#9;&#9;&#9;then
-&#9;&#9;&#9;&#9;LastSeatedAt = tick()
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;-- despawn
-&#9;&#9;&#9;&#9;if script.Parent then
-&#9;&#9;&#9;&#9;&#9;script.Parent:Destroy()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end)
-
-
--- we&apos;ve initialized to the point where we can clean up, kill the failsafe
-Initialized = true
-
-
-local function GetMassOf(model)
-&#9;if model:IsA(&apos;BasePart&apos;) then
-&#9;&#9;return model:GetMass()
-&#9;else
-&#9;&#9;local mass = 0
-&#9;&#9;for _, ch in pairs(model:GetChildren()) do
-&#9;&#9;&#9;mass = mass + GetMassOf(ch)
-&#9;&#9;end
-&#9;&#9;return mass
-&#9;end
-end
-
-
-local BalloonMass = GetMassOf(script.Parent)
-
-
--- floating task
-Spawn(function()
-&#9;local LastTime = tick()
-&#9;while true do
-&#9;&#9;local t = tick()
-&#9;&#9;local dt = t - LastTime
-&#9;&#9;LastTime = t
-&#9;&#9;--
-&#9;&#9;local RightWeld = RightSeat:FindFirstChild(&apos;SeatWeld&apos;)
-&#9;&#9;local LeftWeld = LeftSeat:FindFirstChild(&apos;SeatWeld&apos;)
-&#9;&#9;if not RightWeld and not LeftWeld then
-&#9;&#9;&#9;local velo = FlyingForce.velocity.magnitude
-&#9;&#9;&#9;if velo &gt; 2 then
-&#9;&#9;&#9;&#9;velo = math.max(0, velo - 3*dt)
-&#9;&#9;&#9;&#9;FlyingForce.velocity = FlyingForce.velocity.unit * velo
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;FireSound:Stop()
-&#9;&#9;&#9;&#9;Fire1.Enabled = false
-&#9;&#9;&#9;&#9;Fire2.Enabled = false
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;--
-&#9;&#9;wait(0.2)
-&#9;end
-end)</ProtectedString>
-				</Properties>
-			</Item>
-		</Item>
-		<Item class="Part" referent="RBX3">
+		<Item class="Part" referent="RBX3FC00D638EC24B0BBE7960C135245BE6">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -585,22 +33,22 @@ end)</ProtectedString>
 				<token name="BackSurfaceInput">0</token>
 				<float name="BottomParamA">-0.5</float>
 				<float name="BottomParamB">0.5</float>
-				<token name="BottomSurface">4</token>
+				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0</X>
-					<Y>1.70000005</Y>
-					<Z>0</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<X>7.40415668</X>
+					<Y>21.6739998</Y>
+					<Z>-10.9567356</Z>
+					<R00>0.743721724</R00>
+					<R01>-0.0628795773</R01>
+					<R02>-0.665513337</R02>
+					<R10>0.165666521</R10>
+					<R11>0.981850863</R11>
+					<R12>0.0923670381</R12>
+					<R20>0.647624969</R20>
+					<R21>-0.178949073</R21>
+					<R22>0.740642369</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -613,7 +61,7 @@ end)</ProtectedString>
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -628,9 +76,9 @@ end)</ProtectedString>
 				</Vector3>
 				<float name="TopParamA">-0.5</float>
 				<float name="TopParamB">0.5</float>
-				<token name="TopSurface">3</token>
+				<token name="TopSurface">0</token>
 				<token name="TopSurfaceInput">0</token>
-				<float name="Transparency">0</float>
+				<float name="Transparency">1</float>
 				<Vector3 name="Velocity">
 					<X>0</X>
 					<Y>0</Y>
@@ -644,11 +92,11 @@ end)</ProtectedString>
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBXA8F67325AB3243B1BF74DB9E97A27778">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=115983648</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=115990730</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -657,9 +105,9 @@ end)</ProtectedString>
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1.5</X>
-						<Y>1.5</Y>
-						<Z>1.5</Z>
+						<X>0.699999988</X>
+						<Y>0.699999988</Y>
+						<Z>0.699999988</Z>
 					</Vector3>
 					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=115983592</url></Content>
 					<Vector3 name="VertexColor">
@@ -669,46 +117,2039 @@ end)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+		</Item>
+		<Item class="Model" referent="RBXE2CAE898808C4C958B696F094F2ED494">
+			<Properties>
+				<CoordinateFrame name="ModelInPrimary">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">DisplayModel</string>
+				<Ref name="PrimaryPart">null</Ref>
+			</Properties>
+			<Item class="Part" referent="RBX5B3F0826F19A4AFCAAD0285AC5672E3C">
 				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">SOUND_Deploy</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=116048470 </url></Content>
-					<float name="Volume">1</float>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>5.64617157</X>
+						<Y>45.689579</Y>
+						<Z>-9.98368263</Z>
+						<R00>0.557223678</R00>
+						<R01>-3.14153731e-005</R01>
+						<R02>-0.830352724</R02>
+						<R10>2.75187194e-005</R10>
+						<R11>1.00000405</R11>
+						<R12>-1.92821026e-005</R12>
+						<R20>0.83035475</R20>
+						<R21>-1.2665987e-005</R21>
+						<R22>0.557227969</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Balloon</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.200000003</X>
+						<Y>0.200000003</Y>
+						<Z>0.200000003</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBX9E0D9D9ADF924691BA42175A2C503941">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=115983648</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>2.0999999</X>
+							<Y>1.79999995</Y>
+							<Z>2.0999999</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=115983592</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="Weld" referent="RBXAC096208A709452CABA4FCEC8DEA09A4">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01307285</X>
+							<Y>-3.25819492</Y>
+							<Z>2.07092381</Z>
+							<R00>0.743748665</R00>
+							<R01>0.165634155</R01>
+							<R02>0.647603512</R02>
+							<R10>-0.0628537461</R10>
+							<R11>0.981854796</R11>
+							<R12>-0.17893444</R12>
+							<R20>-0.665486813</R20>
+							<R21>0.0923789591</R21>
+							<R22>0.740665197</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.310127437</X>
+							<Y>-27.1908646</Y>
+							<Z>0.412470877</Z>
+							<R00>0.557254195</R00>
+							<R01>-6.61239028e-007</R01>
+							<R02>0.830334306</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000405</R11>
+							<R12>-5.96046448e-008</R12>
+							<R20>-0.83033222</R20>
+							<R21>8.19563866e-008</R21>
+							<R22>0.557258368</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBX5B3F0826F19A4AFCAAD0285AC5672E3C</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX097F6FFBE6734E16889872B721D59DFF">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>-25.5762405</X>
+						<Y>72.2891769</Y>
+						<Z>-16.8501034</Z>
+						<R00>0.55722332</R00>
+						<R01>-3.13818455e-005</R01>
+						<R02>-0.830352902</R02>
+						<R10>2.74851918e-005</R10>
+						<R11>1.00000405</R11>
+						<R12>-1.92597508e-005</R12>
+						<R20>0.830354929</R20>
+						<R21>-1.2665987e-005</R21>
+						<R22>0.557227492</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBX8A3494139BE94362868D94CFBB2CCECF">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01307285</X>
+							<Y>-3.25819492</Y>
+							<Z>2.07092381</Z>
+							<R00>0.743748665</R00>
+							<R01>0.165634155</R01>
+							<R02>0.647603512</R02>
+							<R10>-0.0628537461</R10>
+							<R11>0.981854796</R11>
+							<R12>-0.17893444</R12>
+							<R20>-0.665486813</R20>
+							<R21>0.0923789591</R21>
+							<R22>0.740665197</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>23.4097023</X>
+							<Y>-53.7911682</Y>
+							<Z>-21.6871185</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBX097F6FFBE6734E16889872B721D59DFF</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX1E95D19DC0474742B701C1A585218831">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>-25.5737953</X>
+						<Y>19.088583</Y>
+						<Z>-16.849102</Z>
+						<R00>0.557225823</R00>
+						<R01>-2.77385116e-005</R01>
+						<R02>-0.830351233</R02>
+						<R10>2.42535025e-005</R10>
+						<R11>1.00000405</R11>
+						<R12>-1.70320272e-005</R12>
+						<R20>0.83035332</R20>
+						<R21>-1.12354755e-005</R21>
+						<R22>0.557230055</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBXDB796400C05C4B2AB0AF8866AC28806B">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01240659</X>
+							<Y>-3.25778341</Y>
+							<Z>2.07059455</Z>
+							<R00>0.743743598</R00>
+							<R01>0.165637881</R01>
+							<R02>0.647604823</R02>
+							<R10>-0.0628563613</R10>
+							<R11>0.981855571</R11>
+							<R12>-0.178935856</R12>
+							<R20>-0.665488362</R20>
+							<R21>0.0923776776</R21>
+							<R22>0.7406618</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>23.4096737</X>
+							<Y>-0.590651691</Y>
+							<Z>-21.6871376</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBX1E95D19DC0474742B701C1A585218831</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBXAE43B113E63243E8B0710641548FBB31">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>11.125597</X>
+						<Y>72.2904205</Y>
+						<Z>-41.4790573</Z>
+						<R00>0.55722928</R00>
+						<R01>-2.36369669e-005</R01>
+						<R02>-0.830348969</R02>
+						<R10>2.06064433e-005</R10>
+						<R11>1.00000417</R11>
+						<R12>-1.45584345e-005</R12>
+						<R20>0.830351055</R20>
+						<R21>-9.57399607e-006</R21>
+						<R22>0.557233512</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBX81A843ED7463471D9675C4AA7E30EBFF">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01179838</X>
+							<Y>-3.25789976</Y>
+							<Z>2.07023549</Z>
+							<R00>0.743740201</R00>
+							<R01>0.165641978</R01>
+							<R02>0.647607505</R02>
+							<R10>-0.062859647</R10>
+							<R11>0.981855035</R11>
+							<R12>-0.178937718</R12>
+							<R20>-0.665491879</R20>
+							<R21>0.0923761651</R21>
+							<R22>0.740658939</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>23.4099369</X>
+							<Y>-53.7909775</Y>
+							<Z>22.512291</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBXAE43B113E63243E8B0710641548FBB31</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX519729E931A547B4AAD70D5C9201AD38">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>11.1268206</X>
+						<Y>19.0898914</Y>
+						<Z>-41.4782295</Z>
+						<R00>0.557232559</R00>
+						<R01>-1.95465982e-005</R01>
+						<R02>-0.830346644</R02>
+						<R10>1.69631094e-005</R10>
+						<R11>1.00000405</R11>
+						<R12>-1.206249e-005</R12>
+						<R20>0.83034873</R20>
+						<R21>-7.94231892e-006</R21>
+						<R22>0.55723685</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBXCE80FC2E92804241A1E06167E05A2185">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01152182</X>
+							<Y>-3.25745726</Y>
+							<Z>2.07045054</Z>
+							<R00>0.743736923</R00>
+							<R01>0.165646091</R01>
+							<R02>0.647610307</R02>
+							<R10>-0.0628629327</R10>
+							<R11>0.981854498</R11>
+							<R12>-0.178939581</R12>
+							<R20>-0.665495276</R20>
+							<R21>0.0923746601</R21>
+							<R22>0.740656137</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>23.4098988</X>
+							<Y>-0.590664089</Y>
+							<Z>22.5122929</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBX519729E931A547B4AAD70D5C9201AD38</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBXACB2E7E8A5DB458EB41899938AB8FC8E">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>36.869194</X>
+						<Y>72.2915497</Y>
+						<Z>-3.11739111</Z>
+						<R00>0.557235956</R00>
+						<R01>-1.54227018e-005</R01>
+						<R02>-0.830344439</R02>
+						<R10>1.32955611e-005</R10>
+						<R11>1.00000405</R11>
+						<R12>-9.55909491e-006</R12>
+						<R20>0.830346465</R20>
+						<R21>-6.27338886e-006</R21>
+						<R22>0.557240248</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBX1741736AA0984F4CA96860BD5AAF21DF">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.011307</X>
+							<Y>-3.25754404</Y>
+							<Z>2.07064176</Z>
+							<R00>0.743733525</R00>
+							<R01>0.165650189</R01>
+							<R02>0.647613049</R02>
+							<R10>-0.0628662333</R10>
+							<R11>0.981853962</R11>
+							<R12>-0.178941458</R12>
+							<R20>-0.665498674</R20>
+							<R21>0.0923731327</R21>
+							<R22>0.740653217</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-22.7894058</X>
+							<Y>-53.7909546</Y>
+							<Z>22.5120621</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBXACB2E7E8A5DB458EB41899938AB8FC8E</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBXBAC3882F797640DFAFE478F7117C804E">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>36.8695221</X>
+						<Y>19.0908146</Y>
+						<Z>-3.11729431</Z>
+						<R00>0.557239413</R00>
+						<R01>-1.13360584e-005</R01>
+						<R02>-0.830342114</R02>
+						<R10>9.67457891e-006</R10>
+						<R11>1.00000405</R11>
+						<R12>-7.07805157e-006</R12>
+						<R20>0.8303442</R20>
+						<R21>-4.67151403e-006</R21>
+						<R22>0.557243705</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBXCB5EE4699BEE4866B7915FC9C7891402">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01178885</X>
+							<Y>-3.25700617</Y>
+							<Z>2.07092142</Z>
+							<R00>0.743730187</R00>
+							<R01>0.165654302</R01>
+							<R02>0.64761585</R02>
+							<R10>-0.062869519</R10>
+							<R11>0.981853366</R11>
+							<R12>-0.178943306</R12>
+							<R20>-0.665502071</R20>
+							<R21>0.0923716202</R21>
+							<R22>0.740650296</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-22.789444</X>
+							<Y>-0.590640128</Y>
+							<Z>22.512064</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBXBAC3882F797640DFAFE478F7117C804E</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX1D137B141E1247F18CD1BA8A85C3D25D">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>0.168897629</X>
+						<Y>72.2914276</Y>
+						<Z>21.5124111</Z>
+						<R00>0.557242811</R00>
+						<R01>-7.22333789e-006</R01>
+						<R02>-0.830339789</R02>
+						<R10>6.01261854e-006</R10>
+						<R11>1.00000405</R11>
+						<R12>-4.58210707e-006</R12>
+						<R20>0.830341876</R20>
+						<R21>-3.02493572e-006</R21>
+						<R22>0.557247043</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBX6C1FD74EE5A7486099EA0169BDE0C001">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01233435</X>
+							<Y>-3.25699878</Y>
+							<Z>2.07117581</Z>
+							<R00>0.743726909</R00>
+							<R01>0.165658414</R01>
+							<R02>0.647618651</R02>
+							<R10>-0.0628728271</R10>
+							<R11>0.981852829</R11>
+							<R12>-0.178945184</R12>
+							<R20>-0.665505528</R20>
+							<R21>0.0923700929</R21>
+							<R22>0.740647435</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-22.789629</X>
+							<Y>-53.7909393</Y>
+							<Z>-21.6873741</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBX1D137B141E1247F18CD1BA8A85C3D25D</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBXA40B6573ED994441B06B3100380DFFC4">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>0.169681549</X>
+						<Y>19.0907574</Y>
+						<Z>21.5126476</Z>
+						<R00>0.557254195</R00>
+						<R01>3.7252903e-007</R01>
+						<R02>-0.83033222</R02>
+						<R10>-6.61239028e-007</R10>
+						<R11>1.00000405</R11>
+						<R12>8.19563866e-008</R12>
+						<R20>0.830334306</R20>
+						<R21>-5.96046448e-008</R21>
+						<R22>0.557258368</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBX2DF4A1811235443D8FF19016C8BDAA2F">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.01242852</X>
+							<Y>-3.25649357</Y>
+							<Z>2.07090855</Z>
+							<R00>0.743723631</R00>
+							<R01>0.165662527</R01>
+							<R02>0.647621393</R02>
+							<R10>-0.0628761202</R10>
+							<R11>0.981852293</R11>
+							<R12>-0.178947046</R12>
+							<R20>-0.665508866</R20>
+							<R21>0.0923685804</R21>
+							<R22>0.740644574</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-22.7896671</X>
+							<Y>-0.590628684</Y>
+							<Z>-21.6873722</Z>
+							<R00>0.557253003</R00>
+							<R01>-7.22706318e-007</R01>
+							<R02>0.830333292</R02>
+							<R10>3.7252903e-007</R10>
+							<R11>1.00000501</R11>
+							<R12>-1.04308128e-007</R12>
+							<R20>-0.830330849</R20>
+							<R21>2.98023224e-008</R21>
+							<R22>0.55725801</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBX3FC00D638EC24B0BBE7960C135245BE6</Ref>
+						<Ref name="Part1">RBXA40B6573ED994441B06B3100380DFFC4</Ref>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBXB6BD4A5A86E742119B7826E8C7348926">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+RbxUtility = LoadLibrary(&quot;RbxUtility&quot;)
+Create = RbxUtility.Create
+
+BalloonScript = script:WaitForChild(&quot;BalloonScript&quot;)
+Gui = script:WaitForChild(&quot;Gui&quot;)
+
+MaxSpeed = 15
+
+IdleDuration = 15 --If the owner of the balloon doesn&apos;t sit in a seat for this long, the balloon is removed.
+DeployTick = 0
+
+Connections = {}
+
+Seated = false
+Flying = false
+MouseDown = false
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ServerControl.Name = &quot;ServerControl&quot;
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
+ClientControl.Name = &quot;ClientControl&quot;
+ClientControl.Parent = Tool
+
+DisplayModel = Tool:FindFirstChild(&quot;DisplayModel&quot;)
+if DisplayModel then
+&#9;DisplayModel:Destroy()
+end
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function Slerp(t, v1, v2)
+&#9;local om = math.acos(math.min(1, v1:Dot(v2)))
+&#9;return ((om &lt; 0.01 and ((1 - t) * v1 + t * v2)) or ((math.sin((1 - t) * om) / math.sin(om)) * v1 + (math.sin(t * om) / math.sin(om)) * v2))
+end
+
+function TransformModel(Objects, Center, NewCFrame, Recurse)
+&#9;local Objects = ((type(Objects) ~= &quot;table&quot; and {Objects}) or Objects)
+&#9;for i, v in pairs(Objects) do
+&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
+&#9;&#9;&#9;v.CFrame = NewCFrame:toWorldSpace(Center:toObjectSpace(v.CFrame))
+&#9;&#9;end
+&#9;&#9;if Recurse then
+&#9;&#9;&#9;TransformModel(v:GetChildren(), Center, NewCFrame, true)
+&#9;&#9;end
+&#9;end
+end
+
+function GetAllConnectedParts(Object)
+&#9;local Parts = {}
+&#9;local function GetConnectedParts(Object)
+&#9;&#9;for i, v in pairs(Object:GetConnectedParts()) do
+&#9;&#9;&#9;local Ignore = false
+&#9;&#9;&#9;for ii, vv in pairs(Parts) do
+&#9;&#9;&#9;&#9;if v == vv then
+&#9;&#9;&#9;&#9;&#9;Ignore = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not Ignore then
+&#9;&#9;&#9;&#9;table.insert(Parts, v)
+&#9;&#9;&#9;&#9;GetConnectedParts(v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;GetConnectedParts(Object)
+&#9;return Parts
+end
+
+function CreateBalloon()
+&#9;local BaseSize = Vector3.new(10, 1, 8.5)
+&#9;local SeatSize = Vector3.new(2, 0.6, 2)
+&#9;local WallSize = Vector2.new(4, 1) --Y, Z
+&#9;local XWallSize = Vector3.new(BaseSize.X, WallSize.X, WallSize.Y)
+&#9;local ZWallSize = Vector3.new(WallSize.Y, WallSize.X, BaseSize.Z - (WallSize.Y * 2))
+&#9;local Model = Create(&quot;Model&quot;){
+&#9;&#9;Name = &quot;ROBLOXWorldTourHotAirBalloon&quot;,
+&#9;&#9;Create(&quot;ObjectValue&quot;){
+&#9;&#9;&#9;Name = &quot;Creator&quot;,
+&#9;&#9;&#9;Value = Player,
+&#9;&#9;},
+&#9;&#9;Create(&quot;NumberValue&quot;){
+&#9;&#9;&#9;Name = &quot;IdleDuration&quot;,
+&#9;&#9;&#9;Value = IdleDuration,
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;MainPart&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;Material = Enum.Material.Plastic, 
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth, 
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom, 
+&#9;&#9;&#9;Size = BaseSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;RightSeatWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;LeftSeatWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;BalloonWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;FireWeld1&quot;
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;FireWeld2&quot;
+&#9;&#9;&#9;},
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;LeftWallWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;RightWallWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;FrontWallWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Weld&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;BackWallWeld&quot;,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;BodyGyro&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;FlyingGyro&quot;,
+&#9;&#9;&#9;&#9;maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+&#9;&#9;&#9;&#9;P = 5000,
+&#9;&#9;&#9;&#9;D = 500,
+&#9;&#9;&#9;&#9;cframe = CFrame.new(),
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;BodyVelocity&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;FlyingForce&quot;, 
+&#9;&#9;&#9;&#9;velocity = Vector3.new(),
+&#9;&#9;&#9;&#9;P = 1000,
+&#9;&#9;&#9;}, 
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;LeftWall&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;&#9;&#9;Size = ZWallSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;RightWall&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom, 
+&#9;&#9;&#9;Size = ZWallSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;FrontWall&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;&#9;&#9;Size = XWallSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;BackWall&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;&#9;&#9;Size = XWallSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;},
+&#9;&#9;Create(&quot;Seat&quot;){
+&#9;&#9;&#9;Name = &quot;RightSeat&quot;,
+&#9;&#9;&#9;BrickColor = BrickColor.new(&quot;Really black&quot;),
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;&#9;&#9;Size = SeatSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;}, 
+&#9;&#9;Create(&quot;Seat&quot;){
+&#9;&#9;&#9;Name = &quot;LeftSeat&quot;,
+&#9;&#9;&#9;BrickColor = BrickColor.new(&quot;Really black&quot;),
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;&#9;&#9;Size = SeatSize,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;}, 
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;FirePart1&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;Create(&quot;Fire&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;Fire1&quot;,
+&#9;&#9;&#9;&#9;Heat = 9,
+&#9;&#9;&#9;&#9;Size = 5,
+&#9;&#9;&#9;&#9;Color = Color3.new((236 / 255), (139 / 255), (70 / 255)),
+&#9;&#9;&#9;&#9;SecondaryColor = Color3.new((139 / 255), (80 / 255), (55 / 255)),
+&#9;&#9;&#9;&#9;Enabled = false,
+&#9;&#9;&#9;}, 
+&#9;&#9;&#9;Create(&quot;Sound&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;FireSound&quot;,
+&#9;&#9;&#9;&#9;SoundId = &quot;http://www.roblox.com/asset/?id=30624426&quot;,
+&#9;&#9;&#9;&#9;Looped = true,
+&#9;&#9;&#9;}, 
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;FirePart2&quot;,
+&#9;&#9;&#9;Transparency = 1,
+&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;Create(&quot;Fire&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;Fire2&quot;,
+&#9;&#9;&#9;&#9;Heat = 9,
+&#9;&#9;&#9;&#9;Size = 5,
+&#9;&#9;&#9;&#9;Color = Color3.new((236 / 255), (139 / 255), (70 / 255)),
+&#9;&#9;&#9;&#9;SecondaryColor = Color3.new((139 / 255), (80 / 255), (55 / 255)),
+&#9;&#9;&#9;&#9;Enabled = false,
+&#9;&#9;&#9;}, 
+&#9;&#9;},
+&#9;&#9;Create(&quot;Part&quot;){
+&#9;&#9;&#9;Name = &quot;Balloon&quot;,
+&#9;&#9;&#9;Material = Enum.Material.Plastic,
+&#9;&#9;&#9;Shape = Enum.PartType.Block, 
+&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
+&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
+&#9;&#9;&#9;Size = Vector3.new(1, 1, 1),
+&#9;&#9;&#9;CanCollide = false,
+&#9;&#9;&#9;Locked = true,
+&#9;&#9;&#9;Create(&quot;SpecialMesh&quot;){
+&#9;&#9;&#9;&#9;Name = &quot;Mesh&quot;,
+&#9;&#9;&#9;&#9;MeshType = &quot;FileMesh&quot;,
+&#9;&#9;&#9;&#9;MeshId = &quot;http://www.roblox.com/asset/?id=115983648&quot;,
+&#9;&#9;&#9;&#9;TextureId = &quot;http://www.roblox.com/asset/?id=115983592&quot;,
+&#9;&#9;&#9;&#9;Scale = Vector3.new(2.1, 1.8, 2.1),
+&#9;&#9;&#9;}, 
+&#9;&#9;}, 
+&#9;}
+&#9;
+&#9;local RightSeatWeld = Model.MainPart.RightSeatWeld
+&#9;RightSeatWeld.Part0 = RightSeatWeld.Parent
+&#9;RightSeatWeld.Part1 = Model.RightSeat
+&#9;RightSeatWeld.C0 = CFrame.new(SeatSize.X, SeatSize.Y, 0)
+
+&#9;local LeftSeatWeld = Model.MainPart.LeftSeatWeld
+&#9;LeftSeatWeld.Part0 = LeftSeatWeld.Parent
+&#9;LeftSeatWeld.Part1 = Model.LeftSeat
+&#9;LeftSeatWeld.C0 = CFrame.new(-SeatSize.X, SeatSize.Y, 0)
+&#9;
+&#9;local BalloonWeld = Model.MainPart.BalloonWeld
+&#9;BalloonWeld.Part0 = BalloonWeld.Parent
+&#9;BalloonWeld.Part1 = Model.Balloon
+&#9;BalloonWeld.C0 = CFrame.new(0, (27 - (BaseSize.Y / 2)), 0)
+&#9;
+&#9;local LeftWeld = Model.MainPart.LeftWallWeld
+&#9;LeftWeld.Part0 = LeftWeld.Parent
+&#9;LeftWeld.Part1 = Model.LeftWall
+&#9;LeftWeld.C0 = CFrame.new(((Model.LeftWall.Size.X / 2) + (Model.MainPart.Size.X / 2) - Model.FrontWall.Size.X), ((Model.LeftWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), 0)
+
+&#9;local RightWeld = Model.MainPart.RightWallWeld
+&#9;RightWeld.Part0 = RightWeld.Parent
+&#9;RightWeld.Part1 = Model.RightWall
+&#9;RightWeld.C0 = CFrame.new(-((Model.RightWall.Size.X / 2) + (Model.MainPart.Size.X / 2) - Model.FrontWall.Size.X), ((Model.RightWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), 0)
+&#9;
+&#9;local FrontWeld = Model.MainPart.FrontWallWeld
+&#9;FrontWeld.Part0 = FrontWeld.Parent
+&#9;FrontWeld.Part1 = Model.FrontWall
+&#9;FrontWeld.C0 = CFrame.new(0, ((Model.FrontWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), ((Model.FrontWall.Size.Z / 2) + (Model.MainPart.Size.Z / 2) - Model.FrontWall.Size.Z))
+
+&#9;local BackWeld = Model.MainPart.BackWallWeld
+&#9;BackWeld.Part0 = BackWeld.Parent
+&#9;BackWeld.Part1 = Model.BackWall
+&#9;BackWeld.C0 = CFrame.new(0, ((Model.BackWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), -((Model.BackWall.Size.Z / 2) + (Model.MainPart.Size.Z / 2) - Model.BackWall.Size.Z))
+&#9;
+&#9;local FireWeld1 = Model.MainPart.FireWeld1
+&#9;FireWeld1.Part0 = FireWeld1.Parent
+&#9;FireWeld1.Part1 = Model.FirePart1
+&#9;FireWeld1.C0 = CFrame.new(-(Model.FirePart1.Size.X * 0.35), 14.5, 0)
+&#9;
+&#9;local FireWeld2 = Model.MainPart.FireWeld2
+&#9;FireWeld2.Part0 = FireWeld2.Parent
+&#9;FireWeld2.Part1 = Model.FirePart2
+&#9;FireWeld2.C0 = CFrame.new((Model.FirePart1.Size.X * 0.35), 14.5, 0)
+&#9;
+&#9;local BalloonScriptClone = BalloonScript:Clone()
+&#9;BalloonScriptClone.Disabled = false
+&#9;BalloonScriptClone.Parent = Model
+&#9;&#9;
+&#9;return {
+&#9;&#9;Balloon = Model,
+&#9;&#9;Creator = Model.Creator,
+&#9;&#9;MainPart = Model.MainPart,
+&#9;&#9;BodyGyro = Model.MainPart.FlyingGyro,
+&#9;&#9;BodyVelocity = Model.MainPart.FlyingForce,
+&#9;&#9;FirePart1 = Model.FirePart1,
+&#9;&#9;Fire1 = Model.FirePart1.Fire1,
+&#9;&#9;Fire2 = Model.FirePart2.Fire2,
+&#9;&#9;FireSound = Model.FirePart1.FireSound,
+&#9;}
+&#9;
+end
+
+function BeginFlight()
+&#9;
+&#9;if not CurrentBalloon or not CurrentBalloon.Balloon or not CurrentBalloon.Balloon.Parent then
+&#9;&#9;return
+&#9;end
+&#9;&#9;
+&#9;local MainPart = CurrentBalloon.Balloon:FindFirstChild(&quot;MainPart&quot;)
+&#9;if not MainPart then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;Flying = true
+&#9;
+&#9;pcall(function()
+&#9;&#9;GuiClone.Frame.Message.Text = &quot;Click and Hold to direct the Balloon in the&quot; .. &quot;\n&quot; .. &quot;direction you are looking. Holding with both&quot; .. &quot;\n&quot;.. &quot;mouse buttons gives easy free flight.&quot;
+&#9;end)
+&#9;
+&#9;ControlBalloon()
+&#9;
+end
+
+function EndFlight()
+&#9;
+&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+&#9;&#9;for i, v in pairs({CurrentBalloon.Fire1, CurrentBalloon.Fire2}) do
+&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;v.Enabled = false
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;
+&#9;Flying = false
+&#9;
+&#9;pcall(function()
+&#9;&#9;GuiClone.Frame.Message.Text = &quot;Click to place a Balloon.&quot; .. &quot;\n&quot;.. &quot;Get into a Balloon to fly it.&quot;
+&#9;end)
+&#9;
+end
+
+function ControlBalloon()
+&#9;
+&#9;if not CurrentBalloon or not CurrentBalloon.Balloon.Parent or not CurrentBalloon.MainPart.Parent or not CurrentBalloon.BodyGyro.Parent or not CurrentBalloon.BodyVelocity.Parent then
+&#9;&#9;return
+&#9;end
+&#9;
+&#9;local MainPart = CurrentBalloon.MainPart
+&#9;local FlyingForce = CurrentBalloon.BodyVelocity
+&#9;local FlyingGyro = CurrentBalloon.BodyGyro
+&#9;local FirePart1 = CurrentBalloon.FirePart1
+&#9;local Fire1 = CurrentBalloon.Fire1
+&#9;local Fire2 = CurrentBalloon.Fire2
+&#9;
+&#9;local SoundPlaying = false&#9;
+&#9;
+&#9;local BalloonMass = 0
+&#9;for i, v in pairs(GetAllConnectedParts(MainPart)) do
+&#9;&#9;BalloonMass = (BalloonMass + v:GetMass())
+&#9;end
+&#9;BalloonMass = (BalloonMass * 2 * 196.20)
+&#9;FlyingForce.maxForce = Vector3.new(BalloonMass, BalloonMass, BalloonMass)
+&#9;
+&#9;local CurrentVelocity = math.min(MaxSpeed, FlyingForce.velocity.magnitude)&#9;
+&#9;
+&#9;local LastTime = tick()
+&#9;local DesiredFlightCFrame = MainPart.CFrame
+&#9;
+&#9;while ToolEquipped and Flying do
+&#9;&#9;local Now = tick()
+&#9;&#9;local Time = (Now - LastTime)
+&#9;&#9;LastTime = Now
+&#9;&#9;
+&#9;&#9;if Flying then
+&#9;&#9;&#9;
+&#9;&#9;&#9;local CoordinateFrame = InvokeClient(&quot;GetCamera&quot;, {Property = &quot;CoordinateFrame&quot;})
+&#9;&#9;&#9;local MoveDirection = (CoordinateFrame * CFrame.Angles(0.6, 0, 0))
+&#9;&#9;&#9;if MouseDown then
+&#9;&#9;&#9;&#9;local Theta = math.acos(DesiredFlightCFrame.lookVector:Dot(MoveDirection.lookVector))
+&#9;&#9;&#9;&#9;local Frac = math.min(0.7, (0.7 * Time / Theta))
+&#9;&#9;&#9;&#9;local Unit = Slerp(Frac, DesiredFlightCFrame.lookVector, MoveDirection.lookVector)
+&#9;&#9;&#9;&#9;DesiredFlightCFrame = CFrame.new(Vector3.new(0, 0, 0), Unit)
+&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;if CurrentVelocity &lt; MaxSpeed then
+&#9;&#9;&#9;&#9;&#9;CurrentVelocity = math.min((CurrentVelocity + 8 * Time), MaxSpeed)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;if CurrentVelocity &gt; 2 then
+&#9;&#9;&#9;&#9;&#9;CurrentVelocity = math.max(0, (CurrentVelocity - 3 * Time))
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;
+&#9;&#9;&#9;local Direction = DesiredFlightCFrame.lookVector
+&#9;&#9;&#9;local DirectionXZ = Vector3.new(Direction.X, 0, Direction.Z).unit
+&#9;&#9;&#9;
+&#9;&#9;&#9;FlyingGyro.cframe = CFrame.new(Vector3.new(), DirectionXZ) * CFrame.Angles(0, 0, 0) --CFrame.Angles(0, 0, (MainPart.RotVelocity.y / 3 * (1 - math.abs(Direction.Y) ^ 2)))
+&#9;&#9;&#9;
+&#9;&#9;&#9;if FirePart1 and FirePart1.Parent then
+&#9;&#9;&#9;&#9;local FireSound = FirePart1:FindFirstChild(&quot;FireSound&quot;)
+&#9;&#9;&#9;&#9;if FireSound then
+&#9;&#9;&#9;&#9;&#9;if Direction.y &gt; 0 then
+&#9;&#9;&#9;&#9;&#9;&#9;if not SoundPlaying then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;SoundPlaying = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;FireSound:Play()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;SoundPlaying = false
+&#9;&#9;&#9;&#9;&#9;&#9;FireSound:Stop()
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;for i, v in pairs({Fire1, Fire2}) do
+&#9;&#9;&#9;&#9;if v and v.Parent then
+&#9;&#9;&#9;&#9;&#9;v.Enabled = MouseDown --(Direction.y &gt; 0 and CurrentVelocity &gt; 2)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;local SlowDownFactor = math.abs(MainPart.RotVelocity.Y / 3)
+&#9;&#9;&#9;FlyingForce.velocity = (Direction.unit * (CurrentVelocity - SlowDownFactor) * (1 - Direction.Y ^ 2))
+&#9;&#9;end
+&#9;&#9;wait()
+&#9;end
+end
+
+function SetUpConnections()
+&#9;for i, v in pairs(Connections) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;Connections = {}
+&#9;if CurrentBalloon and CurrentBalloon.Balloon then
+&#9;&#9;local Balloon = CurrentBalloon.Balloon
+&#9;&#9;local BalloonRemoved = Balloon.Changed:connect(function(Property)
+&#9;&#9;&#9;if Property == &quot;Parent&quot; and not Balloon.Parent then
+&#9;&#9;&#9;&#9;Handle.Transparency = 0
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;for i, v in pairs(Balloon:GetChildren()) do
+&#9;&#9;&#9;if v:IsA(&quot;Seat&quot;) then
+&#9;&#9;&#9;&#9;local SeatWeldAdded = v.ChildAdded:connect(function(Child)
+&#9;&#9;&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; and not Flying then
+&#9;&#9;&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Seated = true
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;BeginFlight()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;local SeatWeldRemoved = v.ChildRemoved:connect(function(Child)
+&#9;&#9;&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; and Flying then
+&#9;&#9;&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;Seated = false
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;EndFlight()
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;&#9;for i, v in pairs({BalloonRemoved, SeatWeldAdded, SeatWeldRemoved}) do
+&#9;&#9;&#9;&#9;&#9;if v then
+&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Connections, v)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;Spawn(function()
+&#9;&#9;local PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
+&#9;&#9;if PlayerGui then
+&#9;&#9;&#9;GuiClone = Gui:Clone()
+&#9;&#9;&#9;GuiClone.Frame.Message.Text = &quot;Click to create a Balloon.&quot; .. &quot;\n&quot; .. &quot;Get into a Balloon to fly it.&quot;
+&#9;&#9;&#9;GuiClone.Parent = PlayerGui
+&#9;&#9;end
+&#9;end)
+&#9;Spawn(function()
+&#9;&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+&#9;&#9;&#9;Handle.Transparency = 1
+&#9;&#9;&#9;if Seated then
+&#9;&#9;&#9;&#9;BeginFlight()
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end)
+&#9;ToolEquipped = true
+end
+
+function Unequipped()
+&#9;MouseDown = false
+&#9;EndFlight()
+&#9;if GuiClone and GuiClone.Parent then
+&#9;&#9;GuiClone:Destroy()
+&#9;end
+&#9;Handle.Transparency = 0
+&#9;ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+&#9;if player == Player and ToolEquipped and value and CheckIfAlive() then
+&#9;&#9;if mode == &quot;MouseClick&quot; then
+&#9;&#9;&#9;local Down = value.Down
+&#9;&#9;&#9;if Down then
+&#9;&#9;&#9;&#9;MouseDown = true
+&#9;&#9;&#9;&#9;if (tick() - DeployTick) &gt; IdleDuration and (not CurrentBalloon or not CurrentBalloon.Balloon.Parent) then
+&#9;&#9;&#9;&#9;&#9;DeployTick = tick()
+&#9;&#9;&#9;&#9;&#9;Seated = false
+&#9;&#9;&#9;&#9;&#9;Flying = false
+&#9;&#9;&#9;&#9;&#9;Handle.Transparency = 1
+&#9;&#9;&#9;&#9;&#9;local MousePosition = InvokeClient(&quot;MousePosition&quot;)
+&#9;&#9;&#9;&#9;&#9;local Direction = CFrame.new(Torso.Position, MousePosition.Position)
+&#9;&#9;&#9;&#9;&#9;CurrentBalloon = CreateBalloon()
+&#9;&#9;&#9;&#9;&#9;local Balloon = CurrentBalloon.Balloon
+&#9;&#9;&#9;&#9;&#9;local MainPart = CurrentBalloon.MainPart
+&#9;&#9;&#9;&#9;&#9;TransformModel(Balloon, Balloon:GetModelCFrame(), ((Torso.CFrame + Direction.lookVector * 10) * CFrame.Angles(0, 0, 0)), true)
+&#9;&#9;&#9;&#9;&#9;MainPart.CFrame = CFrame.new(Vector3.new(MainPart.Position.X, Torso.Position.Y, MainPart.Position.Z), Torso.Position)
+&#9;&#9;&#9;&#9;&#9;CurrentBalloon.BodyGyro.cframe = MainPart.CFrame
+&#9;&#9;&#9;&#9;&#9;Balloon.Parent = game:GetService(&quot;Workspace&quot;)
+&#9;&#9;&#9;&#9;&#9;SetUpConnections(CurrentBalloon)
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;MouseDown = false
+&#9;&#9;&#9;end
+&#9;&#9;elseif mode == &quot;KeyPress&quot; then
+&#9;&#9;&#9;local Key = value.Key
+&#9;&#9;&#9;local ByteKey = string.byte(Key)
+&#9;&#9;&#9;local Down = value.Down
+&#9;&#9;&#9;if Key == &quot;x&quot; and Down then
+&#9;&#9;&#9;&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+&#9;&#9;&#9;&#9;&#9;CurrentBalloon.Balloon:Destroy()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function InvokeClient(Mode, Value)
+&#9;local ClientReturn = nil
+&#9;pcall(function()
+&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+&#9;end)
+&#9;return ClientReturn
+end
+
+Tool.Changed:connect(function(Property)
+&#9;if Property == &quot;Parent&quot; and not Tool.Parent:IsA(&quot;Backpack&quot;) and not Players:GetPlayerFromCharacter(Tool.Parent) then
+&#9;&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+&#9;&#9;&#9;CurrentBalloon.Balloon:Destroy()
+&#9;&#9;end
+&#9;end
+end)
+
+ServerControl.OnServerInvoke = OnServerInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
+			</Properties>
+			<Item class="ScreenGui" referent="RBXB5A2321F138945F2B27D4F10357D982E">
+				<Properties>
+					<string name="Name">Gui</string>
+				</Properties>
+				<Item class="Frame" referent="RBXAFF07822ED6E4ED3BDABF89CAACB712C">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Frame</string>
+						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>-135</XO>
+							<YS>1</YS>
+							<YO>-180</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>270</XO>
+							<YS>0</YS>
+							<YO>80</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">3</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+					<Item class="TextLabel" referent="RBXC7D95B5CFCF742F39022744D40FD41FE">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">1</token>
+							<token name="FontSize">5</token>
+							<string name="Name">Message</string>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>0</XO>
+								<YS>0</YS>
+								<YO>0</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<UDim2 name="Size">
+								<XS>1</XS>
+								<XO>0</XO>
+								<YS>1</YS>
+								<YO>0</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<string name="Text">Click to place a Balloon.
+Get into a Balloon to fly it.</string>
+							<Color3 name="TextColor3">4293322470</Color3>
+							<bool name="TextScaled">false</bool>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
+							<float name="TextTransparency">0</float>
+							<bool name="TextWrapped">true</bool>
+							<token name="TextXAlignment">2</token>
+							<token name="TextYAlignment">1</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">1</int>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+			<Item class="Script" referent="RBX1F3F43E69C0B493EA5C4AC93763E8730">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">BalloonScript</string>
+					<ProtectedString name="Source">--Made by Luckymaxer
+
+Model = script.Parent
+Balloon = Model:FindFirstChild(&quot;Balloon&quot;)
+MainPart = Model:FindFirstChild(&quot;MainPart&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+Debris = game:GetService(&quot;Debris&quot;)
+
+Seated = Instance.new(&quot;BoolValue&quot;)
+Seated.Value = false
+
+Seats = {}
+
+function DestroyModel()
+&#9;Debris:AddItem(Model, 0.5)
+end
+
+Creator = Model:FindFirstChild(&quot;Creator&quot;)
+IdleDuration = Model:FindFirstChild(&quot;IdleDuration&quot;)
+
+if not Balloon or not MainPart or not Creator or not Creator.Value or not Creator.Value:IsA(&quot;Player&quot;) or not Creator.Value.Parent or not IdleDuration then
+&#9;DestroyModel()
+&#9;return
+end
+
+BalloonWeld = MainPart:FindFirstChild(&quot;BalloonWeld&quot;)
+if not BalloonWeld then
+&#9;DestroyModel()
+&#9;return
+end
+
+Player = Creator.Value
+Character = Player.Character
+
+IdleDuration = IdleDuration.Value
+
+function GetAllConnectedParts(Object)
+&#9;local Parts = {}
+&#9;local function GetConnectedParts(Object)
+&#9;&#9;for i, v in pairs(Object:GetConnectedParts()) do
+&#9;&#9;&#9;local Ignore = false
+&#9;&#9;&#9;for ii, vv in pairs(Parts) do
+&#9;&#9;&#9;&#9;if v == vv then
+&#9;&#9;&#9;&#9;&#9;Ignore = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not Ignore then
+&#9;&#9;&#9;&#9;table.insert(Parts, v)
+&#9;&#9;&#9;&#9;GetConnectedParts(v)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+&#9;GetConnectedParts(Object)
+&#9;return Parts
+end
+
+function IdleRemove()
+&#9;local CanRemove = true
+&#9;local RemoveCheck = Seated.Changed:connect(function()
+&#9;&#9;if Seated.Value then
+&#9;&#9;&#9;CanRemove = false
+&#9;&#9;end
+&#9;end)
+&#9;wait(IdleDuration)
+&#9;if RemoveCheck then
+&#9;&#9;RemoveCheck:disconnect()
+&#9;end
+&#9;if CanRemove then
+&#9;&#9;DestroyModel()
+&#9;end
+end
+
+Player.Changed:connect(function(Property)
+&#9;if Property == &quot;Parent&quot; and not Player.Parent then
+&#9;&#9;DestroyModel()
+&#9;elseif Property == &quot;Character&quot; and not Player.Character or not Player.Character.Parent then
+&#9;&#9;DestroyModel()
+&#9;end
+end)
+
+for i, v in pairs(Model:GetChildren()) do
+&#9;if v:IsA(&quot;Seat&quot;) then
+&#9;&#9;table.insert(Seats, v)
+&#9;&#9;v.ChildAdded:connect(function(Child)
+&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; then
+&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+&#9;&#9;&#9;&#9;&#9;Seated.Value = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;&#9;v.ChildRemoved:connect(function(Child)
+&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; then
+&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+&#9;&#9;&#9;&#9;&#9;Seated.Value = false
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+Spawn(function()
+&#9;Seated.Changed:connect(function()
+&#9;&#9;if not Seated.Value then
+&#9;&#9;&#9;IdleRemove()
+&#9;&#9;end
+&#9;end)
+&#9;
+&#9;IdleRemove()
+end)
+
+Spawn(function() --Broken monitor; Will determine whether or not the balloon is intact or in pieces.
+&#9;while true do
+&#9;&#9;if not MainPart.Parent or not Balloon.Parent or (not BalloonWeld.Parent or not BalloonWeld.Part0 or not BalloonWeld.Part0.Parent or not BalloonWeld.Part1 or not BalloonWeld.Part1.Parent) then --The base or balloon of the model is missing, so the balloon is removed.
+&#9;&#9;&#9;DestroyModel()
+&#9;&#9;&#9;break
+&#9;&#9;end
+&#9;&#9;local ConnectedParts = GetAllConnectedParts(MainPart)
+&#9;&#9;for i, v in pairs(Seats) do
+&#9;&#9;&#9;local SeatWelded = false
+&#9;&#9;&#9;for ii, vv in pairs(ConnectedParts) do
+&#9;&#9;&#9;&#9;if v == vv then
+&#9;&#9;&#9;&#9;&#9;SeatWelded = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not SeatWelded then --If neither seat is attached to the balloon, it is unusable, therefore it is removed.
+&#9;&#9;&#9;&#9;table.remove(Seats, i)
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if #Seats == 0 then
+&#9;&#9;&#9;&#9;DestroyModel()
+&#9;&#9;&#9;&#9;break
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;wait(1)
+&#9;end
+end)</ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="NumberValue" referent="RBX6">
+		<Item class="LocalScript" referent="RBX8CAD8148BB1B45EC88BDA9AEE4F7D411">
 			<Properties>
-				<string name="Name">NextBalloonAt</string>
-				<double name="Value">0</double>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild(&quot;Handle&quot;)
+
+Players = game:GetService(&quot;Players&quot;)
+RunService = game:GetService(&quot;RunService&quot;)
+ContextActionService = game:GetService(&quot;ContextActionService&quot;)
+UserInputService = game:GetService(&quot;UserInputService&quot;)
+
+Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+&#9;if mode == &quot;PlayAnimation&quot; and value and ToolEquipped and Humanoid then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+&#9;&#9;table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+&#9;&#9;AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+&#9;elseif mode == &quot;StopAnimation&quot; and value then
+&#9;&#9;for i, v in pairs(Animations) do
+&#9;&#9;&#9;if v.Animation == value.Animation then
+&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;&#9;&#9;table.remove(Animations, i)
+&#9;&#9;&#9;end
+&#9;&#9;end
+&#9;end
+end
+
+function DisableJump(Boolean)
+&#9;if PreventJump then
+&#9;&#9;PreventJump:disconnect()
+&#9;end
+&#9;if Boolean then
+&#9;&#9;PreventJump = Humanoid.Changed:connect(function(Property)
+&#9;&#9;&#9;if Property ==  &quot;Jump&quot; then
+&#9;&#9;&#9;&#9;Humanoid.Jump = false
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+function CheckIfAlive()
+&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+&#9;Character = Tool.Parent
+&#9;Player = Players:GetPlayerFromCharacter(Character)
+&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
+&#9;ToolEquipped = true
+&#9;if not CheckIfAlive() then
+&#9;&#9;return
+&#9;end
+&#9;PlayerMouse = Player:GetMouse()
+&#9;Mouse.Button1Down:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
+&#9;end)
+&#9;Mouse.Button1Up:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
+&#9;end)
+&#9;Mouse.KeyDown:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
+&#9;end)
+&#9;Mouse.KeyUp:connect(function(Key)
+&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
+&#9;end)
+&#9;Mouse.Move:connect(function()
+&#9;&#9;InvokeServer(&quot;MouseMove&quot;, {Position = Mouse.Hit.p, Target = Mouse.Target})
+&#9;end)
+&#9;if UserInputService.TouchEnabled then
+&#9;&#9;ContextActionService:BindActionToInputTypes(&quot;Remove&quot;, function()
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = &quot;x&quot;, Down = true})
+&#9;&#9;&#9;end)
+&#9;&#9;end, true, &quot;&quot;)
+&#9;&#9;ContextActionService:SetTitle(&quot;Remove&quot;, &quot;Remove&quot;)
+&#9;end
+end
+
+function Unequipped()
+&#9;ToolEquipped = false
+&#9;LocalObjects = {}
+&#9;if UserInputService.TouchEnabled then
+&#9;&#9;ContextActionService:UnbindAction(&quot;Remove&quot;)
+&#9;end
+&#9;for i, v in pairs(Animations) do
+&#9;&#9;if v and v.AnimationTrack then
+&#9;&#9;&#9;v.AnimationTrack:Stop()
+&#9;&#9;end
+&#9;end
+&#9;for i, v in pairs({PreventJump, ObjectLocalTransparencyModifier}) do
+&#9;&#9;if v then
+&#9;&#9;&#9;v:disconnect()
+&#9;&#9;end
+&#9;end
+&#9;Animations = {}
+end
+
+function InvokeServer(mode, value)
+&#9;pcall(function()
+&#9;&#9;local ServerReturn = ServerControl:InvokeServer(mode, value)
+&#9;&#9;return ServerReturn
+&#9;end)
+end
+
+function OnClientInvoke(mode, value)
+&#9;if mode == &quot;PlayAnimation&quot; and value and ToolEquipped and Humanoid then
+&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, value)
+&#9;elseif mode == &quot;StopAnimation&quot; and value then
+&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, value)
+&#9;elseif mode == &quot;PlaySound&quot; and value then
+&#9;&#9;value:Play()
+&#9;elseif mode == &quot;StopSound&quot; and value then
+&#9;&#9;value:Stop()
+&#9;elseif mode == &quot;MousePosition&quot; then
+&#9;&#9;return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+&#9;elseif mode == &quot;DisableJump&quot; then
+&#9;&#9;DisableJump(value)
+&#9;elseif mode == &quot;SetCamera&quot; then
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;Camera[value.Property] = value.Value
+&#9;&#9;end)
+&#9;elseif mode == &quot;GetCamera&quot; then
+&#9;&#9;local PropertyReturned = false
+&#9;&#9;local PropertyValue = nil
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;PropertyValue = Camera[value.Property]
+&#9;&#9;&#9;PropertyReturned = true
+&#9;&#9;end)
+&#9;&#9;return ((PropertyReturned and PropertyValue) or nil)
+&#9;elseif mode == &quot;SetLocalTransparencyModifier&quot; and value and ToolEquipped then
+&#9;&#9;pcall(function()
+&#9;&#9;&#9;local ObjectFound = false
+&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;if v == value then
+&#9;&#9;&#9;&#9;&#9;ObjectFound = true
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end
+&#9;&#9;&#9;if not ObjectFound then
+&#9;&#9;&#9;&#9;table.insert(LocalObjects, value)
+&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
+&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
+&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;local CurrentTransparency = v.Object.LocalTransparencyModifier
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ((not v.AutoUpdate and (CurrentTransparency == 1 or  CurrentTransparency == 0)) or v.AutoUpdate) then
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(LocalObjects, i)
+&#9;&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end)
+&#9;&#9;&#9;end
+&#9;&#9;end)
+&#9;end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="LocalScript" referent="RBXCDD1FDA4226C450CBB705277D93B9770">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source">--Made by Luckymaxer
+
+Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
+Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+&#9;if Mouse then
+&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+&#9;end
+end
+
+function OnEquipped(ToolMouse)
+&#9;Mouse = ToolMouse
+&#9;UpdateIcon()
+end
+
+function OnChanged(Property)
+&#9;if Property == &quot;Enabled&quot; then
+&#9;&#9;UpdateIcon()
+&#9;end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX928C12BB69664A35B04D5F71CA778BAC">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-9.61213684</X>
-					<Y>-18.3012524</Y>
-					<Z>35.0836754</Z>
-					<R00>0.946649253</R00>
-					<R01>-0.138739124</R01>
-					<R02>-0.290872186</R02>
+					<X>-33.4304543</X>
+					<Y>54.3175926</Y>
+					<Z>14.2893238</Z>
+					<R00>0.534327209</R00>
+					<R01>0.09761893</R01>
+					<R02>-0.839621961</R02>
 					<R10>-0</R10>
-					<R11>0.90258503</R11>
-					<R12>-0.430511624</R12>
-					<R20>0.322265685</R20>
-					<R21>0.40754351</R21>
-					<R22>0.85443145</R22>
+					<R11>0.993308902</R11>
+					<R12>0.115487412</R12>
+					<R20>0.845277667</R20>
+					<R21>-0.0617080666</R21>
+					<R22>0.530752003</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-9.03039265</X>
-					<Y>-17.4402294</Y>
-					<Z>33.3748131</Z>
+					<X>-22.2131348</X>
+					<Y>52.7746849</Y>
+					<Z>7.19849586</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
