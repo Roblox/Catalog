@@ -19,6 +19,7 @@
 				<R21>0.261768937</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">DualSaber</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=81130905</url></Content>
 			<string name="ToolTip">Swing like a bee</string>
@@ -28,237 +29,65 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">--[[
-&#9;// Now, I arrange my gear with a handle and 2 hidden blades under it. 
-]]
+				<ProtectedString name="Source">local UIS, CAS = game:GetService&apos;UserInputService&apos;, game:GetService&apos;ContextActionService&apos;
 
-local function waitForChild(parent, instance)
-&#9;while parent:FindFirstChild(instance) == nil do 
-&#9;&#9;print(parent, &quot; waiting for &quot;, instance)
-&#9;&#9;wait()
-&#9;end 
-&#9;return parent[instance]
-end 
-
-local Tool = script.Parent 
-local Saber = Tool.Handle
-
-Tool.Enabled = true 
-
-local vCharacter 
-local vTorso
-local vHumanoid 
-local vRightArm 
-local vLeftArm
-
-local Slash_Anim
-local Split_Anim
-local DoubleSlash_Anim 
-local Switch_Anim    
-local SwordWalk_Anim
-
-local RightGrip_Weld
-local LeftGrip_Weld 
-
-local UnsheathSound = waitForChild(Saber, &quot;SaberSound&quot;)
-
-local LeftSaber = Instance.new(&quot;Part&quot;)
-
-local TopBlade = waitForChild(Saber, &quot;TopBlade&quot;)
-local BottomBlade = waitForChild(Saber, &quot;BottomBlade&quot;)
-
-local TopWeld = waitForChild(Saber, &quot;TopWeld&quot;)
-local BottomWeld = waitForChild(Saber, &quot;BottomWeld&quot;)
-
-local damage = 19  
-
-local Mouse 
-
-local function blow(blade, hit)
-&#9;if blade and blade.Transparency ~= 1.0 and hit and hit.Parent then 
-&#9;&#9;local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if hit.Parent:IsA(&quot;Hat&quot;) and hit.Parent.Parent then
-&#9;&#9;&#9;humanoid = hit.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;end 
-&#9;&#9;if humanoid and humanoid ~= vHumanoid and vHumanoid then 
-&#9;&#9;&#9;humanoid:TakeDamage(damage)
-&#9;&#9;end 
-&#9;end 
-end 
-
-local function SlashIt(hum, torso)
-&#9;local lungeSlash = hum:LoadAnimation(Tool[&quot;LungeSlash&quot;])&#9;
+script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.KeyDown:connect(function(key) script.Parent.Input:Fire(&apos;Key&apos;, true, key) end)
 &#9;
-&#9;lungeSlash:Play()
-
-&#9;local target = hum.TargetPoint
-&#9;local direction = (target - torso.Position) * Vector3.new(1, 0, 1)
-&#9;local newBV = nil
-&#9;if direction.magnitude &gt; .01 then 
-&#9;&#9;-- make &apos;em dash forwards too
-&#9;&#9;direction = direction.unit
-&#9;&#9;newBV = Instance.new(&quot;BodyVelocity&quot;)
-&#9;&#9;newBV.P = 100000
-&#9;&#9;newBV.maxForce = Vector3.new(newBV.P, 0, newBV.P)
-&#9;&#9;newBV.velocity = direction * 50
-&#9;&#9;newBV.Parent = torso
-
-&#9;&#9;torso.CFrame = CFrame.new(torso.Position, target * Vector3.new(1, 0, 1) + Vector3.new(0, torso.Position.Y, 0))
+&#9;if UIS.TouchEnabled then
+&#9;&#9;local out2 = false
+&#9;&#9;local detatched = false
+&#9;&#9;CAS:BindActionToInputTypes(
+&#9;&#9;&#9;&apos;MoreElegantBlase_UnsheathSecond&apos;,
+&#9;&#9;&#9;function(action, state, input)
+&#9;&#9;&#9;&#9;if state == Enum.UserInputState.Begin and not detatched then
+&#9;&#9;&#9;&#9;&#9;script.Parent.Input:FireServer(&apos;Key&apos;, true, &apos;q&apos;)
+&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;if out2 then
+&#9;&#9;&#9;&#9;&#9;&#9;out2 = false
+&#9;&#9;&#9;&#9;&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlase_UnsheathSecond&apos;, &apos;Unsheath&apos;)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;out2 = true
+&#9;&#9;&#9;&#9;&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlase_UnsheathSecond&apos;, &apos;Sheath&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;&#9;&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlade_Disconnect&apos;, &apos;Disconnect&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;detatched = false
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end,
+&#9;&#9;&#9;true,
+&#9;&#9;&#9;&apos;&apos;
+&#9;&#9;)
+&#9;&#9;CAS:BindActionToInputTypes(
+&#9;&#9;&#9;&apos;MoreElegantBlade_Disconnect&apos;,
+&#9;&#9;&#9;function(action, state, input)
+&#9;&#9;&#9;&#9;if state == Enum.UserInputState.Begin and out2 then
+&#9;&#9;&#9;&#9;&#9;if not detatched then
+&#9;&#9;&#9;&#9;&#9;&#9;detatched = true
+&#9;&#9;&#9;&#9;&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlade_Disconnect&apos;, &apos;Connect&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;script.Parent.Input:FireServer(&apos;Key&apos;, true, &apos;x&apos;)
+&#9;&#9;&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;&#9;&#9;detatched = false
+&#9;&#9;&#9;&#9;&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlade_Disconnect&apos;, &apos;Disconnect&apos;)
+&#9;&#9;&#9;&#9;&#9;&#9;script.Parent.Input:FireServer(&apos;Key&apos;, true, &apos;e&apos;)
+&#9;&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;&#9;end
+&#9;&#9;&#9;end,
+&#9;&#9;&#9;true,
+&#9;&#9;&#9;&apos;&apos;
+&#9;&#9;)
+&#9;&#9;
+&#9;&#9;
+&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlase_UnsheathSecond&apos;, &apos;Unsheath&apos;)
+&#9;&#9;CAS:SetTitle(&apos;MoreElegantBlade_Disconnect&apos;, &apos;Disconnect&apos;)
 &#9;end
-&#9;
-&#9;wait(.5)
-&#9;if dashSound then dashSound:Play() end 
-&#9;if newBV ~= nil then newBV:remove() end
-&#9;wait(.5)
-end
+end)
 
-local function Shred(key)
-&#9;key = key:lower() 
-&#9;if key == &quot;q&quot; then 
-&#9;&#9;-- Release the other part of the saber 
-&#9;&#9;if BottomBlade and not LeftSaber.Parent then
-&#9;&#9;&#9;if UnsheathSound then UnsheathSound:Play() end
-&#9;&#9;&#9;if BottomBlade.Transparency == 1.0 then 
-&#9;&#9;&#9;&#9;for i = 1, 10 do 
-&#9;&#9;&#9;&#9;&#9;BottomBlade.Transparency = 1 - (i/10)
-&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;for i = 1, 10 do 
-&#9;&#9;&#9;&#9;&#9;BottomBlade.Transparency = 0 + (i/10)
-&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;end  
-&#9;&#9;&#9;end 
-&#9;&#9;end 
-&#9;elseif key == &quot;x&quot; then 
-&#9;&#9;-- Split the sabers
-&#9;&#9;if not LeftSaber.Parent and BottomBlade.Transparency == 0.0 then &#9;&#9;&#9;
-&#9;&#9;&#9;-- Now split them sabers 
-&#9;&#9;&#9;Split_Anim = vHumanoid:LoadAnimation(Tool.SplitAnim)
-&#9;&#9;&#9;if Split_Anim then Split_Anim:Play() end 
-&#9;&#9;&#9;wait(0.5)
-&#9;&#9;&#9;BottomBlade.Transparency = 1.0 &#9;&#9;
-&#9;&#9;&#9;LeftSaber = Saber:Clone()
-&#9;&#9;&#9;LeftSaber.Parent = vCharacter 
-&#9;&#9;&#9;
-&#9;&#9;&#9;LeftGrip_Weld = RightGrip_Weld:Clone()
-&#9;&#9;&#9;LeftGrip_Weld.Part1 = LeftSaber
-&#9;&#9;&#9;LeftGrip_Weld.Part0 = vLeftArm
-&#9;&#9;&#9;LeftGrip_Weld.Parent = vLeftArm
-
-&#9;&#9;&#9;local topBlade = waitForChild(LeftSaber, &quot;TopBlade&quot;)
-&#9;&#9;&#9;local topWeld = TopWeld:Clone()
-&#9;&#9;&#9;topWeld.Part1 = topBlade
-&#9;&#9;&#9;topWeld.Part0 = LeftSaber 
-&#9;&#9;&#9;topWeld.Parent = LeftSaber 
-
-&#9;&#9;&#9;wait(0.5)
-
-&#9;&#9;&#9;LeftSaber.Touched:connect(function(hit) blow(LeftSaber, hit) end)
-&#9;&#9;&#9;topBlade.Touched:connect(function(hit) blow(topBlade, hit) end)
-
-&#9;&#9;&#9;SwordWalk_Anim = vHumanoid:LoadAnimation(Tool.SwordWalk)
-&#9;&#9;&#9;--if SwordWalk_Anim then SwordWalk_Anim:Play() end 
-
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;if not LeftSaber.Parent and SwordWalk_Anim then 
-&#9;&#9;&#9;&#9;&#9;SwordWalk_Anim:Stop() 
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;end)
-&#9;&#9;end 
-&#9;elseif key == &quot;e&quot; then 
-&#9;&#9;-- Combine the sabers if they are separated 
-&#9;&#9;if LeftSaber and LeftSaber.Parent then 
-&#9;&#9;&#9;LeftSaber.Parent = nil
-&#9;&#9;&#9;TopBlade.Transparency = 0.0
-&#9;&#9;&#9;BottomBlade.Transparency = 0.0
-&#9;&#9;end
-&#9;end 
-end 
-
-local function onActivated()
-&#9;if Tool.Enabled == false then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;if vTorso == nil and vHumanoid == nil then 
-&#9;&#9;return 
-&#9;end 
-
-&#9;Tool.Enabled = false 
-
-&#9;if TopBlade and TopBlade.Transparency ~= 0.0 then 
-&#9;&#9;if UnsheathSound then UnsheathSound:Play() end
-&#9;&#9;for i = 1, 10 do
-&#9;&#9;&#9;TopBlade.Transparency = 1 - (i/10)
-&#9;&#9;&#9;wait(0.15)
-&#9;&#9;end 
-&#9;elseif BottomBlade.Transparency == 0.0 then 
-&#9;&#9;local theta = 0    
-&#9;&#9;Tool.GripUp = Vector3.new(1, 0, 0) 
-&#9;&#9;Tool.GripRight = Vector3.new(0, -1, 0) 
-&#9;&#9;Tool.GripForward = Vector3.new(0, 0, 1) 
-&#9;&#9;for i = 1, 120 do 
-&#9;&#9;&#9;theta = i%6 * math.pi/3 
-&#9;&#9;&#9;Tool.GripRight = Vector3.new(0, -math.sin(theta), math.cos(theta)) 
-&#9;&#9;&#9;Tool.GripUp = Vector3.new(0, math.cos(theta), math.sin(theta))&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;wait() 
-&#9;&#9;end   
-&#9;&#9;Tool.Grip =  CFrame.new(0, -0.75, 0, 0, 0, -0.99999994, -0.261768907, 0.965130627, 0, 0.965130568, 0.261768937, 0)&#9;
-&#9;&#9;wait(5.0)   
-&#9;elseif LeftSaber.Parent then 
-&#9;&#9;SlashIt(vHumanoid, vTorso)
-&#9;&#9;wait(2.0)
-&#9;else 
-&#9;&#9;Tool.Grip = CFrame.new(0, 0, 0, 0, 1, -0, 0, -0, -1, -1, 0, -0)
-&#9;&#9;Slash_Anim = vHumanoid:LoadAnimation(Tool.SlashAnim)
-&#9;&#9;if Slash_Anim then Slash_Anim:Play() end 
-&#9;&#9;wait(1.0)
-&#9;&#9;Tool.Grip =  CFrame.new(0, -0.75, 0, 0, 0, -0.99999994, -0.261768907, 0.965130627, 0, 0.965130568, 0.261768937, 0)&#9;
-&#9;end &#9;&#9;
-&#9;Tool.Enabled = true 
-end
-
-local function onEquipped(mouse)
-&#9;vCharacter = Tool.Parent 
-&#9;vTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
-&#9;vHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
-&#9;vRightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;vLeftArm = vCharacter:FindFirstChild(&quot;Left Arm&quot;)
-
-&#9;RightGrip_Weld = waitForChild(vRightArm, &quot;RightGrip&quot;)
-
-&#9;if mouse then
-&#9;&#9;Mouse = mouse 
-&#9;&#9;Mouse.KeyDown:connect(Shred)
-&#9;end 
-
-&#9;if TopWeld then 
-&#9;&#9;TopWeld.Parent = Tool
-&#9;end 
-&#9;if BottomWeld then 
-&#9;&#9;BottomWeld.Parent = Tool 
-&#9;end 
-&#9;TopBlade.Transparency = 1.0
-&#9;BottomBlade.Transparency = 1.0&#9;
-end 
-
-local function onUnequipped()
-&#9;if Slash_Anim then Slash_Anim:Stop() end 
-&#9;if Split_Anim then Split_Anim:Stop() end 
-&#9;if DoubleSlash_Anim then DoubleSlash_Anim:Stop() end 
-&#9;if Switch_Anim then Switch_Anim:Stop() end 
-&#9;if UnsheathSound then UnsheathSound:Stop() end
-&#9;if SwordWalk_Anim then SwordWalk_Anim:Stop() end&#9;
-&#9;LeftSaber.Parent = nil 
-end
-
-Tool.Activated:connect(onActivated)
-Tool.Equipped:connect(onEquipped)
-Tool.Unequipped:connect(onUnequipped)
-
-TopBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)
-BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedString>
+script.Parent.Unequipped:connect(function()
+&#9;CAS:UnbindAction&apos;MoreElegantBlase_UnsheathSecond&apos;
+&#9;CAS:UnbindAction&apos;MoreElegantBlade_Disconnect&apos;
+end)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Part" referent="RBX2">
@@ -274,17 +103,17 @@ BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedStr
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.996450245</X>
-					<Y>0.900862515</Y>
+					<X>1.03878331</X>
+					<Y>12.9044371</Y>
 					<Z>-0.300000012</Z>
-					<R00>-0.988639355</R00>
-					<R01>-0.150304601</R01>
-					<R02>0</R02>
-					<R10>0.150304601</R10>
-					<R11>-0.988639355</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
+					<R00>-0.717675149</R00>
+					<R01>0.696377397</R01>
+					<R02>-5.07023685e-008</R02>
+					<R10>-0.696377397</R10>
+					<R11>-0.717675149</R11>
+					<R12>6.17887892e-008</R12>
+					<R20>6.64145139e-009</R20>
+					<R21>7.96514286e-008</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
@@ -367,17 +196,17 @@ BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedStr
 					<token name="BottomSurfaceInput">0</token>
 					<int name="BrickColor">194</int>
 					<CoordinateFrame name="CFrame">
-						<X>0.605658293</X>
-						<Y>-1.66959953</Y>
-						<Z>-0.300000012</Z>
-						<R00>-0.988639355</R00>
-						<R01>-0.150304601</R01>
-						<R02>0</R02>
-						<R10>0.150304601</R10>
-						<R11>-0.988639355</R11>
-						<R12>0</R12>
-						<R20>0</R20>
-						<R21>0</R21>
+						<X>2.84936428</X>
+						<Y>11.0384817</Y>
+						<Z>-0.299999803</Z>
+						<R00>-0.717675149</R00>
+						<R01>0.696377397</R01>
+						<R02>-5.07023685e-008</R02>
+						<R10>-0.696377397</R10>
+						<R11>-0.717675149</R11>
+						<R12>6.17887892e-008</R12>
+						<R20>6.64145139e-009</R20>
+						<R21>7.96514286e-008</R21>
 						<R22>1</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
@@ -410,9 +239,9 @@ BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedStr
 					<token name="TopSurfaceInput">0</token>
 					<float name="Transparency">0</float>
 					<Vector3 name="Velocity">
-						<X>0.00319821946</X>
-						<Y>-0.00971653778</Y>
-						<Z>2.75405762e-012</Z>
+						<X>0.00252517546</X>
+						<Y>-0.00761347683</Y>
+						<Z>-8.87132902e-012</Z>
 					</Vector3>
 					<token name="formFactorRaw">3</token>
 					<token name="shape">1</token>
@@ -461,17 +290,17 @@ BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedStr
 					<token name="BottomSurfaceInput">0</token>
 					<int name="BrickColor">194</int>
 					<CoordinateFrame name="CFrame">
-						<X>1.4022733</X>
-						<Y>3.57018852</Y>
-						<Z>-0.300000012</Z>
-						<R00>-0.988639295</R00>
-						<R01>0.150304854</R01>
-						<R02>8.64295941e-008</R02>
-						<R10>0.150304854</R10>
-						<R11>0.988639295</R11>
-						<R12>-1.31400686e-008</R12>
-						<R20>-8.74227766e-008</R20>
-						<R21>0</R21>
+						<X>-0.841435075</X>
+						<Y>14.8421602</Y>
+						<Z>-0.300000221</Z>
+						<R00>-0.717675328</R00>
+						<R01>-0.696377218</R01>
+						<R02>1.13443534e-007</R02>
+						<R10>-0.696377218</R10>
+						<R11>0.717675328</R11>
+						<R12>-9.09558651e-010</R12>
+						<R20>-8.07813478e-008</R20>
+						<R21>-7.96514286e-008</R21>
 						<R22>-1</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
@@ -504,9 +333,9 @@ BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedStr
 					<token name="TopSurfaceInput">0</token>
 					<float name="Transparency">0</float>
 					<Vector3 name="Velocity">
-						<X>-0.00180756371</X>
-						<Y>-0.00895549916</Y>
-						<Z>-2.02433469e-012</Z>
+						<X>-0.00110863359</X>
+						<Y>-0.0111394478</Y>
+						<Z>1.00481828e-011</Z>
 					</Vector3>
 					<token name="formFactorRaw">3</token>
 					<token name="shape">1</token>
@@ -689,6 +518,253 @@ BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedStr
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX45FA261C20AF477495808FE60D32B4D8">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">--[[
+&#9;// Now, I arrange my gear with a handle and 2 hidden blades under it. 
+]]
+
+local function waitForChild(parent, instance)
+&#9;while parent:FindFirstChild(instance) == nil do 
+&#9;&#9;print(parent, &quot; waiting for &quot;, instance)
+&#9;&#9;wait()
+&#9;end 
+&#9;return parent[instance]
+end 
+
+local Tool = script.Parent 
+local Saber = Tool.Handle
+local GLib = require(206209239)
+
+Tool.Enabled = true 
+
+local vCharacter 
+local vTorso
+local vHumanoid 
+local vRightArm 
+local vLeftArm
+
+local Slash_Anim
+local Split_Anim
+local DoubleSlash_Anim 
+local Switch_Anim    
+local SwordWalk_Anim
+
+local RightGrip_Weld
+local LeftGrip_Weld 
+
+local UnsheathSound = waitForChild(Saber, &quot;SaberSound&quot;)
+
+local LeftSaber = Instance.new(&quot;Part&quot;)
+
+local TopBlade = waitForChild(Saber, &quot;TopBlade&quot;)
+local BottomBlade = waitForChild(Saber, &quot;BottomBlade&quot;)
+
+local TopWeld = waitForChild(Saber, &quot;TopWeld&quot;)
+local BottomWeld = waitForChild(Saber, &quot;BottomWeld&quot;)
+
+local damage = 19  
+
+local Mouse 
+
+local function blow(blade, hit)
+&#9;if blade and blade.Transparency ~= 1.0 and hit and hit.Parent then 
+&#9;&#9;local humanoid = hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;if hit.Parent:IsA(&quot;Hat&quot;) and hit.Parent.Parent then
+&#9;&#9;&#9;humanoid = hit.Parent.Parent:FindFirstChild(&quot;Humanoid&quot;)
+&#9;&#9;end 
+&#9;&#9;if humanoid and humanoid ~= vHumanoid and vHumanoid and GLib.IsTeammate(GLib.GetPlayerFromPart(humanoid), GLib.GetPlayerFromPart(vHumanoid))~=true then 
+&#9;&#9;&#9;humanoid:TakeDamage(damage)
+&#9;&#9;end 
+&#9;end 
+end 
+
+local function SlashIt(hum, torso)
+&#9;local lungeSlash = hum:LoadAnimation(Tool[&quot;LungeSlash&quot;])&#9;
+&#9;
+&#9;lungeSlash:Play()
+
+&#9;local target = hum.TargetPoint
+&#9;local direction = (target - torso.Position) * Vector3.new(1, 0, 1)
+&#9;local newBV = nil
+&#9;if direction.magnitude &gt; .01 then 
+&#9;&#9;-- make &apos;em dash forwards too
+&#9;&#9;direction = direction.unit
+&#9;&#9;newBV = Instance.new(&quot;BodyVelocity&quot;)
+&#9;&#9;newBV.P = 100000
+&#9;&#9;newBV.maxForce = Vector3.new(newBV.P, 0, newBV.P)
+&#9;&#9;newBV.velocity = direction * 50
+&#9;&#9;newBV.Parent = torso
+
+&#9;&#9;torso.CFrame = CFrame.new(torso.Position, target * Vector3.new(1, 0, 1) + Vector3.new(0, torso.Position.Y, 0))
+&#9;end
+&#9;
+&#9;wait(.5)
+&#9;if dashSound then dashSound:Play() end 
+&#9;if newBV ~= nil then newBV:remove() end
+&#9;wait(.5)
+end
+
+local function Shred(key)
+&#9;key = key:lower() 
+&#9;if key == &quot;q&quot; then 
+&#9;&#9;-- Release the other part of the saber 
+&#9;&#9;if BottomBlade and not LeftSaber.Parent then
+&#9;&#9;&#9;if UnsheathSound then UnsheathSound:Play() end
+&#9;&#9;&#9;if BottomBlade.Transparency == 1.0 then 
+&#9;&#9;&#9;&#9;for i = 1, 10 do 
+&#9;&#9;&#9;&#9;&#9;BottomBlade.Transparency = 1 - (i/10)
+&#9;&#9;&#9;&#9;&#9;wait(0.15)
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;else
+&#9;&#9;&#9;&#9;for i = 1, 10 do 
+&#9;&#9;&#9;&#9;&#9;BottomBlade.Transparency = 0 + (i/10)
+&#9;&#9;&#9;&#9;&#9;wait(0.15)
+&#9;&#9;&#9;&#9;end  
+&#9;&#9;&#9;end 
+&#9;&#9;end 
+&#9;elseif key == &quot;x&quot; then 
+&#9;&#9;-- Split the sabers
+&#9;&#9;if not LeftSaber.Parent and BottomBlade.Transparency == 0.0 then &#9;&#9;&#9;
+&#9;&#9;&#9;-- Now split them sabers 
+&#9;&#9;&#9;Split_Anim = vHumanoid:LoadAnimation(Tool.SplitAnim)
+&#9;&#9;&#9;if Split_Anim then Split_Anim:Play() end 
+&#9;&#9;&#9;wait(0.5)
+&#9;&#9;&#9;BottomBlade.Transparency = 1.0 &#9;&#9;
+&#9;&#9;&#9;LeftSaber = Saber:Clone()
+&#9;&#9;&#9;LeftSaber.Parent = vCharacter 
+&#9;&#9;&#9;
+&#9;&#9;&#9;LeftGrip_Weld = RightGrip_Weld:Clone()
+&#9;&#9;&#9;LeftGrip_Weld.Part1 = LeftSaber
+&#9;&#9;&#9;LeftGrip_Weld.Part0 = vLeftArm
+&#9;&#9;&#9;LeftGrip_Weld.Parent = vLeftArm
+
+&#9;&#9;&#9;local topBlade = waitForChild(LeftSaber, &quot;TopBlade&quot;)
+&#9;&#9;&#9;local topWeld = TopWeld:Clone()
+&#9;&#9;&#9;topWeld.Part1 = topBlade
+&#9;&#9;&#9;topWeld.Part0 = LeftSaber 
+&#9;&#9;&#9;topWeld.Parent = LeftSaber 
+
+&#9;&#9;&#9;wait(0.5)
+
+&#9;&#9;&#9;LeftSaber.Touched:connect(function(hit) blow(LeftSaber, hit) end)
+&#9;&#9;&#9;topBlade.Touched:connect(function(hit) blow(topBlade, hit) end)
+
+&#9;&#9;&#9;SwordWalk_Anim = vHumanoid:LoadAnimation(Tool.SwordWalk)
+&#9;&#9;&#9;--if SwordWalk_Anim then SwordWalk_Anim:Play() end 
+
+&#9;&#9;&#9;Spawn(function()
+&#9;&#9;&#9;&#9;if not LeftSaber.Parent and SwordWalk_Anim then 
+&#9;&#9;&#9;&#9;&#9;SwordWalk_Anim:Stop() 
+&#9;&#9;&#9;&#9;end 
+&#9;&#9;&#9;end)
+&#9;&#9;end 
+&#9;elseif key == &quot;e&quot; then 
+&#9;&#9;-- Combine the sabers if they are separated 
+&#9;&#9;if LeftSaber and LeftSaber.Parent then 
+&#9;&#9;&#9;LeftSaber.Parent = nil
+&#9;&#9;&#9;TopBlade.Transparency = 0.0
+&#9;&#9;&#9;BottomBlade.Transparency = 0.0
+&#9;&#9;end
+&#9;end 
+end 
+
+local function onActivated()
+&#9;if Tool.Enabled == false then 
+&#9;&#9;return 
+&#9;end 
+
+&#9;if vTorso == nil and vHumanoid == nil then 
+&#9;&#9;return 
+&#9;end 
+
+&#9;Tool.Enabled = false 
+
+&#9;if TopBlade and TopBlade.Transparency ~= 0.0 then 
+&#9;&#9;if UnsheathSound then UnsheathSound:Play() end
+&#9;&#9;for i = 1, 10 do
+&#9;&#9;&#9;TopBlade.Transparency = 1 - (i/10)
+&#9;&#9;&#9;wait(0.15)
+&#9;&#9;end 
+&#9;elseif BottomBlade.Transparency == 0.0 then 
+&#9;&#9;local theta = 0    
+&#9;&#9;Tool.GripUp = Vector3.new(1, 0, 0) 
+&#9;&#9;Tool.GripRight = Vector3.new(0, -1, 0) 
+&#9;&#9;Tool.GripForward = Vector3.new(0, 0, 1) 
+&#9;&#9;for i = 1, 120 do 
+&#9;&#9;&#9;theta = i%6 * math.pi/3 
+&#9;&#9;&#9;Tool.GripRight = Vector3.new(0, -math.sin(theta), math.cos(theta)) 
+&#9;&#9;&#9;Tool.GripUp = Vector3.new(0, math.cos(theta), math.sin(theta))&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;
+&#9;&#9;&#9;wait() 
+&#9;&#9;end   
+&#9;&#9;Tool.Grip =  CFrame.new(0, -0.75, 0, 0, 0, -0.99999994, -0.261768907, 0.965130627, 0, 0.965130568, 0.261768937, 0)&#9;
+&#9;&#9;wait(5.0)   
+&#9;elseif LeftSaber.Parent then 
+&#9;&#9;SlashIt(vHumanoid, vTorso)
+&#9;&#9;wait(2.0)
+&#9;else 
+&#9;&#9;Tool.Grip = CFrame.new(0, 0, 0, 0, 1, -0, 0, -0, -1, -1, 0, -0)
+&#9;&#9;Slash_Anim = vHumanoid:LoadAnimation(Tool.SlashAnim)
+&#9;&#9;if Slash_Anim then Slash_Anim:Play() end 
+&#9;&#9;wait(1.0)
+&#9;&#9;Tool.Grip =  CFrame.new(0, -0.75, 0, 0, 0, -0.99999994, -0.261768907, 0.965130627, 0, 0.965130568, 0.261768937, 0)&#9;
+&#9;end &#9;&#9;
+&#9;Tool.Enabled = true 
+end
+
+local function onEquipped()
+&#9;vCharacter = Tool.Parent 
+&#9;vTorso = vCharacter:FindFirstChild(&quot;Torso&quot;)
+&#9;vHumanoid = vCharacter:FindFirstChild(&quot;Humanoid&quot;)
+&#9;vRightArm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
+&#9;vLeftArm = vCharacter:FindFirstChild(&quot;Left Arm&quot;)
+
+&#9;RightGrip_Weld = waitForChild(vRightArm, &quot;RightGrip&quot;)
+
+&#9;if TopWeld then 
+&#9;&#9;TopWeld.Parent = Tool
+&#9;end 
+&#9;if BottomWeld then 
+&#9;&#9;BottomWeld.Parent = Tool 
+&#9;end 
+&#9;TopBlade.Transparency = 1.0
+&#9;BottomBlade.Transparency = 1.0&#9;
+end 
+
+Tool.Input.OnServerEvent:connect(function(client, action, down, ...)
+&#9;if client.Character == Tool.Parent then
+&#9;&#9;if action == &apos;Key&apos; and down then
+&#9;&#9;&#9;Shred(...)
+&#9;&#9;end
+&#9;end
+end)
+
+local function onUnequipped()
+&#9;if Slash_Anim then Slash_Anim:Stop() end 
+&#9;if Split_Anim then Split_Anim:Stop() end 
+&#9;if DoubleSlash_Anim then DoubleSlash_Anim:Stop() end 
+&#9;if Switch_Anim then Switch_Anim:Stop() end 
+&#9;if UnsheathSound then UnsheathSound:Stop() end
+&#9;if SwordWalk_Anim then SwordWalk_Anim:Stop() end&#9;
+&#9;LeftSaber.Parent = nil 
+end
+
+Tool.Activated:connect(onActivated)
+Tool.Equipped:connect(onEquipped)
+Tool.Unequipped:connect(onUnequipped)
+
+TopBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)
+BottomBlade.Touched:connect(function(hit) blow(TopBlade, hit) end)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX1D4A408F0BF3423FBD3D8F31855F35AF">
+			<Properties>
+				<string name="Name">Input</string>
 			</Properties>
 		</Item>
 	</Item>
