@@ -19,6 +19,7 @@
 				<R21>0</R21>
 				<R22>-0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Sword of the Behemoth</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=93693084</url></Content>
 			<string name="ToolTip"></string>
@@ -39,11 +40,11 @@
 					<X>0.759999633</X>
 					<Y>5.13710976</Y>
 					<Z>10.1122227</Z>
-					<R00>1</R00>
-					<R01>0</R01>
+					<R00>0.726553798</R00>
+					<R01>-0.687109768</R01>
 					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
+					<R10>0.687109768</R10>
+					<R11>0.726553798</R11>
 					<R12>0</R12>
 					<R20>0</R20>
 					<R21>0</R21>
@@ -135,11 +136,127 @@
 				<string name="Name">DarkenAnim</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
+		<Item class="Script" referent="RBX7">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">AnimateScript</string>
+				<string name="Name">SwordScript</string>
+				<ProtectedString name="Source">local Tool = script.Parent
+local Character = nil
+local debounceHumHits = {}
+local debounceHumTimes = {}
+local damage = 35
+
+local GLib = require(206209239)
+
+local function WaitForChild(parent, child)
+&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
+&#9;return parent[child]
+end
+
+local Handle = WaitForChild(Tool, &quot;Handle&quot;)
+local Mesh = WaitForChild(Handle, &quot;Mesh&quot;)
+local GlowSpeed = WaitForChild(Tool, &quot;GlowSpeed&quot;)
+local SwingValue = WaitForChild(Tool, &quot;SwingValue&quot;)
+
+function onHit(hit)
+&#9;if not hit then return end
+&#9;local hitChar = hit.Parent
+&#9;if not hitChar or hitChar == Character then return end
+
+&#9;local hitHum = hitChar:FindFirstChild(&quot;Humanoid&quot;)
+&#9;if not hitHum then return end 
+
+&#9;if not Character or not Character == Tool.Parent then return end -- not in hand
+&#9;if not Tool.Enabled then return end -- don&apos;t hurt if not swingin&apos;
+
+&#9;-- debounce check, and then do the damage!
+&#9;local currTime = tick()
+&#9;if (not debounceHumHits[hitHum] or debounceHumHits[hitHum] ~= SwingValue.Value or currTime - debounceHumTimes[hitHum] &gt; 2) and GLib.IsTeammate(GLib.GetPlayerFromPart(hit), GLib.GetPlayerFromPart(Tool))~=true then
+&#9;&#9;debounceHumTimes[hitHum] = currTime
+&#9;&#9;debounceHumHits[hitHum] = SwingValue.Value
+&#9;&#9;hitHum:TakeDamage(damage)
+&#9;end
+end
+
+function onEquip()
+&#9;Character = Tool.Parent
+end
+
+function onUnequip()
+&#9;Character = nil
+end
+
+function glow()
+&#9;local glowParam = 0
+&#9;local glowDirection = 1
+&#9;while true do
+&#9;&#9;Mesh.VertexColor = Vector3.new(1+glowParam, 1+glowParam, 1+glowParam)
+&#9;&#9;glowParam = glowParam + glowDirection*GlowSpeed.Value
+&#9;&#9;if glowParam &gt;= 1 then glowDirection = -1 end
+&#9;&#9;if glowParam &lt;= 0 then glowDirection = 1 end
+
+&#9;&#9;wait(.1) -- 10 frames a second is fine
+&#9;end
+end
+
+-- make it glow
+coroutine.resume(coroutine.create(glow))
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Handle.Touched:connect(onHit)
+</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="NumberValue" referent="RBX8">
+			<Properties>
+				<string name="Name">GlowSpeed</string>
+				<double name="Value">0.050000000000000003</double>
+			</Properties>
+		</Item>
+		<Item class="IntValue" referent="RBX9">
+			<Properties>
+				<string name="Name">SwingValue</string>
+				<int name="Value">0</int>
+			</Properties>
+		</Item>
+		<Item class="SpecialMesh" referent="RBX10">
+			<Properties>
+				<token name="LODX">2</token>
+				<token name="LODY">2</token>
+				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=25212400</url></Content>
+				<token name="MeshType">5</token>
+				<string name="Name">FireMesh</string>
+				<Vector3 name="Offset">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<Vector3 name="Scale">
+					<X>1.20000005</X>
+					<Y>3.5</Y>
+					<Z>1.20000005</Z>
+				</Vector3>
+				<Content name="TextureId"><null></null></Content>
+				<Vector3 name="VertexColor">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX11">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=77320917</url></Content>
+				<string name="Name">ChargeAnim</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX16F956BB882942E78853111064BC3766">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
 				<ProtectedString name="Source">local AnimationNames = {&quot;Slash&quot;, &quot;SlashAnim&quot;, &quot;DarkenAnim&quot;, &quot;ChargeAnim&quot;}
 local Tool = script.Parent
 local Character = nil
@@ -230,7 +347,7 @@ function onMouseUp()
 &#9;lastMouseUpTime = tick()
 end
 
-function onEquip(mouse)
+function onEquip()
 &#9;Character = Tool.Parent
 &#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
 &#9;if Torso then Torso.Anchored = false end
@@ -258,6 +375,14 @@ function onEquip(mouse)
 &#9;&#9;end
 &#9;end
 end
+
+local mousehit = Vector3.new()
+script.Parent.Click.OnServerEvent:connect(function(client, down, hit)
+&#9;if client.Character == script.Parent.Parent then
+&#9;&#9;mousehit = hit;
+&#9;&#9;(down and onMouseDown or onMouseUp)()
+&#9;end
+end)
 
 local whichAnim = 1
 local debounce = false
@@ -439,7 +564,7 @@ while true do
 &#9;&#9;if fullyCharged and Humanoid then
 &#9;&#9;&#9;Handle.CanCollide = false
 &#9;&#9;&#9;if Animations[4] then Animations[4]:Play(.1, 1, 1) end
-&#9;&#9;&#9;LeapAt(Humanoid.TargetPoint)
+&#9;&#9;&#9;LeapAt(mousehit)
 &#9;&#9;&#9;Tool.GripUp = -1*Tool.GripUp
 &#9;&#9;end
 &#9;&#9;fullyCharged = false
@@ -466,118 +591,56 @@ end
 </ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX7">
+		<Item class="RemoteEvent" referent="RBXA40768D128CC4CACAF669C8AB62048ED">
+			<Properties>
+				<string name="Name">Click</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBXAC91FA1EE0B442A98D8E852D01E04ACF">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local Character = nil
-local debounceHumHits = {}
-local debounceHumTimes = {}
-local damage = 35
-
-local function WaitForChild(parent, child)
-&#9;while not parent:FindFirstChild(child) do parent.ChildAdded:wait() end
-&#9;return parent[child]
-end
-
-local Handle = WaitForChild(Tool, &quot;Handle&quot;)
-local Mesh = WaitForChild(Handle, &quot;Mesh&quot;)
-local GlowSpeed = WaitForChild(Tool, &quot;GlowSpeed&quot;)
-local SwingValue = WaitForChild(Tool, &quot;SwingValue&quot;)
-
-function onHit(hit)
-&#9;if not hit then return end
-&#9;local hitChar = hit.Parent
-&#9;if not hitChar or hitChar == Character then return end
-
-&#9;local hitHum = hitChar:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if not hitHum then return end
-
-&#9;if not Character or not Character == Tool.Parent then return end -- not in hand
-&#9;if not Tool.Enabled then return end -- don&apos;t hurt if not swingin&apos;
-
-&#9;-- debounce check, and then do the damage!
-&#9;local currTime = tick()
-&#9;if (not debounceHumHits[hitHum] or debounceHumHits[hitHum] ~= SwingValue.Value or currTime - debounceHumTimes[hitHum] &gt; 2) then
-&#9;&#9;debounceHumTimes[hitHum] = currTime
-&#9;&#9;debounceHumHits[hitHum] = SwingValue.Value
-&#9;&#9;hitHum:TakeDamage(damage)
-&#9;end
-end
-
-function onEquip()
-&#9;Character = Tool.Parent
-end
-
-function onUnequip()
-&#9;Character = nil
-end
-
-function glow()
-&#9;local glowParam = 0
-&#9;local glowDirection = 1
-&#9;while true do
-&#9;&#9;Mesh.VertexColor = Vector3.new(1+glowParam, 1+glowParam, 1+glowParam)
-&#9;&#9;glowParam = glowParam + glowDirection*GlowSpeed.Value
-&#9;&#9;if glowParam &gt;= 1 then glowDirection = -1 end
-&#9;&#9;if glowParam &lt;= 0 then glowDirection = 1 end
-
-&#9;&#9;wait(.1) -- 10 frames a second is fine
-&#9;end
-end
-
--- make it glow
-coroutine.resume(coroutine.create(glow))
-
-Tool.Equipped:connect(onEquip)
-Tool.Unequipped:connect(onUnequip)
-Handle.Touched:connect(onHit)
-</ProtectedString>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source">script.Parent.Equipped:connect(function(mouse)
+&#9;mouse.Button1Down:connect(function() script.Parent.Click:FireServer(true, mouse.Hit.p) end)
+&#9;mouse.Button1Up:connect(function() script.Parent.Click:FireServer(false, mouse.Hit.p) end)
+end)</ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="NumberValue" referent="RBX8">
+		<Item class="Camera" referent="RBX5319E5BBE1DA4000A3826030346FC7EB">
 			<Properties>
-				<string name="Name">GlowSpeed</string>
-				<double name="Value">0.050000000000000003</double>
-			</Properties>
-		</Item>
-		<Item class="IntValue" referent="RBX9">
-			<Properties>
-				<string name="Name">SwingValue</string>
-				<int name="Value">0</int>
-			</Properties>
-		</Item>
-		<Item class="SpecialMesh" referent="RBX10">
-			<Properties>
-				<token name="LODX">2</token>
-				<token name="LODY">2</token>
-				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=25212400</url></Content>
-				<token name="MeshType">5</token>
-				<string name="Name">FireMesh</string>
-				<Vector3 name="Offset">
-					<X>0</X>
-					<Y>0</Y>
-					<Z>0</Z>
-				</Vector3>
-				<Vector3 name="Scale">
-					<X>1.20000005</X>
-					<Y>3.5</Y>
-					<Z>1.20000005</Z>
-				</Vector3>
-				<Content name="TextureId"><null></null></Content>
-				<Vector3 name="VertexColor">
-					<X>1</X>
-					<Y>1</Y>
-					<Z>1</Z>
-				</Vector3>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX11">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=77320917</url></Content>
-				<string name="Name">ChargeAnim</string>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>0.812257648</X>
+					<Y>5.13712263</Y>
+					<Z>6.12781954</Z>
+					<R00>-0.999990106</R00>
+					<R01>1.43896024e-008</R01>
+					<R02>-0.00445296196</R02>
+					<R10>8.8817842e-016</R10>
+					<R11>1</R11>
+					<R12>3.23146742e-006</R12>
+					<R20>0.00445296196</R20>
+					<R21>3.23143536e-006</R21>
+					<R22>-0.999990106</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>0.829998851</X>
+					<Y>5.13710976</Y>
+					<Z>10.1119156</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
