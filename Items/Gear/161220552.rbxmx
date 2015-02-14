@@ -3,7 +3,7 @@
 	<External>nil</External>
 	<Item class="Tool" referent="RBX0">
 		<Properties>
-			<bool name="CanBeDropped">false</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -19,6 +19,7 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Firework Bundle</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=159689214</url></Content>
 			<string name="ToolTip">Firework Bundle</string>
@@ -39,12 +40,12 @@
 					<X>-12.3999996</X>
 					<Y>104.259995</Y>
 					<Z>120.599998</Z>
-					<R00>-0.850173414</R00>
-					<R01>-0.420308173</R01>
-					<R02>0.317089856</R02>
-					<R10>-0.473324388</R10>
-					<R11>0.873906434</R11>
-					<R12>-0.110686265</R12>
+					<R00>-0.659444869</R00>
+					<R01>-0.672584534</R01>
+					<R02>0.335800678</R02>
+					<R10>-0.715515733</R10>
+					<R11>0.698571265</R11>
+					<R12>-0.00594157027</R12>
 					<R20>-0.230584726</R20>
 					<R21>-0.244188786</R21>
 					<R22>-0.94191426</R22>
@@ -147,115 +148,240 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6">
+		<Item class="Animation" referent="RBX10">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=161033971</url></Content>
+				<string name="Name">Light</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXDB4BB8D1C7224E8D914D8E63DBC40A0B">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-11.4073811</X>
+					<Y>104.714119</Y>
+					<Z>119.038551</Z>
+					<R00>-0.832120717</R00>
+					<R01>-0.149119809</R01>
+					<R02>0.534170806</R02>
+					<R10>-7.45057971e-009</R10>
+					<R11>0.963173509</R11>
+					<R12>0.268880755</R12>
+					<R20>-0.554594576</R20>
+					<R21>0.223741248</R21>
+					<R22>-0.801476657</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-12.4243336</X>
+					<Y>104.202225</Y>
+					<Z>120.5644</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX2EE7AADFC6D94505A30B33D3A00DE2AB">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--[[ alexnewtron 2014 ]]--
-script.Parent:WaitForChild(&quot;Handle&quot;);
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--[[ alexnewtron 2014 ]]--
+script.Parent:WaitForChild("Handle");
 
 local gearConfig = {
-&#9;gear = script.Parent,
-&#9;equipped = false,
-&#9;check = true,
-&#9;debris = game:GetService(&quot;Debris&quot;),
-&#9;tween = require(script:WaitForChild(&quot;b&quot;)),
-&#9;easing = require(script:WaitForChild(&quot;e&quot;)),
-&#9;mesh = script.Parent.Handle:WaitForChild(&quot;Mesh&quot;),
-&#9;fuseSound = script.Parent.Handle:WaitForChild(&quot;Fuse&quot;),
-&#9;anims = {
-&#9;&#9;script.Parent:WaitForChild(&quot;Light&quot;)
-&#9;},
-&#9;sparkColors = {Color3.new(255/255,193/255,5/255), Color3.new(207/255, 17/255, 17/255)},
-&#9;sparkStartPos = {UDim2.new(0.5,0,0,0), UDim2.new(0.35,0,0,0), UDim2.new(0.85,0,0,0)},
-&#9;lit = false,
-&#9;readyAnims = {}
+	gear = script.Parent,
+	equipped = false,
+	check = true,
+	debris = game:GetService("Debris"),
+	tween = require(script:WaitForChild("b")),
+	easing = require(script:WaitForChild("e")),
+	mesh = script.Parent.Handle:WaitForChild("Mesh"),
+	fuseSound = script.Parent.Handle:WaitForChild("Fuse"),
+	anims = {
+		script.Parent:WaitForChild("Light")
+	},
+	sparkColors = {Color3.new(255/255,193/255,5/255), Color3.new(207/255, 17/255, 17/255)},
+	sparkStartPos = {UDim2.new(0.5,0,0,0), UDim2.new(0.35,0,0,0), UDim2.new(0.85,0,0,0)},
+	lit = false,
+	readyAnims = {}
 };
 
 function gearConfig.lightAnimation()
-&#9;local b = Instance.new(&quot;BillboardGui&quot;);
-&#9;b.Size = UDim2.new(1,0,1,0);
-&#9;b.Name = &quot;Sparks&quot;;
-&#9;b.ExtentsOffset = Vector3.new(0,-0.5,0);
-&#9;local f = Instance.new(&quot;Frame&quot;, b);
-&#9;f.BackgroundTransparency = 1;
-&#9;f.Size = UDim2.new(1,0,1,0);
-&#9;gearConfig.debris:AddItem(b, 10);
-&#9;b.Parent = script.Parent.Handle;
-&#9;b.Adornee = script.Parent.Handle;
-&#9;gearConfig.lit = true;
-&#9;gearConfig.fuseSound:Play();
-&#9;for i=1, 250 do
-&#9;&#9;if (b.Parent ~= nil and gearConfig.lit) then
-&#9;&#9;&#9;local c = Instance.new(&quot;TextLabel&quot;, f);
-&#9;&#9;&#9;c.Name = &quot;o&quot;;
-&#9;&#9;&#9;c.Text = &quot;&quot;;
-&#9;&#9;&#9;c.Size = UDim2.new(0.1,0,0.1,0);
-&#9;&#9;&#9;c.BackgroundTransparency = 0;
-&#9;&#9;&#9;c.BorderSizePixel = 0;
-&#9;&#9;&#9;c.Position = gearConfig.sparkStartPos[math.random(1, #gearConfig.sparkStartPos)];
-&#9;&#9;&#9;c.BackgroundColor3 = gearConfig.sparkColors[math.random(1, #gearConfig.sparkColors)];
-&#9;&#9;&#9;c:TweenSizeAndPosition(UDim2.new(0.05,0,0.05,0), UDim2.new(math.random(),0,1.5,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 1, false);
-&#9;&#9;&#9;gearConfig.debris:AddItem(c, 1);
-&#9;&#9;&#9;wait(0.005);
-&#9;&#9;else
-&#9;&#9;&#9;b:Destroy();
-&#9;&#9;&#9;break;
-&#9;&#9;end
-&#9;end
+	local b = Instance.new("BillboardGui");
+	b.Size = UDim2.new(1,0,1,0);
+	b.Name = "Sparks";
+	b.ExtentsOffset = Vector3.new(0,-0.5,0);
+	local f = Instance.new("Frame", b);
+	f.BackgroundTransparency = 1;
+	f.Size = UDim2.new(1,0,1,0);
+	gearConfig.debris:AddItem(b, 10);
+	b.Parent = script.Parent.Handle;
+	b.Adornee = script.Parent.Handle;
+	gearConfig.lit = true;
+	gearConfig.fuseSound:Play();
+	for i=1, 250 do
+		if (b.Parent ~= nil and gearConfig.lit) then
+			local c = Instance.new("TextLabel", f);
+			c.Name = "o";
+			c.Text = "";
+			c.Size = UDim2.new(0.1,0,0.1,0);
+			c.BackgroundTransparency = 0;
+			c.BorderSizePixel = 0;
+			c.Position = gearConfig.sparkStartPos[math.random(1, #gearConfig.sparkStartPos)];
+			c.BackgroundColor3 = gearConfig.sparkColors[math.random(1, #gearConfig.sparkColors)];
+			c:TweenSizeAndPosition(UDim2.new(0.05,0,0.05,0), UDim2.new(math.random(),0,1.5,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 1, false);
+			gearConfig.debris:AddItem(c, 1);
+			wait(0.005);
+		else
+			b:Destroy();
+			break;
+		end
+	end
 end
 
 function gearConfig.fireFirework()
-&#9;local a=gearConfig.tween(&quot;forward&quot;)a.add(0.5,{x=0.5},gearConfig.easing.inOutQuad)a.add(0.5,{x=0.1},gearConfig.easing.inOutBack)for x=1,200 do local b=a.getCurrentProperties()gearConfig.mesh.Scale=Vector3.new(0.5,b.x,0.5)a.update(0.025)wait(0.025)if b.x&lt;=0.25 then break end end;local a=gearConfig.tween(&quot;forward&quot;)a.add(0.5,{x=0.1},gearConfig.easing.inOutQuad)a.add(0.5,{x=1},gearConfig.easing.inOutBack)for x=1,200 do local b=a.getCurrentProperties()gearConfig.mesh.Scale=Vector3.new(0.5,b.x,0.5)a.update(0.025)wait(0.025)if b.x&gt;=1 then break end end
-&#9;script.Parent.Handle.Transparency = 1;
-&#9;gearConfig.fuseSound:Stop();
-&#9;gearConfig.lit = false;
-&#9;local bomb = script.Parent.Handle:Clone()
-&#9;bomb.CanCollide = true
-&#9;bomb.Transparency = 0
-&#9;bomb.Position = script.Parent.Handle.Position
-&#9;bomb.Name = &quot;Shell&quot;
-&#9;bomb.Locked = true&#9;
-&#9;local new_script = script[&quot;Explosions&quot;]:clone()
-&#9;new_script.Disabled = false
-&#9;new_script.Parent = bomb&#9;
-&#9;bomb.Parent = workspace
-&#9;repeat wait() until bomb.Parent == nil
-&#9;script.Parent.Handle.Transparency = 0;
-&#9;gearConfig.mesh.Scale = Vector3.new(0.5,0.5,0.5);
-&#9;gearConfig.check = true;
+	local a=gearConfig.tween("forward")a.add(0.5,{x=0.5},gearConfig.easing.inOutQuad)a.add(0.5,{x=0.1},gearConfig.easing.inOutBack)for x=1,200 do local b=a.getCurrentProperties()gearConfig.mesh.Scale=Vector3.new(0.5,b.x,0.5)a.update(0.025)wait(0.025)if b.x<=0.25 then break end end;local a=gearConfig.tween("forward")a.add(0.5,{x=0.1},gearConfig.easing.inOutQuad)a.add(0.5,{x=1},gearConfig.easing.inOutBack)for x=1,200 do local b=a.getCurrentProperties()gearConfig.mesh.Scale=Vector3.new(0.5,b.x,0.5)a.update(0.025)wait(0.025)if b.x>=1 then break end end
+	script.Parent.Handle.Transparency = 1;
+	gearConfig.fuseSound:Stop();
+	gearConfig.lit = false;
+	local bomb = script.Parent.Handle:Clone()
+	bomb.CanCollide = true
+	bomb.Transparency = 0
+	bomb.Position = script.Parent.Handle.Position
+	bomb.Name = "Shell"
+	bomb.Locked = true	
+	local new_script = script["Explosions"]:clone()
+	new_script.Disabled = false
+	new_script.Parent = bomb	
+	bomb.Parent = workspace
+	repeat wait() until bomb.Parent == nil
+	script.Parent.Handle.Transparency = 0;
+	gearConfig.mesh.Scale = Vector3.new(0.5,0.5,0.5);
+	gearConfig.check = true;
 end
 
 gearConfig.gear.Unequipped:connect(function()
-&#9;gearConfig.equipped = false;
+	gearConfig.equipped = false;
 end);
 
-gearConfig.gear.Equipped:connect(function(m)
-&#9;gearConfig.equipped = true;
-&#9;if (m ~= nil) then
-&#9;&#9;local human = script.Parent.Parent:findFirstChild(&quot;Humanoid&quot;);
-&#9;&#9;local torso = script.Parent.Parent:findFirstChild(&quot;Torso&quot;);
-&#9;&#9;gearConfig.readyAnims = {};
-&#9;&#9;for i=1, #gearConfig.anims do
-&#9;&#9;&#9;table.insert(gearConfig.readyAnims, human:LoadAnimation(gearConfig.anims[i]));
-&#9;&#9;&#9;gearConfig.readyAnims[1].KeyframeReached:connect(function(k)
-&#9;&#9;&#9;&#9;if (k == &quot;light&quot;) then
-&#9;&#9;&#9;&#9;&#9;gearConfig.lightAnimation();
-&#9;&#9;&#9;&#9;elseif (k == &quot;fire&quot;) then
-&#9;&#9;&#9;&#9;&#9;gearConfig.fireFirework();
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end);
-&#9;&#9;end
-&#9;&#9;m.Button1Down:connect(function()
-&#9;&#9;&#9;if (gearConfig.check and human.Health &gt; 0) then
-&#9;&#9;&#9;&#9;gearConfig.check = false;
-&#9;&#9;&#9;&#9;gearConfig.readyAnims[1]:Play();
-&#9;&#9;&#9;end
-&#9;&#9;end);
-&#9;end
-end);</ProtectedString>
+gearConfig.gear.Equipped:connect(function()
+	gearConfig.equipped = true;
+	local human = script.Parent.Parent:findFirstChild("Humanoid");
+	local torso = script.Parent.Parent:findFirstChild("Torso");
+	gearConfig.readyAnims = {};
+	for i=1, #gearConfig.anims do
+		table.insert(gearConfig.readyAnims, human:LoadAnimation(gearConfig.anims[i]));
+		gearConfig.readyAnims[1].KeyframeReached:connect(function(k)
+			if (k == "light") then
+				gearConfig.lightAnimation();
+			elseif (k == "fire") then
+				gearConfig.fireFirework();
+			end
+		end);
+	end
+end);
+gearConfig.gear.Activated:connect(function()
+	local human = gearConfig.gear.Parent:FindFirstChild'Humanoid'
+	
+	if human and (gearConfig.check and human.Health > 0) then
+		gearConfig.check = false;
+		gearConfig.readyAnims[1]:Play();
+	end
+end)]]></ProtectedString>
 			</Properties>
+			<Item class="Script" referent="RBX9">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Explosions</string>
+					<ProtectedString name="Source"><![CDATA[--[[ alexnewtron 2014 ]]--
+local config = {
+	force = nil,
+	shell = script.Parent,
+	colors = {Color3.new(1,0,0), Color3.new(0,1,0), Color3.new(0,0,1), Color3.new(1,.5,0), Color3.new(0,.5,1)},
+	starMap = {Vector2.new(0,0), Vector2.new(468,0), Vector2.new(0,468)},
+	debris = game:GetService("Debris"),
+	explodeSound = script.Parent:WaitForChild("Explode"),
+	flySound = script.Parent:WaitForChild("Fly"),
+	spreadAmount = 8 + math.random()*4,
+	rocketCFrame = CFrame.Angles(0, math.random()*math.pi*2, 0),
+	r = {}
+};
+
+if (config.shell:findFirstChild("Sparks")) then
+	config.shell["Sparks"]:Destroy();
+end
+config.force = Instance.new("BodyForce", config.shell);
+
+config.flySound:Play();
+for i=1,10 do
+	config.force.force = config.shell.CFrame:vectorToWorldSpace(Vector3.new(0, 1, 0)) * config.shell:GetMass() * 98 * 3;
+	wait(.1)
+end
+config.explodeSound:Play();
+config.force:Remove()
+
+for j=1,120 do
+	local p = Instance.new("Part");
+	p.Size = Vector3.new(1,1,1);
+	p.Transparency = 1;
+	p.Position = config.shell.Position + ( Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5) * 10);
+	p.Velocity =  config.shell.Velocity;
+	local c = config.colors[math.random(1,#config.colors)];
+	local s = Instance.new("Sparkles", p);
+	s.Color = c;
+	local l = Instance.new("PointLight", p);
+	l.Color = c;
+	l.Brightness = 10;
+	l.Range = 8;
+	l.Enabled = true;
+	local star = Instance.new("BillboardGui");
+	star.Size = UDim2.new(5,0,5,0);
+	star.Name = "Star";
+	local sImg = Instance.new("ImageLabel", star);
+	sImg.Size = UDim2.new(1,0,1,0);
+	sImg.BackgroundTransparency = 1;
+	sImg.Image = "rbxassetid://161037657";
+	sImg.ImageRectSize = Vector2.new(468,468);
+	sImg.ImageRectOffset = config.starMap[math.random(1, #config.starMap)];
+	star.Parent = p;
+	star.Adornee = p;
+	local bv = Instance.new("BodyVelocity", p);
+	bv.P = 1000;
+	bv.maxForce = Vector3.new(1, 1, 1)*1000;
+	bv.velocity = Vector3.new(0, 0, 0);
+	config.debris:AddItem(p, 12);
+	p.Parent = workspace;
+	local r = math.random(1,2);
+	if r == 1 then
+		bv.velocity = config.rocketCFrame:vectorToWorldSpace(Vector3.new(math.random(), math.random(), math.random())) * config.spreadAmount
+	elseif r == 2 then
+		bv.velocity = config.rocketCFrame:vectorToWorldSpace(Vector3.new(-math.random(), -math.random(), -math.random())) * config.spreadAmount
+	end	
+	table.insert(config.r, p);
+end
+wait(0.5);
+for i=1, #config.r do
+	config.r[i]["BodyVelocity"].velocity = config.r[i]["BodyVelocity"].velocity / 2;
+end
+config.shell.Transparency = 1
+wait(2)
+
+config.explodeSound:Stop();
+config.shell:Remove()
+]]></ProtectedString>
+				</Properties>
+			</Item>
 			<Item class="ModuleScript" referent="RBX7">
 				<Properties>
 					<string name="Name">b</string>
@@ -265,7 +391,7 @@ end);</ProtectedString>
 			<Item class="ModuleScript" referent="RBX8">
 				<Properties>
 					<string name="Name">e</string>
-					<ProtectedString name="Source">local pow = math.pow
+					<ProtectedString name="Source"><![CDATA[local pow = math.pow
 local sin = math.sin
 local cos = math.cos
 local pi = math.pi
@@ -289,7 +415,7 @@ end
 
 local function inOutQuad(t, b, c, d)
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return c / 2 * pow(t, 2) + b
   else
     return -c / 2 * ((t - 1) * (t - 3) - 1) + b
@@ -308,7 +434,7 @@ end
 
 local function inOutCubic(t, b, c, d)
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return c / 2 * t * t * t + b
   else
     t = t - 2
@@ -317,7 +443,7 @@ local function inOutCubic(t, b, c, d)
 end
 
 local function outInCubic(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outCubic(t * 2, b, c / 2, d)
   else
     return inCubic((t * 2) - d, b + c / 2, c / 2, d)
@@ -336,7 +462,7 @@ end
 
 local function inOutQuart(t, b, c, d)
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return c / 2 * pow(t, 4) + b
   else
     t = t - 2
@@ -345,7 +471,7 @@ local function inOutQuart(t, b, c, d)
 end
 
 local function outInQuart(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outQuart(t * 2, b, c / 2, d)
   else
     return inQuart((t * 2) - d, b + c / 2, c / 2, d)
@@ -364,7 +490,7 @@ end
 
 local function inOutQuint(t, b, c, d)
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return c / 2 * pow(t, 5) + b
   else
     t = t - 2
@@ -373,7 +499,7 @@ local function inOutQuint(t, b, c, d)
 end
 
 local function outInQuint(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outQuint(t * 2, b, c / 2, d)
   else
     return inQuint((t * 2) - d, b + c / 2, c / 2, d)
@@ -393,7 +519,7 @@ local function inOutSine(t, b, c, d)
 end
 
 local function outInSine(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outSine(t * 2, b, c / 2, d)
   else
     return inSine((t * 2) -d, b + c / 2, c / 2, d)
@@ -420,7 +546,7 @@ local function inOutExpo(t, b, c, d)
   if t == 0 then return b end
   if t == d then return b + c end
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return c / 2 * pow(2, 10 * (t - 1)) + b - c * 0.0005
   else
     t = t - 1
@@ -429,7 +555,7 @@ local function inOutExpo(t, b, c, d)
 end
 
 local function outInExpo(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outExpo(t * 2, b, c / 2, d)
   else
     return inExpo((t * 2) - d, b + c / 2, c / 2, d)
@@ -448,7 +574,7 @@ end
 
 local function inOutCirc(t, b, c, d)
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return -c / 2 * (sqrt(1 - t * t) - 1) + b
   else
     t = t - 2
@@ -457,7 +583,7 @@ local function inOutCirc(t, b, c, d)
 end
 
 local function outInCirc(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outCirc(t * 2, b, c / 2, d)
   else
     return inCirc((t * 2) - d, b + c / 2, c / 2, d)
@@ -475,7 +601,7 @@ local function inElastic(t, b, c, d, a, p)
 
   local s
 
-  if not a or a &lt; abs(c) then
+  if not a or a < abs(c) then
     a = c
     s = p / 4
   else
@@ -500,7 +626,7 @@ local function outElastic(t, b, c, d, a, p)
 
   local s
 
-  if not a or a &lt; abs(c) then
+  if not a or a < abs(c) then
     a = c
     s = p / 4
   else
@@ -522,14 +648,14 @@ local function inOutElastic(t, b, c, d, a, p)
   if not p then p = d * (0.3 * 1.5) end
   if not a then a = 0 end
 
-  if not a or a &lt; abs(c) then
+  if not a or a < abs(c) then
     a = c
     s = p / 4
   else
     s = p / (2 * pi) * asin(c / a)
   end
 
-  if t &lt; 1 then
+  if t < 1 then
     t = t - 1
     return -0.5 * (a * pow(2, 10 * t) * sin((t * d - s) * (2 * pi) / p)) + b
   else
@@ -541,7 +667,7 @@ end
 -- a: amplitud
 -- p: period
 local function outInElastic(t, b, c, d, a, p)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outElastic(t * 2, b, c / 2, d, a, p)
   else
     return inElastic((t * 2) - d, b + c / 2, c / 2, d, a, p)
@@ -564,7 +690,7 @@ local function inOutBack(t, b, c, d, s)
   if not s then s = 1.70158 end
   s = s * 1.525
   t = t / d * 2
-  if t &lt; 1 then
+  if t < 1 then
     return c / 2 * (t * t * ((s + 1) * t - s)) + b
   else
     t = t - 2
@@ -573,7 +699,7 @@ local function inOutBack(t, b, c, d, s)
 end
 
 local function outInBack(t, b, c, d, s)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outBack(t * 2, b, c / 2, d, s)
   else
     return inBack((t * 2) - d, b + c / 2, c / 2, d, s)
@@ -582,12 +708,12 @@ end
 
 local function outBounce(t, b, c, d)
   t = t / d
-  if t &lt; 1 / 2.75 then
+  if t < 1 / 2.75 then
     return c * (7.5625 * t * t) + b
-  elseif t &lt; 2 / 2.75 then
+  elseif t < 2 / 2.75 then
     t = t - (1.5 / 2.75)
     return c * (7.5625 * t * t + 0.75) + b
-  elseif t &lt; 2.5 / 2.75 then
+  elseif t < 2.5 / 2.75 then
     t = t - (2.25 / 2.75)
     return c * (7.5625 * t * t + 0.9375) + b
   else
@@ -601,7 +727,7 @@ local function inBounce(t, b, c, d)
 end
 
 local function inOutBounce(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return inBounce(t * 2, 0, c, d) * 0.5 + b
   else
     return outBounce(t * 2 - d, 0, c, d) * 0.5 + c * .5 + b
@@ -609,7 +735,7 @@ local function inOutBounce(t, b, c, d)
 end
 
 local function outInBounce(t, b, c, d)
-  if t &lt; d / 2 then
+  if t < d / 2 then
     return outBounce(t * 2, b, c / 2, d)
   else
     return inBounce((t * 2) - d, b + c / 2, c / 2, d)
@@ -658,134 +784,9 @@ return {
   inOutBounce = inOutBounce,
   outInBounce = outInBounce,
 }
-</ProtectedString>
+]]></ProtectedString>
 				</Properties>
 			</Item>
-			<Item class="Script" referent="RBX9">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">Explosions</string>
-					<ProtectedString name="Source">--[[ alexnewtron 2014 ]]--
-local config = {
-&#9;force = nil,
-&#9;shell = script.Parent,
-&#9;colors = {Color3.new(1,0,0), Color3.new(0,1,0), Color3.new(0,0,1), Color3.new(1,.5,0), Color3.new(0,.5,1)},
-&#9;starMap = {Vector2.new(0,0), Vector2.new(468,0), Vector2.new(0,468)},
-&#9;debris = game:GetService(&quot;Debris&quot;),
-&#9;explodeSound = script.Parent:WaitForChild(&quot;Explode&quot;),
-&#9;flySound = script.Parent:WaitForChild(&quot;Fly&quot;),
-&#9;spreadAmount = 8 + math.random()*4,
-&#9;rocketCFrame = CFrame.Angles(0, math.random()*math.pi*2, 0),
-&#9;r = {}
-};
-
-if (config.shell:findFirstChild(&quot;Sparks&quot;)) then
-&#9;config.shell[&quot;Sparks&quot;]:Destroy();
-end
-config.force = Instance.new(&quot;BodyForce&quot;, config.shell);
-
-config.flySound:Play();
-for i=1,10 do
-&#9;config.force.force = config.shell.CFrame:vectorToWorldSpace(Vector3.new(0, 1, 0)) * config.shell:GetMass() * 98 * 3;
-&#9;wait(.1)
-end
-config.explodeSound:Play();
-config.force:Remove()
-
-for j=1,120 do
-&#9;local p = Instance.new(&quot;Part&quot;);
-&#9;p.Size = Vector3.new(1,1,1);
-&#9;p.Transparency = 1;
-&#9;p.Position = config.shell.Position + ( Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5) * 10);
-&#9;p.Velocity =  config.shell.Velocity;
-&#9;local c = config.colors[math.random(1,#config.colors)];
-&#9;local s = Instance.new(&quot;Sparkles&quot;, p);
-&#9;s.Color = c;
-&#9;local l = Instance.new(&quot;PointLight&quot;, p);
-&#9;l.Color = c;
-&#9;l.Brightness = 10;
-&#9;l.Range = 8;
-&#9;l.Enabled = true;
-&#9;local star = Instance.new(&quot;BillboardGui&quot;);
-&#9;star.Size = UDim2.new(5,0,5,0);
-&#9;star.Name = &quot;Star&quot;;
-&#9;local sImg = Instance.new(&quot;ImageLabel&quot;, star);
-&#9;sImg.Size = UDim2.new(1,0,1,0);
-&#9;sImg.BackgroundTransparency = 1;
-&#9;sImg.Image = &quot;rbxassetid://161037657&quot;;
-&#9;sImg.ImageRectSize = Vector2.new(468,468);
-&#9;sImg.ImageRectOffset = config.starMap[math.random(1, #config.starMap)];
-&#9;star.Parent = p;
-&#9;star.Adornee = p;
-&#9;local bv = Instance.new(&quot;BodyVelocity&quot;, p);
-&#9;bv.P = 1000;
-&#9;bv.maxForce = Vector3.new(1, 1, 1)*1000;
-&#9;bv.velocity = Vector3.new(0, 0, 0);
-&#9;config.debris:AddItem(p, 12);
-&#9;p.Parent = workspace;
-&#9;local r = math.random(1,2);
-&#9;if r == 1 then
-&#9;&#9;bv.velocity = config.rocketCFrame:vectorToWorldSpace(Vector3.new(math.random(), math.random(), math.random())) * config.spreadAmount
-&#9;elseif r == 2 then
-&#9;&#9;bv.velocity = config.rocketCFrame:vectorToWorldSpace(Vector3.new(-math.random(), -math.random(), -math.random())) * config.spreadAmount
-&#9;end&#9;
-&#9;table.insert(config.r, p);
-end
-wait(0.5);
-for i=1, #config.r do
-&#9;config.r[i][&quot;BodyVelocity&quot;].velocity = config.r[i][&quot;BodyVelocity&quot;].velocity / 2;
-end
-config.shell.Transparency = 1
-wait(2)
-
-config.explodeSound:Stop();
-config.shell:Remove()
-</ProtectedString>
-				</Properties>
-			</Item>
-		</Item>
-		<Item class="Animation" referent="RBX10">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=161033971</url></Content>
-				<string name="Name">Light</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX11">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-12.8907528</X>
-					<Y>104.551308</Y>
-					<Z>122.971931</Z>
-					<R00>0.986003995</R00>
-					<R01>0.0174224321</R01>
-					<R02>-0.165808752</R02>
-					<R10>-0</R10>
-					<R11>0.994524896</R11>
-					<R12>0.104500167</R12>
-					<R20>0.166721568</R20>
-					<R21>-0.103037581</R21>
-					<R22>0.980605543</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-12.5591364</X>
-					<Y>104.342308</Y>
-					<Z>121.010727</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
