@@ -7,7 +7,7 @@
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>0</Y>
+				<Y>-0.5</Y>
 				<Z>-0.300000012</Z>
 				<R00>1</R00>
 				<R01>0</R01>
@@ -37,18 +37,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">208</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.547626257</X>
-					<Y>3.85000396</Y>
-					<Z>3.41560698</Z>
-					<R00>0.564649642</R00>
-					<R01>-0.163965791</R01>
-					<R02>0.808898449</R02>
-					<R10>2.04876574e-006</R10>
+					<X>1.50000358</X>
+					<Y>-1.59999609</Y>
+					<Z>-0.299988031</Z>
+					<R00>1.00000274</R00>
+					<R01>5.73694706e-007</R01>
+					<R02>4.17232513e-006</R02>
+					<R10>1.40055545e-006</R10>
 					<R11>0.980066597</R11>
-					<R12>0.198675111</R12>
-					<R20>-0.825335681</R20>
-					<R21>-0.11217612</R21>
-					<R22>0.55338949</R22>
+					<R12>0.198673189</R12>
+					<R20>3.9935112e-006</R20>
+					<R21>-0.198667258</R21>
+					<R22>0.980075479</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -148,6 +148,1183 @@
 				</Properties>
 			</Item>
 		</Item>
+		<Item class="Script" referent="RBXD7227E32C8AF41BFB64BC01CB1A0242A">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
+--Made by Stickmasterluke
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+Mesh = Handle:WaitForChild("Mesh")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+Debris = game:GetService("Debris")
+
+DisplayModel = Tool:FindFirstChild("DisplayModel")
+if DisplayModel then
+	DisplayModel:Destroy()
+end
+
+BasePart = Instance.new("Part")
+BasePart.Shape = Enum.PartType.Block
+BasePart.Material = Enum.Material.Plastic
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Anchored = false
+BasePart.Locked = true
+BasePart.CanCollide = true
+
+Animations = {
+	Fly = {Animation = Tool:WaitForChild("Fly"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
+}
+
+Sounds = {
+	Fire = Handle:WaitForChild("FireSound"),
+	Wings = Handle:WaitForChild("WingSound"),
+	BoltThunk = Handle:WaitForChild("BoltThunk")
+}
+
+BaseScale = Vector3.new(1, 1, 0.7)
+Mesh.Scale = BaseScale
+
+RapidFireDamage = 14
+
+Range = 350
+
+Rate = (1 / 60)
+
+BarrelOffset = Vector3.new(-0.05, 0.5, -1.5)
+WindVec = Vector3.new(2, -1, 1).unit
+
+ChargeMode = 1
+RapidFireMode = 2
+
+LastFlap = 0
+
+Charge = 0
+FireMode = 1
+
+Flying = false
+Check = true
+
+MouseDown = false
+ToolEquipped = false
+
+Wing = BasePart:Clone()
+Wing.Name = "Wing"
+Wing.CanCollide = false
+Wing.Size = Vector3.new(4, 4, 0.6)
+WingMesh = Instance.new("SpecialMesh")
+WingMesh.MeshType = Enum.MeshType.FileMesh
+WingMesh.TextureId = "http://www.roblox.com/asset/?id=111825642"
+WingMesh.Scale = Vector3.new(1.5, 1.5, 1.5)
+WingMesh.Parent = Wing
+
+BaseArrow = BasePart:Clone()
+BaseArrow.Name = "Arrow"
+BaseArrow.Size = Vector3.new(0.3, 0.3, 2.7)
+BaseArrow.CanCollide = true
+ArrowMesh = Instance.new("SpecialMesh")
+ArrowMesh.MeshType = Enum.MeshType.FileMesh
+ArrowMesh.MeshId = "http://www.roblox.com/asset/?id=92189547"
+ArrowMesh.TextureId = "http://www.roblox.com/asset/?id=92189351"
+ArrowMesh.Scale = Vector3.new(1, 1, 2)
+ArrowMesh.VertexColor = Vector3.new(0.1, 0.1, 0.2)
+ArrowMesh.Parent = BaseArrow
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
+ClientControl.Parent = Tool
+
+Mesh.Scale = BaseScale
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function TagHumanoid(humanoid, player)
+	local Creator_Tag = Instance.new("ObjectValue")
+	Creator_Tag.Name = "creator"
+	Creator_Tag.Value = player
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function CheckIntangible(Hit)
+	if Hit and Hit.Parent then
+		if Hit:IsDescendantOf(Character) or Hit.Transparency > 0.8 or Hit.Name == "Handle" or Hit.Name == "Effect" or Hit.Name == "Bullet" or Hit.Name == "Laser" or string.lower(Hit.Name) == "water" or Hit.Name == "Rail" or Hit.Name == "Arrow" then
+			return true
+		end
+	end
+	return false
+end
+
+function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
+	local RayHit, RayPos = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, (Vec * Length)), Ignore)
+	if RayHit and CheckIntangible(RayHit) then
+		if DelayIfHit then
+			wait()
+		end
+		RayHit, RayPos = CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+	end
+	return RayHit, RayPos
+end
+
+function DrawBeam(StartPos, EndPos, Color, FadeDelay)
+	local Distance = (StartPos - EndPos).magnitude
+	local Laser = BasePart:Clone()
+	Laser.Name = "Effect"
+	Laser.Size = Vector3.new(0.2, 0.2, 0.2)
+	Laser.Transparency = 5
+	Laser.BrickColor = Color
+	Laser.Anchored = true
+	Laser.CanCollide = false
+	local Mesh = Instance.new("SpecialMesh")
+	Mesh.MeshType = Enum.MeshType.Head
+	Mesh.Scale = Vector3.new(BaseScale.X, (Distance * 5), BaseScale.Z)
+	Mesh.Parent = Laser
+	Laser.CFrame = CFrame.new(StartPos, EndPos) * CFrame.new(0, 0, (-Distance / 2)) * CFrame.Angles((math.pi / 2), 0, 0)
+	Debris:AddItem(Laser, (FadeDelay * 3))
+	Laser.Parent = game:GetService("Workspace")
+	
+	local Frames = math.floor(FadeDelay / Rate)
+	for Frame = 1, Frames do
+		wait(Rate)
+		local Percent = (Frame / Frames)
+		Laser.CFrame = Laser.CFrame + WindVec * Rate
+		Laser.Transparency = (0.5 + (Percent * 0.5))
+	end
+	Debris:AddItem(Laser, 1)
+end
+
+function HandleDamage(Hit, Damage)
+	if not Hit or not Hit.Parent then
+		return
+	end
+	local character = Hit.Parent
+	if character:IsA("Hat") then
+		character = Hit.Parent
+	end
+	local player = Players:GetPlayerFromCharacter(character)
+	if player and IsTeamMate(Player, player) then
+		return
+	end
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid and humanoid.Health > 0 and CheckIfAlive() then
+		humanoid:TakeDamage(Damage)
+		UntagHumanoid(humanoid)
+		TagHumanoid(humanoid, Player)
+	end
+end
+
+function Fire(TargetPos, StartPos, Damage, FadeDelay)
+	local FakeStartPos = (Handle.CFrame * CFrame.new(BarrelOffset)).p
+	local Vec = (TargetPos - StartPos).unit
+
+	local Arrow = BaseArrow:Clone()	
+	
+	local Sound = Sounds.BoltThunk:Clone()
+	Sound.Parent = Arrow
+	Sound:Play()
+	
+	local RayHit, RayPos = CastRay(StartPos, Vec, Range, Character, false)
+	local FakeVec = (RayPos - FakeStartPos).unit
+	if RayHit then
+		local NewCF = CFrame.new(RayPos, (RayPos + FakeVec)) * CFrame.new(0, 0, (0.9 + (math.random(0, 1) * 0.4)))
+		local StickWeld = Instance.new("Weld")
+		StickWeld.Part0 = RayHit
+		StickWeld.Part1 = Arrow
+		StickWeld.C0 = (RayHit.CFrame:inverse() * NewCF)
+		StickWeld.C1 = (NewCF:inverse() * NewCF)
+		StickWeld.Parent = Arrow
+		Arrow.CFrame = NewCF
+		HandleDamage(RayHit, Damage)
+	else
+		Arrow.CFrame = CFrame.new(RayPos, (RayPos + FakeVec))
+		Arrow.Velocity = (FakeVec * 300)
+	end
+	
+	Debris:AddItem(Arrow, (10 + (math.random() * 10)))
+	Arrow.Parent = game:GetService("Workspace")
+
+	Spawn(function()
+		DrawBeam(FakeStartPos, RayPos, BrickColor.new("Institutional white"), FadeDelay)
+	end)
+
+	Sounds.Fire:Play()
+	
+	if DisplayArrow and DisplayArrow.Parent then
+		DisplayArrow:Destroy()
+	end
+	
+end
+
+function RemoveFlyStuff()
+	InvokeClient("StopAnimation", Animations.Fly)
+	for i, v in pairs(Character:GetChildren()) do
+		if v:IsA("BasePart") and v.Name == "LeftWing" or v.Name == "RightWing" then
+			v:Destroy()
+		end
+	end
+end
+
+function CreateDisplayArrow()
+	DisplayArrow = Tool:FindFirstChild("DisplayArrow")
+	if DisplayArrow then
+		DisplayArrow:Destroy()
+	end
+	DisplayArrow = BaseArrow:Clone()
+	DisplayArrow.Name = "DisplayArrow"
+	DisplayArrow.CanCollide = false
+	DisplayArrow.Mesh.Scale = Vector3.new(1, 1, 1.5)
+	DisplayWeld = Instance.new("Weld")
+	DisplayWeld.Part0 = Handle
+	DisplayWeld.Part1 = DisplayArrow
+	DisplayWeld.C0 = CFrame.new(-0.05, 0, -0.5, -4.37113883e-008, 0, 1, 0, 1, 0, -1, 0, -4.37113883e-008)
+	DisplayWeld.C1 = CFrame.new(0, 0, 0, 1.91068547e-015, -4.37113883e-008, 1, 0, 1, 4.37113883e-008, -1, 0, 1.91068547e-015)
+	DisplayWeld.Parent = DisplayArrow
+	DisplayArrow.Parent = Tool
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent) and true) or false)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		for i, v in pairs(Animations) do
+			if v and v.Animation then
+				InvokeClient("Preload", v.Animation.AnimationId)
+			end
+		end
+	end)
+	Spawn(CreateDisplayArrow)
+	ToolEquipped = true
+end
+
+function Unequipped()
+	for i, v in pairs(Animations) do
+		InvokeClient("StopAnimation", v)
+	end
+	RemoveFlyStuff()
+	MouseDown = false
+	ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+	if player ~= Player or not value or not CheckIfAlive() then
+		return
+	end
+	if mode == "MouseClick" then
+		local Down = value.Down
+		if Down and not MouseDown and Check then
+			MouseDown = true
+			Spawn(function()
+				while MouseDown and CheckIfAlive() do
+					local Waited = false
+					if Check then
+						if FireMode == RapidFireMode then
+							Check = false
+							Mesh.Scale = Vector3.new(BaseScale.X, BaseScale.Y, (BaseScale.Z + 0.2))
+							DisplayWeld.C0 = CFrame.new(-0.05, 0, 0) * CFrame.Angles(0, (math.pi / 2),0)
+							wait(0.1)
+							Mesh.Scale = BaseScale
+							Fire(InvokeClient("MousePosition").Position, Handle.Position, RapidFireDamage, 0.25)
+							wait(0.15)
+							DisplayWeld.C0 = CFrame.new(-0.05, 0, -0.5) * CFrame.Angles(0, (math.pi / 2), 0)
+							CreateDisplayArrow()
+							wait(0.15)
+							Waited = true
+							Check = true
+						elseif FireMode == ChargeMode then
+							if Charge < 100 then
+								Charge = (Charge + 1.25)
+								local Percent = (Charge / 100)
+								Mesh.Scale = Vector3.new(BaseScale.X, BaseScale.Y, (BaseScale.Z + (BaseScale.Z * (Percent * 0.6))))
+								DisplayWeld.C0 = CFrame.new(-0.05, 0, (-0.5 + Percent)) * CFrame.Angles(0, (math.pi / 2), 0)
+								wait(0.05)
+								Waited = true
+							end
+						end
+					end
+					wait(Rate)
+				end
+			end)
+		elseif not Down and MouseDown then
+			MouseDown = false
+			if FireMode == ChargeMode and CheckIfAlive() then
+				Check = false
+				Fire(InvokeClient("MousePosition").Position, Handle.Position, (Charge + 10), (0.25 + (Charge / 50)))
+				Charge = 0
+				Mesh.Scale = BaseScale
+				DisplayWeld.C0 = CFrame.new(-0.05, 0, -0.5) * CFrame.Angles(0, (math.pi / 2), 0)
+				wait(0.75)
+				CreateDisplayArrow()
+				wait(0.25)
+				Check = true
+			end
+		end
+	elseif mode == "KeyPress" then
+		local Key = value.Key
+		local ByteKey = string.byte(Key)
+		local Down = value.Down
+	elseif mode == "Flying" then
+		local Mode = value.Mode
+		RemoveFlyStuff()
+		
+		if Mode then
+			
+			LeftWing = Wing:Clone()
+			LeftWing.Name = "LeftWing"
+			LeftWing.Mesh.MeshId = "http://www.roblox.com/asset/?id=111896510"
+			
+			LeftWeld = Instance.new("Motor")
+			LeftWeld.Name = "LeftWeld"
+			LeftWeld.Part0 = Torso
+			LeftWeld.Part1 = LeftWing
+			LeftWeld.MaxVelocity = 0.2
+			LeftWeld.C0 = CFrame.new(-0.25, 1, 0.25) * CFrame.Angles((math.pi / 2), 0, 0)
+			LeftWeld.C1 = CFrame.new(2, -1, -0.25) * CFrame.Angles((math.pi / 2), 0, 0)
+			LeftWeld.Parent = LeftWing
+			
+			RightWing = Wing:Clone()
+			RightWing.Name = "RightWing"
+			RightWing.Mesh.MeshId = "http://www.roblox.com/asset/?id=111893941"
+			
+			RightWeld = Instance.new("Motor")
+			RightWeld.Name = "RightWeld"
+			RightWeld.Part0 = Torso
+			RightWeld.Part1 = RightWing
+			RightWeld.MaxVelocity = 0.2
+			RightWeld.C0 = CFrame.new(0.25, 1, 0.25) * CFrame.Angles((math.pi / 2), 0, 0)
+			RightWeld.C1 = CFrame.new(-2, -1, -0.25) * CFrame.Angles((math.pi / 2), 0, 0)
+			RightWeld.Parent = RightWing
+	
+			LeftWing.Parent = Character
+			RightWing.Parent = Character
+			
+			Spawn(function()
+				InvokeClient("PlayAnimation", Animations.Fly)
+			end)
+			
+		else
+			InvokeClient("StopAnimation", Animations.Fly)
+		end
+	elseif mode == "SetMode" then
+		Charge = 0
+		FireMode = value
+	elseif mode == "SetWingSpan" then
+		local Value = value.Value
+		for i, v in pairs({LeftWeld, RightWeld}) do
+			if v and v.Parent then
+				v.DesiredAngle = (Value * ((v == LeftWeld and 1) or -1))
+			end
+		end
+	end
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX1F4F6EBA4B7A456D9DDC39D94AE1FC00">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+
+Camera = game:GetService("Workspace").CurrentCamera
+
+ArtemisGui = script:WaitForChild("ArtemisGui")
+
+Animations = {}
+LocalObjects = {}
+
+Sounds = {
+	Wings = Handle:WaitForChild("WingSound"),	
+}
+
+Controls = {
+	Forward = {
+		Value = 0,
+		DesiredValue = -1,
+		Keys = {
+			Key = "w",
+			ByteKey = 17
+		}
+	},
+	Backward = {
+		Value = 0,
+		DesiredValue = 1,
+		Keys = {
+			Key = "s",
+			ByteKey = 18
+		}
+	},
+	Left = {
+		Value = 0,
+		DesiredValue = -1,
+		Keys = {
+			Key = "a",
+			ByteKey = 20
+		}
+	},
+	Right = {
+		Value = 0,
+		DesiredValue = 1,
+		Keys = {
+			Key = "d",
+			ByteKey = 19
+		}
+	}
+}
+
+Speed = {
+	Current = 2.1,
+	Max = 45
+}
+
+Inertia = (1 - (Speed.Current / Speed.Max))
+
+Momentum = Vector3.new(0, 0, 0)
+LastMomentum = Vector3.new(0, 0, 0)
+TotalMomentum = 0
+
+LastFlap = 0
+LastTilt = 0
+
+Rate = (1 / 60)
+
+Flying = false
+FireMode = 0
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+ToolEquipped = false
+
+function ChangeMode(NewMode)
+	FireMode = NewMode
+	if Button1 and Button1.Parent and Button2 and Button2.Parent then
+		pcall(function()
+			if FireMode == 1 then
+				Button1:FindFirstChild("Active").Visible = true
+				Button1:FindFirstChild("Inactive").Visible = false
+				Button2:FindFirstChild("Active").Visible = false
+				Button2:FindFirstChild("Inactive").Visible = true
+			else
+				Button1:FindFirstChild("Active").Visible = false
+				Button1:FindFirstChild("Inactive").Visible = true
+				Button2:FindFirstChild("Active").Visible = true
+				Button2:FindFirstChild("Inactive").Visible = false
+			end
+		end)
+		Spawn(function()
+			InvokeServer("SetMode", FireMode)
+		end)
+	end
+end
+
+function RemoveFlyStuff()
+	for i, v in pairs(Torso:GetChildren()) do
+		if v.Name == "FlightGyro" or v.Name == "FlightVelocity" then
+			v:Destroy()
+		end
+	end
+end
+
+function Clamp(Number, Min, Max)
+	return math.max(math.min(Max, Number), Min)
+end
+
+function Fly()
+	
+	if not ToolEquipped or not CheckIfAlive() then
+		Flying = false
+	else
+		Flying = not Flying
+	end
+	
+	if Flying and ToolEquipped and CheckIfAlive() then
+		
+		Momentum = (Torso.Velocity + (Torso.CFrame.lookVector * 3) + Vector3.new(0, 10, 0))
+		Momentum = Vector3.new(Clamp(Momentum.X, -15, 15), Clamp(Momentum.Y, -15, 15), Clamp(Momentum.Z, -15, 15))
+		
+		local FlightGyro = Instance.new("BodyGyro")
+		FlightGyro.Name = "FlightGyro"
+		FlightGyro.P = (10 ^ 6)
+		FlightGyro.maxTorque = Vector3.new(FlightGyro.P, FlightGyro.P, FlightGyro.P)
+		FlightGyro.cframe = Torso.CFrame
+		FlightGyro.Parent = Torso
+		
+		local FlightVelocity = Instance.new("BodyVelocity")
+		FlightVelocity.Name = "FlightVelocity"
+		FlightVelocity.velocity = Vector3.new(0, 0, 0)
+		FlightVelocity.P = (10 ^ 4)
+		FlightVelocity.maxForce = (Vector3.new(1, 1, 1) * (10 ^ 6))
+		FlightVelocity.Parent = Torso
+		
+		Spawn(function()
+			InvokeServer("Flying", {Mode = true})
+		end)
+		
+		for i, v in pairs(Controls) do
+			Controls[i].Value = 0
+		end
+		
+		Humanoid.AutoRotate = false
+		
+		while Flying and CheckIfAlive() and ToolEquipped do
+			
+			local CoordinateFrame = Camera.CoordinateFrame
+			local Movement = (CoordinateFrame:vectorToWorldSpace(Vector3.new((Controls.Left.Value + Controls.Right.Value), (math.abs(Controls.Forward.Value) * 0.2), (Controls.Forward.Value + Controls.Backward.Value)) * Speed.Current))
+			
+			Momentum = ((Momentum * Inertia) + Movement)
+			TotalMomentum = Momentum.magnitude
+			if TotalMomentum > Speed.Max then
+				TotalMomentum = Speed.Max
+			end
+
+			local Tilt = ((Momentum * Vector3.new(1, 0, 1)).unit:Cross(((LastMomentum * Vector3.new(1, 0, 1)).unit))).y
+			if tostring(Tilt) == "-1.#IND" or tostring(Tilt) == "1.#IND" or Tilt == math.huge or Tilt == -math.huge or tostring(0 / 0) == tostring(Tilt) then
+				Tilt = 0
+			end
+			local AbsoluteTilt = math.abs(Tilt)
+			if AbsoluteTilt > 0.06 or AbsoluteTilt < 0.0001 then
+				if math.abs(LastTilt) > 0.0001 then
+					Tilt = (LastTilt * 0.9)
+				else
+					Tilt = 0
+				end
+			else
+				Tilt = ((LastTilt * 0.77) + (Tilt * 0.25))
+			end
+			
+			LastTilt = Tilt
+			if TotalMomentum < 0.5 then
+				Momentum = Vector3.new(0, 0, 0)
+				TotalMomentum = 0
+				FlightGyro.cframe = CoordinateFrame
+			else
+				FlightGyro.cframe = CFrame.new(Vector3.new(0, 0, 0), Momentum) *CFrame.Angles(0, 0, (Tilt * -20)) * CFrame.Angles((math.pi * -0.5 * (TotalMomentum / Speed.Max)), 0, 0)
+			end
+			
+			FlightVelocity.velocity = Momentum
+			
+			local GravityDelta = ((((Momentum * Vector3.new(0, 1, 0)) - Vector3.new(0, -Speed.Max, 0)).magnitude / Speed.Max) * 0.5)
+			if GravityDelta > 0.45 and tick() > LastFlap then
+				LastFlap = (tick() + 0.5)
+				Spawn(function()
+					Sounds.Wings:Play()
+					Spawn(function()
+						InvokeServer("SetWingSpan", {Value = -1})
+					end)
+					wait(0.25)
+					Spawn(function()
+						InvokeServer("SetWingSpan", {Value = 0})
+					end)
+					wait(0.25)
+					Spawn(function()
+						InvokeServer("SetWingSpan", {Value = -0.5})
+					end)
+				end)
+			end
+			LastMomentum = Momentum
+			wait(Rate)
+		end
+		if CheckIfAlive() then
+			Humanoid.AutoRotate = true
+			Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+		end
+		RemoveFlyStuff()
+		Spawn(function()
+			InvokeServer("Flying", {Mode = false})
+		end)
+		Flying = false
+	end
+end
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function DisableJump(Boolean)
+	if PreventJump then
+		PreventJump:disconnect()
+	end
+	if Boolean then
+		PreventJump = Humanoid.Changed:connect(function(Property)
+			if Property ==  "Jump" then
+				Humanoid.Jump = false
+			end
+		end)
+	end
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Head and Head.Parent and Torso and Torso.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Head = Character:FindFirstChild("Head")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Player:GetMouse()
+	Mouse.Button1Down:connect(function()
+		InvokeServer("MouseClick", {Down = true})
+	end)
+	Mouse.Button1Up:connect(function()
+		InvokeServer("MouseClick", {Down = false})
+	end)
+	Mouse.KeyDown:connect(function(Key)
+		OnClientInvoke("KeyPress", {Key = Key, Down = true})
+		InvokeServer("KeyPress", {Key = Key, Down = true})
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		OnClientInvoke("KeyPress", {Key = Key, Down = false})
+		InvokeServer("KeyPress", {Key = Key, Down = false})
+	end)
+	Mouse.Move:connect(function()
+		InvokeServer("MouseMove", {Position = Mouse.Hit.p, Target = Mouse.Target})
+	end)
+	Spawn(function()
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			ArtemisGuiClone = ArtemisGui:Clone()
+			Button1 = ArtemisGuiClone.ButtonHolder.Button1
+			Button2 = ArtemisGuiClone.ButtonHolder.Button2
+			Button1.MouseButton1Down:connect(function()
+				ChangeMode(1)
+			end)
+			Button2.MouseButton1Down:connect(function()
+				ChangeMode(2)
+			end)
+			ChangeMode(1)
+			ArtemisGuiClone.Parent = PlayerGui
+		end
+	end)
+	ToolEquipped = true
+end
+
+function Unequipped()
+	LocalObjects = {}
+	Button1 = nil
+	Button2 = nil
+	if ArtemisGuiClone and ArtemisGuiClone.Parent then
+		ArtemisGuiClone:Destroy()
+	end
+	RemoveFlyStuff()
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	for i, v in pairs({PreventJump, ObjectLocalTransparencyModifier}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	local ServerRtrurn
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(mode, value)
+	end)
+	return ServerReturn
+end
+
+function OnClientInvoke(mode, value)
+	if not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	if mode == "PlayAnimation" then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MousePosition" then
+		return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+	elseif mode == "DisableJump" and value then
+		DisableJump(value)
+	elseif mode == "SetLocalTransparencyModifier" and value then
+		pcall(function()
+			local ObjectFound = false
+			for i, v in pairs(LocalObjects) do
+				if v == value then
+					ObjectFound = true
+				end
+			end
+			if not ObjectFound then
+				table.insert(LocalObjects, value)
+				if ObjectLocalTransparencyModifier then
+					ObjectLocalTransparencyModifier:disconnect()
+				end
+				ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+					for i, v in pairs(LocalObjects) do
+						if v.Object and v.Object.Parent then
+							local CurrentTransparency = v.Object.LocalTransparencyModifier
+							if ((not v.AutoUpdate and (CurrentTransparency == 1 or  CurrentTransparency == 0)) or v.AutoUpdate) then
+								v.Object.LocalTransparencyModifier = v.Transparency
+							end
+						else
+							table.remove(LocalObjects, i)
+						end
+					end
+				end)
+			end
+		end)
+	elseif mode == "KeyPress" and value then
+		local Key = value.Key
+		local ByteKey = string.byte(Key)
+		local Down = value.Down
+		if Key == "q" and Down then
+			ChangeMode(1)
+		elseif Key == "e" and Down then
+			ChangeMode(2)
+		elseif ByteKey == 32 and Down then
+			Spawn(Fly)
+		else
+			for i, v in pairs(Controls) do
+				if v.Keys.Key == Key or v.Keys.ByteKey == ByteKey then
+					v.Value = ((Down and v.DesiredValue) or 0)
+				end
+			end
+		end
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="ScreenGui" referent="RBXDBC1B27895224B3596E48845416411B5">
+				<Properties>
+					<string name="Name">ArtemisGui</string>
+				</Properties>
+				<Item class="Frame" referent="RBX0ABD2E9292554361A996C47C051B20DF">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">ButtonHolder</string>
+						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>-65</XO>
+							<YS>1</YS>
+							<YO>-150</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>130</XO>
+							<YS>0</YS>
+							<YO>70</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+					<Item class="ImageButton" referent="RBX5DA65A1AAC394A148E6139E78B685B1F">
+						<Properties>
+							<bool name="Active">true</bool>
+							<bool name="AutoButtonColor">false</bool>
+							<Color3 name="BackgroundColor3">4294967295</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">0</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<Content name="Image"><url>http://www.roblox.com/asset/?id=90879220</url></Content>
+							<Color3 name="ImageColor3">4294967295</Color3>
+							<Vector2 name="ImageRectOffset">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<Vector2 name="ImageRectSize">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<float name="ImageTransparency">1</float>
+							<bool name="Modal">false</bool>
+							<string name="Name">Button1</string>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>10</XO>
+								<YS>0</YS>
+								<YO>10</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<bool name="Selected">false</bool>
+							<UDim2 name="Size">
+								<XS>0</XS>
+								<XO>50</XO>
+								<YS>1</YS>
+								<YO>-20</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<token name="Style">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">1</int>
+						</Properties>
+						<Item class="ImageLabel" referent="RBXBBAC22C0BC254B72BF847E03CF871D00">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4294967295</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<Content name="Image"><url>http://www.roblox.com/asset/?id=111892626</url></Content>
+								<Color3 name="ImageColor3">4294967295</Color3>
+								<Vector2 name="ImageRectOffset">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<Vector2 name="ImageRectSize">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<float name="ImageTransparency">0</float>
+								<string name="Name">Inactive</string>
+								<UDim2 name="Position">
+									<XS>0</XS>
+									<XO>0</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>1</XS>
+									<XO>0</XO>
+									<YS>1</YS>
+									<YO>0</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+						</Item>
+						<Item class="ImageLabel" referent="RBX4DF6255431B946AB86D1E93584A30E28">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4294967295</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<Content name="Image"><url>http://www.roblox.com/asset/?id=111892694</url></Content>
+								<Color3 name="ImageColor3">4294967295</Color3>
+								<Vector2 name="ImageRectOffset">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<Vector2 name="ImageRectSize">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<float name="ImageTransparency">0</float>
+								<string name="Name">Active</string>
+								<UDim2 name="Position">
+									<XS>0</XS>
+									<XO>0</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>1</XS>
+									<XO>0</XO>
+									<YS>1</YS>
+									<YO>0</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+						</Item>
+					</Item>
+					<Item class="ImageButton" referent="RBX55F5B6C255B0475EB457D7442B7D7F3E">
+						<Properties>
+							<bool name="Active">true</bool>
+							<bool name="AutoButtonColor">false</bool>
+							<Color3 name="BackgroundColor3">4294967295</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">0</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<Content name="Image"><url>http://www.roblox.com/asset/?id=90879178</url></Content>
+							<Color3 name="ImageColor3">4294967295</Color3>
+							<Vector2 name="ImageRectOffset">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<Vector2 name="ImageRectSize">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<float name="ImageTransparency">1</float>
+							<bool name="Modal">false</bool>
+							<string name="Name">Button2</string>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>70</XO>
+								<YS>0</YS>
+								<YO>10</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<bool name="Selected">false</bool>
+							<UDim2 name="Size">
+								<XS>0</XS>
+								<XO>50</XO>
+								<YS>1</YS>
+								<YO>-20</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<token name="Style">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">1</int>
+						</Properties>
+						<Item class="ImageLabel" referent="RBX31A25EE291D145D880D00BF396AF48BD">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4294967295</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<Content name="Image"><url>http://www.roblox.com/asset/?id=111892406</url></Content>
+								<Color3 name="ImageColor3">4294967295</Color3>
+								<Vector2 name="ImageRectOffset">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<Vector2 name="ImageRectSize">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<float name="ImageTransparency">0</float>
+								<string name="Name">Inactive</string>
+								<UDim2 name="Position">
+									<XS>0</XS>
+									<XO>0</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>1</XS>
+									<XO>0</XO>
+									<YS>1</YS>
+									<YO>0</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+						</Item>
+						<Item class="ImageLabel" referent="RBX441161EC9BC94B95B9283DA68A71311A">
+							<Properties>
+								<bool name="Active">false</bool>
+								<Color3 name="BackgroundColor3">4294967295</Color3>
+								<float name="BackgroundTransparency">1</float>
+								<Color3 name="BorderColor3">4279970357</Color3>
+								<int name="BorderSizePixel">1</int>
+								<bool name="ClipsDescendants">false</bool>
+								<bool name="Draggable">false</bool>
+								<Content name="Image"><url>http://www.roblox.com/asset/?id=111892552</url></Content>
+								<Color3 name="ImageColor3">4294967295</Color3>
+								<Vector2 name="ImageRectOffset">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<Vector2 name="ImageRectSize">
+									<X>0</X>
+									<Y>0</Y>
+								</Vector2>
+								<float name="ImageTransparency">0</float>
+								<string name="Name">Active</string>
+								<UDim2 name="Position">
+									<XS>0</XS>
+									<XO>0</XO>
+									<YS>0</YS>
+									<YO>0</YO>
+								</UDim2>
+								<float name="Rotation">0</float>
+								<UDim2 name="Size">
+									<XS>1</XS>
+									<XO>0</XO>
+									<YS>1</YS>
+									<YO>0</YO>
+								</UDim2>
+								<token name="SizeConstraint">0</token>
+								<bool name="Visible">true</bool>
+								<int name="ZIndex">1</int>
+							</Properties>
+						</Item>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX46707524CEB846089E0C1AE111BF89F2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX90860BEF822E4AE1ABA33DD3FA9166FF">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=90828653</url></Content>
+				<string name="Name">Fly</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXAA042F52F8E14543934822D818FF34BE">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>3.97749066</X>
+					<Y>-3.45740557</Y>
+					<Z>-5.50038767</Z>
+					<R00>-0.898212612</R00>
+					<R01>0.210274026</R01>
+					<R02>0.386003941</R02>
+					<R10>-0</R10>
+					<R11>0.878157079</R11>
+					<R12>-0.478372335</R12>
+					<R20>-0.439561427</R20>
+					<R21>-0.429680079</R21>
+					<R22>-0.788771689</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>2.68053961</X>
+					<Y>-1.85010207</Y>
+					<Z>-2.85016012</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
 		<Item class="Part" referent="RBXE26CFE7F7D684BC988ED669FE837E39A">
 			<Properties>
 				<bool name="Anchored">false</bool>
@@ -161,18 +1338,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">1003</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.06228542</X>
-					<Y>4.24070024</Y>
-					<Z>3.12409616</Z>
-					<R00>0.564654469</R00>
-					<R01>-0.16396372</R01>
-					<R02>0.808908224</R02>
-					<R10>3.39161534e-006</R10>
+					<X>1.45000017</X>
+					<Y>-1.699332</Y>
+					<Z>-0.790018559</Z>
+					<R00>1.00000548</R00>
+					<R01>1.19955337e-006</R01>
+					<R02>8.40430766e-006</R02>
+					<R10>2.74339527e-006</R10>
 					<R11>0.980066597</R11>
-					<R12>0.198678985</R12>
-					<R20>-0.825335741</R20>
-					<R21>-0.112175472</R21>
-					<R22>0.553391099</R22>
+					<R12>0.198677063</R12>
+					<R20>7.91772527e-006</R20>
+					<R21>-0.198665187</R21>
+					<R22>0.980084419</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
@@ -245,7 +1422,7 @@
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>3.12823772</X>
-						<Y>-3.47989988</Y>
+						<Y>-3.97989988</Y>
 						<Z>-2.2120595</Z>
 						<R00>0.564644814</R00>
 						<R01>6.48200512e-007</R01>
@@ -290,18 +1467,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-1.14700007</X>
-					<Y>5.45000029</Y>
-					<Z>4.82300043</Z>
-					<R00>0.564644814</R00>
-					<R01>1.9967556e-006</R01>
-					<R02>0.825340211</R02>
-					<R10>6.48200512e-007</R10>
-					<R11>1.00000036</R11>
-					<R12>1.89244747e-006</R12>
-					<R20>-0.825335681</R20>
-					<R21>4.54485416e-007</R21>
-					<R22>0.564643085</R22>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
@@ -345,14 +1522,6 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Script" referent="RBX62F527510A8749F4B26EFD4CD05DCE38">
-				<Properties>
-					<bool name="Disabled">false</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">Script</string>
-					<ProtectedString name="Source">script.Parent:Remove()</ProtectedString>
-				</Properties>
-			</Item>
 			<Item class="SpecialMesh" referent="RBX1E55F93710EA4E139B5A8BEEAD8C9CE1">
 				<Properties>
 					<token name="LODX">2</token>
@@ -413,962 +1582,6 @@
 					<Ref name="Part1">RBX7A682AD238E54E78BC72D54CF276ADCD</Ref>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Camera" referent="RBX998B598F055B4710BBC2074BE001A3B7">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-3.30003452</X>
-					<Y>3.28718662</Y>
-					<Z>-1.44104207</Z>
-					<R00>-0.898906171</R00>
-					<R01>-0.0929470882</R01>
-					<R02>-0.428168774</R02>
-					<R10>-0</R10>
-					<R11>0.97723937</R11>
-					<R12>-0.212139606</R12>
-					<R20>0.438141137</R20>
-					<R21>-0.190693602</R21>
-					<R22>-0.878446519</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-2.44369698</X>
-					<Y>3.71146584</Y>
-					<Z>0.315850973</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBXF7814EBAAB8944379C150525476E4D6C">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Script</string>
-				<ProtectedString name="Source">--Rescripted by Luckymaxer
---Made by Stickmasterluke
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-Mesh = Handle:WaitForChild(&quot;Mesh&quot;)
-
-Players = game:GetService(&quot;Players&quot;)
-RunService = game:GetService(&quot;RunService&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
-
-ArtemisGui = script:WaitForChild(&quot;ArtemisGui&quot;)
-
-DisplayModel = Tool:FindFirstChild(&quot;DisplayModel&quot;)
-if DisplayModel then
-&#9;DisplayModel:Destroy()
-end
-
-BasePart = Instance.new(&quot;Part&quot;)
-BasePart.Shape = Enum.PartType.Block
-BasePart.Material = Enum.Material.Plastic
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.Anchored = false
-BasePart.Locked = true
-BasePart.CanCollide = true
-
-BaseScale = Vector3.new(1, 1, 0.7)
-Mesh.Scale = BaseScale
-
-Speed = 2.1
-TopSpeed = 45
-
-Inertia = (1 - (Speed / TopSpeed))
-
-RapidFireDamage = 144
-
-Range = 350
-
-Rate = (1 / 30)
-
-BarrelOffset = Vector3.new(-0.05, 0.5, -1.5)
-WindVec = Vector3.new(2, -1, 1).unit
-
-ChargeMode = 1
-RapidFireMode = 2
-
-Charge = 0
-Momentum = Vector3.new(0, 0, 0)
-LastMomentum = Vector3.new(0, 0, 0)
-TotalMomentum = 0
-LastFlap = 0
-Tilt = 0
-LastTilt = 0
-FireMode = 1
-
-Controls = {
-&#9;Forward = {
-&#9;&#9;Value = 0,
-&#9;&#9;DesiredValue = -1,
-&#9;&#9;Keys = {
-&#9;&#9;&#9;Key = &quot;w&quot;,
-&#9;&#9;&#9;ByteKey = 17
-&#9;&#9;}
-&#9;},
-&#9;Backward = {
-&#9;&#9;Value = 0,
-&#9;&#9;DesiredValue = 1,
-&#9;&#9;Keys = {
-&#9;&#9;&#9;Key = &quot;s&quot;,
-&#9;&#9;&#9;ByteKey = 18
-&#9;&#9;}
-&#9;},
-&#9;Left = {
-&#9;&#9;Value = 0,
-&#9;&#9;DesiredValue = -1,
-&#9;&#9;Keys = {
-&#9;&#9;&#9;Key = &quot;a&quot;,
-&#9;&#9;&#9;ByteKey = 20
-&#9;&#9;}
-&#9;},
-&#9;Right = {
-&#9;&#9;Value = 0,
-&#9;&#9;DesiredValue = 1,
-&#9;&#9;Keys = {
-&#9;&#9;&#9;Key = &quot;d&quot;,
-&#9;&#9;&#9;ByteKey = 19
-&#9;&#9;}
-&#9;}
-}
-
-Flying = false
-Check = true
-
-MouseDown = false
-ToolEquipped = false
-
-Wing = BasePart:Clone()
-Wing.Name = &quot;Wing&quot;
-Wing.CanCollide = false
-Wing.Size = Vector3.new(4, 4, 0.6)
-WingMesh = Instance.new(&quot;SpecialMesh&quot;)
-WingMesh.MeshType = Enum.MeshType.FileMesh
-WingMesh.TextureId = &quot;http://www.roblox.com/asset/?id=111825642&quot;
-WingMesh.Scale = Vector3.new(1.5, 1.5, 1.5)
-WingMesh.Parent = Wing
-
-BaseArrow = BasePart:Clone()
-BaseArrow.Name = &quot;Arrow&quot;
-BaseArrow.Size = Vector3.new(0.3, 0.3, 2.7)
-BaseArrow.CanCollide = true
-ArrowMesh = Instance.new(&quot;SpecialMesh&quot;)
-ArrowMesh.MeshType = Enum.MeshType.FileMesh
-ArrowMesh.MeshId = &quot;http://www.roblox.com/asset/?id=92189547&quot;
-ArrowMesh.TextureId = &quot;http://www.roblox.com/asset/?id=92189351&quot;
-ArrowMesh.Scale = Vector3.new(1, 1, 2)
-ArrowMesh.VertexColor = Vector3.new(0.1, 0.1, 0.2)
-ArrowMesh.Parent = BaseArrow
-
-Animations = {
-&#9;Fly = {Animation = Tool:WaitForChild(&quot;Fly&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
-}
-
-Sounds = {
-&#9;Fire = Handle:WaitForChild(&quot;FireSound&quot;),
-&#9;Wings = Handle:WaitForChild(&quot;WingSound&quot;),
-&#9;BoltThunk = Handle:WaitForChild(&quot;BoltThunk&quot;)
-}
-
-ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ServerControl.Name = &quot;ServerControl&quot;
-ServerControl.Parent = Tool
-
-ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ClientControl.Name = &quot;ClientControl&quot;
-ClientControl.Parent = Tool
-
-Tool.Enabled = true
-
-ServerControl.OnServerInvoke = (function(player, Mode, Value)
-&#9;if player == Player and ToolEquipped and Value then
-&#9;&#9;if Mode == &quot;MouseClick&quot; then
-&#9;&#9;&#9;local Down = Value.Down
-&#9;&#9;&#9;if Down and not MouseDown and Check then
-&#9;&#9;&#9;&#9;MouseDown = true
-&#9;&#9;&#9;&#9;if ArrowCharge then
-&#9;&#9;&#9;&#9;&#9;ArrowCharge:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;ArrowCharge = RunService.Heartbeat:connect(function()
-&#9;&#9;&#9;&#9;&#9;local Waited = false
-&#9;&#9;&#9;&#9;&#9;if Check then
-&#9;&#9;&#9;&#9;&#9;&#9;if FireMode == RapidFireMode then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if Check and CheckIfAlive() then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Check = false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = Vector3.new(1, 1, 0.9)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;DisplayWeld.C0 = CFrame.new(-0.05, 0, 0) * CFrame.Angles(0, (math.pi / 2),0)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.1)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = BaseScale
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Fire(InvokeClient(&quot;MousePosition&quot;), Head.Position, RapidFireDamage, 0.25)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;DisplayWeld.C0 = CFrame.new(-0.05, 0, -0.5) * CFrame.Angles(0, (math.pi / 2), 0)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;CreateDisplayArrow()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.15)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Waited = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Check = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ArrowCharge then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;ArrowCharge:disconnect()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;elseif FireMode == ChargeMode then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if Charge &lt; 100 then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Charge = (Charge + 1)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Percent = (Charge / 100)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Mesh.Scale = Vector3.new(1, 1, (0.7 + (0.7 * Percent)))
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;DisplayWeld.C0 = CFrame.new(-0.05, 0, (-0.5 + Percent)) * CFrame.Angles(0, (math.pi / 2), 0)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(0.05)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;Waited = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;if not Waited then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;elseif not Down and MouseDown then
-&#9;&#9;&#9;&#9;MouseDown = false
-&#9;&#9;&#9;&#9;if ArrowCharge then
-&#9;&#9;&#9;&#9;&#9;ArrowCharge:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if FireMode == ChargeMode and CheckIfAlive() then
-&#9;&#9;&#9;&#9;&#9;Check = false
-&#9;&#9;&#9;&#9;&#9;Fire(InvokeClient(&quot;MousePosition&quot;), Head.Position, (Charge + 10), (0.25 + (Charge / 50)))
-&#9;&#9;&#9;&#9;&#9;Charge = 0
-&#9;&#9;&#9;&#9;&#9;Mesh.Scale = BaseScale
-&#9;&#9;&#9;&#9;&#9;DisplayWeld.C0 = CFrame.new(-0.05, 0, -0.5) * CFrame.Angles(0, (math.pi / 2), 0)
-&#9;&#9;&#9;&#9;&#9;wait(0.75)
-&#9;&#9;&#9;&#9;&#9;CreateDisplayArrow()
-&#9;&#9;&#9;&#9;&#9;wait(0.25)
-&#9;&#9;&#9;&#9;&#9;Check = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;elseif Mode == &quot;KeyPress&quot; then
-&#9;&#9;&#9;local Key = Value.Key
-&#9;&#9;&#9;local ByteKey = string.byte(Key)
-&#9;&#9;&#9;local Down = Value.Down
-&#9;&#9;&#9;if Key == &quot;q&quot; and Down then
-&#9;&#9;&#9;&#9;ChangeMode(1)
-&#9;&#9;&#9;elseif Key == &quot;e&quot; and Down then
-&#9;&#9;&#9;&#9;ChangeMode(2)
-&#9;&#9;&#9;elseif ByteKey == 32 and Down then
-&#9;&#9;&#9;&#9;Fly()
-&#9;&#9;&#9;&#9;Torso.Velocity = Momentum
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;for i, v in pairs(Controls) do
-&#9;&#9;&#9;&#9;&#9;if v.Keys.Key == Key or v.Keys.ByteKey == ByteKey then
-&#9;&#9;&#9;&#9;&#9;&#9;v.Value = ((Down and v.DesiredValue) or 0)
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end)
-
-function InvokeClient(Mode, Value)
-&#9;local ClientReturn = nil
-&#9;pcall(function()
-&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-&#9;end)
-&#9;return ClientReturn
-end
-
-function TagHumanoid(humanoid, player)
-&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;Creator_Tag.Name = &quot;creator&quot;
-&#9;Creator_Tag.Value = player
-&#9;Debris:AddItem(Creator_Tag, 2)
-&#9;Creator_Tag.Parent = humanoid
-end
-
-function UntagHumanoid(humanoid)
-&#9;for i, v in pairs(humanoid:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-function ChangeMode(NewMode)
-&#9;Charge = 0
-&#9;FireMode = NewMode
-&#9;Button1.Image = &quot;http://www.roblox.com/asset/?id=111892626&quot;
-&#9;Button2.Image = &quot;http://www.roblox.com/asset/?id=111892406&quot;
-&#9;if NewMode == 1 then
-&#9;&#9;Button1.Image=&quot;http://www.roblox.com/asset/?id=111892694&quot;
-&#9;elseif NewMode == 2 then
-&#9;&#9;Button2.Image=&quot;http://www.roblox.com/asset/?id=111892552&quot;
-&#9;end
-end
-
-function CheckIntangible(Hit)
-&#9;if Hit and Hit.Parent then
-&#9;&#9;if Hit:IsDescendantOf(Character) or Hit.Transparency &gt; 0.8 or Hit.Name == &quot;Handle&quot; or Hit.Name == &quot;Effect&quot; or Hit.Name == &quot;Bullet&quot; or Hit.Name == &quot;Laser&quot; or string.lower(Hit.Name) == &quot;water&quot; or Hit.Name == &quot;Rail&quot; or Hit.Name == &quot;Arrow&quot; then
-&#9;&#9;&#9;return true
-&#9;&#9;end
-&#9;end
-&#9;return false
-end
-
-function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
-&#9;local Ignore = ((type(Ignore) == &quot;table&quot; and Ignore) or {Ignore})
-&#9;local RayHit, RayPos = game:GetService(&quot;Workspace&quot;):FindPartOnRayWithIgnoreList(Ray.new(StartPos, (Vec * Length)), Ignore)
-&#9;if RayHit and CheckIntangible(RayHit) then
-&#9;&#9;if DelayIfHit then
-&#9;&#9;&#9;wait()
-&#9;&#9;end
-&#9;&#9;RayHit, RayPos = CastRay((RayPos + (Vec * 0.01)), Vec, (Length-((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
-&#9;end
-&#9;return RayHit, RayPos
-end
-
-function DrawBeam(StartPos, EndPos, Color, FadeDelay)
-&#9;local Distance = (StartPos - EndPos).magnitude
-&#9;local Laser = BasePart:Clone()
-&#9;Laser.Name = &quot;Effect&quot;
-&#9;Laser.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;Laser.Transparency = 5
-&#9;Laser.BrickColor = Color
-&#9;Laser.Anchored = true
-&#9;Laser.CanCollide = false
-&#9;local Mesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;Mesh.MeshType = Enum.MeshType.Head
-&#9;Mesh.Scale = Vector3.new(1, (Distance * 5), 1)
-&#9;Mesh.Parent = Laser
-&#9;Laser.CFrame = CFrame.new(StartPos, EndPos) * CFrame.new(0, 0, (-Distance / 2)) * CFrame.Angles((math.pi / 2), 0, 0)
-&#9;Debris:AddItem(Laser, (FadeDelay * 3))
-&#9;Laser.Parent = game:GetService(&quot;Workspace&quot;)
-
-&#9;local Frames = math.floor(FadeDelay / Rate)
-&#9;for Frame = 1, Frames do
-&#9;&#9;wait(Rate)
-&#9;&#9;local Percent = (Frame / Frames)
-&#9;&#9;Laser.CFrame = Laser.CFrame + WindVec * Rate
-&#9;&#9;Laser.Transparency = (0.5 + (Percent * 0.5))
-&#9;end
-&#9;wait(1)
-&#9;if Laser and Laser.Parent then
-&#9;&#9;Laser:Destroy()
-&#9;end
-end
-
-function Fire(TargetPos, StartPos, Damage, FadeDelay)
-&#9;local FakeStartPos = (Handle.CFrame * CFrame.new(BarrelOffset)).p
-&#9;local Vec = (TargetPos - StartPos).unit
-
-&#9;local Arrow = BaseArrow:Clone()&#9;
-&#9;
-&#9;local Sound = Sounds.BoltThunk:Clone()
-&#9;Sound.Parent = Arrow
-&#9;Sound:Play()
-&#9;
-&#9;local RayHit, RayPos = CastRay(StartPos, Vec, Range, Character, false)
-&#9;local FakeVec = (RayPos - FakeStartPos).unit
-&#9;if RayHit then
-&#9;&#9;local NewCF = CFrame.new(RayPos, (RayPos + FakeVec)) * CFrame.new(0, 0, (0.9 + (math.random(0, 1) * 0.4)))
-&#9;&#9;local StickWeld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;StickWeld.Part0 = RayHit
-&#9;&#9;StickWeld.Part1 = Arrow
-&#9;&#9;StickWeld.C0 = RayHit.CFrame:inverse() * NewCF
-&#9;&#9;StickWeld.C1 = NewCF:inverse() * NewCF
-&#9;&#9;StickWeld.Parent = Arrow
-&#9;&#9;Arrow.CFrame = NewCF
-&#9;&#9;local character = RayHit.Parent
-&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if humanoid and humanoid.Health &gt; 0 then
-&#9;&#9;&#9;humanoid:TakeDamage(Damage)
-&#9;&#9;&#9;UntagHumanoid(humanoid)
-&#9;&#9;&#9;TagHumanoid(humanoid, Player)
-&#9;&#9;end
-&#9;else
-&#9;&#9;Arrow.CFrame = CFrame.new(RayPos, (RayPos + FakeVec))
-&#9;&#9;Arrow.Velocity = (FakeVec * 300)
-&#9;end
-&#9;
-&#9;Debris:AddItem(Arrow, (10 + (math.random() * 10)))
-&#9;Arrow.Parent = game:GetService(&quot;Workspace&quot;)
-
-&#9;Spawn(function()
-&#9;&#9;DrawBeam(FakeStartPos, RayPos, BrickColor.new(&quot;Institutional white&quot;), FadeDelay)
-&#9;end)
-
-&#9;Sounds.Fire:Play()
-&#9;
-&#9;if DisplayArrow and DisplayArrow.Parent then
-&#9;&#9;DisplayArrow:Destroy()
-&#9;end
-&#9;
-end
-
-function RemoveFlyStuff()
-&#9;InvokeClient(&quot;StopAnimation&quot;, Animations.Fly)
-&#9;for i, v in pairs({FlyConnection, ArrowCharge}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs(Character:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) and v.Name == &quot;LeftWing&quot; or v.Name == &quot;RightWing&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs(Torso:GetChildren()) do
-&#9;&#9;if v.Name == &quot;FlightGyro&quot; or v.Name == &quot;FlightVelocity&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-function Fly()
-&#9;if not ToolEquipped then
-&#9;&#9;Flying = false
-&#9;else
-&#9;&#9;Flying = not Flying
-&#9;end
-&#9;RemoveFlyStuff()
-&#9;if Flying and CheckIfAlive() then
-&#9;&#9;Momentum = (Torso.Velocity + (Torso.CFrame.lookVector * 3) + Vector3.new(0, 10, 0))
-&#9;&#9;
-&#9;&#9;local FlightGyro = Instance.new(&quot;BodyGyro&quot;)
-&#9;&#9;FlightGyro.Name = &quot;FlightGyro&quot;
-&#9;&#9;FlightGyro.P = (10 ^ 6)
-&#9;&#9;FlightGyro.maxTorque = Vector3.new(FlightGyro.P, FlightGyro.P, FlightGyro.P)
-&#9;&#9;FlightGyro.cframe = Torso.CFrame
-&#9;&#9;FlightGyro.Parent = Torso
-&#9;&#9;
-&#9;&#9;FlightVelocity = Instance.new(&quot;BodyVelocity&quot;)
-&#9;&#9;FlightVelocity.Name = &quot;FlightVelocity&quot;
-&#9;&#9;FlightVelocity.velocity = Vector3.new(0, 0, 0)
-&#9;&#9;FlightVelocity.P = (10 ^ 4)
-&#9;&#9;FlightVelocity.maxForce = (Vector3.new(1, 1, 1) * (10 ^ 6))
-&#9;&#9;FlightVelocity.Parent = Torso
-&#9;&#9;
-&#9;&#9;LeftWing = Wing:Clone()
-&#9;&#9;LeftWing.Name = &quot;LeftWing&quot;
-&#9;&#9;LeftWing.Mesh.MeshId = &quot;http://www.roblox.com/asset/?id=111896510&quot;
-&#9;&#9;
-&#9;&#9;LeftWeld = Instance.new(&quot;Motor&quot;)
-&#9;&#9;LeftWeld.Name = &quot;LeftWeld&quot;
-&#9;&#9;LeftWeld.Part0 = Torso
-&#9;&#9;LeftWeld.Part1 = LeftWing
-&#9;&#9;LeftWeld.MaxVelocity = 0.2
-&#9;&#9;LeftWeld.C0=CFrame.new(-0.25, 1, 0.25) * CFrame.Angles((math.pi / 2), 0, 0)
-&#9;&#9;LeftWeld.C1=CFrame.new(2, -1, -0.25) * CFrame.Angles((math.pi / 2), 0, 0)
-&#9;&#9;LeftWeld.Parent = LeftWing
-&#9;&#9;
-&#9;&#9;LeftWing.Parent = Character
-&#9;&#9;
-&#9;&#9;RightWing = Wing:Clone()
-&#9;&#9;RightWing.Name = &quot;RightWing&quot;
-&#9;&#9;RightWing.Mesh.MeshId = &quot;http://www.roblox.com/asset/?id=111893941&quot;
-&#9;&#9;
-&#9;&#9;RightWeld = Instance.new(&quot;Motor&quot;)
-&#9;&#9;RightWeld.Name = &quot;RightWeld&quot;
-&#9;&#9;RightWeld.Part0 = Torso
-&#9;&#9;RightWeld.Part1 = RightWing
-&#9;&#9;RightWeld.MaxVelocity = 0.2
-&#9;&#9;RightWeld.C0 = CFrame.new(0.25, 1, 0.25) * CFrame.Angles((math.pi / 2), 0, 0)
-&#9;&#9;RightWeld.C1 = CFrame.new(-2, -1, -0.25) * CFrame.Angles((math.pi / 2), 0, 0)
-&#9;&#9;RightWeld.Parent = RightWing
-
-&#9;&#9;RightWing.Parent = Character
-&#9;&#9;
-&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Fly)
-&#9;&#9;
-&#9;&#9;if FlyConnection then
-&#9;&#9;&#9;FlyConnection:disconnect()
-&#9;&#9;end
-&#9;&#9;
-&#9;&#9;FlyConnection = RunService.Heartbeat:connect(function()
-&#9;&#9;&#9;
-&#9;&#9;&#9;if not Flying or not CheckIfAlive() or not ToolEquipped then
-&#9;&#9;&#9;&#9;RemoveFlyStuff()
-&#9;&#9;&#9;&#9;Flying = false
-&#9;&#9;&#9;&#9;if FlyConnection then
-&#9;&#9;&#9;&#9;&#9;FlyConnection:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;&#9;if not Flying or not CheckIfAlive or not ToolEquipped then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;&#9;local CoordinateFrame = InvokeClient(&quot;GetCamera&quot;, {Property = &quot;CoordinateFrame&quot;})
-&#9;&#9;&#9;local Movement = (CoordinateFrame:vectorToWorldSpace(Vector3.new((Controls.Left.Value + Controls.Right.Value), (math.abs(Controls.Forward.Value) * 0.2), (Controls.Forward.Value + Controls.Backward.Value)) * Speed))
-&#9;&#9;&#9;
-&#9;&#9;&#9;Momentum = ((Momentum * Inertia) + Movement)
-&#9;&#9;&#9;TotalMomentum = Momentum.magnitude
-&#9;&#9;&#9;if TotalMomentum &gt; TopSpeed then
-&#9;&#9;&#9;&#9;TotalMomentum = TopSpeed
-&#9;&#9;&#9;end
-
-&#9;&#9;&#9;local Tilt = ((Momentum * Vector3.new(1, 0, 1)).unit:Cross(((LastMomentum * Vector3.new(1, 0, 1)).unit))).y
-&#9;&#9;&#9;if tostring(Tilt) == &quot;-1.#IND&quot; or tostring(Tilt) == &quot;1.#IND&quot; or Tilt == math.huge or Tilt == -math.huge or tostring(0 / 0) == tostring(Tilt) then
-&#9;&#9;&#9;&#9;Tilt = 0
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local AbsoluteTilt = math.abs(Tilt)
-&#9;&#9;&#9;if AbsoluteTilt &gt; 0.06 or AbsoluteTilt &lt; 0.0001 then
-&#9;&#9;&#9;&#9;if math.abs(LastTilt) &gt; 0.0001 then
-&#9;&#9;&#9;&#9;&#9;Tilt = (LastTilt * 0.9)
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;Tilt = 0
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;Tilt = ((LastTilt * 0.77) + (Tilt * 0.25)) --Weighted average
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;&#9;LastTilt = Tilt
-&#9;&#9;&#9;if TotalMomentum &lt; 0.5 then
-&#9;&#9;&#9;&#9;Momentum = Vector3.new(0, 0, 0)
-&#9;&#9;&#9;&#9;TotalMomentum = 0
-&#9;&#9;&#9;&#9;FlightGyro.cframe = CoordinateFrame
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;FlightGyro.cframe = CFrame.new(Vector3.new(0, 0, 0), Momentum) *CFrame.Angles(0, 0, (Tilt * -20)) * CFrame.Angles((math.pi * -0.5 * (TotalMomentum / TopSpeed)), 0, 0)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;&#9;FlightVelocity.velocity = Momentum
-&#9;&#9;&#9;
-&#9;&#9;&#9;local GravityDelta = ((((Momentum * Vector3.new(0, 1, 0)) - Vector3.new(0, -TopSpeed, 0)).magnitude / TopSpeed) * 0.5)
-&#9;&#9;&#9;if GravityDelta &gt; 0.45 and tick() &gt; LastFlap then
-&#9;&#9;&#9;&#9;LastFlap = (tick() + 0.5)
-&#9;&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;&#9;InvokeClient(&quot;PlaySound&quot;, Sounds.Wings)
-&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;LeftWeld.DesiredAngle = 1
-&#9;&#9;&#9;&#9;&#9;RightWeld.DesiredAngle = 1
-&#9;&#9;&#9;&#9;&#9;wait(0.25)
-&#9;&#9;&#9;&#9;&#9;LeftWeld.DesiredAngle = 0
-&#9;&#9;&#9;&#9;&#9;RightWeld.DesiredAngle = 0
-&#9;&#9;&#9;&#9;&#9;wait(0.25)
-&#9;&#9;&#9;&#9;&#9;LeftWeld.DesiredAngle = -0.5
-&#9;&#9;&#9;&#9;&#9;RightWeld.DesiredAngle = 0.5
-&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;LastMomentum = Momentum
-&#9;&#9;&#9;wait(Rate)
-&#9;&#9;end)
-&#9;end
-end
-
-function CreateDisplayArrow()
-&#9;DisplayArrow = Tool:FindFirstChild(&quot;DisplayArrow&quot;)
-&#9;if DisplayArrow then
-&#9;&#9;DisplayArrow:Destroy()
-&#9;end
-&#9;DisplayArrow = BaseArrow:Clone()
-&#9;DisplayArrow.Name = &quot;DisplayArrow&quot;
-&#9;DisplayArrow.CanCollide = false
-&#9;DisplayArrow.Mesh.Scale = Vector3.new(1, 1, 1.5)
-&#9;DisplayWeld = Instance.new(&quot;Weld&quot;)
-&#9;DisplayWeld.Part0 = Handle
-&#9;DisplayWeld.Part1 = DisplayArrow
-&#9;DisplayWeld.C0 = CFrame.new(-0.0500000007, 0, -0.5, -4.37113883e-008, 0, 1, 0, 1, 0, -1, 0, -4.37113883e-008)
-&#9;DisplayWeld.C1 = CFrame.new(0, 0, 0, 1.91068547e-015, -4.37113883e-008, 1, 0, 1, 4.37113883e-008, -1, 0, 1.91068547e-015)
-&#9;DisplayWeld.Parent = DisplayArrow
-&#9;DisplayArrow.Parent = Tool
-end
-
-function CheckIfAlive()
-&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Head and Head.Parent and Torso and Torso.Parent) and true) or false)
-end
-
-function Equipped()
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Head = Character:FindFirstChild(&quot;Head&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;Spawn(function()
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v and v.Animation then
-&#9;&#9;&#9;&#9;InvokeClient(&quot;Preload&quot;, v.Animation.AnimationId)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-&#9;Spawn(function()
-&#9;&#9;Mesh.Scale = BaseScale
-&#9;&#9;CreateDisplayArrow()
-&#9;&#9;local PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
-&#9;&#9;if PlayerGui then
-&#9;&#9;&#9;ArtemisGuiClone = ArtemisGui:Clone()
-&#9;&#9;&#9;Button1 = ArtemisGuiClone.ButtonHolder.Button1
-&#9;&#9;&#9;Button2 = ArtemisGuiClone.ButtonHolder.Button2
-&#9;&#9;&#9;Button1.MouseButton1Down:connect(function()
-&#9;&#9;&#9;&#9;ChangeMode(1)
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;Button2.MouseButton1Down:connect(function()
-&#9;&#9;&#9;&#9;ChangeMode(2)
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;ChangeMode(1)
-&#9;&#9;&#9;ArtemisGuiClone.Parent = PlayerGui
-&#9;&#9;end
-&#9;end)
-&#9;ToolEquipped = true
-end
-
-function Unequipped()
-&#9;for i, v in pairs(Animations) do
-&#9;&#9;InvokeClient(&quot;StopAnimation&quot;, v)
-&#9;end
-&#9;RemoveFlyStuff()
-&#9;if ArtemisGuiClone and ArtemisGuiClone.Parent then
-&#9;&#9;ArtemisGuiClone:Destroy()
-&#9;end
-&#9;Button1 = nil
-&#9;Button2 = nil
-&#9;MouseDown = false
-&#9;ToolEquipped = false
-end
-
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
-			</Properties>
-			<Item class="ScreenGui" referent="RBXDF6C6E4EB3974E9F95D15B9ED87F1F09">
-				<Properties>
-					<string name="Name">ArtemisGui</string>
-				</Properties>
-				<Item class="Frame" referent="RBXC309975BDBE44B73A73BA0D7A0234125">
-					<Properties>
-						<bool name="Active">false</bool>
-						<Color3 name="BackgroundColor3">4288914085</Color3>
-						<float name="BackgroundTransparency">1</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">1</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<string name="Name">ButtonHolder</string>
-						<UDim2 name="Position">
-							<XS>0.5</XS>
-							<XO>-65</XO>
-							<YS>1</YS>
-							<YO>-150</YO>
-						</UDim2>
-						<float name="Rotation">0</float>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>130</XO>
-							<YS>0</YS>
-							<YO>70</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<token name="Style">0</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-					<Item class="ImageButton" referent="RBXC2B4B4E4E0C746C1B124920180CF864B">
-						<Properties>
-							<bool name="Active">true</bool>
-							<bool name="AutoButtonColor">false</bool>
-							<Color3 name="BackgroundColor3">4294967295</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">0</int>
-							<bool name="ClipsDescendants">false</bool>
-							<bool name="Draggable">false</bool>
-							<Content name="Image"><url>http://www.roblox.com/asset/?id=111892694</url></Content>
-							<Color3 name="ImageColor3">4294967295</Color3>
-							<Vector2 name="ImageRectOffset">
-								<X>0</X>
-								<Y>0</Y>
-							</Vector2>
-							<Vector2 name="ImageRectSize">
-								<X>0</X>
-								<Y>0</Y>
-							</Vector2>
-							<float name="ImageTransparency">0</float>
-							<bool name="Modal">false</bool>
-							<string name="Name">Button1</string>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>10</XO>
-								<YS>0</YS>
-								<YO>10</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<bool name="Selected">false</bool>
-							<UDim2 name="Size">
-								<XS>0</XS>
-								<XO>50</XO>
-								<YS>1</YS>
-								<YO>-20</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<token name="Style">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">1</int>
-						</Properties>
-					</Item>
-					<Item class="ImageButton" referent="RBX54E39C3C58C949A589FF9D206982D693">
-						<Properties>
-							<bool name="Active">true</bool>
-							<bool name="AutoButtonColor">false</bool>
-							<Color3 name="BackgroundColor3">4294967295</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">0</int>
-							<bool name="ClipsDescendants">false</bool>
-							<bool name="Draggable">false</bool>
-							<Content name="Image"><url>http://www.roblox.com/asset/?id=111892406</url></Content>
-							<Color3 name="ImageColor3">4294967295</Color3>
-							<Vector2 name="ImageRectOffset">
-								<X>0</X>
-								<Y>0</Y>
-							</Vector2>
-							<Vector2 name="ImageRectSize">
-								<X>0</X>
-								<Y>0</Y>
-							</Vector2>
-							<float name="ImageTransparency">0</float>
-							<bool name="Modal">false</bool>
-							<string name="Name">Button2</string>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>70</XO>
-								<YS>0</YS>
-								<YO>10</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<bool name="Selected">false</bool>
-							<UDim2 name="Size">
-								<XS>0</XS>
-								<XO>50</XO>
-								<YS>1</YS>
-								<YO>-20</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<token name="Style">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">1</int>
-						</Properties>
-					</Item>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="LocalScript" referent="RBX08093F8B95E445798E28070F857769DB">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-
-Players = game:GetService(&quot;Players&quot;)
-ContentProvider = game:GetService(&quot;ContentProvider&quot;)
-RunService = game:GetService(&quot;RunService&quot;)
-
-Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
-
-Animations = {}
-LocalObjects = {}
-
-ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
-ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
-
-ToolEquipped = false
-
-ClientControl.OnClientInvoke = (function(Mode, Value)
-&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
-&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
-&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
-&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
-&#9;elseif Mode == &quot;Preload&quot; and Value then
-&#9;&#9;ContentProvider:Preload(Value)
-&#9;elseif Mode == &quot;PlaySound&quot; and Value then
-&#9;&#9;Value:Play()
-&#9;elseif Mode == &quot;StopSound&quot; and Value then
-&#9;&#9;Value:Stop()
-&#9;elseif Mode == &quot;MousePosition&quot; then
-&#9;&#9;return PlayerMouse.Hit.p
-&#9;elseif Mode == &quot;DisableJump&quot; then
-&#9;&#9;DisableJump(Value)
-&#9;elseif Mode == &quot;GetCamera&quot; and Value then
-&#9;&#9;local PropertyReturn = nil
-&#9;&#9;pcall(function()
-&#9;&#9;&#9;PropertyReturn = Camera[Value.Property]
-&#9;&#9;end)
-&#9;&#9;return PropertyReturn
-&#9;elseif Mode == &quot;SetLocalTransparencyModifier&quot; and Value and ToolEquipped then
-&#9;&#9;pcall(function()
-&#9;&#9;&#9;local ObjectFound = false
-&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
-&#9;&#9;&#9;&#9;if v == Value then
-&#9;&#9;&#9;&#9;&#9;ObjectFound = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not ObjectFound then
-&#9;&#9;&#9;&#9;table.insert(LocalObjects, Value)
-&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
-&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
-&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
-&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent and ((not v.AutoUpdate and (v.Object.LocalTransparencyModifier == 1 or  v.Object.LocalTransparencyModifier == 0)) or v.AutoUpdate) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-end)
-
-function InvokeServer(Mode, Value)
-&#9;local ServerReturn = nil
-&#9;pcall(function()
-&#9;&#9;ServerReturn = ServerControl:InvokeServer(Mode, Value)
-&#9;end)
-&#9;return ServerReturn
-end
-
-function SetAnimation(Mode, Value)
-&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == Value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
-&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
-&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
-&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == Value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function DisableJump(Boolean)
-&#9;if PreventJump then
-&#9;&#9;PreventJump:disconnect()
-&#9;end
-&#9;if Boolean then
-&#9;&#9;PreventJump = Humanoid.Changed:connect(function(Property)
-&#9;&#9;&#9;if Property ==  &quot;Jump&quot; then
-&#9;&#9;&#9;&#9;Humanoid.Jump = false
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-end
-
-function CheckIfAlive()
-&#9;return (Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0)
-end
-
-function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;ToolEquipped = true
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;PlayerMouse = Player:GetMouse()
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
-&#9;end)
-&#9;Mouse.Button1Up:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
-&#9;end)
-&#9;Mouse.KeyDown:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
-&#9;end)
-&#9;Mouse.KeyUp:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
-&#9;end)
-&#9;Mouse.WheelForward:connect(function()
-&#9;&#9;InvokeServer(&quot;WheelMoved&quot;, {Forward = true})
-&#9;end)
-&#9;Mouse.WheelBackward:connect(function()
-&#9;&#9;InvokeServer(&quot;WheelMoved&quot;, {Forward = false})
-&#9;end)
-end
-
-function Unequipped()
-&#9;ToolEquipped = false
-&#9;LocalObjects = {}
-&#9;for i, v in pairs(Animations) do
-&#9;&#9;if v and v.AnimationTrack then
-&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs({PreventJump, ObjectLocalTransparencyModifier}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;Animations = {}
-end
-
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBXBD164CAECFD44199B8623DF334A2980E">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
-
-Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
-Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
-
-Tool = script.Parent
-
-Mouse = nil
-
-function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
-&#9;end
-end
-
-function OnEquipped(ToolMouse)
-&#9;Mouse = ToolMouse
-&#9;UpdateIcon()
-end
-
-function OnChanged(Property)
-&#9;if Property == &quot;Enabled&quot; then
-&#9;&#9;UpdateIcon()
-&#9;end
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBXE0EDC96510A242DA9A525C6A5CC8C710">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=90828653</url></Content>
-				<string name="Name">Fly</string>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
