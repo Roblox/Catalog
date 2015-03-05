@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX7C47D90ECA2B4466888297715EE274B4">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>-0.769599557</R21>
 				<R22>0.585888743</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">TommyGun</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=116747513</url></Content>
-			<string name="ToolTip">I BELIEVE YA, BUT MY TOMMY GUN DONT</string>
+			<string name="ToolTip">Historic &apos;Timmy&apos; Gun</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX2828641395C94524B972BA22A0D4FA0A">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -36,18 +37,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.612733841</X>
-					<Y>32.6300011</Y>
-					<Z>-45.7190094</Z>
-					<R00>2.7213483e-008</R00>
-					<R01>-0.407661706</R01>
-					<R02>-0.913133502</R02>
-					<R10>1.21492656e-008</R10>
-					<R11>0.913132966</R11>
-					<R12>-0.407661796</R12>
-					<R20>1.0000006</R20>
-					<R21>0</R21>
-					<R22>2.98023224e-008</R22>
+					<X>0.0627341345</X>
+					<Y>0.390000999</Y>
+					<Z>-0.289007634</Z>
+					<R00>-0.972802281</R00>
+					<R01>0.141028538</R01>
+					<R02>-0.183758378</R02>
+					<R10>0.215265334</R10>
+					<R11>0.843363762</R11>
+					<R12>-0.492339998</R12>
+					<R20>0.0855422541</R20>
+					<R21>-0.518505216</R21>
+					<R22>-0.85078609</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -61,7 +62,7 @@
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
 				<bool name="Locked">false</bool>
-				<token name="Material">256</token>
+				<token name="Material">1088</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
@@ -91,453 +92,7 @@
 					<Z>4.10998917</Z>
 				</Vector3>
 			</Properties>
-			<Item class="LocalScript" referent="RBX2">
-				<Properties>
-					<bool name="Disabled">false</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">LocalScript</string>
-					<ProtectedString name="Source">------------------------
---[[UTIL Functions]]--
-------------------------
---Global functions used by all classes are wrapped in UTIL
---deal with it.
-local UTIL = {}
- 
-function UTIL.Class(tableIn,template)
-        tableIn = tableIn or {}
-        local mt = {
-        __metatable = UTIL.DeepCopy(template);
-        __index     = UTIL.DeepCopy(template);
-        }
-        return setmetatable(tableIn, mt)
-end
-function UTIL.MakeClass(...)
-        local arg = {...}
-        assert(#arg&gt;0, &apos;ERROR: class needs 1 argument or more&apos;)
-        local members = arg[1]
-        for i=2,#arg,1 do
-                if type(arg[i])==&apos;table&apos; then
-                        for key,val in pairs(arg[i]) do
-                                if not members[key] then
-                                        members[key] = val
-                                end
-                        end
-                end
-        end
-        local function New(init)
-                return UTIL.Class(init or {},members)
-        end
-        local function Copy(obj, ...)
-                local newobj = obj:New(unpack(arg))
-                for n,v in pairs(obj) do newobj[n] = v end
-                return newobj
-        end
-        members.New  = New
-        members.Copy = Copy
-        return mt
-end
- 
-function UTIL.DeepCopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == &apos;table&apos; then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[UTIL.DeepCopy(orig_key)] = UTIL.DeepCopy(orig_value)
-        end
-        setmetatable(copy, UTIL.DeepCopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
-function UTIL.Instantiate(guiType)
-&#9;return function(data)
-&#9;&#9;local obj = Instance.new(guiType)
-&#9;&#9;for k, v in pairs(data) do
-&#9;&#9;&#9;if type(k) == &apos;number&apos; then
-&#9;&#9;&#9;&#9;v.Parent = obj
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;obj[k] = v
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return obj
-&#9;end
-end 
-
-function UTIL.RetroRegister(func,...)
-&#9;func()
-&#9;for _,i in ipairs({...}) do
-&#9;&#9;i:connect(func)
-&#9;end
-end
-
--- Waits for a new character to be added if the current one is invalid
--- (Ensures that you don&apos;t have the old dead character after a respawn)
-function UTIL.WaitForValidCharacter(player)
-&#9;local character = player.Character
-&#9;if not character or not character.Parent or not character:FindFirstChild(&apos;Humanoid&apos;) or character.Humanoid.Health &lt;= 0 then
-&#9;&#9;player.CharacterAdded:wait()
-&#9;&#9;wait(0) --NOTE: Necessary for server scripts executing on the same event
-&#9;&#9;character = player.Character
-&#9;end
-&#9;return character
-end
-
-
--- Returns a character ancestor and its Humanoid, or nil
-function UTIL.FindCharacterAncestor(subject)
-&#9;if subject and subject ~= Workspace then
-&#9;&#9;local humanoid = subject:FindFirstChild(&apos;Humanoid&apos;)
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;return subject, humanoid
-&#9;&#9;else
-&#9;&#9;&#9;return UTIL.FindCharacterAncestor(subject.Parent)
-&#9;&#9;end
-&#9;end
-&#9;return nil
-end
-
-UTIL.AssetURL = &apos;http://www.roblox.com/asset/?id=&apos;
-
-
-UTIL.TouchEnabled = game:GetService(&quot;UserInputService&quot;).TouchEnabled 
-do
-&#9;local suceeded,_ =pcall(function() game.Workspace.CurrentCamera:GetPanSpeed() end)
-&#9;UTIL.CanCheckPanSpeed = suceeded
-end
-
-
-local DebrisService = Game:GetService(&apos;Debris&apos;)
-local DebugPrintOffset = 0
-function UTIL.Dprint(...)
-&#9;local line = &apos;&apos;
-&#9;for _, segment in pairs({...}) do
-&#9;&#9;line = line .. (line and &apos; &apos; or &apos;&apos;) .. tostring(segment)
-&#9;end
-&#9;local gui = Instance.new(&apos;ScreenGui&apos;)
-&#9;local label = Instance.new(&apos;TextLabel&apos;)
-&#9;label.Text = line
-&#9;label.Size = UDim2.new(0.25, 0, 0.05, 0)
-&#9;label.BackgroundTransparency = 0.5
-&#9;label.Position = UDim2.new(0, 0, 0, DebugPrintOffset)
-&#9;label.TextWrapped = true
-&#9;label.Parent = gui
-&#9;DebrisService:AddItem(gui, 30)
-&#9;gui.Parent = script.Parent
-&#9;DebugPrintOffset = (DebugPrintOffset &lt;= 600) and DebugPrintOffset + 30 or 0
-end
---
---All Welding Related Utility functions should be put here
---
-WeldUtil = {}
-
-
-do
-
-
-&#9;function WeldUtil:WeldBetween(a, b)
-&#9;&#9;local weld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;weld.Part0 = a
-&#9;&#9;weld.Part1 = b
-&#9;&#9;weld.C0 = CFrame.new()
-&#9;&#9;weld.C1 = b.CFrame:inverse() * a.CFrame
-&#9;&#9;weld.Parent = a
-&#9;&#9;return weld
-&#9;end
-&#9;
-&#9;function WeldUtil:PermaWeld(weld)
-&#9;&#9;local OriginalParent = weld.Parent
-&#9;&#9;weld.Changed:connect(function()
-&#9;&#9;&#9;Delay(0,function() weld.Parent = OriginalParent end)
-&#9;&#9;end)
-&#9;end
-
-end
-
-local InternalEvent =
-{
-&#9;Listeners = nil,
-}
-do
-&#9;UTIL.MakeClass(InternalEvent)
-&#9;function InternalEvent:Connect(func)
-&#9;&#9;if not self.Listeners then self.Listeners = {} end
-&#9;&#9;table.insert(self.Listeners,func)
-&#9;end
-&#9;function InternalEvent:Fire(...)
-&#9;&#9;if not self.Listeners then return end
-&#9;&#9;local args = {...}
-&#9;&#9;for _,i in ipairs(self.Listeners) do
-&#9;&#9;&#9;Spawn(function() i(unpack(args)) end)
-&#9;&#9;end
-&#9;end
-end
-
-local PartProjectile =
-{
-&#9;Damage = 5, -- Base output damage per shot.
-&#9;Range = 250, -- Max distance that the weapon can fire.
-&#9;Speed = 1,--how many studs per second to move
-&#9;DirectionRay=nil,
-&#9;Part = nil,
-&#9;IsAlive = true,
-&#9;IgnoreList = {},
-}
-do
-&#9;UTIL.MakeClass(PartProjectile)
-&#9;function PartProjectile.New(base,ray)
-&#9;&#9;local init = nil
-&#9;&#9;--if base is a copy of this class, then copy over fields
-&#9;&#9;if type(base) == &apos;table&apos; and base.Update then
-&#9;&#9;&#9;init = UTIL.DeepCopy(base)
-&#9;&#9;&#9;init.Part= base.Part:Clone()
-&#9;&#9;else
-&#9;&#9;&#9;init = UTIL.DeepCopy(PartProjectile)
-&#9;&#9;&#9;init.Part = base:Clone()
-&#9;&#9;end
-&#9;&#9;init.Part.CFrame = CFrame.new(ray.Origin,ray.Origin+ray.Direction)
-&#9;&#9;init.Part.Parent = game.Workspace
-&#9;&#9;init.DirectionRay = ray
-&#9;&#9;table.insert(init.IgnoreList,init.Part)
-&#9;&#9;return init
-&#9;end
-&#9;
-&#9;function PartProjectile:Hit(part)
-&#9;&#9;local char,hum = UTIL.FindCharacterAncestor(part)
-&#9;&#9;
-&#9;&#9;if hum then
-&#9;&#9;&#9;hum:TakeDamage(self.Damage)
-&#9;&#9;end
-&#9;&#9;self.IsAlive = false
-&#9;end
-&#9;
-&#9;function PartProjectile:Update(dt)
-&#9;&#9;if not self.IsAlive then return end
-&#9;&#9;local oldPos = self.Part.CFrame
-&#9;&#9;self.Part.CFrame = oldPos+(self.DirectionRay.Direction*self.Speed*dt)
-&#9;&#9;if (self.Part.CFrame.p-self.DirectionRay.Origin).magnitude&gt;self.Range then
-&#9;&#9;&#9;self.IsAlive = false
-&#9;&#9;end
-&#9;&#9;local obj = game.Workspace:FindPartOnRayWithIgnoreList( Ray.new(oldPos.p,self.DirectionRay.Direction*self.Speed*dt), self.IgnoreList,false )
-&#9;&#9;if obj then
-&#9;&#9;&#9;self:Hit(obj)
-&#9;&#9;end
-&#9;&#9;
-&#9;end
-&#9;
-&#9;function PartProjectile:Destroy()
-&#9;&#9;self.Part.Parent = nil
-&#9;end
-&#9;
-end
-
---[[shooting Tool Class]]--
-&#9;
-local ShootingTool =
-{
-&#9;FireRate = .5, -- How often the weapon can fire.
-&#9;Automatic = false, -- hold down to continue firing
-&#9;Spread = 0, -- The bigger the spread, the more inaccurate the shots will be.
-&#9;ClipSize = 50, -- Shots in a clip
-&#9;ReloadTime = 3, -- Time it takes to reload the tool.
-&#9;StartingClips = -1,
-&#9;BarrelPos = CFrame.new(0, 0, - 1.2), -- L, F, U
-&#9;
-&#9;SourcePart = nil,
-&#9;TemplateProjectile = nil,
-&#9;Projectiles = {},
-&#9;IsFireing = false,
-&#9;
-&#9;OnFire = nil,
-&#9;OnReload = nil,
-&#9;
-&#9;BulletsLeft = 50,
-&#9;
-&#9;LastReload = 0,
-&#9;
-&#9;FireSound = nil,
-&#9;
-}
-do
-&#9;UTIL.MakeClass(ShootingTool)
-&#9;function ShootingTool.New(nSource,nProjectile)
-&#9;&#9;local init= UTIL.DeepCopy(ShootingTool)
-&#9;&#9;init.SourcePart= nSource
-&#9;&#9;init.TemplateProjectile = nProjectile
-&#9;&#9;init.OnFire = InternalEvent.New()
-&#9;&#9;init.OnReload = InternalEvent.New()
-&#9;&#9;return init
-&#9;end
-&#9;
-&#9;function ShootingTool:UpdateBullets(dt)
-&#9;&#9;for index,i in ipairs(self.Projectiles) do
-&#9;&#9;&#9;if i.IsAlive then 
-&#9;&#9;&#9;&#9;i:Update(dt) 
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;i:Destroy()
-&#9;&#9;&#9;&#9;table.remove(self.Projectiles, index)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;
-&#9;function ShootingTool:StartFireing(mouse)
-&#9;&#9;if tick()-self.LastReload&lt;self.ReloadTime then return end
-&#9;&#9;while self.IsFireing do wait() end
-&#9;&#9;self.IsFireing = true
-&#9;&#9;repeat
-&#9;&#9;&#9;if tick()-self.LastReload&gt;self.ReloadTime then
-&#9;&#9;&#9;&#9;local startPos = self.SourcePart.CFrame:toWorldSpace(self.BarrelPos)
-&#9;&#9;&#9;&#9;local dir = (CFrame.Angles((math.random()-.5)*2*self.Spread,(math.random()-.5)*2*self.Spread,(math.random()-.5)*2*self.Spread)*CFrame.new((mouse.Hit.p-startPos.p).unit)).p
-&#9;&#9;&#9;&#9;local nprojectile = PartProjectile.New(self.TemplateProjectile, Ray.new(startPos.p,dir))
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;table.insert(self.Projectiles,nprojectile)
-&#9;&#9;&#9;&#9;self.OnFire:Fire()
-&#9;&#9;&#9;&#9;if self.FireSound then
-&#9;&#9;&#9;&#9;&#9;self.FireSound:Play()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;self.BulletsLeft = self.BulletsLeft -1
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if self.BulletsLeft==0 then
-&#9;&#9;&#9;&#9;self.OnReload:Fire()
-&#9;&#9;&#9;&#9;self.BulletsLeft = self.ClipSize
-&#9;&#9;&#9;&#9;self.LastReload = tick()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait(self.FireRate)
-&#9;&#9;until not self.IsFireing or not self.Automatic
-&#9;end
-&#9;
-&#9;function ShootingTool:EndFireing()
-&#9;&#9;self.IsFireing=false
-&#9;end
-&#9;
-end
-do
-&#9;local Handle = script.Parent
-&#9;local Tool = Handle.Parent
-&#9;
-&#9;local BarrelClip = UTIL.Instantiate&quot;Part&quot;
-&#9;{
-&#9;&#9;Size = Vector3.new(0.2, 0.2, 0.32),
-&#9;&#9;UTIL.Instantiate&apos;SpecialMesh&apos;
-&#9;&#9;{
-&#9;&#9;&#9;TextureId = &quot;http://www.roblox.com/asset/?id=116679995&quot;,
-&#9;&#9;&#9;MeshId = &quot;http://www.roblox.com/asset/?id=116740155&quot;,
-&#9;&#9;&#9;Scale = Vector3.new(0.9, 0.9, 0.9),
-&#9;&#9;},
-&#9;&#9;CanCollide = false,
-&#9;&#9;Parent = Tool
-&#9;}
-&#9;
-&#9;local BarrelWeld = UTIL.Instantiate&quot;Weld&quot;
-&#9;{
-&#9;&#9;C1 = CFrame.new(0.0183372498, 0.378660202, 0.237049103, 0.00777955074, 0.0069010579, 0.999946177, -0.0223222617, 0.999727845, -0.00672559161, -0.999720693, -0.0222686939, 0.00793197285),
-&#9;&#9;C0 = CFrame.new(0, 0, 0, 0.00777955074, 0.0069010579, 0.999946177, -0.0223222617, 0.999727845, -0.00672559161, -0.999720693, -0.0222686939, 0.00793197285),
-&#9;&#9;Part0 = Handle,
-&#9;&#9;Part1 = BarrelClip,
-&#9;&#9;Parent = Handle,
-&#9;}
-&#9;WeldUtil:PermaWeld(BarrelWeld)
-&#9;
-&#9;local OrangeLight = Handle:WaitForChild(&apos;OrangeLight&apos;)
-&#9;local RedLight = Handle:WaitForChild(&apos;RedLight&apos;)
-&#9;local SpotLight = Handle:WaitForChild(&apos;SpotLight&apos;)
-&#9;
-&#9;
-&#9;local Player = game.Players.LocalPlayer
-&#9;local Character = UTIL.WaitForValidCharacter(Player)
-&#9;local HoldAni = UTIL.Instantiate&quot;Animation&quot;
-&#9;{AnimationId = &quot;http://www.roblox.com/Asset?ID=116690317&quot;}
-&#9;local ReloadAni = UTIL.Instantiate&quot;Animation&quot;
-&#9;{AnimationId = &quot;http://www.roblox.com/Asset?ID=116695140&quot;}
-&#9;
-&#9;local HoldAniTrack
-&#9;local ReloadAniTrack
-&#9;local ShellMesh = UTIL.Instantiate&quot;SpecialMesh&quot;
-&#9;{
-&#9;&#9;MeshId = UTIL.AssetURL..94295100,--116680945,
-&#9;&#9;TextureId = UTIL.AssetURL..94287792,--116681256,
-&#9;&#9;Scale = Vector3.new(2.8,2.8,5),
-&#9;}
-&#9;local Projectile
-&#9;do
-&#9;&#9;local tpart = UTIL.Instantiate&quot;Part&quot;
-&#9;&#9;{
-&#9;&#9;&#9;Anchored = true,
-&#9;&#9;&#9;CanCollide = false,
-&#9;&#9;&#9;Size = Vector3.new(.2,.2,.6),
-&#9;&#9;&#9;ShellMesh:Clone(),
-&#9;&#9;}
-&#9;&#9;Projectile = PartProjectile.New(tpart,Ray.new())
-&#9;end 
-&#9;table.insert(Projectile.IgnoreList,Handle)
-&#9;
-&#9;Projectile.Speed = 200
-&#9;local Gun = ShootingTool.New(Handle,Projectile)
-&#9;Gun.Automatic = true
-&#9;Gun.BarrelPos = CFrame.new(0, 0, - 3.1)
-&#9;Gun.FireRate = .05
-&#9;Gun.Spread = .1
-&#9;Gun.FireSound  = Handle:WaitForChild(&apos;FireSound&apos;)
-&#9;
-&#9;Gun.OnFire:Connect(function()
-&#9;&#9;SpotLight.Enabled = true
-&#9;&#9;if(math.random()&gt;.5) then
-&#9;&#9;&#9;OrangeLight.Enabled =true
-&#9;&#9;else
-&#9;&#9;&#9;RedLight.Enabled =true
-&#9;&#9;end
-&#9;&#9;wait(.05)
-&#9;&#9;SpotLight.Enabled = false
-&#9;&#9;OrangeLight.Enabled =false
-&#9;&#9;RedLight.Enabled =false
-&#9;end)
-&#9;
-&#9;Gun.OnReload:Connect(function()
-&#9;&#9;local leftArm = Character:FindFirstChild(&apos;Left Arm&apos;)
-&#9;&#9;if not leftArm then return end
-&#9;&#9;local reloadBarrel = BarrelClip:Clone()
-&#9;&#9;reloadBarrel.Parent = Tool
-&#9;&#9;local tweld=WeldUtil:WeldBetween(reloadBarrel,leftArm)
-&#9;&#9;BarrelClip.Transparency = 1
-&#9;&#9;if ReloadAniTrack then
-&#9;&#9;&#9;ReloadAniTrack:Play()
-&#9;&#9;end
-&#9;&#9;wait(3)
-&#9;&#9;reloadBarrel:Destroy()
-&#9;&#9;tweld:Destroy()
-&#9;&#9;BarrelClip.Transparency = 0
-&#9;end)
-&#9;
-&#9;Tool.Equipped:connect(function(mouse)
-&#9;&#9;
-&#9;&#9;Character = UTIL.WaitForValidCharacter(Player)
-&#9;&#9;local Humanoid = Character:FindFirstChild(&apos;Humanoid&apos;)
-&#9;&#9;table.insert(Projectile.IgnoreList,Character)
-&#9;&#9;HoldAniTrack = Humanoid:LoadAnimation(HoldAni)
-&#9;&#9;ReloadAniTrack = Humanoid:LoadAnimation(ReloadAni)
-&#9;&#9;HoldAniTrack:Play()
-&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;Gun:StartFireing(mouse)
-&#9;&#9;end)
-&#9;&#9;mouse.Button1Up:connect(function()
-&#9;&#9;&#9;Gun:EndFireing()
-&#9;&#9;end)
-&#9;end)
-&#9;Tool.Unequipped:connect(function()
-&#9;&#9;HoldAniTrack:Stop()
-&#9;end)
-&#9;while true do
-&#9;&#9;Gun:UpdateBullets(1/30)
-&#9;&#9;wait()
-&#9;end
-
-end
-</ProtectedString>
-				</Properties>
-			</Item>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX4FD8B6BBEB9343438E5895658120E485">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -562,35 +117,39 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="PointLight" referent="RBX4">
+			<Item class="PointLight" referent="RBXB2C0E34B4BE741E385A037B7F4D14903">
 				<Properties>
 					<float name="Brightness">4</float>
 					<Color3 name="Color">4293034271</Color3>
 					<bool name="Enabled">false</bool>
 					<string name="Name">OrangeLight</string>
 					<float name="Range">4</float>
+					<bool name="Shadows">false</bool>
 				</Properties>
 			</Item>
-			<Item class="PointLight" referent="RBX5">
+			<Item class="PointLight" referent="RBX10C4B560B3C14A4EA31EEE161B984819">
 				<Properties>
 					<float name="Brightness">4</float>
 					<Color3 name="Color">4294901760</Color3>
 					<bool name="Enabled">false</bool>
 					<string name="Name">RedLight</string>
 					<float name="Range">4</float>
+					<bool name="Shadows">false</bool>
 				</Properties>
 			</Item>
-			<Item class="SpotLight" referent="RBX6">
+			<Item class="SpotLight" referent="RBX4E9D7F9B9ED44C7E83DDB412FECEF575">
 				<Properties>
 					<float name="Angle">45</float>
 					<float name="Brightness">8</float>
 					<Color3 name="Color">4294901760</Color3>
 					<bool name="Enabled">false</bool>
+					<token name="Face">5</token>
 					<string name="Name">SpotLight</string>
 					<float name="Range">16</float>
+					<bool name="Shadows">false</bool>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX7">
+			<Item class="Sound" referent="RBX37C44769490D47D7917A723D964FEEF3">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">FireSound</string>
@@ -600,8 +159,470 @@ end
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
+			<Item class="Script" referent="RBX1C349EFA9DA84F06A6829407BD2A31EB">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Script</string>
+					<ProtectedString name="Source"><![CDATA[------------------------
+--[[UTIL Functions]]--
+------------------------
+--Global functions used by all classes are wrapped in UTIL
+--deal with it.
+local UTIL = {}
+local GLib = require(206209239)
+ 
+function UTIL.Class(tableIn,template)
+        tableIn = tableIn or {}
+        local mt = {
+        __metatable = UTIL.DeepCopy(template);
+        __index     = UTIL.DeepCopy(template);
+        }
+        return setmetatable(tableIn, mt)
+end
+function UTIL.MakeClass(...)
+        local arg = {...}
+        assert(#arg>0, 'ERROR: class needs 1 argument or more')
+        local members = arg[1]
+        for i=2,#arg,1 do
+                if type(arg[i])=='table' then
+                        for key,val in pairs(arg[i]) do
+                                if not members[key] then
+                                        members[key] = val
+                                end
+                        end
+                end
+        end
+        local function New(init)
+                return UTIL.Class(init or {},members)
+        end
+        local function Copy(obj, ...)
+                local newobj = obj:New(unpack(arg))
+                for n,v in pairs(obj) do newobj[n] = v end
+                return newobj
+        end
+        members.New  = New
+        members.Copy = Copy
+        return mt
+end
+ 
+function UTIL.DeepCopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[UTIL.DeepCopy(orig_key)] = UTIL.DeepCopy(orig_value)
+        end
+        setmetatable(copy, UTIL.DeepCopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
+function UTIL.Instantiate(guiType)
+	return function(data)
+		local obj = Instance.new(guiType)
+		for k, v in pairs(data) do
+			if type(k) == 'number' then
+				v.Parent = obj
+			else
+				obj[k] = v
+			end
+		end
+		return obj
+	end
+end 
+
+function UTIL.RetroRegister(func,...)
+	func()
+	for _,i in ipairs({...}) do
+		i:connect(func)
+	end
+end
+
+-- Waits for a new character to be added if the current one is invalid
+-- (Ensures that you don't have the old dead character after a respawn)
+function UTIL.WaitForValidCharacter(player)
+	local character = player.Character
+	if not character or not character.Parent or not character:FindFirstChild('Humanoid') or character.Humanoid.Health <= 0 then
+		player.CharacterAdded:wait()
+		wait(0) --NOTE: Necessary for server scripts executing on the same event
+		character = player.Character
+	end
+	return character
+end
+
+
+-- Returns a character ancestor and its Humanoid, or nil
+function UTIL.FindCharacterAncestor(subject)
+	if subject and subject ~= Workspace then
+		local humanoid = subject:FindFirstChild('Humanoid')
+		if humanoid then
+			return subject, humanoid
+		else
+			return UTIL.FindCharacterAncestor(subject.Parent)
+		end
+	end
+	return nil
+end
+
+UTIL.AssetURL = 'http://www.roblox.com/asset/?id='
+
+
+UTIL.TouchEnabled = game:GetService("UserInputService").TouchEnabled 
+do
+	local suceeded,_ =pcall(function() game.Workspace.CurrentCamera:GetPanSpeed() end)
+	UTIL.CanCheckPanSpeed = suceeded
+end
+
+
+local DebrisService = Game:GetService('Debris')
+local DebugPrintOffset = 0
+function UTIL.Dprint(...)
+	local line = ''
+	for _, segment in pairs({...}) do
+		line = line .. (line and ' ' or '') .. tostring(segment)
+	end
+	local gui = Instance.new('ScreenGui')
+	local label = Instance.new('TextLabel')
+	label.Text = line
+	label.Size = UDim2.new(0.25, 0, 0.05, 0)
+	label.BackgroundTransparency = 0.5
+	label.Position = UDim2.new(0, 0, 0, DebugPrintOffset)
+	label.TextWrapped = true
+	label.Parent = gui
+	DebrisService:AddItem(gui, 30)
+	gui.Parent = script.Parent
+	DebugPrintOffset = (DebugPrintOffset <= 600) and DebugPrintOffset + 30 or 0
+end
+--
+--All Welding Related Utility functions should be put here
+--
+WeldUtil = {}
+
+
+do
+
+
+	function WeldUtil:WeldBetween(a, b)
+		local weld = Instance.new("Weld")
+		weld.Part0 = a
+		weld.Part1 = b
+		weld.C0 = CFrame.new()
+		weld.C1 = b.CFrame:inverse() * a.CFrame
+		weld.Parent = a
+		return weld
+	end
+	
+	function WeldUtil:PermaWeld(weld)
+		local OriginalParent = weld.Parent
+		weld.Changed:connect(function()
+			Delay(0,function() weld.Parent = OriginalParent end)
+		end)
+	end
+
+end
+
+local InternalEvent =
+{
+	Listeners = nil,
+}
+do
+	UTIL.MakeClass(InternalEvent)
+	function InternalEvent:Connect(func)
+		if not self.Listeners then self.Listeners = {} end
+		table.insert(self.Listeners,func)
+	end
+	function InternalEvent:Fire(...)
+		if not self.Listeners then return end
+		local args = {...}
+		for _,i in ipairs(self.Listeners) do
+			Spawn(function() i(unpack(args)) end)
+		end
+	end
+end
+
+local PartProjectile =
+{
+	Damage = 5, -- Base output damage per shot.
+	Range = 250, -- Max distance that the weapon can fire.
+	Speed = 1,--how many studs per second to move
+	DirectionRay=nil,
+	Part = nil,
+	IsAlive = true,
+	IgnoreList = {},
+}
+do
+	UTIL.MakeClass(PartProjectile)
+	function PartProjectile.New(base,ray)
+		local init = nil
+		--if base is a copy of this class, then copy over fields
+		if type(base) == 'table' and base.Update then
+			init = UTIL.DeepCopy(base)
+			init.Part= base.Part:Clone()
+		else
+			init = UTIL.DeepCopy(PartProjectile)
+			init.Part = base:Clone()
+		end
+		init.Part.CFrame = CFrame.new(ray.Origin,ray.Origin+ray.Direction)
+		init.Part.Parent = game.Workspace
+		init.DirectionRay = ray
+		table.insert(init.IgnoreList,init.Part)
+		return init
+	end
+	
+	function PartProjectile:Hit(part)
+		local char,hum = UTIL.FindCharacterAncestor(part)
+		
+		if hum and not GLib.IsTeammate(GLib.GetPlayerFromPart(script), GLib.GetPlayerFromPart(hum)) then
+			GLib.TagHumanoid(GLib.GetPlayerFromPart(script), hum, 1)
+			hum:TakeDamage(self.Damage)
+		end
+		self.IsAlive = false
+	end
+	
+	function PartProjectile:Update(dt)
+		if not self.IsAlive then return end
+		local oldPos = self.Part.CFrame
+		self.Part.CFrame = oldPos+(self.DirectionRay.Direction*self.Speed*dt)
+		if (self.Part.CFrame.p-self.DirectionRay.Origin).magnitude>self.Range then
+			self.IsAlive = false
+		end
+		local obj = game.Workspace:FindPartOnRayWithIgnoreList( Ray.new(oldPos.p,self.DirectionRay.Direction*self.Speed*dt), self.IgnoreList,false )
+		if obj then
+			self:Hit(obj)
+		end
+		
+	end
+	
+	function PartProjectile:Destroy()
+		self.Part.Parent = nil
+	end
+	
+end
+
+--[[shooting Tool Class]]--
+	
+local ShootingTool =
+{
+	FireRate = .5, -- How often the weapon can fire.
+	Automatic = false, -- hold down to continue firing
+	Spread = 0, -- The bigger the spread, the more inaccurate the shots will be.
+	ClipSize = 50, -- Shots in a clip
+	ReloadTime = 3, -- Time it takes to reload the tool.
+	StartingClips = -1,
+	BarrelPos = CFrame.new(0, 0, - 1.2), -- L, F, U
+	
+	SourcePart = nil,
+	TemplateProjectile = nil,
+	Projectiles = {},
+	IsFireing = false,
+	
+	OnFire = nil,
+	OnReload = nil,
+	
+	BulletsLeft = 50,
+	
+	LastReload = 0,
+	
+	FireSound = nil,
+	
+}
+do
+	UTIL.MakeClass(ShootingTool)
+	function ShootingTool.New(nSource,nProjectile)
+		local init= UTIL.DeepCopy(ShootingTool)
+		init.SourcePart= nSource
+		init.TemplateProjectile = nProjectile
+		init.OnFire = InternalEvent.New()
+		init.OnReload = InternalEvent.New()
+		return init
+	end
+	
+	function ShootingTool:UpdateBullets(dt)
+		for index,i in ipairs(self.Projectiles) do
+			if i.IsAlive then 
+				i:Update(dt) 
+			else
+				i:Destroy()
+				table.remove(self.Projectiles, index)
+			end
+		end
+	end
+	
+	function ShootingTool:StartFireing()
+		if tick()-self.LastReload<self.ReloadTime then return end
+		while self.IsFireing do wait() end
+		self.IsFireing = true
+		repeat
+			if tick()-self.LastReload>self.ReloadTime and Gun.MousePos then
+				local startPos = self.SourcePart.CFrame:toWorldSpace(self.BarrelPos)
+				local dir = (CFrame.Angles((math.random()-.5)*2*self.Spread,(math.random()-.5)*2*self.Spread,(math.random()-.5)*2*self.Spread)*CFrame.new((Gun.MousePos-startPos.p).unit)).p
+				local nprojectile = PartProjectile.New(self.TemplateProjectile, Ray.new(startPos.p,dir))
+				
+				table.insert(self.Projectiles,nprojectile)
+				self.OnFire:Fire()
+				if self.FireSound then
+					self.FireSound:Play()
+				end
+				self.BulletsLeft = self.BulletsLeft -1
+			end
+			if self.BulletsLeft==0 then
+				self.OnReload:Fire()
+				self.BulletsLeft = self.ClipSize
+				self.LastReload = tick()
+			end
+			wait(self.FireRate)
+		until not self.IsFireing or not self.Automatic
+	end
+	
+	function ShootingTool:EndFireing()
+		self.IsFireing=false
+	end
+	
+end
+do
+	local Handle = script.Parent
+	local Tool = Handle.Parent
+	
+	local BarrelClip = UTIL.Instantiate"Part"
+	{
+		Size = Vector3.new(0.2, 0.2, 0.32),
+		UTIL.Instantiate'SpecialMesh'
+		{
+			TextureId = "http://www.roblox.com/asset/?id=116679995",
+			MeshId = "http://www.roblox.com/asset/?id=116740155",
+			Scale = Vector3.new(0.9, 0.9, 0.9),
+		},
+		CanCollide = false,
+		Parent = Tool
+	}
+	
+	local BarrelWeld = UTIL.Instantiate"Weld"
+	{
+		C1 = CFrame.new(0.0183372498, 0.378660202, 0.237049103, 0.00777955074, 0.0069010579, 0.999946177, -0.0223222617, 0.999727845, -0.00672559161, -0.999720693, -0.0222686939, 0.00793197285),
+		C0 = CFrame.new(0, 0, 0, 0.00777955074, 0.0069010579, 0.999946177, -0.0223222617, 0.999727845, -0.00672559161, -0.999720693, -0.0222686939, 0.00793197285),
+		Part0 = Handle,
+		Part1 = BarrelClip,
+		Parent = Handle,
+	}
+	WeldUtil:PermaWeld(BarrelWeld)
+	
+	local OrangeLight = Handle:WaitForChild('OrangeLight')
+	local RedLight = Handle:WaitForChild('RedLight')
+	local SpotLight = Handle:WaitForChild('SpotLight')
+	
+	
+	local ShellMesh = UTIL.Instantiate"SpecialMesh"
+	{
+		MeshId = UTIL.AssetURL..94295100,--116680945,
+		TextureId = UTIL.AssetURL..94287792,--116681256,
+		Scale = Vector3.new(2.8,2.8,5),
+	}
+	local Projectile
+	do
+		local tpart = UTIL.Instantiate"Part"
+		{
+			Anchored = true,
+			CanCollide = false,
+			Size = Vector3.new(.2,.2,.6),
+			ShellMesh:Clone(),
+		}
+		Projectile = PartProjectile.New(tpart,Ray.new())
+	end 
+	table.insert(Projectile.IgnoreList,Handle)
+	
+	Projectile.Speed = 200
+	Gun = ShootingTool.New(Handle,Projectile)
+	Gun.Automatic = true
+	Gun.BarrelPos = CFrame.new(0, 0, - 3.1)
+	Gun.FireRate = .05
+	Gun.Spread = .1
+	Gun.FireSound  = Handle:WaitForChild('FireSound')
+	
+	local HoldAniTrack
+	local ReloadAniTrack
+	Gun.OnFire:Connect(function()
+		SpotLight.Enabled = true
+		if(math.random()>.5) then
+			OrangeLight.Enabled =true
+		else
+			RedLight.Enabled =true
+		end
+		wait(.05)
+		SpotLight.Enabled = false
+		OrangeLight.Enabled =false
+		RedLight.Enabled =false
+	end)
+	
+	Gun.OnReload:Connect(function()
+		local leftArm = script.Parent.Parent.Parent:FindFirstChild('Left Arm')
+		if not leftArm then return end
+		local reloadBarrel = BarrelClip:Clone()
+		reloadBarrel.Parent = Tool
+		local tweld=WeldUtil:WeldBetween(reloadBarrel,leftArm)
+		BarrelClip.Transparency = 1
+		if ReloadAniTrack then
+			ReloadAniTrack:Play()
+		end
+		wait(3)
+		reloadBarrel:Destroy()
+		tweld:Destroy()
+		BarrelClip.Transparency = 0
+	end)
+	
+	Tool.Equipped:connect(function()
+		
+		local Character = script.Parent.Parent.Parent
+		local HoldAni = UTIL.Instantiate"Animation"
+		{AnimationId = "http://www.roblox.com/Asset?ID=116690317"}
+		local ReloadAni = UTIL.Instantiate"Animation"
+		{AnimationId = "http://www.roblox.com/Asset?ID=116695140"}
+		
+		
+		local Humanoid = Character:FindFirstChild('Humanoid')
+		table.insert(Projectile.IgnoreList,Character)
+		HoldAniTrack = Humanoid:LoadAnimation(HoldAni)
+		ReloadAniTrack = Humanoid:LoadAnimation(ReloadAni)
+		HoldAniTrack:Play()
+	end)
+	Tool.Unequipped:connect(function()
+		HoldAniTrack:Stop()
+	end)
+	spawn(function()
+		while true do
+			Gun:UpdateBullets(1/30)
+			wait()
+		end
+	end)
+
+end
+
+local Tool = script.Parent.Parent
+Tool.Input.OnServerEvent:connect(function(client, action, ...)
+	if client.Character == Tool.Parent then
+		if action == 'Mouse1' then
+			local down, pos = ...
+			
+			if down and Gun then
+				Gun:StartFireing()
+			elseif not down and Gun then
+				Gun:EndFireing()
+			end
+		elseif action == 'MouseMove' then
+			local pos = ...
+			if Gun then
+				Gun.MousePos = pos
+			end
+		end
+	end
+end)]]></ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Part" referent="RBX8">
+		<Item class="Part" referent="RBXC234EB6BD4A041218B2DE05F5DA068AB">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -614,18 +635,18 @@ end
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.976270974</X>
-					<Y>32.3943062</Y>
-					<Z>-45.7094498</Z>
-					<R00>0.00428991765</R00>
-					<R01>-0.427933723</R01>
-					<R02>-0.903802216</R02>
-					<R10>0.0094730733</R10>
-					<R11>0.903783858</R11>
-					<R12>-0.427882999</R12>
-					<R20>0.999949038</R20>
-					<R21>-0.00672531035</R21>
-					<R22>0.00793248415</R22>
+					<X>0.0455264337</X>
+					<Y>0.201692</Y>
+					<Z>0.100923359</Z>
+					<R00>-0.970350087</R00>
+					<R01>0.143431529</R01>
+					<R02>-0.194566309</R02>
+					<R10>0.224904507</R10>
+					<R11>0.830696523</R11>
+					<R12>-0.50927633</R12>
+					<R20>0.0885767266</R20>
+					<R21>-0.537931204</R21>
+					<R22>-0.838324249</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<float name="Elasticity">0.5</float>
@@ -639,7 +660,7 @@ end
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
 				<bool name="Locked">false</bool>
-				<token name="Material">256</token>
+				<token name="Material">1088</token>
 				<string name="Name">BarrelClip</string>
 				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
@@ -669,7 +690,7 @@ end
 					<Z>0.319990754</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX9">
+			<Item class="SpecialMesh" referent="RBX50FCB5C653C9489B81D3174D1E0CD30E">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -694,75 +715,109 @@ end
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX10">
-				<Properties>
-					<CoordinateFrame name="C0">
-						<X>0</X>
-						<Y>0</Y>
-						<Z>0</Z>
-						<R00>0.00777906645</R00>
-						<R01>0.00690134289</R01>
-						<R02>0.999947846</R02>
-						<R10>-0.0223223157</R10>
-						<R11>0.99972713</R11>
-						<R12>-0.00672530197</R12>
-						<R20>-0.999722123</R20>
-						<R21>-0.0222686492</R21>
-						<R22>0.00793247484</R22>
-					</CoordinateFrame>
-					<CoordinateFrame name="C1">
-						<X>0.00955963135</X>
-						<Y>-0.363422394</Y>
-						<Z>-0.235873222</Z>
-						<R00>2.98023224e-008</R00>
-						<R01>0</R01>
-						<R02>1.0000006</R02>
-						<R10>0</R10>
-						<R11>1</R11>
-						<R12>0</R12>
-						<R20>-1.0000006</R20>
-						<R21>0</R21>
-						<R22>2.98023224e-008</R22>
-					</CoordinateFrame>
-					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX8</Ref>
-					<Ref name="Part1">RBX1</Ref>
-				</Properties>
-			</Item>
-			<Item class="Script" referent="RBX11">
+			<Item class="Script" referent="RBX138C6F2F8103403582CA6DEF0AF9CA78">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">Script</string>
-					<ProtectedString name="Source">wait(.1)
+					<ProtectedString name="Source"><![CDATA[wait(.1)
 script.Parent:Destroy()
-wait(1)</ProtectedString>
+wait(1)]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX12">
+		<Item class="LocalScript" referent="RBX4037C3681CD54FB4A3EE75FE6CF67D8E">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[local equipped = false
+local setIconCon
+local Players = game:GetService'Players'
+
+local getCharacterFromPart = function(part)
+	local current = part
+	local character = nil
+	local humanoid = nil
+	while true do
+		for i, child in next, current:GetChildren() do
+			if child:IsA'Humanoid' then
+				character = current
+				humanoid = child
+				break
+			end
+		end
+		
+		if character then
+			break
+		else
+			current = current.Parent
+			
+			if not current or current == game then
+				break
+			end
+		end
+	end
+	
+	return character, character and Players:GetPlayerFromCharacter(character), humanoid
+end
+
+script.Parent.Equipped:connect(function(mouse)
+	equipped = true
+	mouse.Button1Down:connect(function() script.Parent.Input:FireServer('Mouse1', true, mouse.Hit.p, mouse.Target) end)
+	mouse.Button1Up:connect(function() script.Parent.Input:FireServer('Mouse1', false, mouse.Hit.p) end)
+	mouse.KeyDown:connect(function(key) script.Parent.Input:FireServer('Key', true, key) end)
+	mouse.KeyUp:connect(function(key) script.Parent.Input:FireServer('Key', false, key) end)
+	
+	setIconCon = script.Parent.SetIcon.OnClientEvent:connect(function(icon)
+		mouse.Icon = icon
+	end)
+	
+	while equipped do
+		script.Parent.Input:FireServer('MouseMove', mouse.Hit.p, mouse.Target)
+		wait(1/20)
+	end
+end)
+script.Parent.Unequipped:connect(function()
+	equipped = false
+	
+	if setIconCon then setIconCon:disconnect() end
+end)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX2910B0D1B4664D73B5992D00FD62EB32">
+			<Properties>
+				<string name="Name">Input</string>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX0AF0D1D4576348E1BE0F1711CAD20109">
+			<Properties>
+				<string name="Name">SetIcon</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX716A677DAE504ED6AD2BDE8D9D2E2DEB">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-0.782072365</X>
-					<Y>32.2130661</Y>
-					<Z>-42.9816628</Z>
-					<R00>0.944392145</R00>
-					<R01>0.0034243837</R01>
-					<R02>-0.328803509</R02>
-					<R10>-2.32830644e-010</R10>
-					<R11>0.999945819</R11>
-					<R12>0.0104141152</R12>
-					<R20>0.328821361</R20>
-					<R21>-0.00983500853</R21>
-					<R22>0.944340944</R22>
+					<X>-2.86431766</X>
+					<Y>0.492263734</Y>
+					<Z>-0.271955937</Z>
+					<R00>0.0331536978</R00>
+					<R01>0.123472251</R01>
+					<R02>-0.99179405</R02>
+					<R10>-0</R10>
+					<R11>0.992339551</R11>
+					<R12>0.12354017</R12>
+					<R20>0.999450207</R20>
+					<R21>-0.00409581326</R21>
+					<R22>0.0328997262</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.12446481</X>
-					<Y>32.1922379</Y>
-					<Z>-44.8703461</Z>
+					<X>0.0279786587</X>
+					<Y>0.131992579</Y>
+					<Z>-0.367899001</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
