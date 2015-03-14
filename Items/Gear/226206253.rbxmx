@@ -1,0 +1,375 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBXF4B6A22F38D64EC1AA486F3CB35E3CFC">
+		<Properties>
+			<bool name="CanBeDropped">false</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-1.5</X>
+				<Y>3.1500001</Y>
+				<Z>1.25</Z>
+				<R00>-1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>-1</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">FlowerStep</string>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=223833126  </url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBXFA5AA082937F4BEE801D1B147B779AA0">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Server</string>
+				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Handle = Tool:WaitForChild("Handle")
+local Heartbeat = game:GetService("RunService").Heartbeat
+
+Handle.Transparency = 1
+
+local Equipping = false
+local Equipped = false
+
+local Feet = {}
+local FootFrame = CFrame.new(0, -0.7, 0)
+
+local FlowerTime = 0.25
+
+function getPlayer()
+	local char = Tool.Parent
+	return game:GetService("Players"):GetPlayerFromCharacter(char)
+end
+
+function contains(t, v)
+	for _, val in pairs(t) do
+		if val == v then
+			return true
+		end
+	end
+	return false
+end
+
+function tagHuman(human)
+	local tag = Instance.new("ObjectValue")
+	tag.Value = getPlayer()
+	tag.Name = "creator"
+	tag.Parent = human
+	game:GetService("Debris"):AddItem(tag)
+end
+
+function flower(pos)
+	local flower = Instance.new("Part")
+	flower.FormFactor = "Custom"
+	flower.Anchored = true
+	flower.CanCollide = false
+	flower.Size = Vector3.new(0.2, 0.2, 0.2)
+	flower.CFrame = CFrame.new(
+		pos,
+		pos + Vector3.new(
+			math.random(-8, 8),
+			-32,
+			math.random(-8, 8)
+		)
+	)
+	
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = "FileMesh"
+	mesh.MeshId = "rbxassetid://225072270"
+	mesh.TextureId = "rbxassetid://225072517"
+	mesh.Scale = Vector3.new(0, 0, 0)
+	mesh.Parent = flower
+	
+	flower.Parent = workspace
+	game:GetService("Debris"):AddItem(flower, 5)
+	
+	spawn(function()
+		local size = math.random() * 2
+		while mesh.Scale.X < size do
+			mesh.Scale = mesh.Scale + Vector3.new(1, 1, 1) * Heartbeat:wait()
+		end
+	end)
+end
+
+function onEquip()
+	if Equipping then return end
+	
+	Equipping = true
+	Equipped = true
+	
+	--attach the feet
+	local foot = Handle:Clone()
+	foot.Mesh.MeshId = "http://www.roblox.com/asset/?id=223832574"
+	foot.Transparency = 0
+	foot.CanCollide = false
+	
+	local right, left
+	
+	local char = Tool.Parent
+	if char then
+		local lleg = char:FindFirstChild("Left Leg")
+		if lleg then
+			left = foot:Clone()
+			left.Parent = char
+			
+			local weld = Instance.new("Weld")
+			weld.Part0 = lleg
+			weld.Part1 = left
+			weld.C0 = FootFrame
+			weld.Parent = weld.Part0
+			
+			table.insert(Feet, left)
+		end
+		
+		local rleg = char:FindFirstChild("Right Leg")
+		if rleg then
+			right = foot:Clone()
+			right.Parent = char
+			
+			foot.Mesh.MeshId = "rbxassetid://223832617"
+			
+			local weld = Instance.new("Weld")
+			weld.Part0 = rleg
+			weld.Part1 = right
+			weld.C0 = FootFrame
+			weld.Parent = weld.Part0
+			
+			table.insert(Feet, right)
+		end
+	end
+	
+	Equipping = false
+	
+	local leftTimer = FlowerTime
+	local rightTimer = 0
+	while Equipped do
+		local dt = Heartbeat:wait()
+		
+		leftTimer = leftTimer - dt
+		if leftTimer <= 0 then
+			flower(left.Position)
+			leftTimer = FlowerTime
+		end
+		
+		rightTimer = rightTimer - dt
+		if rightTimer <= 0 then
+			flower(right.Position)
+			rightTimer = FlowerTime
+		end
+	end
+end
+
+function onUnequip()
+	Equipped = false
+	
+	for _, foot in pairs(Feet) do
+		foot:Destroy()
+	end
+	Feet = {}
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX5D6F7DBE882542F98E9187A47AB8D567">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Client</string>
+				<ProtectedString name="Source"><![CDATA[local Player = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+function playAnimation(animName, ...)
+	if Tracks[animName] then
+		Tracks[animName]:Play()
+	else
+		local anim = Tool:FindFirstChild(animName)
+		if anim and Tool.Parent and Tool.Parent:FindFirstChild("Humanoid") then
+			Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+			playAnimation(animName, ...)
+		end
+	end
+end
+
+function stopAnimation(animName)
+	if Tracks[animName] then
+		Tracks[animName]:Stop()
+	end
+end
+
+function inputBegan(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftDown")
+	end
+end
+
+function inputEnded(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftUp")
+	end
+end
+
+function onRemote(func, ...)
+	if func == "PlayAnimation" then
+		playAnimation(...)
+	elseif func == "StopAnimation" then
+		stopAnimation(...)
+	end
+end
+
+UIS.InputBegan:connect(inputBegan)
+UIS.InputEnded:connect(inputEnded)
+Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBXAFA2C83AAB0E413E99890CD411D3F871">
+			<Properties>
+				<string name="Name">Remote</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX8AA169C2CD824A4FBA67BDBAA374B542">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.899990857</X>
+					<Y>18.6999989</Y>
+					<Z>-28.7000084</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>2.5999999</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX93AA97A7C6EB4CE0A13E61250E331810">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=223832543  </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=223833075 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX486E27BE69A14FF8902E2F56143AD339">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-3.64892101</X>
+					<Y>20.1693916</Y>
+					<Z>-25.969759</Z>
+					<R00>0.704691768</R00>
+					<R01>0.34501037</R01>
+					<R02>-0.619981706</R02>
+					<R10>-1.49011594e-008</R10>
+					<R11>0.873812318</R11>
+					<R12>0.486263245</R12>
+					<R20>0.709513545</R20>
+					<R21>-0.342665702</R21>
+					<R22>0.615768373</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-2.40895748</X>
+					<Y>19.1968651</Y>
+					<Z>-27.2012959</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
