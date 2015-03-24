@@ -50,7 +50,7 @@
 					<R21>-0.0103630964</R21>
 					<R22>0.513923287</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -127,636 +127,6 @@
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Script" referent="RBXA8E24ECE80354181AE4B226A754D2FF5">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Script</string>
-				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild("Handle")
-Mesh = Handle:WaitForChild("Mesh")
-
-Players = game:GetService("Players")
-Debris = game:GetService("Debris")
-
-EggScript = script:WaitForChild("EggScript"):Clone()
-
-BaseUrl = "http://www.roblox.com/asset/?id="
-
-Sounds = {
-	SlingRelease = Handle:WaitForChild("SlingRelease"),
-}
-
-MeshData = {
-	GunWithSling = "223833506",
-	Gun = "223833668",
-	Sling = "223833582",
-	Egg = "225334624",
-	TextureId = "223833747",
-}
-
-Duration = 0.75
-ReloadTime = 4
-
-for i, v in pairs(MeshData) do
-	MeshData[i] = (BaseUrl .. v)
-end
-
-BasePart = Instance.new("Part")
-BasePart.Material = Enum.Material.Plastic
-BasePart.Shape = Enum.PartType.Block
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
-BasePart.Locked = true
-BasePart.CanCollide = true
-BasePart.Anchored = false
-
-Egg = BasePart:Clone()
-Egg.Name = "Egg"
-Egg.BrickColor = BrickColor.new("Institutional white")
-Egg.Size = Vector3.new(0.5, 0.6, 0.5)
-EggMesh = Instance.new("SpecialMesh")
-EggMesh.Name = "Mesh"
-EggMesh.MeshType = Enum.MeshType.FileMesh
-EggMesh.MeshId = MeshData.Egg
-EggMesh.TextureId = ""
-EggMesh.Scale = Vector3.new(0.55, 0.55, 0.55)
-EggMesh.VertexColor = Vector3.new(1, 1, 1)
-EggMesh.Offset = Vector3.new(0, 0, 0)
-EggMesh.Parent = Egg
-
-Sling = BasePart:Clone()
-Sling.Name = "Sling"
-Sling.Size = Vector3.new(0.5, 0.75, 2.75)
-Sling.CanCollide = false
-SlingMesh = Instance.new("SpecialMesh")
-SlingMesh.Name = "Mesh"
-SlingMesh.MeshType = Enum.MeshType.FileMesh
-SlingMesh.MeshId = MeshData.Sling
-SlingMesh.TextureId = MeshData.TextureId
-SlingMesh.Scale = Vector3.new(0.65, 0.65, 0.65)
-SlingMesh.VertexColor = Vector3.new(1, 1, 1)
-SlingMesh.Offset = Vector3.new(0, 0, 0)
-SlingMesh.Parent = Sling
-
-Rate = (1 / 60)
-Gravity = 196.20
-
-EggReady = true
-ToolEquipped = false
-
-RemoteFunctions = Tool:WaitForChild("RemoteFunctions")
-
-ServerControl = (RemoteFunctions:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
-ServerControl.Name = "ServerControl"
-ServerControl.Parent = RemoteFunctions
-
-ClientControl = (RemoteFunctions:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
-ClientControl.Name = "ClientControl"
-ClientControl.Parent = RemoteFunctions
-
-Mesh.MeshId = MeshData.GunWithSling
-Handle.Transparency = 0
-Tool.Enabled = true
-
-function CreateEgg()
-	if not ToolEquipped or not SlingClone or not SlingClone.Parent then
-		return
-	end
-	if EggClone and EggClone.Parent then
-		EggClone:Destroy()
-	end
-	EggClone = Egg:Clone()
-	local EggWeld = Instance.new("Weld")
-	EggWeld.Part0 = SlingClone
-	EggWeld.Part1 = EggClone
-	EggWeld.C0 = CFrame.new(0, 0.15, 0.8)
-	EggWeld.Parent = EggClone
-	EggClone.Parent = Tool
-end
-
-function ManageSling(Create)
-	for i, v in pairs(Tool:GetChildren()) do
-		if v:IsA("BasePart") and v ~= Handle then
-			v:Destroy()
-		end
-	end
-	if Create then
-		Mesh.MeshId = MeshData.Gun
-		SlingClone = Sling:Clone()
-		SlingMotor = Instance.new("Motor6D")
-		SlingMotor.MaxVelocity = 0.25
-		SlingMotor.Part0 = Handle
-		SlingMotor.Part1 = SlingClone
-		SlingMotor.C0 = CFrame.new(0.0785072446, 0.188826829, -1.54037094, -4.37113883e-008, 0, -1, 0, 1, 0, 1, 0, -4.37113883e-008)
-		SlingMotor.C1 = CFrame.new(0.078507781, -0.286166668, -1.31539106, -1.34110451e-007, -4.65661287e-010, -0.999999046, -1.39698386e-008, 0.999999404, -2.32830644e-010, 1.00000083, -1.95577741e-008, 7.4505806e-008)
-		SlingMotor.Parent = SlingClone
-		SlingClone.Parent = Tool
-	end
-end
-
-function CheckIfAlive()
-	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
-end
-
-function Activated()
-	if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped or not EggReady then
-		return
-	end
-	if not SlingClone or not SlingClone.Parent or not SlingMotor or not SlingMotor.Parent then
-		return
-	end
-	Tool.Enabled = false
-	EggReady = false
-	Sounds.SlingRelease.Pitch = (math.random(900, 1200) * 0.001)
-	Sounds.SlingRelease:Play()
-	SlingMotor.DesiredAngle = (math.random(500, 750) * 0.001)
-	if EggClone and EggClone.Parent then
-		Spawn(function()
-			local MousePosition = InvokeClient("MousePosition").Position
-			local EggCFrame = EggClone.CFrame
-			local Direction = CFrame.new(EggCFrame.p, MousePosition)
-			EggClone:Destroy()
-			local LaunchedEgg = Egg:Clone()
-			LaunchedEgg.CFrame = EggCFrame
-			local BodyGyro = Instance.new("BodyGyro")
-			BodyGyro.maxTorque = Vector3.new(math.huge, math.huge, math.huge)
-			BodyGyro.cframe = Direction
-			BodyGyro.Parent = LaunchedEgg
-			local EggScriptClone = EggScript:Clone()
-			local Creator = Instance.new("ObjectValue")
-			Creator.Name = "Creator"
-			Creator.Value = Player
-			Creator.Parent = EggScriptClone
-			EggScriptClone.Disabled = false
-			EggScriptClone.Parent = LaunchedEgg
-			
-			local Velocity = (Direction.lookVector * 200)
-			LaunchedEgg.Velocity = Velocity	
-			
-			Debris:AddItem(LaunchedEgg, 5)
-			LaunchedEgg.Parent = game:GetService("Workspace")
-		end)
-	end
-	Delay(Duration, (function()
-		SlingMotor.DesiredAngle = 0
-	end))
-	wait(ReloadTime)
-	CreateEgg()
-	wait(Rate)
-	EggReady = true
-	Tool.Enabled = true
-end
-
-function Equipped()
-	Character = Tool.Parent
-	Humanoid = Character:FindFirstChild("Humanoid")
-	Player = Players:GetPlayerFromCharacter(Character)
-	if not CheckIfAlive() then
-		return
-	end
-	ToolEquipped = true
-	Spawn(function()
-		ManageSling(true)
-		if EggReady then
-			CreateEgg()
-		end
-	end)
-end
-
-function Unequipped()
-	Mesh.MeshId = MeshData.GunWithSling
-	ManageSling(false)
-	ToolEquipped = false
-end
-
-function InvokeClient(Mode, Value)
-	local ClientReturn = nil
-	pcall(function()
-		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-	end)
-	return ClientReturn
-end
-
---[[function OnServerInvoke(player, mode, value)
-	if player ~= Player or not ToolEquipped or not CheckIfAlive() then
-		return
-	end
-end
-
-ServerControl.OnServerInvoke = OnServerInvoke]]
-
-ManageSling(false)
-
-Tool.Activated:connect(Activated)
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX3D3374AD993845539B065E28AAE40112">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">EggScript</string>
-					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Part = script.Parent
-
-Players = game:GetService("Players")
-InsertService = game:GetService("InsertService")
-Debris = game:GetService("Debris")
-
-EggSplatModel = InsertService:LoadAsset(228153674)
-EggSplat = EggSplatModel:GetChildren()[1]:Clone()
-if EggSplatModel and EggSplatModel.Parent then
-	Debris:AddItem(EggSplatModel, 1)
-end
-EggSplat.Anchored = false
-
-EggSplatScript = script:WaitForChild("EggSplatScript")
-
-Images = {225903962, 225904058, 225904105, 225904147, 225904216}
-
-BaseUrl = "http://www.roblox.com/asset/?id="
-
-Sounds = {
-	EggSplat = script:WaitForChild("EggSplat"),
-	EggCrack = script:WaitForChild("EggCrack"),
-}
-
-Broken = false
-
-
-ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Bullet", "Egg"}
-
-Rate = (1 / 60)
-
-Creator = script:WaitForChild("Creator")
-
-function CheckTableForString(Table, String)
-	for i, v in pairs(Table) do
-		if string.find(string.lower(String), string.lower(v)) then
-			return true
-		end
-	end
-	return false
-end
-
-function CheckIntangible(Hit)
-	if Hit and Hit.Parent then
-		if Hit.Transparency > 0.8 or not Hit.CanCollide or CheckTableForString(ProjectileNames, Hit.Name) or Hit.Parent:FindFirstChild("Humanoid") then
-			return true
-		end
-	end
-	return false
-end
-
-function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
-	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
-	local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
-	if RayHit and CheckIntangible(RayHit) then
-		if DelayIfHit then
-			wait()
-		end
-		RayHit, RayPos, RayNormal = CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
-	end
-	return RayHit, RayPos, RayNormal
-end
-
-function CreateEggSplatter(Hit)
-	local EggSplatClone = EggSplat:Clone()
-	local EggSplatScriptClone = EggSplatScript:Clone()
-	local CreatorClone = Creator:Clone()
-	CreatorClone.Value = Creator.Value
-	CreatorClone.Parent = EggSplatScriptClone
-	EggSplatScriptClone.Disabled = false
-	EggSplatScriptClone.Parent = EggSplatClone
-	EggSplatClone.Size = (EggSplatClone.Size * (math.random(50, 200) * 0.01))
-	if Hit and Hit.Object and Hit.Object.Parent and Hit.RayData then
-		local PartCFrame = CFrame.new(Hit.RayData.RayPos, (CFrame.new(Hit.RayData.RayPos) + Hit.RayData.RayNormal * 2).p) * CFrame.Angles(-(math.pi / 2), (math.random(-360, 360) * 0.01), 0)
-		PartCFrame = (PartCFrame * CFrame.new(0, (EggSplatClone.Size.Y / 1), 0))
-		local Weld = Instance.new("Motor")
-		Weld.Name = "Weld"
-		Weld.Part0 = EggSplatClone
-		Weld.Part1 = Hit.Object
-		Weld.C0 = PartCFrame:inverse()
-		Weld.C1 = Hit.Object.CFrame:inverse()
-		Weld.Parent = EggSplatClone
-		Debris:AddItem(EggSplatClone, 10)
-		EggSplatClone.Parent = game:GetService("Workspace")
-	end
-end
-
-function CoverScreen(player)
-	local PlayerGui = player:FindFirstChild("PlayerGui")
-	if PlayerGui then
-
-		local ScreenGui = Instance.new("ScreenGui") 
-		ScreenGui.Name = "SlimeSplatter"
-		local MainFrame = Instance.new("Frame") 
-		MainFrame.Name = "Splater"
-		MainFrame.Position = UDim2.new(0, 0, 0, 0) 
-		MainFrame.Size = UDim2.new(1, 0, 1, 0) 
-		MainFrame.BackgroundColor = BrickColor.new(1, 1, 1)
-		MainFrame.Transparency = 1
-		MainFrame.BorderColor = BrickColor.new(1, 1, 1)
-		MainFrame.Parent = ScreenGui
-	
-		for i = 1, math.random(1, 4) do
-			local Splatter = Instance.new("ImageLabel")
-			local Size = ((math.random() * 1) + 0.25)
-			Splatter.Size = UDim2.new(Size, 0, Size, 0)
-			Splatter.Position = UDim2.new((math.random() - (Size / 2)), 0, (math.random() - (Size / 2)), 0)
-			Splatter.SizeConstraint = Enum.SizeConstraint.RelativeXX
-			Splatter.Transparency = 1
-			Splatter.Image = (BaseUrl .. Images[math.random(1, #Images)])
-			Splatter.Parent = MainFrame
-			Splatter.Rotation = math.random(0, 360)
-			Debris:AddItem(Splatter, (5 + (math.random() * 2)))
-		end
-		
-		Debris:AddItem(ScreenGui, 5)
-		
-		ScreenGui.Parent = PlayerGui
-	
-	end
-end
-
-function Splat(Hit)
-	if not Hit or not Hit.Parent or Broken then
-		return
-	end
-	local Player = Creator.Value
-	local Character = (((Player and Player.Parent and Player:IsA("Player") and Player.Character) and Player.Character) or nil)
-	local HumanoidHit = false
-	local character = Hit.Parent
-	if character:IsA("Hat") then
-		character = Hit.Parent
-	end
-	if character == Character or character.Parent == Character then
-		return
-	end
-	local humanoid = character:FindFirstChild("Humanoid")
-	if humanoid and humanoid.Health > 0 then
-		local player = Players:GetPlayerFromCharacter(character)
-		if player and player ~= Player then
-			CoverScreen(player)
-		end
-		local HumanoidHit = true
-	end
-	if HumanoidHit then
-		local Sound = Sounds.EggSplat:Clone()
-		Sound.Pitch = (math.random(1500, 2500) * 0.001)
-		Sound.Parent = Part
-		Sound:Play()
-	else
-		local Sound = Sounds.EggCrack:Clone()
-		Sound.Pitch = (math.random(1000, 1500) * 0.001)
-		Sound.Parent = Part
-		Sound:Play()
-		local RayHit, RayPos, RayNormal = CastRay(Part.Position, (Part.Velocity.unit * -1), ((Part.Size.Y / 2) + 10), {Part}, false)
-		if RayHit then
-			Spawn(function()
-				CreateEggSplatter({Object = RayHit, RayData = {RayPos = RayPos, RayNormal = RayNormal}})
-			end)
-		end
-	end
-	Part.Transparency = 1
-	Part.CanCollide = false
-	Part.Anchored = true
-	Broken = true
-	Debris:AddItem(Part, 2)
-end
-
-Part.Touched:connect(Splat)]]></ProtectedString>
-				</Properties>
-				<Item class="Sound" referent="RBXDADCAFD1EBB54A6989EFD69A201D3701">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">EggCrack</string>
-						<float name="Pitch">1.5</float>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=227491416</url></Content>
-						<float name="Volume">0.5</float>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX20F33938FCDC47F89E91FFF1E1DA30C3">
-					<Properties>
-						<bool name="Looped">false</bool>
-						<string name="Name">EggSplat</string>
-						<float name="Pitch">1.5</float>
-						<bool name="PlayOnRemove">false</bool>
-						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=168192032</url></Content>
-						<float name="Volume">0.5</float>
-					</Properties>
-				</Item>
-				<Item class="Script" referent="RBXE304FDDBD62F4FDC985DCB1F8AB4421B">
-					<Properties>
-						<bool name="Disabled">true</bool>
-						<Content name="LinkedSource"><null></null></Content>
-						<string name="Name">EggSplatScript</string>
-						<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Part = script.Parent
-
-Players = game:GetService("Players")
-
-SlowScript = script:WaitForChild("SlowScript")
-
-Creator = script:WaitForChild("Creator")
-
-function Splat(Hit)
-	if not Hit or not Hit.Parent then
-		return
-	end
-	local Player = Creator.Value
-	local Character = (((Player and Player.Parent and Player:IsA("Player") and Player.Character) and Player.Character) or nil)
-	local HumanoidHit = false
-	local character = Hit.Parent
-	if character:IsA("Hat") then
-		character = Hit.Parent
-	end
-	if character == Character or character.Parent == Character then
-		return
-	end
-	local humanoid = character:FindFirstChild("Humanoid")
-	if not humanoid or humanoid.Health == 0 then
-		return
-	end
-	local SlowScriptClone = character:FindFirstChild(SlowScript.Name)
-	if not SlowScriptClone then
-		SlowScriptClone = SlowScript:Clone()
-		local Duration = Instance.new("NumberValue")
-		Duration.Name = "Duration"
-		Duration.Parent = SlowScriptClone
-	end
-	SlowScriptClone.Duration.Value = 5
-	SlowScriptClone.Disabled = false
-	SlowScriptClone.Parent = character
-end
-
-Part.Touched:connect(Splat)]]></ProtectedString>
-					</Properties>
-					<Item class="Script" referent="RBX6D738140871C4B94B83FC450B1838B2F">
-						<Properties>
-							<bool name="Disabled">true</bool>
-							<Content name="LinkedSource"><null></null></Content>
-							<string name="Name">SlowScript</string>
-							<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Character = script.Parent
-Humanoid = Character:FindFirstChild("Humanoid")
-
-Duration = script:WaitForChild("Duration")
-
-Rate = (1 / 60)
-
-Humanoid.WalkSpeed = 6
-
-while Duration.Value > 0 do
-	local Time = wait(Rate)
-	Duration.Value = (Duration.Value - Time)
-	wait(Rate)
-end
-
-Humanoid.WalkSpeed = 16]]></ProtectedString>
-						</Properties>
-					</Item>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="LocalScript" referent="RBX4FA5990A32D34974B732E7036522BFF3">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Mouse_Icon = "rbxasset://textures/GunCursor.png"
-Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
-
-Tool = script.Parent
-
-Mouse = nil
-
-function UpdateIcon()
-	if Mouse then
-		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
-	end
-end
-
-function OnEquipped(ToolMouse)
-	Mouse = ToolMouse
-	UpdateIcon()
-end
-
-function OnChanged(Property)
-	if Property == "Enabled" then
-		UpdateIcon()
-	end
-end
-
-Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)]]></ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX7CB94520E9CE45B2846F5545555D3FBB">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild("Handle")
-
-Players = game:GetService("Players")
-
-Animations = {}
-
-RemoteFunctions = Tool:WaitForChild("RemoteFunctions")
-ServerControl = RemoteFunctions:WaitForChild("ServerControl")
-ClientControl = RemoteFunctions:WaitForChild("ClientControl")
-
-ToolEquipped = false
-
-function SetAnimation(mode, value)
-	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
-		for i, v in pairs(Animations) do
-			if v.Animation == value.Animation then
-				v.AnimationTrack:Stop()
-				table.remove(Animations, i)
-			end
-		end
-		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
-		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
-		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
-	elseif mode == "StopAnimation" and value then
-		for i, v in pairs(Animations) do
-			if v.Animation == value.Animation then
-				v.AnimationTrack:Stop()
-				table.remove(Animations, i)
-			end
-		end
-	end
-end
-
-function CheckIfAlive()
-	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
-end
-
-function Equipped(Mouse)
-	Character = Tool.Parent
-	Player = Players:GetPlayerFromCharacter(Character)
-	Humanoid = Character:FindFirstChild("Humanoid")
-	if not CheckIfAlive() then
-		return
-	end
-	PlayerMouse = Player:GetMouse()
-	ToolEquipped = true
-end
-
-function Unequipped()
-	ToolEquipped = false
-	for i, v in pairs(Animations) do
-		if v and v.AnimationTrack then
-			v.AnimationTrack:Stop()
-		end
-	end
-	Animations = {}
-end
-
-function InvokeServer(mode, value)
-	local ServerReturn
-	pcall(function()
-		ServerReturn = ServerControl:InvokeServer(mode, value)
-	end)
-	return ServerReturn
-end
-
-function OnClientInvoke(mode, value)
-	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
-		SetAnimation("PlayAnimation", value)
-	elseif mode == "StopAnimation" and value then
-		SetAnimation("StopAnimation", value)
-	elseif mode == "PlaySound" and value then
-		value:Play()
-	elseif mode == "StopSound" and value then
-		value:Stop()
-	elseif mode == "MousePosition" then
-		return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
-	end
-end
-
-ClientControl.OnClientInvoke = OnClientInvoke
-
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
-			</Properties>
 		</Item>
 		<Item class="Folder" referent="RBXDBB97D0CAB4C4EC09B48CDB098C5F96C">
 			<Properties>
@@ -1067,6 +437,650 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX6A3BA80D0FEB4046B20B69D23B95E829">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+Mesh = Handle:WaitForChild("Mesh")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+EggScript = script:WaitForChild("EggScript"):Clone()
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Sounds = {
+	SlingRelease = Handle:WaitForChild("SlingRelease"),
+}
+
+MeshData = {
+	GunWithSling = "223833506",
+	Gun = "223833668",
+	Sling = "223833582",
+	Egg = "225334624",
+	TextureId = "223833747",
+}
+
+Duration = 0.75
+ReloadTime = 4
+
+for i, v in pairs(MeshData) do
+	MeshData[i] = (BaseUrl .. v)
+end
+
+BasePart = Instance.new("Part")
+BasePart.Material = Enum.Material.Plastic
+BasePart.Shape = Enum.PartType.Block
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.Locked = true
+BasePart.CanCollide = true
+BasePart.Anchored = false
+
+Egg = BasePart:Clone()
+Egg.Name = "Egg"
+Egg.BrickColor = BrickColor.new("Institutional white")
+Egg.Size = Vector3.new(0.5, 0.6, 0.5)
+EggMesh = Instance.new("SpecialMesh")
+EggMesh.Name = "Mesh"
+EggMesh.MeshType = Enum.MeshType.FileMesh
+EggMesh.MeshId = MeshData.Egg
+EggMesh.TextureId = ""
+EggMesh.Scale = Vector3.new(0.55, 0.55, 0.55)
+EggMesh.VertexColor = Vector3.new(1, 1, 1)
+EggMesh.Offset = Vector3.new(0, 0, 0)
+EggMesh.Parent = Egg
+
+Sling = BasePart:Clone()
+Sling.Name = "Sling"
+Sling.Size = Vector3.new(0.5, 0.75, 2.75)
+Sling.CanCollide = false
+SlingMesh = Instance.new("SpecialMesh")
+SlingMesh.Name = "Mesh"
+SlingMesh.MeshType = Enum.MeshType.FileMesh
+SlingMesh.MeshId = MeshData.Sling
+SlingMesh.TextureId = MeshData.TextureId
+SlingMesh.Scale = Vector3.new(0.65, 0.65, 0.65)
+SlingMesh.VertexColor = Vector3.new(1, 1, 1)
+SlingMesh.Offset = Vector3.new(0, 0, 0)
+SlingMesh.Parent = Sling
+
+Rate = (1 / 60)
+Gravity = 196.20
+
+EggReady = true
+ToolEquipped = false
+
+RemoteFunctions = Tool:WaitForChild("RemoteFunctions")
+
+ServerControl = (RemoteFunctions:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
+ServerControl.Parent = RemoteFunctions
+
+ClientControl = (RemoteFunctions:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
+ClientControl.Parent = RemoteFunctions
+
+Mesh.MeshId = MeshData.GunWithSling
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function CreateEgg()
+	if not ToolEquipped or not SlingClone or not SlingClone.Parent then
+		return
+	end
+	if EggClone and EggClone.Parent then
+		EggClone:Destroy()
+	end
+	EggClone = Egg:Clone()
+	local EggWeld = Instance.new("Weld")
+	EggWeld.Part0 = SlingClone
+	EggWeld.Part1 = EggClone
+	EggWeld.C0 = CFrame.new(0, 0.15, 0.8)
+	EggWeld.Parent = EggClone
+	EggClone.Parent = Tool
+end
+
+function ManageSling(Create)
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+	if Create then
+		Mesh.MeshId = MeshData.Gun
+		SlingClone = Sling:Clone()
+		SlingMotor = Instance.new("Motor6D")
+		SlingMotor.MaxVelocity = 0.25
+		SlingMotor.Part0 = Handle
+		SlingMotor.Part1 = SlingClone
+		SlingMotor.C0 = CFrame.new(0.0785072446, 0.188826829, -1.54037094, -4.37113883e-008, 0, -1, 0, 1, 0, 1, 0, -4.37113883e-008)
+		SlingMotor.C1 = CFrame.new(0.078507781, -0.286166668, -1.31539106, -1.34110451e-007, -4.65661287e-010, -0.999999046, -1.39698386e-008, 0.999999404, -2.32830644e-010, 1.00000083, -1.95577741e-008, 7.4505806e-008)
+		SlingMotor.Parent = SlingClone
+		SlingClone.Parent = Tool
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Activated()
+	if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped or not EggReady then
+		return
+	end
+	if not SlingClone or not SlingClone.Parent or not SlingMotor or not SlingMotor.Parent then
+		return
+	end
+	Tool.Enabled = false
+	EggReady = false
+	Sounds.SlingRelease.Pitch = (math.random(900, 1200) * 0.001)
+	Sounds.SlingRelease:Play()
+	SlingMotor.DesiredAngle = (math.random(500, 750) * 0.001)
+	if EggClone and EggClone.Parent then
+		Spawn(function()
+			local MousePosition = InvokeClient("MousePosition").Position
+			local EggCFrame = EggClone.CFrame
+			local Direction = CFrame.new(EggCFrame.p, MousePosition)
+			EggClone:Destroy()
+			local LaunchedEgg = Egg:Clone()
+			LaunchedEgg.CFrame = EggCFrame
+			local BodyGyro = Instance.new("BodyGyro")
+			BodyGyro.maxTorque = Vector3.new(math.huge, math.huge, math.huge)
+			BodyGyro.cframe = Direction
+			BodyGyro.Parent = LaunchedEgg
+			local EggScriptClone = EggScript:Clone()
+			local Creator = Instance.new("ObjectValue")
+			Creator.Name = "Creator"
+			Creator.Value = Player
+			Creator.Parent = EggScriptClone
+			EggScriptClone.Disabled = false
+			EggScriptClone.Parent = LaunchedEgg
+			
+			local Velocity = (Direction.lookVector * 200)
+			LaunchedEgg.Velocity = Velocity	
+			
+			Debris:AddItem(LaunchedEgg, 5)
+			LaunchedEgg.Parent = game:GetService("Workspace")
+		end)
+	end
+	Delay(Duration, (function()
+		SlingMotor.DesiredAngle = 0
+	end))
+	wait(ReloadTime)
+	CreateEgg()
+	wait(Rate)
+	EggReady = true
+	Tool.Enabled = true
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Humanoid = nil
+	for i, v in pairs(Character:GetChildren()) do
+		if v:IsA("Humanoid") then
+			Humanoid = v
+			break
+		end
+	end
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	ToolEquipped = true
+	Spawn(function()
+		ManageSling(true)
+		if EggReady then
+			CreateEgg()
+		end
+	end)
+end
+
+function Unequipped()
+	Mesh.MeshId = MeshData.GunWithSling
+	ManageSling(false)
+	ToolEquipped = false
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+--[[function OnServerInvoke(player, mode, value)
+	if player ~= Player or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke]]
+
+ManageSling(false)
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBXDC528C88B45F4DF190D7D99E74D7ED15">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">EggScript</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Part = script.Parent
+
+Players = game:GetService("Players")
+InsertService = game:GetService("InsertService")
+Debris = game:GetService("Debris")
+
+EggSplatModel = InsertService:LoadAsset(228153674)
+EggSplat = EggSplatModel:GetChildren()[1]:Clone()
+if EggSplatModel and EggSplatModel.Parent then
+	Debris:AddItem(EggSplatModel, 1)
+end
+EggSplat.Anchored = false
+
+EggSplatScript = script:WaitForChild("EggSplatScript")
+
+Images = {225903962, 225904058, 225904105, 225904147, 225904216}
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Sounds = {
+	EggSplat = script:WaitForChild("EggSplat"),
+	EggCrack = script:WaitForChild("EggCrack"),
+}
+
+Broken = false
+
+
+ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Bullet", "Egg"}
+
+Rate = (1 / 60)
+
+Creator = script:WaitForChild("Creator")
+
+function CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.find(string.lower(String), string.lower(v)) then
+			return true
+		end
+	end
+	return false
+end
+
+function CheckIntangible(Hit)
+	if Hit and Hit.Parent then
+		if Hit.Transparency > 0.8 or not Hit.CanCollide or CheckTableForString(ProjectileNames, Hit.Name) or Hit.Parent:FindFirstChild("Humanoid") then
+			return true
+		end
+	end
+	return false
+end
+
+function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
+	local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+	if RayHit and CheckIntangible(RayHit) then
+		if DelayIfHit then
+			wait()
+		end
+		RayHit, RayPos, RayNormal = CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+	end
+	return RayHit, RayPos, RayNormal
+end
+
+function CreateEggSplatter(Hit)
+	local EggSplatClone = EggSplat:Clone()
+	local EggSplatScriptClone = EggSplatScript:Clone()
+	local CreatorClone = Creator:Clone()
+	CreatorClone.Value = Creator.Value
+	CreatorClone.Parent = EggSplatScriptClone
+	EggSplatScriptClone.Disabled = false
+	EggSplatScriptClone.Parent = EggSplatClone
+	EggSplatClone.Size = (EggSplatClone.Size * (math.random(50, 200) * 0.01))
+	if Hit and Hit.Object and Hit.Object.Parent and Hit.RayData then
+		local PartCFrame = CFrame.new(Hit.RayData.RayPos, (CFrame.new(Hit.RayData.RayPos) + Hit.RayData.RayNormal * 2).p) * CFrame.Angles(-(math.pi / 2), (math.random(-360, 360) * 0.01), 0)
+		PartCFrame = (PartCFrame * CFrame.new(0, (EggSplatClone.Size.Y / 1), 0))
+		local Weld = Instance.new("Motor")
+		Weld.Name = "Weld"
+		Weld.Part0 = EggSplatClone
+		Weld.Part1 = Hit.Object
+		Weld.C0 = PartCFrame:inverse()
+		Weld.C1 = Hit.Object.CFrame:inverse()
+		Weld.Parent = EggSplatClone
+		Debris:AddItem(EggSplatClone, 10)
+		EggSplatClone.Parent = game:GetService("Workspace")
+	end
+end
+
+function CoverScreen(player)
+	local PlayerGui = player:FindFirstChild("PlayerGui")
+	if PlayerGui then
+
+		local ScreenGui = Instance.new("ScreenGui") 
+		ScreenGui.Name = "SlimeSplatter"
+		local MainFrame = Instance.new("Frame") 
+		MainFrame.Name = "Splater"
+		MainFrame.Position = UDim2.new(0, 0, 0, 0) 
+		MainFrame.Size = UDim2.new(1, 0, 1, 0) 
+		MainFrame.BackgroundColor = BrickColor.new(1, 1, 1)
+		MainFrame.Transparency = 1
+		MainFrame.BorderColor = BrickColor.new(1, 1, 1)
+		MainFrame.Parent = ScreenGui
+	
+		for i = 1, math.random(1, 4) do
+			local Splatter = Instance.new("ImageLabel")
+			local Size = ((math.random() * 1) + 0.25)
+			Splatter.Size = UDim2.new(Size, 0, Size, 0)
+			Splatter.Position = UDim2.new((math.random() - (Size / 2)), 0, (math.random() - (Size / 2)), 0)
+			Splatter.SizeConstraint = Enum.SizeConstraint.RelativeXX
+			Splatter.Transparency = 1
+			Splatter.Image = (BaseUrl .. Images[math.random(1, #Images)])
+			Splatter.Parent = MainFrame
+			Splatter.Rotation = math.random(0, 360)
+			Debris:AddItem(Splatter, (5 + (math.random() * 2)))
+		end
+		
+		Debris:AddItem(ScreenGui, 5)
+		
+		ScreenGui.Parent = PlayerGui
+	
+	end
+end
+
+function Splat(Hit)
+	if not Hit or not Hit.Parent or Broken then
+		return
+	end
+	local Player = Creator.Value
+	local Character = (((Player and Player.Parent and Player:IsA("Player") and Player.Character) and Player.Character) or nil)
+	local HumanoidHit = false
+	local character = Hit.Parent
+	if character:IsA("Hat") then
+		character = Hit.Parent
+	end
+	if character == Character or character.Parent == Character then
+		return
+	end
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid and humanoid.Health > 0 then
+		local player = Players:GetPlayerFromCharacter(character)
+		if player and player ~= Player then
+			CoverScreen(player)
+		end
+		local HumanoidHit = true
+	end
+	if HumanoidHit then
+		local Sound = Sounds.EggSplat:Clone()
+		Sound.Pitch = (math.random(1500, 2500) * 0.001)
+		Sound.Parent = Part
+		Sound:Play()
+	else
+		local Sound = Sounds.EggCrack:Clone()
+		Sound.Pitch = (math.random(1000, 1500) * 0.001)
+		Sound.Parent = Part
+		Sound:Play()
+		local RayHit, RayPos, RayNormal = CastRay(Part.Position, (Part.Velocity.unit * -1), ((Part.Size.Y / 2) + 10), {Part}, false)
+		if RayHit then
+			Spawn(function()
+				CreateEggSplatter({Object = RayHit, RayData = {RayPos = RayPos, RayNormal = RayNormal}})
+			end)
+		end
+	end
+	Part.Transparency = 1
+	Part.CanCollide = false
+	Part.Anchored = true
+	Broken = true
+	Debris:AddItem(Part, 2)
+end
+
+Part.Touched:connect(Splat)]]></ProtectedString>
+				</Properties>
+				<Item class="Sound" referent="RBX1AA1295E1525468EB4736E8D93421A26">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">EggCrack</string>
+						<float name="Pitch">1.5</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=227491416</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+				<Item class="Sound" referent="RBX10540396C6AB420B96499B9DACDA017D">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">EggSplat</string>
+						<float name="Pitch">1.5</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=168192032</url></Content>
+						<float name="Volume">0.5</float>
+					</Properties>
+				</Item>
+				<Item class="Script" referent="RBXE858C9D2D1F642AAA9322E3FFACA4FB8">
+					<Properties>
+						<bool name="Disabled">true</bool>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">EggSplatScript</string>
+						<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Part = script.Parent
+
+Players = game:GetService("Players")
+
+SlowScript = script:WaitForChild("SlowScript")
+
+Creator = script:WaitForChild("Creator")
+
+function Splat(Hit)
+	if not Hit or not Hit.Parent then
+		return
+	end
+	local Player = Creator.Value
+	local Character = (((Player and Player.Parent and Player:IsA("Player") and Player.Character) and Player.Character) or nil)
+	local HumanoidHit = false
+	local character = Hit.Parent
+	if character:IsA("Hat") then
+		character = Hit.Parent
+	end
+	if character == Character or character.Parent == Character then
+		return
+	end
+	local humanoid = character:FindFirstChild("Humanoid")
+	if not humanoid or humanoid.Health == 0 then
+		return
+	end
+	local SlowScriptClone = character:FindFirstChild(SlowScript.Name)
+	if not SlowScriptClone then
+		SlowScriptClone = SlowScript:Clone()
+		local Duration = Instance.new("NumberValue")
+		Duration.Name = "Duration"
+		Duration.Parent = SlowScriptClone
+	end
+	SlowScriptClone.Duration.Value = 5
+	SlowScriptClone.Disabled = false
+	SlowScriptClone.Parent = character
+end
+
+Part.Touched:connect(Splat)]]></ProtectedString>
+					</Properties>
+					<Item class="Script" referent="RBX6D964CF9707E4A819DCA5EDF8B17ACB0">
+						<Properties>
+							<bool name="Disabled">true</bool>
+							<Content name="LinkedSource"><null></null></Content>
+							<string name="Name">SlowScript</string>
+							<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Character = script.Parent
+Humanoid = Character:FindFirstChild("Humanoid")
+
+Duration = script:WaitForChild("Duration")
+
+Rate = (1 / 60)
+
+Humanoid.WalkSpeed = 6
+
+while Duration.Value > 0 do
+	local Time = wait(Rate)
+	Duration.Value = (Duration.Value - Time)
+	wait(Rate)
+end
+
+Humanoid.WalkSpeed = 16
+
+script:Destroy()]]></ProtectedString>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX13A03DFC1AB44026A0FC78B455C9181F">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+
+Animations = {}
+
+RemoteFunctions = Tool:WaitForChild("RemoteFunctions")
+ServerControl = RemoteFunctions:WaitForChild("ServerControl")
+ClientControl = RemoteFunctions:WaitForChild("ClientControl")
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = nil
+	for i, v in pairs(Character:GetChildren()) do
+		if v:IsA("Humanoid") then
+			Humanoid = v
+			break
+		end
+	end
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Player:GetMouse()
+	ToolEquipped = true
+end
+
+function Unequipped()
+	ToolEquipped = false
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	Animations = {}
+end
+
+function InvokeServer(mode, value)
+	local ServerReturn
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(mode, value)
+	end)
+	return ServerReturn
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MousePosition" then
+		return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX2E7DB88A73684BF0A5281AF0B79A4F3C">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
