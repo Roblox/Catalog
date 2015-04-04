@@ -1,0 +1,532 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBXAFB5794C832241C2B44712269BFE4376">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>2.23517418e-008</Y>
+				<Z>1.01950586</Z>
+				<R00>0.999936879</R00>
+				<R01>0.0112336874</R01>
+				<R02>0</R02>
+				<R10>-0.000749997504</R10>
+				<R11>0.066759035</R11>
+				<R12>0.997768819</R12>
+				<R20>0.0112086227</R20>
+				<R21>-0.997705817</R21>
+				<R22>0.066763252</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">BunnyEaredSai</string>
+			<Content name="TextureId"><url>rbxassetid://230849491</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX70DCE70046EA44DA84C045B54C05B28B">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Server</string>
+				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Handle = Tool:WaitForChild("Handle")
+
+local Heartbeat = game:GetService("RunService").Heartbeat
+local HeartbeatConnection
+
+local FriendlyFire = false
+
+local AttackRestTimer = 0
+local DropAttackTimer = 0
+local DamageTimer = 0
+
+local AttackWindow = 0.75
+local AttackDamage = 12
+local AttackDamaging = false
+
+
+--returns the wielding player of this tool
+function getPlayer()
+	local char = Tool.Parent
+	return game:GetService("Players"):GetPlayerFromCharacter(char)
+end
+
+--helpfully checks a table for a specific value
+function contains(t, v)
+	for _, val in pairs(t) do
+		if val == v then
+			return true
+		end
+	end
+	return false
+end
+
+--tags a human for the ROBLOX KO system
+function tagHuman(human)
+	local tag = Instance.new("ObjectValue")
+	tag.Value = getPlayer()
+	tag.Name = "creator"
+	tag.Parent = human
+	game:GetService("Debris"):AddItem(tag)
+end
+
+--used by checkTeams
+function sameTeam(otherHuman)
+	local player = getPlayer()
+	local otherPlayer = game:GetService("Players"):GetPlayerFromCharacter(otherHuman.Parent)
+	if player and otherPlayer then
+		if player == otherPlayer then
+			return true
+		end
+		if otherPlayer.Neutral then
+			return false
+		end
+		return player.TeamColor == otherPlayer.TeamColor
+	end
+	return false
+end
+
+--use this to determine if you want this human to be harmed or not, returns boolean
+function checkTeams(otherHuman)
+	return not (sameTeam(otherHuman) and not FriendlyFire)
+end
+
+function canAttack()
+	return AttackRestTimer <= 0 
+end
+
+function canDropAttack()
+	return DropAttackTimer > 0
+end
+
+function onHeartbeat(dt)
+	AttackRestTimer = AttackRestTimer - dt
+	if AttackRestTimer < 0 then
+		AttackRestTimer = 0
+	end
+	
+	DropAttackTimer = DropAttackTimer - dt
+	if DropAttackTimer < 0 then
+		DropAttackTimer = 0
+	end
+	
+	DamageTimer = DamageTimer - dt
+	if DamageTimer < 0 then
+		DamageTimer = 0
+	end
+	
+	if characterIsGrounded() then
+		DropAttackTimer = 0
+	end
+end
+
+function playSound(name, pitch)
+	pitch = pitch or math.random(90, 110) / 100
+	
+	local sound = Handle:FindFirstChild(name)
+	sound.Pitch = pitch
+	sound:Play()
+end
+
+function airAttack()
+	local root = Tool.Parent:FindFirstChild("HumanoidRootPart")
+	if root then
+		if canDropAttack() then
+			root.Velocity = Vector3.new(0, -160, 0)
+			
+			spawn(function()
+				local t = 0
+				while not characterIsGrounded() and t < 2 do
+					t = t + Heartbeat:wait()
+				end
+				
+				local e = Instance.new("Explosion")
+				e.Position = root.Position - Vector3.new(0, 3, 0)
+				e.BlastPressure = 0
+				e.Hit:connect(function(part)
+					if part:IsDescendantOf(Tool.Parent) then return end
+					
+					if part.Parent and part.Parent:FindFirstChild("HumanoidRootPart") then
+						local root = part.Parent.HumanoidRootPart
+						local dir = (root.Position - e.Position).unit
+						
+						local vel = Instance.new("BodyVelocity")
+						vel.velocity = dir * 64
+						vel.maxForce = Vector3.new(1e9, 1e9, 1e9)
+						vel.Parent = root
+						game:GetService("Debris"):AddItem(vel, 0.1)
+					end
+				end)
+				e.Parent = workspace
+				
+				Remote:FireClient(getPlayer(), "StopAnimation", "Fall")
+				playSound("Hit")
+			end)
+			
+			DropAttackTimer = 0
+			AttackRestTimer = AttackRestTimer + 1
+			
+			Remote:FireClient(getPlayer(), "PlayAnimation", "Fall")
+			playSound("Whoosh")
+		else
+			root.Velocity = Vector3.new(0, 96, 0)
+			
+			DropAttackTimer = 2.5
+			AttackRestTimer = AttackRestTimer + 0.5
+			
+			Remote:FireClient(getPlayer(), "PlayAnimation", "Jump", nil, nil, 2)
+			playSound("Jump")
+		end
+	end
+end
+
+function groundAttack()
+	Remote:FireClient(getPlayer(), "PlayAnimation", "Swing", nil, nil, math.random(90, 110) / 100)
+	playSound("Swing")
+	
+	AttackRestTimer = AttackRestTimer + 0.25
+	DamageTimer = DamageTimer + 0.15
+end
+
+function characterIsGrounded()
+	local root = Tool.Parent:FindFirstChild("HumanoidRootPart")
+	if root then
+		local ray = Ray.new(root.Position, Vector3.new(0, -3.5, 0))
+		local part, pos = workspace:FindPartOnRay(ray, Tool.Parent)
+		return part ~= nil
+	end
+	return false
+end
+
+function onLeftDown()
+	if not canAttack() then return end
+	
+	if characterIsGrounded() then
+		groundAttack()
+	else
+		airAttack()
+	end
+end
+
+function onHandleTouched(part)
+	if DamageTimer <= 0 then return end
+	if part:IsDescendantOf(Tool.Parent) then return end
+	
+	if part.Parent and part.Parent:FindFirstChild("Humanoid") then
+		local human = part.Parent.Humanoid
+		if checkTeams(human) then
+			tagHuman(human)
+			human:TakeDamage(AttackDamage)
+			DamageTimer = 0
+		end
+	end
+end
+
+function onRemote(player, func, ...)
+	if player ~= getPlayer() then return end
+	
+	if func == "LeftDown" then
+		onLeftDown(...)
+	end
+end
+
+function onEquip()
+	HeartbeatConnection = Heartbeat:connect(onHeartbeat)
+end
+
+function onUnequip()
+	if HeartbeatConnection then
+		HeartbeatConnection:disconnect()
+		HeartbeatConnection = nil
+	end
+end
+
+Remote.OnServerEvent:connect(onLeftDown)
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Handle.Touched:connect(onHandleTouched)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX9C5068F1462849C58D2CAB4FF722B041">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Client</string>
+				<ProtectedString name="Source"><![CDATA[local Player = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+local BeganConnection, EndedConnection
+
+function playAnimation(animName, ...)
+	if Tracks[animName] then
+		Tracks[animName]:Play(...)
+	else
+		local anim = Tool:FindFirstChild(animName)
+		if anim and Tool.Parent and Tool.Parent:FindFirstChild("Humanoid") then
+			Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+			playAnimation(animName, ...)
+		end
+	end
+end
+
+function stopAnimation(animName)
+	if Tracks[animName] then
+		Tracks[animName]:Stop()
+	end
+end
+
+function inputBegan(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftDown")
+	end
+end
+
+function inputEnded(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftUp")
+	end
+end
+
+function onRemote(func, ...)
+	if func == "PlayAnimation" then
+		playAnimation(...)
+	elseif func == "StopAnimation" then
+		stopAnimation(...)
+	end
+end
+
+function onEquip()
+	BeganConnection = UIS.InputBegan:connect(inputBegan)
+	EndedConnection = UIS.InputEnded:connect(inputEnded)
+end
+
+function onUnequip()
+	if BeganConnection then
+		BeganConnection:disconnect()
+		BeganConnection = nil
+	end
+	
+	if EndedConnection then
+		EndedConnection:disconnect()
+		EndedConnection = nil
+	end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX26880B457BA741ADB1DBF29EFD27501E">
+			<Properties>
+				<string name="Name">Remote</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX34C94E5C088B4AB096CFB43E0E3A705D">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>58.4990044</Y>
+					<Z>0</Z>
+					<R00>0.722945333</R00>
+					<R01>0.689166486</R01>
+					<R02>0.0489727221</R02>
+					<R10>-0.183006376</R10>
+					<R11>0.259361714</R11>
+					<R12>-0.948282719</R12>
+					<R20>-0.666226923</R20>
+					<R21>0.676594317</R21>
+					<R22>0.313626409</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX1D4B8B430FDA41649AA75E7144DC997B">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>rbxassetid://230849408</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.174999997</X>
+						<Y>0.174999997</Y>
+						<Z>0.174999997</Z>
+					</Vector3>
+					<Content name="TextureId"><url>rbxassetid://230849444</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXC0397F6DB9BB4BB0BF35AAF0374EB6DD">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Jump</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://107433821</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXFD74BFC0ACC84E93B676492A1AB8CD28">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Whoosh</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://25874790</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX0AC592990B0A482CB1A911BF83AA7790">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Hit</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://124254994</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXC32D948640B74AC9AE92E717138B2A52">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://92597369</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX999FA12C0037475780F8522398DD413D">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">FleshHit</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://93005921</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX72D264A00A93470AAF1B713FFB4812B5">
+			<Properties>
+				<Content name="AnimationId"><url>rbxassetid://233064613</url></Content>
+				<string name="Name">Jump</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXCBFFFCF20F2043738204A6D30BD8D0A1">
+			<Properties>
+				<Content name="AnimationId"><url>rbxassetid://233322916</url></Content>
+				<string name="Name">Fall</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX33DF3093B06242468B5B3E29FDEFC151">
+			<Properties>
+				<Content name="AnimationId"><url>rbxassetid://233329237</url></Content>
+				<string name="Name">Swing</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX4DA119E8A7BC4D3C97463E24530C826A">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-2.33995175</X>
+					<Y>57.9078102</Y>
+					<Z>0.719741702</Z>
+					<R00>0.22835049</R00>
+					<R01>-0.137842223</R01>
+					<R02>-0.963771582</R02>
+					<R10>1.86264515e-009</R10>
+					<R11>0.989926457</R11>
+					<R12>-0.141582996</R12>
+					<R20>0.97357899</R20>
+					<R21>0.0323305465</R21>
+					<R22>0.226050183</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-1.2605263</X>
+					<Y>58.0663834</Y>
+					<Z>0.466565192</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
