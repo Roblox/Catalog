@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX6D189AB267EB46E9B2755B4587ABECE3">
+	<Item class="Tool" referent="RBXAFD0F91DF0254653B906E9932E874BB5">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=230851572</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBXC20D8E198AA142DCA37CF0D709E953AB">
+		<Item class="Part" referent="RBXE47B284348714321AB453CD76DE20DAB">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -92,7 +92,7 @@
 					<Z>4.5</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX965BD903633E417DB25D3F3DCE1C08E3">
+			<Item class="SpecialMesh" referent="RBXA0CBA7C932FF4CADB1399132F35E9941">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -118,7 +118,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX15E9BA3306AF4CA1A68679ED9CB09332">
+		<Item class="Script" referent="RBX3B09DA7781A24FF9B570B749928F8272">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -135,11 +135,10 @@ Debris = game:GetService("Debris")
 BaseUrl = "http://www.roblox.com/asset/?id="
 
 EatScript = script:WaitForChild("EatScript")
-BurgerScript = script:WaitForChild("BurgerScript")
+FoodScript = script:WaitForChild("FoodScript")
 
 Gravity = 196.20
 
-Damage = 35
 ReloadTime = 2
 
 BasePart = Instance.new("Part")
@@ -162,9 +161,13 @@ BurgerMesh.MeshId  = (BaseUrl .. "230851424")
 BurgerMesh.TextureId = (BaseUrl .. "230851532")
 BurgerMesh.Scale = Vector3.new(1, 1, 1)
 BurgerMesh.Parent = Burger
+Burger = {
+	Object = Burger:Clone(),
+	Offset = CFrame.new(0.125, 0, 0.35) * CFrame.Angles(0, 0, (math.pi / 2)),
+}
 
 Fries = BasePart:Clone()
-Fries.Name = "Projectile"
+Fries.Name = "Fries"
 Fries.Size = Vector3.new(0.4, 0.5, 1.125)
 FriesMesh = Instance.new("SpecialMesh")
 FriesMesh.MeshType = Enum.MeshType.FileMesh
@@ -172,6 +175,10 @@ FriesMesh.MeshId  = (BaseUrl .. "230851485")
 FriesMesh.TextureId = (BaseUrl .. "230851532")
 FriesMesh.Scale = Vector3.new(2, 2, 2)
 FriesMesh.Parent = Fries
+Fries = {
+	Object = Fries:Clone(),
+	Offset = CFrame.new(0.125, 0, 0.35) * CFrame.Angles(-(math.pi / 2), 0, 0),
+}
 
 ToolEquipped = false
 
@@ -205,7 +212,7 @@ function UntagHumanoid(humanoid)
 	end
 end
 
-function ProjectileTouched(Projectile)
+function ProjectileTouched(Projectile, ProjectileType)
 	local PartTouched
 	local ProjectileHit = false
 	PartTouched = Projectile.Touched:connect(function(Hit)
@@ -228,14 +235,16 @@ function ProjectileTouched(Projectile)
 		if Projectile and Projectile.Parent then
 			Projectile:Destroy()
 		end
+		local DamageValue = ((Projectile.Name == "Burger" and 20) or 35)
 		local RightArm = character:FindFirstChild("Right Arm")
 		if RightArm then
-			local FoodPart = Fries:Clone()
+			local DurationTime = 1.5
+			local FoodPart = ProjectileType.Object:Clone()
 			local WeldGrip = Instance.new("Weld")
 			WeldGrip.Part0 = RightArm
 			WeldGrip.Part1 = FoodPart
 			WeldGrip.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
-			WeldGrip.C1 =  CFrame.new(0.125, 0, 0.35) * CFrame.Angles(-(math.pi / 2), 0, 0)
+			WeldGrip.C1 =  ProjectileType.Offset
 			WeldGrip.Parent = FoodPart
 			local EatScriptClone = EatScript:Clone()
 			local Food = Instance.new("ObjectValue")
@@ -244,46 +253,28 @@ function ProjectileTouched(Projectile)
 			Food.Parent = EatScriptClone
 			EatScriptClone.Disabled = false
 			Debris:AddItem(EatScriptClone, 7)
-			Debris:AddItem(FoodPart, 5)
+			Debris:AddItem(FoodPart, DurationTime)
 			EatScriptClone.Parent = humanoid
 			FoodPart.Parent = Hit.Parent
-			Delay(1.5, function()
-				if FoodPart and FoodPart.Parent then
-					FoodPart:Destroy()
-				end
-				if character and character.Parent and humanoid and humanoid.Parent and humanoid.Health > 0 then
-					UntagHumanoid(humanoid)
-					TagHumanoid(humanoid, Player)
-					local CurrentHealth = humanoid.Health
-					humanoid:TakeDamage(Damage)
-					if (CurrentHealth - Damage) <= 0 then
-						humanoid:TakeDamage(math.huge)
-						local Explosion = Instance.new("Explosion")
-						Explosion.ExplosionType = Enum.ExplosionType.NoCraters
-						Explosion.BlastRadius = 15
-						Explosion.BlastPressure = 0
-						Explosion.Position = character:GetModelCFrame().p
-						Explosion.Parent = game:GetService("Workspace")
-						for i = 1, math.random(2, 5) do
-							local BurgerClone = Burger:Clone()
-							BurgerClone.CFrame = ((CFrame.new(Projectile.Position) * CFrame.new((math.random(-200, 200) * 0.01), (math.random(-200, 200) * 0.01), (math.random(-200, 200) * 0.01))) * CFrame.Angles(0, 0, 0))
-							local Creator = Instance.new("ObjectValue")
-							Creator.Name = "Creator"
-							Creator.Value = Player
-							Creator.Parent = BurgerClone
-							local BurgerScriptClone = BurgerScript:Clone()
-							BurgerScriptClone.Disabled = false
-							BurgerScriptClone.Parent = BurgerClone
-							Debris:AddItem(BurgerClone, 15)
-							BurgerClone.Parent = game:GetService("Workspace")
-						end
-					end
-				end
-			end)
+			local FoodScriptClone = FoodScript:Clone()
+			local Duration = Instance.new("NumberValue")
+			Duration.Name = "Duration"
+			Duration.Value = DurationTime
+			Duration.Parent = FoodScriptClone
+			local Damage = Instance.new("NumberValue")
+			Damage.Name = "Damage"
+			Damage.Value = DamageValue
+			Damage.Parent = FoodScriptClone
+			local Creator = Instance.new("ObjectValue")
+			Creator.Name = "Creator"
+			Creator.Value = Player
+			Creator.Parent = FoodScriptClone
+			FoodScriptClone.Disabled = false
+			FoodScriptClone.Parent = character
 		else
 			UntagHumanoid(humanoid)
 			TagHumanoid(humanoid, Player)
-			humanoid:TakeDamage(Damage)
+			humanoid:TakeDamage(DamageValue)
 		end
 	end)
 	return PartTouched
@@ -297,9 +288,11 @@ function Activated()
 	local Speed = 100
 	local SpawnPosition = (Handle.CFrame * CFrame.new(0, 0, -0.5))
 	local TargetPosition = InvokeClient("MousePosition").Position
-	SpawnPosition = (SpawnPosition + Handle.CFrame.lookVector * ((Handle.Size.Z / 2) + (Fries.Size.Y / 2)))
+	SpawnPosition = (SpawnPosition + Handle.CFrame.lookVector * ((Handle.Size.Z / 2) + (Fries.Object.Size.Y / 2)))
 	local Direction = CFrame.new(SpawnPosition.p, TargetPosition)
-	local ProjectileClone = Fries:Clone()
+	local FoodType = math.random(1, 4)
+	FoodType = ((FoodType == 1 and Fries) or Burger)
+	local ProjectileClone = FoodType.Object:Clone()
 	local Mass = (ProjectileClone:GetMass() * Gravity)
 	local Velocity = (Direction.lookVector * Speed)
 	local Creator = Instance.new("ObjectValue")
@@ -320,7 +313,7 @@ function Activated()
 	Debris:AddItem(ProjectileClone, 5)
 	Debris:AddItem(BodyVelocity, 0.2)
 	ProjectileClone.Parent = game:GetService("Workspace")
-	ProjectileTouched(ProjectileClone)
+	ProjectileTouched(ProjectileClone, FoodType)
 	wait(ReloadTime)
 	Tool.Enabled = true
 end
@@ -362,7 +355,7 @@ Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="LocalScript" referent="RBXB45AF10DB04240898CB325A01A20A71A">
+			<Item class="LocalScript" referent="RBX83F75CC2A5EF4A1F84819F06200970DE">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -377,8 +370,6 @@ Debris = game:GetService("Debris")
 
 Food = script:WaitForChild("Food").Value
 Eat = script:WaitForChild("EatAnim")
-
-Damage = 20
 
 function TagHumanoid(humanoid, player)
 	local Creator_Tag = Instance.new("ObjectValue")
@@ -428,26 +419,29 @@ Food.Changed:connect(function(Property)
 	end
 end)]]></ProtectedString>
 				</Properties>
-				<Item class="Animation" referent="RBX2627B5CE53164D538660971E8A392F4E">
+				<Item class="Animation" referent="RBXF5CE83063F15445CBE04572BA852C832">
 					<Properties>
 						<Content name="AnimationId"><url>http://www.roblox.com/asset?id=159993489</url></Content>
 						<string name="Name">EatAnim</string>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Script" referent="RBX23C973F086474720B8740860EF72ED87">
+			<Item class="Script" referent="RBX07FF331B5BAB43A4B1656A3663CDFC54">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">BurgerScript</string>
+					<string name="Name">FoodScript</string>
 					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
-Part = script.Parent
+Character = script.Parent
+Humanoid = Character:FindFirstChild("Humanoid")
 
 Players = game:GetService("Players")
 Debris = game:GetService("Debris")
 
-Creator = Part:WaitForChild("Creator")
+Creator = script:WaitForChild("Creator").Value
+Duration = script:WaitForChild("Duration").Value
+Damage = script:WaitForChild("Damage").Value
 
 function IsTeamMate(Player1, Player2)
 	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
@@ -469,34 +463,28 @@ function UntagHumanoid(humanoid)
 	end
 end
 
-ProjectileHit = false
-Part.Touched:connect(function(Hit)
-	if not Hit or not Hit.Parent or ProjectileHit then
-		return
+wait(Duration)
+
+if Humanoid and Humanoid.Health > 0 then
+	UntagHumanoid(Humanoid)
+	TagHumanoid(Humanoid, Creator)
+	local CurrentHealth = Humanoid.Health
+	Humanoid:TakeDamage(Damage)
+	if (CurrentHealth - Damage) <= 0 then
+		Humanoid:TakeDamage(math.huge)
+		local Explosion = Instance.new("Explosion")
+		Explosion.ExplosionType = Enum.ExplosionType.NoCraters
+		Explosion.BlastRadius = 15
+		Explosion.BlastPressure = 0
+		Explosion.Position = Character:GetModelCFrame().p
+		Explosion.Parent = game:GetService("Workspace")
 	end
-	local character = Hit.Parent
-	if character:IsA("Hat") then
-		character = character.Parent
-	end
-	local player = Players:GetPlayerFromCharacter(character)
-	local CreatorPlayer = (((Creator and Creator.Value and Creator.Value:IsA("Player")) and Creator.Value) or nil)
-	if CreatorPlayer and player and (player == CreatorPlayer or IsTeamMate(CreatorPlayer, player)) then
-		return
-	end
-	local humanoid = character:FindFirstChild("Humanoid")
-	if not humanoid or humanoid.Health == 0 then
-		return
-	end
-	ProjectileHit = true
-	UntagHumanoid(humanoid)
-	TagHumanoid(humanoid, CreatorPlayer)
-	humanoid:TakeDamage(25)
-	Part:Destroy()
-end)]]></ProtectedString>
+	Debris:AddItem(script, 1)
+end]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX18D559FD63DB440D9F58DB435B1AF3D1">
+		<Item class="LocalScript" referent="RBX6888F0066AB248A3827361F4F7CEB432">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -659,7 +647,7 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX16ED334790D94AB9827D26357D95F96D">
+		<Item class="LocalScript" referent="RBXFA2B9C03A4F34BECA3557530251922B5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -695,7 +683,7 @@ Tool.Changed:connect(OnChanged)
 ]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX14364CF2BCD0470781B7F4C5DB249D29">
+		<Item class="Camera" referent="RBXBCEC78A3E19E4943817080AF301DFF9D">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">5</token>
@@ -729,6 +717,16 @@ Tool.Changed:connect(OnChanged)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="RemoteFunction" referent="RBX969035572140438EB1220D9178CAB74F">
+			<Properties>
+				<string name="Name">ServerControl</string>
+			</Properties>
+		</Item>
+		<Item class="RemoteFunction" referent="RBXC2CF50AD41284770B2F2F5DE2044E5E7">
+			<Properties>
+				<string name="Name">ClientControl</string>
 			</Properties>
 		</Item>
 	</Item>
