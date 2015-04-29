@@ -19,7 +19,8 @@
 				<R21>0</R21>
 				<R22>-4.37113883e-008</R22>
 			</CoordinateFrame>
-			<string name="Name">Chicago Cane</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">ChicagoNewsManCane</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=122332826</url></Content>
 			<string name="ToolTip">CLASSIC CANE</string>
 		</Properties>
@@ -39,15 +40,15 @@
 					<X>-0.200000003</X>
 					<Y>17.7000008</Y>
 					<Z>21.7000008</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<R00>0.866025507</R00>
+					<R01>-0.129409477</R01>
+					<R02>0.482962698</R02>
+					<R10>-0.249999866</R10>
+					<R11>0.72444433</R11>
+					<R12>0.642402053</R12>
+					<R20>-0.433012456</R20>
+					<R21>-0.677077174</R21>
+					<R22>0.595034957</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -116,168 +117,187 @@
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBXFB42D8F303B94CA7815E99BE68AC96CF">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Slash</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12135982</url></Content>
+					<float name="Volume">0.25</float>
+				</Properties>
+			</Item>
 		</Item>
 		<Item class="Script" referent="RBX3">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">-------- OMG HAX
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
 
-r = game:service(&quot;RunService&quot;)
-
-
-local damage = 3
-
-
-local slash_damage = 6
-
-
-sword = script.Parent.Handle
 Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
 
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
 
-local SlashSound = Instance.new(&quot;Sound&quot;)
-SlashSound.SoundId = &quot;http://www.roblox.com/Asset/?ID=12135982&quot;
-SlashSound.Parent = sword
-SlashSound.Volume = .7
+Damage = {
+	Touched = 3,
+	Slash = 6,
+	Current = 0
+}
 
-function isTurbo(character)
-&#9;return character:FindFirstChild(&quot;PaperHat&quot;) ~= nil
-end
+Sounds = {
+	Slash = Handle:WaitForChild("Slash"),
+}
 
+Grips = {
+	Up = CFrame.new(0.100000001, 1.4, -0.3, -4.37113883e-008, 0, 1, 0, 1, 0, -1, 0, -4.37113883e-008),
+	Out = (CFrame.Angles(math.pi, -(math.pi / 2), 0) + Vector3.new(0, 1.5, 0)),
+}
 
-function blow(hit)
-&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;local vCharacter = Tool.Parent
-&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
-&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
-&#9;if humanoid~=nil and humanoid ~= hum and hum ~= nil then
-&#9;&#9;-- final check, make sure sword is in-hand
+ReloadTime = 0.4
 
-&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;&#9;if (right_arm ~= nil) then
-&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
-&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
-&#9;&#9;&#9;&#9;local d = damage
-&#9;&#9;&#9;&#9;if (isTurbo(vCharacter) == true) then d = d * 2.5 end
-&#9;&#9;&#9;&#9;tagHumanoid(humanoid, vPlayer)
-&#9;&#9;&#9;&#9;humanoid:TakeDamage(d)
-&#9;&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;&#9;untagHumanoid(humanoid)
-&#9;&#9;&#9;end
-&#9;&#9;end
+ToolEquipped = false
 
-
-&#9;end
-end
-
-
-function tagHumanoid(humanoid, player)
-&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value = player
-&#9;creator_tag.Name = &quot;creator&quot;
-&#9;creator_tag.Parent = humanoid
-end
-
-function untagHumanoid(humanoid)
-&#9;if humanoid ~= nil then
-&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
-&#9;&#9;if tag ~= nil then
-&#9;&#9;&#9;tag.Parent = nil
-&#9;&#9;end
-&#9;end
-end
-
-
-function attack()
-&#9;damage = slash_damage
-&#9;SlashSound:play()
-&#9;local anim = Instance.new(&quot;StringValue&quot;)
-&#9;anim.Name = &quot;toolanim&quot;
-&#9;anim.Value = &quot;Slash&quot;
-&#9;anim.Parent = Tool
-&#9;swordOut()
-&#9;wait(.5)
-&#9;swordUp()
-end
-
-
-function swordUp()
-&#9;Tool.Grip=CFrame.new(0.100000001, 1.4, -.3, -4.37113883e-008, 0, 1, 0, 1, 0, -1, 0, -4.37113883e-008)
-end
-
-function swordOut()
-&#9;Tool.Grip=CFrame.Angles(math.pi,-math.pi/2,0)+Vector3.new(0,1.5,0)
-end
-
-
-
+Damage.CurrentDamage = Damage.Touched
+Tool.Grip = Grips.Up
 Tool.Enabled = true
 
-function onActivated()
-
-&#9;if not Tool.Enabled then
-&#9;&#9;return
-&#9;end
-
-&#9;Tool.Enabled = false
-
-&#9;local character = Tool.Parent;
-&#9;local humanoid = character.Humanoid
-&#9;if humanoid == nil then
-&#9;&#9;print(&quot;Humanoid not found&quot;)
-&#9;&#9;return 
-&#9;end
-
-&#9;
-
-&#9;attack()
-
-&#9;wait(.4)
-
-&#9;Tool.Enabled = true
+function IsTurbo()
+	return Character:FindFirstChild("PaperHat")
 end
 
-
-function onEquipped()
-&#9;SlashSound:play()
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
 end
 
+function TagHumanoid(humanoid, player)
+	local Creator_Tag = Instance.new("ObjectValue")
+	Creator_Tag.Name = "creator"
+	Creator_Tag.Value = player
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
 
-script.Parent.Activated:connect(onActivated)
-script.Parent.Equipped:connect(onEquipped)
+function UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
 
+function Blow(Hit)
+	if not Hit or not Hit.Parent or not CheckIfAlive() then
+		return
+	end
+	
+	local character = Hit.Parent
+	
+	local player = Players:GetPlayerFromCharacter(character)
+	if player and (IsTeamMate(Player, player) or player == Player) then
+		return
+	end
+	
+	local humanoid = character:FindFirstChild("Humanoid")
+	if character == Character or not humanoid or humanoid.Health == 0 then
+		return
+	end
+	
+	local RightArm = Character:FindFirstChild("Right Arm")
+	if not RightArm then
+		return
+	end
+	local RightGrip = RightArm:FindFirstChild("RightGrip")
+	if not RightGrip or (RightGrip.Part0 ~= RightArm and RightGrip.Part1 ~= RightArm) then
+		return
+	end
+	
+	UntagHumanoid(humanoid)
+	TagHumanoid(humanoid, Player)
+	
+	local FinalizedDamage = Damage.CurrentDamage
+	FinalizedDamage = ((IsTurbo() and (FinalizedDamage * 2.5)) or FinalizedDamage)
+	
+	humanoid:TakeDamage(FinalizedDamage)
+	
+end
 
-connection = sword.Touched:connect(blow)
+function Attack()
+	Damage.CurrentDamage = Damage.Slash
+	Sounds.Slash:Play()
+	local anim = Instance.new("StringValue")
+	anim.Name = "toolanim"
+	anim.Value = "Slash"
+	anim.Parent = Tool
+	Tool.Grip = Grips.Out
+	Damage.CurrentDamage = Damage.Slash
+	wait(0.5)
+	Damage.CurrentDamage = Damage.Touched
+	Sounds.Slash:Stop()
+	Tool.Grip = Grips.Up
+end
 
+function CheckIfAlive()
+	return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent) and true) or false)
+end
 
-</ProtectedString>
+function Activated()
+	if not Tool.Enabled or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	Tool.Enabled = false
+	Attack()
+	Tool.Enabled = true
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	Sounds.Slash:Play()
+	ToolEquipped = true
+end
+
+function Unequipped()
+	ToolEquipped = false
+end
+
+Handle.Touched:connect(Blow)
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX4">
+		<Item class="Camera" referent="RBX3EAD5DF6391549BD8904BBAA66DF2105">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-3.3887763</X>
-					<Y>18.0411491</Y>
-					<Z>21.3886013</Z>
-					<R00>-0.0897453278</R00>
-					<R01>0.0749431774</R01>
-					<R02>-0.993141174</R02>
-					<R10>-4.65661232e-010</R10>
-					<R11>0.997164905</R11>
-					<R12>0.0752468184</R12>
-					<R20>0.995964706</R20>
-					<R21>0.00675305072</R21>
-					<R22>-0.089490898</R22>
+					<X>-2.24292684</X>
+					<Y>18.5964394</Y>
+					<Z>22.5045528</Z>
+					<R00>0.513811469</R00>
+					<R01>0.308355689</R01>
+					<R02>-0.800571322</R02>
+					<R10>-0</R10>
+					<R11>0.933172166</R11>
+					<R12>0.359429508</R12>
+					<R20>0.857903123</R20>
+					<R21>-0.184679002</R21>
+					<R22>0.479474574</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-1.40249419</X>
-					<Y>17.8906555</Y>
-					<Z>21.5675831</Z>
+					<X>-1.28223908</X>
+					<Y>18.165123</Y>
+					<Z>21.9291821</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
