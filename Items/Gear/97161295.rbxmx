@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX1DA009AD85744AF599682BDCC3422103">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,12 @@
 				<R21>0.094321698</R21>
 				<R22>0.67454046</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Tool Cloner</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=97241460</url></Content>
-			<string name="ToolTip">Clone a tool from your backpack.</string>
+			<string name="ToolTip">Gear Cloner</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXD385847CE46D4BAA83471E6901761494">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -36,18 +37,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>64.9866409</X>
-					<Y>4.98727942</Y>
-					<Z>1.73115933</Z>
-					<R00>0.457933843</R00>
-					<R01>0.0937354192</R01>
-					<R02>-0.88403064</R02>
-					<R10>-0.0206027329</R10>
-					<R11>0.995277941</R11>
-					<R12>0.0948587805</R12>
-					<R20>0.888747811</R20>
-					<R21>-0.0252254996</R21>
-					<R22>0.457702547</R22>
+					<X>-0.013359</X>
+					<Y>0.687278986</Y>
+					<Z>0.0311590005</Z>
+					<R00>-0.442905217</R00>
+					<R01>0.766894102</R01>
+					<R02>-0.46444416</R02>
+					<R10>0.064378038</R10>
+					<R11>0.543890178</R11>
+					<R12>0.836683989</R12>
+					<R20>0.894254327</R20>
+					<R21>0.34067142</R21>
+					<R22>-0.290262789</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -91,7 +92,7 @@
 					<Z>0.300000012</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX73A18CFD0B8C49CF8F2A57DC152CA561">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,7 +117,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBXE913BD1227934273A317B664ABF112A8">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Sound</string>
@@ -126,7 +127,7 @@
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Sound" referent="RBX21DB2D35AFC842258199FED7FA8193DC">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Sound</string>
@@ -137,271 +138,340 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="Script" referent="RBX5AE56B3544EA4F6C9D0BB07953877464">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Stickmasterluke
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Stickmasterluke
 
 
 sp=script.Parent
-plr=game.Players.LocalPlayer
 
 rate=1/30
-debris=game:GetService(&quot;Debris&quot;)
+debris=game:GetService("Debris")
 canclone=true
 
 function waitfor(parent,name)
-&#9;while parent:FindFirstChild(name)==nil do
-&#9;&#9;wait()
-&#9;end
-&#9;return parent:FindFirstChild(name)
+	while parent:FindFirstChild(name)==nil do
+		wait()
+	end
+	return parent:FindFirstChild(name)
 end
 
 moveint=22
 scrollspeed=.1
 
 function creategui()
-&#9;tool=nil
-&#9;if plr:FindFirstChild(&quot;PlayerGui&quot;)~=nil and plr:FindFirstChild(&quot;Backpack&quot;)~=nil then
-&#9;&#9;if gui~=nil then
-&#9;&#9;&#9;gui:remove()
-&#9;&#9;end
-&#9;&#9;gui=Instance.new(&quot;ScreenGui&quot;)
-&#9;&#9;gui.Name=&quot;ToolCloneGui&quot;
-&#9;&#9;gui.Parent=plr.PlayerGui
+	tool=nil
+	local plr = game.Players:getPlayerFromCharacter(sp.Parent)
+	if plr:FindFirstChild("PlayerGui")~=nil and plr:FindFirstChild("Backpack")~=nil then
+		if gui~=nil then
+			gui:remove()
+		end
+		gui=Instance.new("ScreenGui")
+		gui.Name="ToolCloneGui"
+		gui.Parent=plr.PlayerGui
+		
+		local bus = Instance.new'RemoteEvent'
+		bus.Name = 'GuiBus'
+		bus.Parent = script
+		local ls = script.Parent.GuiScript:Clone()
+		ls.Parent = gui
+		ls.Bus.Value = bus
+		ls.Tool.Value = sp
+		ls.Disabled = false
 
-&#9;&#9;showframe=Instance.new(&quot;Frame&quot;)
-&#9;&#9;showframe.Style=&quot;RobloxRound&quot;
-&#9;&#9;showframe.Position = UDim2.new(1,-480,1,-410)
-&#9;&#9;showframe.Size = UDim2.new(0,160,0,200)
-&#9;&#9;showframe.ClipsDescendants=true
-&#9;&#9;showframe.Visible=false
-&#9;&#9;showframe.Parent = gui
+		showframe=Instance.new("Frame")
+		showframe.Name = 'ShowFrame'
+		showframe.Style="RobloxRound"
+		showframe.Position = UDim2.new(1,-480,1,-410)
+		showframe.Size = UDim2.new(0,160,0,200)
+		showframe.ClipsDescendants=true
+		showframe.Visible=false
+		showframe.Parent = gui
 
-&#9;&#9;showimage=Instance.new(&quot;ImageLabel&quot;)
-&#9;&#9;showimage.Size=UDim2.new(1,0,0,150)
-&#9;&#9;showimage.BackgroundTransparency=1
-&#9;&#9;showimage.Parent=showframe
+		showimage=Instance.new("ImageLabel")
+		showimage.Name = 'ShowImage'
+		showimage.Size=UDim2.new(1,0,0,150)
+		showimage.BackgroundTransparency=1
+		showimage.Parent=showframe
 
-&#9;&#9;closebutton=Instance.new(&quot;TextButton&quot;)
-&#9;&#9;closebutton.Text=&quot;X&quot;
-&#9;&#9;closebutton.TextScaled=true
-&#9;&#9;closebutton.Style=&quot;RobloxButtonDefault&quot;
-&#9;&#9;closebutton.Size=UDim2.new(0,30,0,30)
-&#9;&#9;closebutton.TextColor3=Color3.new(1,0,0)
-&#9;&#9;closebutton.Font=&quot;Arial&quot;
-&#9;&#9;closebutton.FontSize=&quot;Size14&quot;
-&#9;&#9;closebutton.Position=UDim2.new(1,-20,0,-10)
-&#9;&#9;closebutton.Parent=showframe
-&#9;&#9;closebutton.MouseButton1Down:connect(function()
-&#9;&#9;&#9;showframe.Visible=false
-&#9;&#9;end)
+		closebutton=Instance.new("TextButton")
+		closebutton.Name = 'CloseButton'
+		closebutton.Text="X"
+		closebutton.TextScaled=true
+		closebutton.Style="RobloxButtonDefault"
+		closebutton.Size=UDim2.new(0,30,0,30)
+		closebutton.TextColor3=Color3.new(1,0,0)
+		closebutton.Font="Arial"
+		closebutton.FontSize="Size14"
+		closebutton.Position=UDim2.new(1,-20,0,-10)
+		closebutton.Parent=showframe
 
-&#9;&#9;clonebutton=Instance.new(&quot;TextButton&quot;)
-&#9;&#9;clonebutton.Text=&quot;Clone&quot;
-&#9;&#9;clonebutton.Style=&quot;RobloxButton&quot;
-&#9;&#9;clonebutton.Size=UDim2.new(0,80,0,30)
-&#9;&#9;clonebutton.TextColor3=Color3.new(1,1,1)
-&#9;&#9;clonebutton.Font=&quot;ArialBold&quot;
-&#9;&#9;clonebutton.FontSize=&quot;Size14&quot;
-&#9;&#9;clonebutton.Position=UDim2.new(.5,-40,1,-35)
-&#9;&#9;clonebutton.Parent=showframe
-&#9;&#9;clonebutton.MouseButton1Down:connect(function()
-&#9;&#9;&#9;local chr=plr.Character
-&#9;&#9;&#9;if tool~=nil and chr~=nil then
-&#9;&#9;&#9;&#9;local ctool=tool:clone()
-&#9;&#9;&#9;&#9;--ctool.CanBeDropped=true
-&#9;&#9;&#9;&#9;local t=chr:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;local hndl=ctool:FindFirstChild(&quot;Handle&quot;)
-&#9;&#9;&#9;&#9;if hndl~=nil and t~=nil and canclone then
-&#9;&#9;&#9;&#9;&#9;canclone=false
-&#9;&#9;&#9;&#9;&#9;gui:remove()
-&#9;&#9;&#9;&#9;&#9;hndl.CFrame=t.CFrame+(t.CFrame.lookVector*10)+Vector3.new(0,5,0)
-&#9;&#9;&#9;&#9;&#9;ctool.Parent=game.Workspace
-&#9;&#9;&#9;&#9;&#9;local s=Instance.new(&quot;Sound&quot;)
-&#9;&#9;&#9;&#9;&#9;s.Name=&quot;PhaseInSoundEffect&quot;
-&#9;&#9;&#9;&#9;&#9;s.SoundId=&quot;http://www.roblox.com/asset/?id=97272128&quot;
-&#9;&#9;&#9;&#9;&#9;debris:AddItem(s,5)
-&#9;&#9;&#9;&#9;&#9;s.Parent=hndl
-&#9;&#9;&#9;&#9;&#9;delay(.05,function()
-&#9;&#9;&#9;&#9;&#9;&#9;if s~=nil then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;s:Play()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;&#9;delay(0,function()
-&#9;&#9;&#9;&#9;&#9;&#9;p=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;p.BrickColor=BrickColor.new(&quot;Cyan&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;p.FormFactor=&quot;Custom&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.Size=Vector3.new(0,0,0)
-&#9;&#9;&#9;&#9;&#9;&#9;p.Anchored=true
-&#9;&#9;&#9;&#9;&#9;&#9;p.CanCollide=false
-&#9;&#9;&#9;&#9;&#9;&#9;p.TopSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.BottomSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.Name=&quot;Effect&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;local m=Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;m.MeshType=&quot;Sphere&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;m.Parent=p
-&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(p,5)
-&#9;&#9;&#9;&#9;&#9;&#9;p.CFrame=hndl.CFrame+Vector3.new(0,-3,0)
-&#9;&#9;&#9;&#9;&#9;&#9;p.Parent=game.Workspace
-&#9;&#9;&#9;&#9;&#9;&#9;frames=.5/rate
-&#9;&#9;&#9;&#9;&#9;&#9;for frame=1,frames do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local percent=frame/frames
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;m.Scale=Vector3.new(5,5,5)*(1-percent)*8
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;p.Transparency=percent
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(rate)
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;sp:remove()
-&#9;&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;&#9;wait(2)
-&#9;&#9;&#9;&#9;&#9;sp:remove()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
+		clonebutton=Instance.new("TextButton")
+		clonebutton.Name = 'CloneButton'
+		clonebutton.Text="Clone"
+		clonebutton.Style="RobloxButton"
+		clonebutton.Size=UDim2.new(0,80,0,30)
+		clonebutton.TextColor3=Color3.new(1,1,1)
+		clonebutton.Font="ArialBold"
+		clonebutton.FontSize="Size14"
+		clonebutton.Position=UDim2.new(.5,-40,1,-35)
+		clonebutton.Parent=showframe
+		
 
-&#9;&#9;frame=Instance.new(&quot;Frame&quot;)
-&#9;&#9;frame.Style=&quot;RobloxRound&quot;
-&#9;&#9;frame.Position = UDim2.new(1,-300,1,-410)
-&#9;&#9;frame.Size = UDim2.new(0,200,0,323)
-&#9;&#9;frame.ClipsDescendants=true
-&#9;&#9;frame.Parent = gui
+		frame=Instance.new("Frame")
+		frame.Name = 'Frame'
+		frame.Style="RobloxRound"
+		frame.Position = UDim2.new(1,-300,1,-410)
+		frame.Size = UDim2.new(0,200,0,323)
+		frame.ClipsDescendants=true
+		frame.Parent = gui
 
-&#9;&#9;window=Instance.new(&quot;Frame&quot;)
-&#9;&#9;window.BackgroundTransparency=1
-&#9;&#9;window.ClipsDescendants=true
-&#9;&#9;window.Parent=frame
+		window=Instance.new("Frame")
+		window.Name = 'Window'
+		window.BackgroundTransparency=1
+		window.ClipsDescendants=true
+		window.Parent=frame
 
-&#9;&#9;scroller=Instance.new(&quot;Frame&quot;)
-&#9;&#9;scroller.BackgroundTransparency=.5
-&#9;&#9;scroller.BorderSizePixel=0
-&#9;&#9;scroller.Position = UDim2.new(1,-25,0,0)
-&#9;&#9;scroller.Size = UDim2.new(0,25,1,0)
-&#9;&#9;scroller.Parent = frame
+		scroller=Instance.new("Frame")
+		scroller.Name = 'Scroller'
+		scroller.BackgroundTransparency=.5
+		scroller.BorderSizePixel=0
+		scroller.Position = UDim2.new(1,-25,0,0)
+		scroller.Size = UDim2.new(0,25,1,0)
+		scroller.Parent = frame
 
-&#9;&#9;local buttonup=Instance.new(&quot;ImageButton&quot;)
-&#9;&#9;buttonup.Size=UDim2.new(0,25,0,25)
-&#9;&#9;buttonup.Position=UDim2.new(0,0,0,0)
-&#9;&#9;buttonup.Image=&quot;rbxasset://textures/ui/scrollbuttonUp.png&quot;
-&#9;&#9;buttonup.BackgroundTransparency=1
-&#9;&#9;buttonup.MouseButton1Down:connect(function()
-&#9;&#9;&#9;upbuttondown=true
-&#9;&#9;&#9;while upbuttondown do
-&#9;&#9;&#9;&#9;if window.Position.Y.Offset+moveint&gt;=0 then
-&#9;&#9;&#9;&#9;&#9;window.Position=UDim2.new(0,0,0,0)
-&#9;&#9;&#9;&#9;&#9;upbuttondown=false
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;window.Position=window.Position+UDim2.new(0,0,0,moveint)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait(scrollspeed)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;buttonup.MouseButton1Up:connect(function()
-&#9;&#9;&#9;upbuttondown=false
-&#9;&#9;end)
-&#9;&#9;buttonup.MouseLeave:connect(function()
-&#9;&#9;&#9;upbuttondown=false
-&#9;&#9;end)
-&#9;&#9;buttonup.Parent=scroller
+		local buttonup=Instance.new("ImageButton")
+		buttonup.Name = 'ButtonUp'
+		buttonup.Size=UDim2.new(0,25,0,25)
+		buttonup.Position=UDim2.new(0,0,0,0)
+		buttonup.Image="rbxasset://textures/ui/scrollbuttonUp.png"
+		buttonup.BackgroundTransparency=1
+		buttonup.Parent=scroller
 
-&#9;&#9;local buttondown=Instance.new(&quot;ImageButton&quot;)
-&#9;&#9;buttondown.Size=UDim2.new(0,25,0,25)
-&#9;&#9;buttondown.Position=UDim2.new(0,0,1,-25)
-&#9;&#9;buttondown.BackgroundTransparency=1
-&#9;&#9;buttondown.Image=&quot;rbxasset://textures/ui/scrollbuttonDown.png&quot;
-&#9;&#9;buttondown.MouseButton1Down:connect(function()
-&#9;&#9;&#9;downbuttondown=true
-&#9;&#9;&#9;while downbuttondown do
-&#9;&#9;&#9;&#9;if (window.Position.Y.Offset+window.Size.Y.Offset)-moveint&lt;=frame.Size.Y.Offset then
-&#9;&#9;&#9;&#9;&#9;window.Position=UDim2.new(0,0,0,frame.Size.Y.Offset-window.Size.Y.Offset)
-&#9;&#9;&#9;&#9;&#9;downbuttondown=false
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;window.Position=window.Position+UDim2.new(0,0,0,-moveint)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait(scrollspeed)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;buttondown.MouseButton1Up:connect(function()
-&#9;&#9;&#9;downbuttondown=false
-&#9;&#9;end)
-&#9;&#9;buttondown.MouseLeave:connect(function()
-&#9;&#9;&#9;downbuttondown=false
-&#9;&#9;end)
-&#9;&#9;buttondown.Parent=scroller
+		local buttondown=Instance.new("ImageButton")
+		buttondown.Name = 'ButtonDown'
+		buttondown.Size=UDim2.new(0,25,0,25)
+		buttondown.Position=UDim2.new(0,0,1,-25)
+		buttondown.BackgroundTransparency=1
+		buttondown.Image="rbxasset://textures/ui/scrollbuttonDown.png"
+		buttondown.Parent=scroller
 
-&#9;&#9;i=0
-&#9;&#9;for _,v in ipairs(plr.Backpack:GetChildren()) do
-&#9;&#9;&#9;if v.className==&quot;Tool&quot; then
-&#9;&#9;&#9;&#9;local button=Instance.new(&quot;TextButton&quot;)
-&#9;&#9;&#9;&#9;button.Size=UDim2.new(1,0,0,20)
-&#9;&#9;&#9;&#9;button.Position=UDim2.new(0,0,0,i*22)
-&#9;&#9;&#9;&#9;button.TextColor3=Color3.new(1,1,1)
-&#9;&#9;&#9;&#9;button.Style=&quot;RobloxButton&quot;
-&#9;&#9;&#9;&#9;button.Text=v.Name
-&#9;&#9;&#9;&#9;button.Visible=true
-&#9;&#9;&#9;&#9;button.Parent=window
-&#9;&#9;&#9;&#9;button.MouseButton1Down:connect(function()
-&#9;&#9;&#9;&#9;&#9;if v~=nil then
-&#9;&#9;&#9;&#9;&#9;&#9;tool=v
-&#9;&#9;&#9;&#9;&#9;&#9;showimage.Image=v.TextureId
-&#9;&#9;&#9;&#9;&#9;&#9;showframe.Visible=true
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;i=i+1
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;window.Size=UDim2.new(1,-30,0,(i+1)*22)
-&#9;end
+		i=0
+		for _,v in ipairs(plr.Backpack:GetChildren()) do
+			if v.className=="Tool" then
+				local button=Instance.new("TextButton")
+				button.Size=UDim2.new(1,0,0,20)
+				button.Position=UDim2.new(0,0,0,i*22)
+				button.TextColor3=Color3.new(1,1,1)
+				button.Style="RobloxButton"
+				button.Text=v.Name
+				button.Visible=true
+				button.Parent=window
+				local val = Instance.new'ObjectValue'
+				val.Value = v
+				val.Name = 'Tool'
+				val.Parent = button
+				i=i+1
+			end
+		end
+		window.Size=UDim2.new(1,-30,0,(i+1)*22)
+		
+		bus.OnServerEvent:connect(function(client, action, ...)
+			if client.Character == sp.Parent then
+				if action == 'Clone' then
+					local tool = ...
+					
+					local ctool=tool:clone()
+					--ctool.CanBeDropped=true
+					local t=sp.Parent:FindFirstChild("Torso")
+					local hndl=ctool:FindFirstChild("Handle")
+					if hndl~=nil and t~=nil and canclone then
+						canclone=false
+						gui:remove()
+						hndl.CFrame=t.CFrame+(t.CFrame.lookVector*10)+Vector3.new(0,5,0)
+						ctool.Parent=game.Workspace
+						local s=Instance.new("Sound")
+						s.Name="PhaseInSoundEffect"
+						s.SoundId="http://www.roblox.com/asset/?id=97272128"
+						debris:AddItem(s,5)
+						s.Parent=hndl
+						delay(.05,function()
+							if s~=nil then
+								s:Play()
+							end
+						end)
+						delay(0,function()
+							p=Instance.new("Part")
+							p.BrickColor=BrickColor.new("Cyan")
+							p.FormFactor="Custom"
+							p.Size=Vector3.new(0,0,0)
+							p.Anchored=true
+							p.CanCollide=false
+							p.TopSurface="Smooth"
+							p.BottomSurface="Smooth"
+							p.Name="Effect"
+							local m=Instance.new("SpecialMesh")
+							m.MeshType="Sphere"
+							m.Parent=p
+							debris:AddItem(p,5)
+							p.CFrame=hndl.CFrame+Vector3.new(0,-3,0)
+							p.Parent=game.Workspace
+							frames=.5/rate
+							for frame=1,frames do
+								local percent=frame/frames
+								m.Scale=Vector3.new(5,5,5)*(1-percent)*8
+								p.Transparency=percent
+								wait(rate)
+							end
+							sp:remove()
+						end)
+						wait(2)
+						sp:remove()
+					end
+				end
+			end
+		end)
+	end
 end
 
 
 
-function onEquipped(mouse)
-&#9;equipped=true
-&#9;plr=game.Players.LocalPlayer
-&#9;if mouse~=nil and plr~=nil then
-&#9;&#9;creategui()
-&#9;end
+function onEquipped()
+	equipped=true
+	creategui()
 end
 
 function onUnequipped()
-&#9;equipped=false
-&#9;if gui~=nil then
-&#9;&#9;gui:remove()
-&#9;end
+	equipped=false
+	if gui~=nil then
+		gui:remove()
+	end
 end
 
 sp.Equipped:connect(onEquipped)
 sp.Unequipped:connect(onUnequipped)
 
 
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX6">
+		<Item class="LocalScript" referent="RBXA89B869F0DF6404AB825E23F533C7374">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">GuiScript</string>
+				<ProtectedString name="Source"><![CDATA[local gui = script.Parent
+local plr = gui.Parent.Parent
+local bus = script:WaitForChild'Bus'.Value or script.Bus.Changed:wait() -- hnnng
+local tool = script:WaitForChild'Tool'.Value or script.Tool.Changed:wait()
+
+local showframe = gui:WaitForChild'ShowFrame'
+local showimage = showframe:WaitForChild'ShowImage'
+local frame = gui:WaitForChild'Frame'
+local scroller = frame:WaitForChild'Scroller'
+local window = frame:WaitForChild'Window'
+
+local scrollspeed = 0.1
+local moveint = 22
+local rate = 1/30
+
+showframe:WaitForChild'CloseButton'.MouseButton1Down:connect(function()
+	showframe.Visible=false
+end)
+showframe:WaitForChild'CloneButton'.MouseButton1Down:connect(function()
+	local chr=plr.Character
+	if tool~=nil and chr~=nil then
+		bus:FireServer('Clone', tool)
+	end
+end)
+scroller:WaitForChild'ButtonUp'.MouseButton1Down:connect(function()
+	upbuttondown=true
+	while upbuttondown do
+		if window.Position.Y.Offset+moveint>=0 then
+			window.Position=UDim2.new(0,0,0,0)
+			upbuttondown=false
+		else
+			window.Position=window.Position+UDim2.new(0,0,0,moveint)
+		end
+		wait(scrollspeed)
+	end
+end)
+scroller:WaitForChild'ButtonUp'.MouseButton1Up:connect(function()
+	upbuttondown=false
+end)
+scroller:WaitForChild'ButtonUp'.MouseLeave:connect(function()
+	upbuttondown=false
+end)
+scroller:WaitForChild'ButtonDown'.MouseButton1Down:connect(function()
+	downbuttondown=true
+	while downbuttondown do
+		if (window.Position.Y.Offset+window.Size.Y.Offset)-moveint<=frame.Size.Y.Offset then
+			window.Position=UDim2.new(0,0,0,frame.Size.Y.Offset-window.Size.Y.Offset)
+			downbuttondown=false
+		else
+			window.Position=window.Position+UDim2.new(0,0,0,-moveint)
+		end
+		wait(scrollspeed)
+	end
+end)
+scroller:WaitForChild'ButtonDown'.MouseButton1Up:connect(function()
+	downbuttondown=false
+end)
+scroller:WaitForChild'ButtonDown'.MouseLeave:connect(function()
+	downbuttondown=false
+end)
+
+local function ontoolgui(button)
+	button.MouseButton1Down:connect(function()
+		if button.Tool.Value~=nil then
+			tool=button.Tool.Value
+			showimage.Image=button.Tool.Value.TextureId
+			showframe.Visible=true
+		end
+	end)
+end
+for index, obj in next, window:GetChildren() do ontoolgui(obj) end
+window.ChildAdded:connect(ontoolgui)]]></ProtectedString>
+			</Properties>
+			<Item class="ObjectValue" referent="RBXB2B538761B814B7D89179935D842D760">
+				<Properties>
+					<string name="Name">Bus</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+			<Item class="ObjectValue" referent="RBXBF717FA56DC3407CA10D8B8D9C147459">
+				<Properties>
+					<string name="Name">Tool</string>
+					<Ref name="Value">null</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBXAC746744B8C7452EAE00DADF142CA6A6">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>64.0617523</X>
-					<Y>5.11073256</Y>
-					<Z>2.54358149</Z>
-					<R00>0.659950137</R00>
-					<R01>0.074968271</R01>
-					<R02>-0.747559726</R02>
-					<R10>-3.72529074e-009</R10>
-					<R11>0.995009184</R11>
-					<R12>0.0997834727</R12>
-					<R20>0.751309514</R20>
-					<R21>-0.0658521131</R21>
-					<R22>0.656656384</R22>
+					<X>-2.20328212</X>
+					<Y>1.19473016</Y>
+					<Z>0.187244922</Z>
+					<R00>0.0801778883</R00>
+					<R01>0.263092697</R01>
+					<R02>-0.961433113</R02>
+					<R10>-1.86264537e-009</R10>
+					<R11>0.964538455</R11>
+					<R12>0.26394242</R12>
+					<R20>0.996780634</R20>
+					<R21>-0.0211623441</R21>
+					<R22>0.0773346424</R22>
 				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
+				<float name="FieldOfView">29.9999981</float>
 				<CoordinateFrame name="Focus">
-					<X>64.9866409</X>
-					<Y>4.98727942</Y>
-					<Z>1.73115945</Z>
+					<X>-0.0386411548</X>
+					<Y>0.600470901</Y>
+					<Z>0.0131280422</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
