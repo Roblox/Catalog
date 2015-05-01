@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX072B60CC9F084D93B79230C8D0C6AE81">
+	<Item class="Tool" referent="RBX635583E3A5C64BA1BF9B5BA637A45DC8">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>rbxassetid://243184138</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX25BD27AEAD7C48949B7A0215C9E5906D">
+		<Item class="Script" referent="RBX61BEFE97906F4E30B7A8235AF90889AC">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -35,10 +35,16 @@ local Handle = Tool:WaitForChild("Handle")
 
 local FriendlyFire = false
 
-local ArmMesh, HoldWeld, StabilityGyro
-local CanGrab = true
-local Gyros = {}
-local Player
+local ArmMesh
+
+local HitAble = false
+local HitWindup = 0.15
+local HitWindow = 0.75
+local HitDamage = 15
+local HitVictims = {}
+
+local SwingAble = true
+local SwingRestTime = 1
 
 --returns the wielding player of this tool
 function getPlayer()
@@ -88,35 +94,34 @@ end
 
 function onTouched(part)
 	if part:IsDescendantOf(Tool.Parent) then return end
-	if not CanGrab then return end
+	if not HitAble then return end
 	
 	if part.Parent and part.Parent:FindFirstChild("Humanoid") then
 		local human = part.Parent.Humanoid
+		
+		if contains(HitVictims, human) then return end
+		
 		local root = part.Parent:FindFirstChild("HumanoidRootPart")
 		if root and not root.Anchored then
-			human.Sit = true
-			
-			if HoldWeld then
-				HoldWeld:Destroy()
-			end
-			
-			local w = Instance.new("Weld")
-			w.Part0 = Handle
-			w.Part1 = root
-			w.C0 = CFrame.new(0, -1.1,  0.7) * CFrame.Angles(0, math.pi/2, 0) * CFrame.Angles(-math.pi/2, 0, 0)
-			w.Parent = w.Part0
-			HoldWeld = w
-			
-			Remote:FireClient(getPlayer(), "PlayAnimation", "Hold")
-			
 			local myRoot = Tool.Parent:FindFirstChild("HumanoidRootPart")
-			if myRoot then
-				local StabilityGyro = Instance.new("BodyGyro")
-				StabilityGyro.maxTorque = Vector3.new(1e9, 0, 1e9)
-				StabilityGyro.cframe = myRoot.CFrame
-				StabilityGyro.Parent = myRoot
-				table.insert(Gyros, StabilityGyro)
-			end 
+			if myRoot and checkTeams(human) then
+				local delta = root.Position - myRoot.Position
+				
+				human.Sit = true
+				tagHuman(human)
+				human:TakeDamage(HitDamage)
+				table.insert(HitVictims, human)
+				
+				local bv = Instance.new("BodyVelocity")
+				bv.maxForce = Vector3.new(1e9, 1e9, 1e9)
+				bv.velocity = delta.unit * 128
+				bv.Parent = root
+				game:GetService("Debris"):AddItem(bv, 0.05)
+				
+				Handle.Smack.Pitch = math.random(90, 110)/100
+				Handle.Smack.TimePosition = 0.15
+				Handle.Smack:Play()
+			end
 		end
 	end
 end
@@ -127,8 +132,6 @@ function onEquip()
 	local arm = Tool.ArmMesh:Clone()
 	arm.Parent = char:FindFirstChild("Right Arm")
 	ArmMesh = arm
-	
-	Player = getPlayer()
 end
 
 function onUnequip()
@@ -136,54 +139,30 @@ function onUnequip()
 		ArmMesh:Destroy()
 		ArmMesh = nil
 	end
-	if HoldWeld then
-		HoldWeld:Destroy()
-		HoldWeld = nil
-	end
-	if StabilityGyro then
-		StabilityGyro:Destroy()
-		StabilityGyro = nil
-		
-		for _, gyro in pairs(Gyros) do
-			gyro:Destroy()
-		end
-		Gyros = {}
-	end
-	
-	Remote:FireClient(Player, "StopAnimation", "Hold")
 end
 
 function onLeftDown()
-	if HoldWeld then
-		Remote:FireClient(getPlayer(), "StopAnimation", "Hold")
-		
-		local thisRoot = Tool.Parent:FindFirstChild("HumanoidRootPart")
-		local thatRoot = HoldWeld.Part1
-		if thisRoot and thatRoot then
-			local human = thatRoot.Parent:FindFirstChild("Humanoid")
-			if human then
-				human.Sit = true
-				
-				HoldWeld:Destroy()
-				HoldWeld = nil
-				if StabilityGyro then
-					StabilityGyro:Destroy()
-					StabilityGyro = nil
-				end
-				
-				local bv = Instance.new("BodyVelocity")
-				bv.maxForce = Vector3.new(1e9, 1e9, 1e9)
-				bv.velocity = thisRoot.CFrame.lookVector * 64
-				bv.Parent = thatRoot
-				game:GetService("Debris"):AddItem(bv, 0.2)
-				
-				CanGrab = false
-				delay(0.5, function()
-					CanGrab = true
-				end)
-			end
-		end
-	end
+	if not SwingAble then return end
+	
+	SwingAble = false
+	delay(SwingRestTime, function()
+		SwingAble = true
+	end)
+	
+	delay(HitWindup, function()
+		HitAble = true
+		delay(HitWindow, function()
+			HitAble = false
+		end)
+	end)
+	
+	HitVictims = {}
+	
+	Remote:FireClient(getPlayer(), "PlayAnimation", "Swing")
+	
+	wait(0.25)
+	Handle.Boom.Pitch = math.random(80, 100)/100
+	Handle.Boom:Play()
 end
 
 function onRemote(player, func, ...)
@@ -200,7 +179,7 @@ Handle.Touched:connect(onTouched)
 Remote.OnServerEvent:connect(onRemote)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX77DBFAE85AC24EC1B01C838853E798B5">
+		<Item class="LocalScript" referent="RBXFD69B769B5DB4F19B69D9D1E5E9876BE">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -275,12 +254,12 @@ Tool.Unequipped:connect(onUnequip)
 Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="RemoteEvent" referent="RBXCB68E3C19FA8424B855941D3FF095594">
+		<Item class="RemoteEvent" referent="RBX445088AF0A1F487AAB0A24AE74EEE645">
 			<Properties>
 				<string name="Name">Remote</string>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX1303C021D7E74AC49DDF4EF9B3D4794D">
+		<Item class="Part" referent="RBX2E07E9BA974F4EFCA88E8D3BDC08D7A5">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -293,9 +272,9 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-3</X>
-					<Y>49.900074</Y>
-					<Z>-47</Z>
+					<X>-0.0378680006</X>
+					<Y>26.9622173</Y>
+					<Z>-0.0221829992</Z>
 					<R00>0.707106411</R00>
 					<R01>-0.499999642</R01>
 					<R02>0.500000775</R02>
@@ -343,12 +322,12 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>1</X>
-					<Y>1</Y>
-					<Z>1</Z>
+					<X>1.60000002</X>
+					<Y>3</Y>
+					<Z>0.800000012</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX99DFF6921C6F42C1B90E77A926F69538">
+			<Item class="SpecialMesh" referent="RBX22EE1A0A341B475CB2DAB66038C19675">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -373,8 +352,28 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBXBEFB7D7462DB49C48D351C75B374DDE9">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Boom</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://101084318</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXECDD2383E212440FB5DC0F89C741FE98">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Smack</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>rbxassetid://105424180</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="SpecialMesh" referent="RBXC89CB25384604FBEA68A054D44247490">
+		<Item class="SpecialMesh" referent="RBXAED53293F1D54607AD5EB2E3F59877A6">
 			<Properties>
 				<token name="LODX">2</token>
 				<token name="LODY">2</token>
@@ -399,35 +398,35 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX670E5F45703D45168BE3A24483FB5011">
+		<Item class="Animation" referent="RBX082D6B0228D148EDA7E63E5E94444C17">
 			<Properties>
-				<Content name="AnimationId"><url>rbxassetid://243592320</url></Content>
-				<string name="Name">Hold</string>
+				<Content name="AnimationId"><url>rbxassetid://243827693</url></Content>
+				<string name="Name">Swing</string>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBXE84305DFA17340DFBE228CB7E1AAAA54">
+		<Item class="Camera" referent="RBX3E95C1193C6E4614A73F4B85E2639507">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-5.50516319</X>
-					<Y>50.5770073</Y>
-					<Z>-48.8565674</Z>
-					<R00>-0.628391623</R00>
-					<R01>0.146044016</R01>
-					<R02>-0.764064908</R02>
-					<R10>-1.49011612e-008</R10>
-					<R11>0.982218444</R11>
-					<R12>0.187742084</R12>
-					<R20>0.777897179</R20>
-					<R21>0.11797557</R21>
-					<R22>-0.617217839</R22>
+					<X>-1.31570804</X>
+					<Y>27.4149227</Y>
+					<Z>-2.77091551</Z>
+					<R00>-0.894472361</R00>
+					<R01>0.0743582472</R01>
+					<R02>-0.440896988</R02>
+					<R10>-0</R10>
+					<R11>0.986074626</R11>
+					<R12>0.16630362</R12>
+					<R20>0.447123438</R20>
+					<R21>0.148753986</R21>
+					<R22>-0.882016361</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-4.22153378</X>
-					<Y>50.2616005</Y>
-					<Z>-47.8196411</Z>
+					<X>-0.433913946</X>
+					<Y>27.0823154</Y>
+					<Z>-1.00688255</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
