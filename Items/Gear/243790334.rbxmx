@@ -1,0 +1,445 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX072B60CC9F084D93B79230C8D0C6AE81">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-0.103803635</X>
+				<Y>0.74994278</Y>
+				<Z>-0.407396257</Z>
+				<R00>-4.37113883e-008</R00>
+				<R01>-1</R01>
+				<R02>-4.37113883e-008</R02>
+				<R10>0</R10>
+				<R11>-4.37113883e-008</R11>
+				<R12>1</R12>
+				<R20>-1</R20>
+				<R21>4.37113883e-008</R21>
+				<R22>1.91068547e-015</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">SteampunkGlove</string>
+			<Content name="TextureId"><url>rbxassetid://243184138</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBX25BD27AEAD7C48949B7A0215C9E5906D">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Server</string>
+				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Handle = Tool:WaitForChild("Handle")
+
+local FriendlyFire = false
+
+local ArmMesh, HoldWeld, StabilityGyro
+local CanGrab = true
+local Gyros = {}
+local Player
+
+--returns the wielding player of this tool
+function getPlayer()
+	local char = Tool.Parent
+	return game:GetService("Players"):GetPlayerFromCharacter(char)
+end
+
+--helpfully checks a table for a specific value
+function contains(t, v)
+	for _, val in pairs(t) do
+		if val == v then
+			return true
+		end
+	end
+	return false
+end
+
+--tags a human for the ROBLOX KO system
+function tagHuman(human)
+	local tag = Instance.new("ObjectValue")
+	tag.Value = getPlayer()
+	tag.Name = "creator"
+	tag.Parent = human
+	game:GetService("Debris"):AddItem(tag)
+end
+
+--used by checkTeams
+function sameTeam(otherHuman)
+	local player = getPlayer()
+	local otherPlayer = game:GetService("Players"):GetPlayerFromCharacter(otherHuman.Parent)
+	if player and otherPlayer then
+		if player == otherPlayer then
+			return true
+		end
+		if otherPlayer.Neutral then
+			return false
+		end
+		return player.TeamColor == otherPlayer.TeamColor
+	end
+	return false
+end
+
+--use this to determine if you want this human to be harmed or not, returns boolean
+function checkTeams(otherHuman)
+	return not (sameTeam(otherHuman) and not FriendlyFire)
+end
+
+function onTouched(part)
+	if part:IsDescendantOf(Tool.Parent) then return end
+	if not CanGrab then return end
+	
+	if part.Parent and part.Parent:FindFirstChild("Humanoid") then
+		local human = part.Parent.Humanoid
+		local root = part.Parent:FindFirstChild("HumanoidRootPart")
+		if root and not root.Anchored then
+			human.Sit = true
+			
+			if HoldWeld then
+				HoldWeld:Destroy()
+			end
+			
+			local w = Instance.new("Weld")
+			w.Part0 = Handle
+			w.Part1 = root
+			w.C0 = CFrame.new(0, -1.1,  0.7) * CFrame.Angles(0, math.pi/2, 0) * CFrame.Angles(-math.pi/2, 0, 0)
+			w.Parent = w.Part0
+			HoldWeld = w
+			
+			Remote:FireClient(getPlayer(), "PlayAnimation", "Hold")
+			
+			local myRoot = Tool.Parent:FindFirstChild("HumanoidRootPart")
+			if myRoot then
+				local StabilityGyro = Instance.new("BodyGyro")
+				StabilityGyro.maxTorque = Vector3.new(1e9, 0, 1e9)
+				StabilityGyro.cframe = myRoot.CFrame
+				StabilityGyro.Parent = myRoot
+				table.insert(Gyros, StabilityGyro)
+			end 
+		end
+	end
+end
+
+function onEquip()
+	--put in our right arm
+	local char = Tool.Parent
+	local arm = Tool.ArmMesh:Clone()
+	arm.Parent = char:FindFirstChild("Right Arm")
+	ArmMesh = arm
+	
+	Player = getPlayer()
+end
+
+function onUnequip()
+	if ArmMesh then
+		ArmMesh:Destroy()
+		ArmMesh = nil
+	end
+	if HoldWeld then
+		HoldWeld:Destroy()
+		HoldWeld = nil
+	end
+	if StabilityGyro then
+		StabilityGyro:Destroy()
+		StabilityGyro = nil
+		
+		for _, gyro in pairs(Gyros) do
+			gyro:Destroy()
+		end
+		Gyros = {}
+	end
+	
+	Remote:FireClient(Player, "StopAnimation", "Hold")
+end
+
+function onLeftDown()
+	if HoldWeld then
+		Remote:FireClient(getPlayer(), "StopAnimation", "Hold")
+		
+		local thisRoot = Tool.Parent:FindFirstChild("HumanoidRootPart")
+		local thatRoot = HoldWeld.Part1
+		if thisRoot and thatRoot then
+			local human = thatRoot.Parent:FindFirstChild("Humanoid")
+			if human then
+				human.Sit = true
+				
+				HoldWeld:Destroy()
+				HoldWeld = nil
+				if StabilityGyro then
+					StabilityGyro:Destroy()
+					StabilityGyro = nil
+				end
+				
+				local bv = Instance.new("BodyVelocity")
+				bv.maxForce = Vector3.new(1e9, 1e9, 1e9)
+				bv.velocity = thisRoot.CFrame.lookVector * 64
+				bv.Parent = thatRoot
+				game:GetService("Debris"):AddItem(bv, 0.2)
+				
+				CanGrab = false
+				delay(0.5, function()
+					CanGrab = true
+				end)
+			end
+		end
+	end
+end
+
+function onRemote(player, func, ...)
+	if player ~= getPlayer() then return end
+	
+	if func == "LeftDown" then
+		onLeftDown(...)
+	end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Handle.Touched:connect(onTouched)
+Remote.OnServerEvent:connect(onRemote)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX77DBFAE85AC24EC1B01C838853E798B5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Client</string>
+				<ProtectedString name="Source"><![CDATA[local Player = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+local BeganConnection, EndedConnection
+
+function playAnimation(animName, ...)
+	if Tracks[animName] then
+		Tracks[animName]:Play()
+	else
+		local anim = Tool:FindFirstChild(animName)
+		if anim and Tool.Parent and Tool.Parent:FindFirstChild("Humanoid") then
+			Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+			playAnimation(animName, ...)
+		end
+	end
+end
+
+function stopAnimation(animName)
+	if Tracks[animName] then
+		Tracks[animName]:Stop()
+	end
+end
+
+function inputBegan(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftDown")
+	end
+end
+
+function inputEnded(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftUp")
+	end
+end
+
+function onRemote(func, ...)
+	if func == "PlayAnimation" then
+		playAnimation(...)
+	elseif func == "StopAnimation" then
+		stopAnimation(...)
+	end
+end
+
+function onEquip()
+	BeganConnection = UIS.InputBegan:connect(inputBegan)
+	EndedConnection = UIS.InputEnded:connect(inputEnded)
+end
+
+function onUnequip()
+	if BeganConnection then
+		BeganConnection:disconnect()
+		BeganConnection = nil
+	end
+	
+	if EndedConnection then
+		EndedConnection:disconnect()
+		EndedConnection = nil
+	end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBXCB68E3C19FA8424B855941D3FF095594">
+			<Properties>
+				<string name="Name">Remote</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX1303C021D7E74AC49DDF4EF9B3D4794D">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-3</X>
+					<Y>49.900074</Y>
+					<Z>-47</Z>
+					<R00>0.707106411</R00>
+					<R01>-0.499999642</R01>
+					<R02>0.500000775</R02>
+					<R10>0.707107127</R10>
+					<R11>0.500000298</R11>
+					<R12>-0.499999166</R12>
+					<R20>-1.12762132e-006</R20>
+					<R21>0.707106769</R21>
+					<R22>0.707106769</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX99DFF6921C6F42C1B90E77A926F69538">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>rbxassetid://243183921</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2.5</X>
+						<Y>1.5</Y>
+						<Z>2.5</Z>
+					</Vector3>
+					<Content name="TextureId"><url>rbxassetid://243183937</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="SpecialMesh" referent="RBXC89CB25384604FBEA68A054D44247490">
+			<Properties>
+				<token name="LODX">2</token>
+				<token name="LODY">2</token>
+				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=45081172</url></Content>
+				<token name="MeshType">5</token>
+				<string name="Name">ArmMesh</string>
+				<Vector3 name="Offset">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<Vector3 name="Scale">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+				<Content name="TextureId"><url>http://www.roblox.com/asset/?id=45081306</url></Content>
+				<Vector3 name="VertexColor">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX670E5F45703D45168BE3A24483FB5011">
+			<Properties>
+				<Content name="AnimationId"><url>rbxassetid://243592320</url></Content>
+				<string name="Name">Hold</string>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXE84305DFA17340DFBE228CB7E1AAAA54">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>-5.50516319</X>
+					<Y>50.5770073</Y>
+					<Z>-48.8565674</Z>
+					<R00>-0.628391623</R00>
+					<R01>0.146044016</R01>
+					<R02>-0.764064908</R02>
+					<R10>-1.49011612e-008</R10>
+					<R11>0.982218444</R11>
+					<R12>0.187742084</R12>
+					<R20>0.777897179</R20>
+					<R21>0.11797557</R21>
+					<R22>-0.617217839</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-4.22153378</X>
+					<Y>50.2616005</Y>
+					<Z>-47.8196411</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
