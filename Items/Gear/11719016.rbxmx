@@ -1,10 +1,9 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX9C3B08F2D57E427780FD0041989DDA03">
 		<Properties>
-			<int name="ActivationState">0</int>
-			<int name="BackendToolState">2</int>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0.5</X>
@@ -20,177 +19,275 @@
 				<R21>1</R21>
 				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">BlowDryer</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=11716958</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX1">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Air</string>
-				<string name="Source">function windforce(victimTorso)
-	if (victimTorso.Parent:FindFirstChild(&quot;ForceField&quot;) ~= nil) then return end
-	if victimTorso:FindFirstChild(&quot;WindEffect&quot;) == nil then
-
-		local dir = script.Parent.Velocity.unit
-		local force = Instance.new(&quot;BodyVelocity&quot;)
-		force.Name = &quot;WindEffect&quot;
-		force.maxForce = Vector3.new(1e7, 1e7, 1e7)
-		force.P = 125
-		force.velocity =  (dir * 75) + Vector3.new(0, 30,0)
-		force.Parent = victimTorso
-		game.Debris:AddItem(force, .5)
-	end
-end
-
-
-function OnTouch(part)
-	if (part.Parent == nil) then return end
-	if (part.Parent:FindFirstChild(&quot;Humanoid&quot;) ~= nil) then
-		local t = part.Parent:FindFirstChild(&quot;Torso&quot;)
-		if (t ~= nil) then
-			windforce(t)
-		end
-	end
-	script.Parent:Remove()
-end
-
-
-script.Parent.Touched:connect(OnTouch)
-
-
-wait(2)
-script.Parent:Remove()</string>
-				<bool name="archivable">true</bool>
-			</Properties>
-		</Item>
-		<Item class="Script" referent="RBX2">
+		<Item class="Script" referent="RBX5B96DEBE46134CBD91910F86CB7DF5FC">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">BlowDryer</string>
-				<string name="Source">print(&quot;Flamethrower script loaded&quot;)
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
 
 Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
 
-shooting = false
-reloadtime = 0
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
 
-colors = {1, 208, 45, 11} 
+AirScript = script:WaitForChild("AirScript")
 
-function fire(v)
+Colors = {"White", "Light stone grey", "Light blue", "Pastel Blue"} 
 
+BasePart = Instance.new("Part")
+BasePart.Shape = Enum.PartType.Block
+BasePart.Material = Enum.Material.Plastic
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.CanCollide = true
+BasePart.Locked = true
+BasePart.Anchored = false
 
-	
+AirBubble = BasePart:Clone()
+AirBubble.Name = "Effect"
+AirBubble.Shape = Enum.PartType.Ball
+AirBubble.Size = Vector3.new(2, 2, 2)
+AirBubble.CanCollide = false
 
-	local missile = Instance.new(&quot;Part&quot;)
+Gravity = 196.20
 
-	local vCharacter = Tool.Parent
+Sounds = {
+	DryerSound = Handle:WaitForChild("DryerSound")
+}
 
-	local head = vCharacter:findFirstChild(&quot;Head&quot;)
-	if head == nil then return end
+MouseDown = false
+ToolEquipped = false
 
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
+ServerControl.Parent = Tool
 
-	local spawnPos = head.Position
-	spawnPos  = spawnPos + (v * 10)
-
-	missile.Name = &quot;HotAir&quot;
-
-	local dx = (math.random() - .5) * 50
-	local dy = (math.random() - .5) * 50
-	local dz = (math.random() - .5) * 50
-
-	missile.CFrame = CFrame.new(spawnPos, Vector3.new(dx,dy,dz))
-	missile.Size = Vector3.new(2,2,2)
-	missile.Velocity = v * 80
-	missile.BrickColor = BrickColor.new(colors[math.random(1, #colors)])
-	missile.Shape = 0
-	missile.CanCollide = false
-	missile.Transparency = (math.random() * .5)
-
-	local force = Instance.new(&quot;BodyForce&quot;)
-	force.force = Vector3.new(0,98 * 8,0)
-	force.Parent = missile
-
-	local new_script = script.Parent.Air:clone()
-	new_script.Disabled = false
-	new_script.Parent = missile
-	
-	missile.Parent = game.Workspace
-
-end
-
-
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
+ClientControl.Parent = Tool
 
 Tool.Enabled = true
-function onActivated(mouse)
-	if (Tool.Enabled == false) then return end
-	Tool.Enabled = false
-	if reloadtime &gt; 0 then return end
-	if shooting == true then return end
-	print(&quot;start shooting&quot;)
-	reloadtime = 1.0
-	shooting = true
 
-	local time = 0
-
-	local character = Tool.Parent;
-	local humanoid = character.Humanoid
-	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
-		return 
+function Fire(Direction)
+	
+	if not Tool.Enabled or not CheckIfAlive() then
+		return
 	end
+	
+	local SpawnPos = Handle.Position + (Direction * 7.5)
+	
+	local Offset = Vector3.new(
+		((math.random() - 0.5) * 50),
+		((math.random() - 0.5) * 50),
+		((math.random() - 0.5) * 50)
+	)
 
-	local sound = character.PrimaryPart:findFirstChild(&quot;DryerSound&quot;)
-	if sound == nil then 
-		sound = Instance.new(&quot;Sound&quot;)
-		sound.Name = &quot;DryerSound&quot;
-		sound.SoundId = &quot;http://www.roblox.com/asset/?id=11717967&quot;
-		sound.Parent = character.PrimaryPart
-	end
-	sound:Play()
+	local Force = 80
 
+	local Air = AirBubble:Clone()
+	Air.Transparency = (math.random() * 0.5)
+	Air.CFrame = CFrame.new(SpawnPos, Vector3.new(Offset.X, Offset.Y, Offset.Z))
+	Air.Velocity = (Direction * Force)
+	Air.BrickColor = BrickColor.new(Colors[math.random(1, #Colors)])
+	
+	local Mass = (Air:GetMass() * Gravity)
+	
+	local BodyVelocity = Instance.new("BodyVelocity")
+	BodyVelocity.maxForce = Vector3.new(Mass, Mass, Mass)
+	BodyVelocity.velocity = (Direction * Force)
+	BodyVelocity.Parent = Air
+	
+	local Creator = Instance.new("ObjectValue")
+	Creator.Name = "Creator"
+	Creator.Value = Player
+	Creator.Parent = Air
+	
+	local AirScriptClone = AirScript:Clone()
+	AirScriptClone.Disabled = false
+	AirScriptClone.Parent = Air
+	
+	Debris:AddItem(Air, 2)
+	
+	Air.Parent = game:GetService("Workspace")
 
-	while shooting == true do
-		local targetPos = humanoid.TargetPoint
-		local lookAt = (targetPos - character.Head.Position).unit
-		local dx = (math.random() - .5) * .3
-		local dy = (math.random() - .5) * .3
-		local dz = (math.random() - .5) * .3
-
-		fire(Vector3.new(lookAt.x + dx, lookAt.y + dy, lookAt.z + dz))
-		wait(.05)
-		time = time + .05
-		if time &gt; 2.0 then shooting = false end
-	end
-
-	sound:Stop()
-
-	wait(reloadtime)
-	reloadtime = 0
-
-	Tool.Enabled = true
 end
 
-function onDeactivated(mouse)
-	shooting = false
+function CheckIfAlive()
+	return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0) and true) or false)
 end
 
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	if not CheckIfAlive() then
+		return
+	end
+	ToolEquipped = true
+end
 
+function Unequipped()
+	MouseDown = false
+	ToolEquipped = false
+end
 
-script.Parent.Activated:connect(onActivated)
-script.Parent.Deactivated:connect(onDeactivated)
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
 
+ServerControl.OnServerInvoke = (function(player, Mode, Value)
+	if player ~= Player or not ToolEquipped or not CheckIfAlive() or not Mode or not Value then
+		return
+	end
+	if Mode == "Button1Click" then
+		local Down = Value.Down
+		if Down and not MouseDown and Tool.Enabled then
+			MouseDown = true
+			Spawn(function()
+				Sounds.DryerSound:Play()
+				local Rate = (1 / 60)
+				local MaxDuration = 2
+				local StartTime = tick()
+				if ToolUnequipped then
+					ToolUnequipped:disconnect()
+				end
+				local CurrentlyEquipped = true
+				ToolUnequipped = Tool.Unequipped:connect(function()
+					CurrentlyEquipped = false
+				end)
+				while MouseDown and ToolEquipped and CheckIfAlive() and (tick() - StartTime) < MaxDuration do
+					local TargetPos = InvokeClient("MousePosition")
+					if TargetPos then
+						TargetPos = TargetPos.Position
+						Spawn(function()
+							for i = 1, math.random(2, 3) do
+								if CurrentlyEquipped then
+									local Direction = (TargetPos - Handle.Position).unit
+									local Offset = Vector3.new(
+										((math.random() - 0.5) * 0.3),
+										((math.random() - 0.5) * 0.3),
+										((math.random() - 0.5) * 0.3)
+									)
+									Fire(Vector3.new((Direction.X + Offset.X), (Direction.Y + Offset.Y), (Direction.Z + Offset.Z)))
+									wait(0.1)
+								end
+							end
+						end)
+					end
+					wait(Rate)
+				end
+				Sounds.DryerSound:Stop()
+				Tool.Enabled = false
+				wait(1)
+				Tool.Enabled = true
+			end)
+		elseif not Down and MouseDown then
+			MouseDown = false
+		end
+	end
+end)
 
-
-
-
-</string>
-				<bool name="archivable">true</bool>
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
+			<Item class="Script" referent="RBX4D2F2401AB4C4369A35669D771C03296">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">AirScript</string>
+					<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
+
+Part = script.Parent
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+Creator = Part:FindFirstChild("Creator")
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function TagHumanoid(humanoid, player)
+	local Creator_Tag = Instance.new("ObjectValue")
+	Creator_Tag.Name = "creator"
+	Creator_Tag.Value = player
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
+
+function Touched(Hit)
+	if not Hit or not Hit.Parent then
+		return
+	end
+	local character = Hit.Parent
+	if character:IsA("Hat") then
+		character = character.Parent
+	end
+	for i, v in pairs(character:GetChildren()) do
+		if v:IsA("ForceField") then
+			return
+		end
+	end
+	local humanoid = character:FindFirstChild("Humanoid")
+	if not humanoid or humanoid.Health == 0 then
+		return
+	end
+	local CreatorPlayer = (((Creator and Creator.Value and Creator.Value:IsA("Player")) and Creator.Value) or nil)
+	local player = Players:GetPlayerFromCharacter(character)
+	if CreatorPlayer and player and (CreatorPlayer == player or IsTeamMate(CreatorPlayer, player)) then
+		return
+	end
+	local torso = character:FindFirstChild("Torso")
+	if not torso then
+		return
+	end
+	local WindEffect = torso:FindFirstChild("WindEffect")
+	if WindEffect then
+		return
+	end
+	local Direction = Part.Velocity.unit
+	local WindEffect = Instance.new("BodyVelocity")
+	WindEffect.Name = "WindEffect"
+	WindEffect.maxForce = Vector3.new(1e7, 1e7, 1e7)
+	WindEffect.P = 125
+	WindEffect.velocity = ((Direction * 75) + Vector3.new(0, 30, 0))
+	Debris:AddItem(WindEffect, 0.5)
+	WindEffect.Parent = torso
+	Debris:AddItem(Part, 0)
+	Part:Destroy()
+end
+
+Part.Touched:connect(Touched)
+
+Debris:AddItem(Part, 2)
+
+]]></ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Part" referent="RBX3">
+		<Item class="Part" referent="RBX0ACBEF2820F5441DBB8AACE3EAEFDEC9">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -203,23 +300,21 @@ script.Parent.Deactivated:connect(onDeactivated)
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.499740601</X>
-					<Y>0.200001746</Y>
-					<Z>-0.499984741</Z>
-					<R00>-3.42285489e-008</R00>
-					<R01>0</R01>
-					<R02>-1</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>1</R20>
-					<R21>0</R21>
-					<R22>-3.42285489e-008</R22>
+					<X>0.016144</X>
+					<Y>1.05829298</Y>
+					<Z>-0.0784149989</Z>
+					<R00>0.70710659</R00>
+					<R01>-3.10593045e-008</R01>
+					<R02>0.707106531</R02>
+					<R10>-0.707106471</R10>
+					<R11>1.31466393e-007</R11>
+					<R12>0.707106531</R12>
+					<R20>-1.14923061e-007</R20>
+					<R21>-0.99999994</R21>
+					<R22>7.09985102e-008</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">2</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -229,7 +324,7 @@ script.Parent.Deactivated:connect(onDeactivated)
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0.400000006</float>
@@ -252,7 +347,7 @@ script.Parent.Deactivated:connect(onDeactivated)
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
 					<X>2</X>
@@ -260,7 +355,7 @@ script.Parent.Deactivated:connect(onDeactivated)
 					<Z>2</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBX6ABF0730AF934A969BE59B1B13D42FCF">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -283,65 +378,241 @@ script.Parent.Deactivated:connect(onDeactivated)
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXB6497861747F4EA48FE0BCDE1132EFFD">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">DryerSound</string>
+					<float name="Pitch">1</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=11717967</url></Content>
+					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBXC9388857918141D0947306A8A87C2982">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Local Gui</string>
-				<string name="Source">local Tool = script.Parent;
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
 
-function UpdateIcon(mouse)
-	if (mouse == nil) then return end
-	if (Tool.Enabled == true) then
-		mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-	else
-		mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
 	end
 end
 
-
-function onButton1Down(mouse)
-	UpdateIcon(mouse)
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
 end
 
-function onEquippedLocal(mouse)
-
-	UpdateIcon(mouse)
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
 end
 
-
-Tool.Equipped:connect(onEquippedLocal)
-</string>
-				<bool name="archivable">true</bool>
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX6">
+		<Item class="LocalScript" referent="RBX25A5BB2486504071BC6D322DAAF50B99">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+UserInputService = game:GetService("UserInputService")
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+InputCheck = Instance.new("ScreenGui")
+InputCheck.Name = "InputCheck"
+InputButton = Instance.new("ImageButton")
+InputButton.Name = "InputButton"
+InputButton.Image = ""
+InputButton.BackgroundTransparency = 1
+InputButton.ImageTransparency = 1
+InputButton.Size = UDim2.new(1, 0, 1, 0)
+InputButton.Parent = InputCheck
+
+Rate = (1 / 60)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop(value.FadeTime)
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		PlayerMouse = Player:GetMouse()
+		Mouse.Button1Down:connect(function()
+			InvokeServer("Button1Click", {Down = true})
+		end)
+		Mouse.Button1Up:connect(function()
+			InvokeServer("Button1Click", {Down = false})
+		end)
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			if UserInputService.TouchEnabled then
+				InputCheckClone = InputCheck:Clone()
+				InputCheckClone.InputButton.InputBegan:connect(function()
+					InvokeServer("Button1Click", {Down = true})
+				end)
+				InputCheckClone.InputButton.InputEnded:connect(function()
+					InvokeServer("Button1Click", {Down = false})
+				end)
+				InputCheckClone.Parent = PlayerGui
+			end
+		end
+	end)
+end
+
+function Unequipped()
+	LocalObjects = {}
+	if InputCheckClone and InputCheckClone.Parent then
+		InputCheckClone:Destroy()
+	end
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	for i, v in pairs({ObjectLocalTransparencyModifier}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	pcall(function()
+		local ServerReturn = ServerControl:InvokeServer(mode, value)
+		return ServerReturn
+	end)
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MousePosition" then
+		return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+	elseif mode == "SetLocalTransparencyModifier" and value and ToolEquipped then
+		pcall(function()
+			local ObjectFound = false
+			for i, v in pairs(LocalObjects) do
+				if v == value then
+					ObjectFound = true
+				end
+			end
+			if not ObjectFound then
+				table.insert(LocalObjects, value)
+				if ObjectLocalTransparencyModifier then
+					ObjectLocalTransparencyModifier:disconnect()
+				end
+				ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+					for i, v in pairs(LocalObjects) do
+						if v.Object and v.Object.Parent then
+							local CurrentTransparency = v.Object.LocalTransparencyModifier
+							if ((not v.AutoUpdate and (CurrentTransparency == 1 or  CurrentTransparency == 0)) or v.AutoUpdate) then
+								v.Object.LocalTransparencyModifier = v.Transparency
+							end
+						else
+							table.remove(LocalObjects, i)
+						end
+					end
+				end)
+			end
+		end)
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXE15357E2ABD643C1A3229BA3F5B98906">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>0.120396391</X>
-					<Y>-2.76017928</Y>
-					<Z>-0.77551192</Z>
-					<R00>-0.587670088</R00>
-					<R01>-0.799139261</R01>
-					<R02>-0.126571253</R02>
-					<R10>5.8880717e-010</R10>
-					<R11>0.156434491</R11>
-					<R12>-0.987688363</R12>
-					<R20>0.809100628</R20>
-					<R21>-0.580434918</R21>
-					<R22>-0.0919318795</R22>
+					<X>0.217367008</X>
+					<Y>1.34995973</Y>
+					<Z>1.79220855</Z>
+					<R00>0.999965489</R00>
+					<R01>0.000839877874</R01>
+					<R02>-0.00826865621</R02>
+					<R10>-0</R10>
+					<R11>0.994880974</R11>
+					<R12>0.10105373</R12>
+					<R20>0.00831120089</R20>
+					<R21>-0.101050243</R21>
+					<R22>0.994846582</R22>
 				</CoordinateFrame>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>0.499740571</X>
-					<Y>0.200001746</Y>
-					<Z>-0.499984711</Z>
+					<X>0.233391792</X>
+					<Y>1.15411603</Y>
+					<Z>-0.135819554</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -353,7 +624,6 @@ Tool.Equipped:connect(onEquippedLocal)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
-				<bool name="archivable">true</bool>
 			</Properties>
 		</Item>
 	</Item>
