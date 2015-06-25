@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX933296A8571A45979EEE5844380616A0">
+	<Item class="Tool" referent="RBX5AB10739EB5A4BEB817B97E4E6136FF8">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=259731102</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX8E07DAEC51394AEE9FFBD2996487A02C">
+		<Item class="Part" referent="RBXCDC6C9F92D824817B53B3BA0AFDAB937">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -92,7 +92,7 @@
 					<Z>3.5</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXE9F53386717B493DB64AB930BAA859D8">
+			<Item class="SpecialMesh" referent="RBXC8E59911B60D48BEA70228AF9A917ECA">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,17 +117,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX7415414295154EC7BA6458441CF1EEE9">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Splat</string>
-					<float name="Pitch">2.5</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=168192032</url></Content>
-					<float name="Volume">1</float>
-				</Properties>
-			</Item>
-			<Item class="Sound" referent="RBX1A9AB2ECBB06496C980A25A6C96D9FEA">
+			<Item class="Sound" referent="RBX3A45A83EF3A648119D319DA5D90E1DCD">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
@@ -138,7 +128,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX18922D6735A442D3846D061A7EA94BA2">
+		<Item class="Script" referent="RBXC7E42711045D4F74908BC570B49C32E2">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -173,7 +163,8 @@ BasePart = Create("Part"){
 BasePaintBall = BasePart:Clone()
 BasePaintBall.Name = "Projectile"
 BasePaintBall.Size = Vector3.new(1, 1, 1)
-BasePaintBall.CanCollide = true
+BasePaintBall.CanCollide = false
+BasePaintBall.Anchored = true
 PaintBallMesh = Create("SpecialMesh"){
 	MeshType = Enum.MeshType.FileMesh,
 	MeshId = (BaseUrl .. "259731035"),
@@ -187,12 +178,10 @@ PaintBallMesh = Create("SpecialMesh"){
 Gravity = 196.20
 
 Damage = 0
-Velocity = 125
 FireRate = 0.75
 
 Sounds = {
 	Fire = Handle:WaitForChild("Fire"),
-	Splat = Handle:WaitForChild("Splat"),
 }
 
 ToolEquipped = false
@@ -221,26 +210,12 @@ function Activated()
 		return
 	end
 	local TargetPosition = MousePosition.Position
-	local SpawnPosition = (Handle.CFrame * CFrame.new(0, 0, -((Handle.Size.Z / 2) + (BasePaintBall.Size.Z / 2) + 0.5)))
+	local SpawnPosition = (Handle.CFrame * CFrame.new(0, 0, -((Handle.Size.Z / 2) + (BasePaintBall.Size.Z / 2) + 0)))
 	local Direction = CFrame.new(SpawnPosition.p, TargetPosition)
-	local Force = (Direction.lookVector * Velocity)
-	local Mass = (BasePaintBall:GetMass() * Gravity * 0.8)
 	
 	local PaintBall = BasePaintBall:Clone()
-	PaintBall.CanCollide = false
 	PaintBall.CFrame = CFrame.new(SpawnPosition.p, TargetPosition)
-	PaintBall.Velocity = Force
 	
-	local BodyForce = Create("BodyVelocity"){
-		maxForce = Vector3.new(Mass, Mass, Mass),
-		velocity = Force,
-		Parent = PaintBall,
-	}
-	local BodyGyro = Create("BodyGyro"){
-		maxTorque = Vector3.new(math.huge, math.huge, math.huge),
-		cframe = Direction,
-		Parent = PaintBall,
-	}
 	local Values = {
 		{Name = "Creator", Class = "ObjectValue", Value = Player},
 		{Name = "Damage", Class = "NumberValue", Value = Damage},
@@ -252,13 +227,10 @@ function Activated()
 			Parent = PaintBall,
 		}
 	end
-	local Splat = Sounds.Splat:Clone()
-	Splat.Pitch = (math.random(2500, 4000) * 0.001)
-	Splat.Parent = PaintBall
 	local ProjectileScriptCopy = ProjectileScript:Clone()
 	ProjectileScriptCopy.Disabled = false
 	ProjectileScriptCopy.Parent = PaintBall
-	Debris:AddItem(PaintBall, 10)
+	Debris:AddItem(PaintBall, 2.5)
 	PaintBall.Parent = game:GetService("Workspace")
 	Sounds.Fire:Play()
 	wait(FireRate)
@@ -303,7 +275,7 @@ Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX4631FE2BD53C415B82EBD2B718C84754">
+			<Item class="Script" referent="RBX00EA37C5C19B4558B06F93ED6F770D30">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -322,12 +294,50 @@ Creator = Projectile:WaitForChild("Creator")
 Damage = Projectile:WaitForChild("Damage")
 
 Sounds = {
-	Splat = Projectile:WaitForChild("Splat"),
+	Splat = script:WaitForChild("Splat"),
 }
 
 BaseUrl = "http://www.roblox.com/asset/?id="
 
-SplatImages = {259808772, 259808884, 259809010, 259809111, 259809167}
+BaseColor = BrickColor.new("New Yeller")
+
+BasePart = Create("Part"){
+	Shape = Enum.PartType.Block,
+	Material = Enum.Material.Plastic,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+	Anchored = false,
+}
+
+InkBlotch1 = BasePart:Clone()
+InkBlotch1.Size = Vector3.new(1, 0.2, 1)
+InkBlotch1Mesh = Create("SpecialMesh"){
+	Name = "Mesh",
+	MeshId = (BaseUrl .. "78575004"),
+	TextureId = "",
+	Scale = Vector3.new(0.75, 1, 0.75),
+	VertexColor = Vector3.new(1, 1, 1),
+	Offset = Vector3.new(0, 0, 0),
+	Parent = InkBlotch1,
+}
+
+InkBlotch2 = BasePart:Clone()
+InkBlotch2.Size = Vector3.new(1, 0.2, 1)
+InkBlotch2Mesh = Create("SpecialMesh"){
+	Name = "Mesh",
+	MeshId = (BaseUrl .. "153993912"),
+	TextureId = "",
+	Scale = Vector3.new(0.75, 1, 0.75),
+	VertexColor = Vector3.new(1, 1, 1),
+	Offset = Vector3.new(0, 0, 0),
+	Parent = InkBlotch2,
+}
+
+InkBlotches = {InkBlotch1, InkBlotch2}
 
 Rate = (1 / 60)
 
@@ -354,47 +364,42 @@ function UntagHumanoid(humanoid)
 	end
 end
 
-function SplatterScreen(Player)
-	if not Player or not Player:IsA("Player") then
-		return
+function CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.find(string.lower(String), string.lower(v)) then
+			return true
+		end
 	end
-	local PlayerGui = Player:FindFirstChild("PlayerGui")
-	if not PlayerGui then
-		return
-	end
-	local SplatGui = Create("ScreenGui"){
-		Name = "SplatGui",
-	}
-	local Size = ((math.random() * 0.5) + 0.5)
-	local Blob = Create("ImageLabel"){
-		Size = UDim2.new(Size, 0, Size, 0),
-		Position = UDim2.new((math.random() - (Size / 2)), 0, (math.random() - (Size / 2)), 0),
-		SizeConstraint = Enum.SizeConstraint.RelativeXX,
-		BackgroundTransparency = 1,
-		Image = (BaseUrl .. SplatImages[math.random(1, #SplatImages)]),
-		Rotation = math.random(0, 360),
-		Parent = SplatGui,
-	}
-	for i = 1, math.random(5, 10) do
-		local Size = ((math.random() * 0.3) + 0.375)
-		local Splat = Create("ImageLabel"){
-			Size = UDim2.new(Size, 0, Size, 0),
-			Position = UDim2.new((math.random() - (Size / 2)), 0, (math.random() - (Size / 2)), 0),
-			SizeConstraint = Enum.SizeConstraint.RelativeXX,
-			BackgroundTransparency = 1,
-			Image = (BaseUrl .. SplatImages[math.random(1, #SplatImages)]),
-			Rotation = math.random(0, 360),
-			Parent = SplatGui,
-		}
-		Debris:AddItem(Splat, (3 + (math.random() * 6)))
-		Splat.Parent = SplatGui
-	end
-	Debris:AddItem(SplatGui, 10)
-	SplatGui.Parent = PlayerGui
+	return false
 end
 
-function Touched(Hit)
-	if not Hit or not Hit.Parent or Hit.Name == Projectile.Name or IgnoreHit then
+function CheckIntangible(Hit)
+	local ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Bullet"}
+	if Hit and Hit.Parent then
+		if ((not Hit.CanCollide or CheckTableForString(ProjectileNames, Hit.Name)) and not Hit.Parent:FindFirstChild("Humanoid")) then
+			return true
+		end
+	end
+	return false
+end
+
+function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
+	local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+	if RayHit and CheckIntangible(RayHit) then
+		if DelayIfHit then
+			wait()
+		end
+		RayHit, RayPos, RayNormal = CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+	end
+	return RayHit, RayPos, RayNormal
+end
+
+function Touched(RayData)
+	local RayHit = RayData.RayHit
+	local RayPos = RayData.RayPos
+	local RayNormal = RayData.RayNormal
+	if not RayHit or not RayHit.Parent or RayHit.Name == Projectile.Name or not RayPos or not RayNormal or IgnoreHit then
 		return
 	end
 	local Player = Creator.Value
@@ -402,7 +407,7 @@ function Touched(Hit)
 		return
 	end
 	local Character = Player.Character
-	local character = Hit.Parent
+	local character = RayHit.Parent
 	if character:IsA("Hat") or character:IsA("Tool") then
 		character = character.Parent
 	end
@@ -410,19 +415,42 @@ function Touched(Hit)
 		return
 	end
 	local player = Players:GetPlayerFromCharacter(character)
-	if player == Player then
-		return
+	if player then
+		IgnoreHit = true
 	end
 	local humanoid = character:FindFirstChild("Humanoid")
 	if humanoid then
-		if not IsTeamMate(Player, player) and humanoid.Health > 0 then
-			if player then
-				SplatterScreen(player)
-			end
-			UntagHumanoid(humanoid)
-			TagHumanoid(humanoid, Player)
-			humanoid:TakeDamage(Damage.Value)
+		IgnoreHit = true
+	end
+	if not IgnoreHit then
+		if not RayHit.Anchored and RayHit:GetMass() <= 16 then
+			RayHit.BrickColor = BaseColor
+			RayHit.Reflectance = 0.25
 		end
+		local Ink = InkBlotches[math.random(1, #InkBlotches)]:Clone()
+		Ink.Name = "Effect"
+		Ink.BrickColor = BaseColor
+		Ink.Material = Enum.Material.Ice
+		Ink.Reflectance = 0.2
+		Ink.Size = Vector3.new((math.random(750, 1500) * 0.001), 0.2, (math.random(750, 1500) * 0.001))
+		Ink.Mesh.Scale = (Ink.Mesh.Scale * Vector3.new(Ink.Size.X, 0, Ink.Size.Z))
+		Ink.CanCollide = false
+		local Sound = Sounds.Splat:Clone()
+		Sound.Pitch = (math.random(2500, 4000) * 0.001)
+		Sound.Parent = Ink
+		local PartCFrame = CFrame.new(RayPos, (CFrame.new(RayPos) + RayNormal * 2).p) * CFrame.Angles(-(math.pi / 2), (math.random(-360, 360) * 0.01), 0)
+		PartCFrame = (PartCFrame * CFrame.new(0, (Ink.Size.Y / 4), 0))
+		local Weld = Create("Motor"){
+			Name = "Stick",
+			Part0 = Ink,
+			Part1 = RayHit,
+			C0 = PartCFrame:inverse(),
+			C1 = RayHit.CFrame:inverse(),
+			Parent = Ink,
+		}
+		Debris:AddItem(Ink, 5)
+		Ink.Parent = game:GetService("Workspace")
+		Sound:Play()
 	end
 	IgnoreHit = true
 	if Projectile and Projectile.Parent then
@@ -431,15 +459,34 @@ function Touched(Hit)
 	end
 end
 
-Projectile.Touched:connect(Touched)
-
-Delay(0.25, (function()
-	Projectile.CanCollide = true
-end))]]></ProtectedString>
+while not IgnoreHit do
+	local Player = Creator.Value
+	local Character
+	if Player and Player:IsA("Player") then
+		Character = Player.Character
+	end
+	local RayHit, RayPos, RayNormal = CastRay(Projectile.Position, Projectile.CFrame.lookVector, (Projectile.Size.Z * 4), {Character, Projectile}, false)
+	if RayHit then
+		Touched({RayHit = RayHit, RayPos = RayPos, RayNormal = RayNormal})
+	else
+		Projectile.CFrame = (Projectile.CFrame + Projectile.CFrame.lookVector * 3)
+	end
+	wait(Rate)
+end]]></ProtectedString>
 				</Properties>
+				<Item class="Sound" referent="RBX02B4231DD2F946B7AC80EB0D70F50D5C">
+					<Properties>
+						<bool name="Looped">false</bool>
+						<string name="Name">Splat</string>
+						<float name="Pitch">2.5</float>
+						<bool name="PlayOnRemove">false</bool>
+						<Content name="SoundId"><url>http://www.roblox.com/asset/?id=168192032</url></Content>
+						<float name="Volume">1</float>
+					</Properties>
+				</Item>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX733CC11EF16D48EDB464E2983748C5D7">
+		<Item class="LocalScript" referent="RBX9F5CD108A75E4F4BA96692B3D938E542">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -574,7 +621,7 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX454A65F0FE8A46C0A653DDC65C00F233">
+		<Item class="LocalScript" referent="RBX160416FDFCEA44B0B5B6D6E1C339368F">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -609,7 +656,7 @@ Tool.Equipped:connect(OnEquipped)
 Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX1EF10C2DC9364C97B39D9ACE6FFD917D">
+		<Item class="Camera" referent="RBX13B452439BB44321A777E6D6AE25977A">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
