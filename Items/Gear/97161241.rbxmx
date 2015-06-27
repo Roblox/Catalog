@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX21178CB5ECE5482DAE4AAF5239AF1FDE">
+	<Item class="Tool" referent="RBXDB5FAA319EC74F0CB00DA5855E7A873D">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=97180656</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX4F31DF3480BB447AA62ACFC3A2007164">
+		<Item class="Part" referent="RBX18BA8A950CE7493F8D0DFBA657E28D0D">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -80,9 +80,9 @@
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">1</float>
 				<Vector3 name="Velocity">
-					<X>1.09261264e-005</X>
-					<Y>0.00657704705</Y>
-					<Z>7.62182754e-006</Z>
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
 				</Vector3>
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
@@ -92,7 +92,7 @@
 					<Z>1.60000002</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBXF1AA0296F297484EBABDB6726165282D">
+			<Item class="Sound" referent="RBX9A0012CD96B6444DBE8590EF35EBBAEA">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Jump</string>
@@ -102,7 +102,7 @@
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="SpecialMesh" referent="RBX3A8741EFE4A640FBAFF84D04F6ECD8E3">
+			<Item class="SpecialMesh" referent="RBX8EBD076B7A6B41429743C79D76670C22">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -127,7 +127,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX63831DA0A6474724836F36C8053B7D41">
+			<Item class="Sound" referent="RBX14E12457C96F47BF86A58A387440FFF0">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">Hit</string>
@@ -138,529 +138,147 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX261DEF2F7E92406B86E7837D0199712B">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">BootsScript</string>
-				<ProtectedString name="Source">--Rescripted by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-
-Players = game:GetService(&quot;Players&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
-InsertService = game:GetService(&quot;InsertService&quot;)
-
-FreezePlayer = script:WaitForChild(&quot;FreezePlayer&quot;)
-RechargeGui = script:WaitForChild(&quot;RechargeGui&quot;)
-
-Damage = 60
-CoolDownTime = 9
-MaxJumpDistance = 60
-LastUse = 0
-PointsAlongJump = 18
-
-BasePart = Instance.new(&quot;Part&quot;)
-BasePart.Material = Enum.Material.Plastic
-BasePart.Shape = Enum.PartType.Block
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
-BasePart.Anchored = false
-BasePart.CanCollide = true
-BasePart.Locked = true
-
-BaseBoot = BasePart:Clone()
-BaseBoot.Name = &quot;Boot&quot;
-BaseBoot.Size = Vector3.new(1, 1, 1.6)
-BootMesh = Handle:WaitForChild(&quot;Mesh&quot;):Clone()
-BootMesh.Parent = BaseBoot
-
-Sounds = {
-&#9;Hit = Handle:WaitForChild(&quot;Hit&quot;),
-&#9;Jump = Handle:WaitForChild(&quot;Jump&quot;)
-}
-
-ToolEquipped = false
-
-ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ServerControl.Name = &quot;ServerControl&quot;
-ServerControl.Parent = Tool
-
-ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ClientControl.Name = &quot;ClientControl&quot;
-ClientControl.Parent = Tool
-
-Tool.Enabled = true
-
-function EquipBoots()
-&#9;UnequipBoots()
-&#9;local LeftLeg = Character:FindFirstChild(&quot;Left Leg&quot;)
-&#9;local RightLeg = Character:FindFirstChild(&quot;Right Leg&quot;)
-&#9;for i, v in pairs({LeftLeg, RightLeg}) do
-&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;local Boot = BaseBoot:Clone()
-&#9;&#9;&#9;Boot.Name = (((v == LeftLeg and &quot;Left&quot;) or &quot;Right&quot;) .. &quot;Boot&quot;)
-&#9;&#9;&#9;local Weld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;Weld.Part0 = Boot
-&#9;&#9;&#9;Weld.Part1 = v
-&#9;&#9;&#9;Weld.C0 = CFrame.new(0, 0.57, 0.19)
-&#9;&#9;&#9;Weld.Parent = v
-&#9;&#9;&#9;Boot.Parent = Tool
-&#9;&#9;end
-&#9;end
-end
-
-function UnequipBoots()
-&#9;for i, v in pairs(Tool:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) and (v.Name == &quot;LeftBoot&quot; or v.Name == &quot;RightBoot&quot;) then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-function PointOnCircle(OriginX, OriginZ, Radius, Theta)
-&#9;local x = OriginX + Radius * math.cos(Theta)
-&#9;local z = OriginZ + Radius * math.sin(Theta)
-&#9;return x, z
-end
-
-function SquishCharacter(character)
-&#9;local lowestY = math.huge
-&#9;&#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;local squishedPoint = child.CFrame.p - (child.Size * 0.4)
-&#9;&#9;&#9;if squishedPoint.Y &lt; lowestY then
-&#9;&#9;&#9;&#9;lowestY = squishedPoint.Y
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;if not lowestY then
-&#9;&#9;return
-&#9;end
-&#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;child.Anchored = true
-&#9;&#9;&#9;local origCFrame = child.CFrame
-&#9;&#9;&#9;local offsetY = origCFrame.p.Y - lowestY
-&#9;&#9;&#9;child.FormFactor = &quot;Custom&quot;
-&#9;&#9;&#9;if child.Name ~= &quot;Head&quot; then
-&#9;&#9;&#9;&#9;child.Size = child.Size * Vector3.new(1.6,0.2,1.6)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;child.CFrame = (origCFrame - Vector3.new(0, offsetY, 0))
-&#9;&#9;&#9;if child.Name == &quot;Torso&quot; then
-&#9;&#9;&#9;&#9;child.CFrame = child.CFrame + Vector3.new(0, 0.1, 0)
-&#9;&#9;&#9;end
-&#9;&#9;elseif child:IsA(&quot;CharacterMesh&quot;) then
-&#9;&#9;&#9;local bodyParts = character:GetChildren()
-&#9;&#9;&#9;local bodyPart
-&#9;&#9;&#9;for j = 1, #bodyParts do
-&#9;&#9;&#9;&#9;for word in string.gmatch(tostring(child.BodyPart), string.gsub(bodyParts[j].Name, &quot; &quot;, &quot;&quot;)) do
-&#9;&#9;&#9;&#9;&#9;if bodyParts[j]:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;bodyPart = bodyParts[j]
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if bodyPart and not bodyPart:FindFirstChild(&quot;Mesh&quot;) then
-&#9;&#9;&#9;&#9;local newMesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;newMesh.MeshId = &quot;http://www.roblox.com/asset/asset/?id=&quot; .. tostring(child.MeshId)
-&#9;&#9;&#9;&#9;newMesh.TextureId = &quot;http://www.roblox.com/asset/asset/?id=&quot; .. tostring(child.OverlayTextureId)
-&#9;&#9;&#9;&#9;if bodyPart.Name == &quot;Torso&quot; and tonumber(child.BaseTextureId) &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;newMesh.TextureId = &quot;http://www.roblox.com/asset/asset/?id=&quot; .. tostring(child.BaseTextureId)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;newMesh.Scale = Vector3.new(1, 0.2, 1)
-&#9;&#9;&#9;&#9;newMesh.Parent = bodyPart
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function Jump(destination, targetObject)
-&#9;local differenceVector = Torso.CFrame.p - destination
-&#9;local distance = differenceVector.magnitude
-&#9;local dirVector = differenceVector.unit
-&#9;local halfPoint = differenceVector / 2 + Torso.CFrame.p
-&#9;local arcedHalfPoint = dirVector:Cross(Vector3.new(0,1,0)):Cross(dirVector) * distance / 2 + halfPoint
-
-&#9;if distance &gt; MaxJumpDistance then
-&#9;&#9;if PlayerGui and PlayerGui:FindFirstChild(&quot;RechargeText&quot;) then
-&#9;&#9;&#9;PlayerGui:FindFirstChild(&quot;RechargeText&quot;).Text = &quot;Too Far Away!&quot;
-&#9;&#9;&#9;-- Refund your cooldown
-&#9;&#9;&#9;LastUse = 0
-&#9;&#9;end
-&#9;&#9;return
-&#9;end
-&#9;StartGuiRecharge()
-&#9;if targetObject and targetObject.Parent then
-&#9;&#9;local freezePlayerCopy = FreezePlayer:Clone()
-&#9;&#9;freezePlayerCopy.Disabled = false
-&#9;&#9;freezePlayerCopy.Parent = targetObject.Parent
-&#9;end
-
-&#9;local waypoints = {}
-&#9;local visitedWaypoints = {}
-&#9;for i = 1, PointsAlongJump do
-&#9;&#9;local objectZ, objectY = PointOnCircle(distance * 0.5, 0, distance * 0.5, math.pi - (math.pi / PointsAlongJump) * i)
-&#9;&#9;local nextPoint = CFrame.new(Torso.CFrame.p, destination):pointToWorldSpace(Vector3.new(0, objectY, -objectZ))
-&#9;&#9;local nextTargetPart = BasePart:Clone()
-&#9;&#9;nextTargetPart.BrickColor = BrickColor.new(&quot;Really red&quot;)
-&#9;&#9;nextTargetPart.Shape = Enum.PartType.Ball
-&#9;&#9;nextTargetPart.Size = Vector3.new(1, 1, 1)
-&#9;&#9;nextTargetPart.CanCollide = false
-&#9;&#9;nextTargetPart.Anchored = true
-&#9;&#9;nextTargetPart.CFrame = CFrame.new(nextPoint)
-&#9;&#9;nextTargetPart.Name = tostring(i)
-&#9;&#9;Debris:AddItem(nextTargetPart, 10)
-&#9;&#9;nextTargetPart.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;table.insert(waypoints, nextTargetPart)
-&#9;end
-&#9;Humanoid.PlatformStand = true
-&#9;Sounds.Jump:Play()
-&#9;local bodyPosition = Instance.new(&quot;BodyPosition&quot;)
-&#9;bodyPosition.maxForce = Vector3.new(16000, 16000, 16000)
-&#9;bodyPosition.P = 15000
-&#9;bodyPosition.D = 500
-&#9;bodyPosition.position = waypoints[1].CFrame.p
-&#9;for i = 1, #waypoints do
-&#9;&#9;local connection = waypoints[i].Touched:connect(
-&#9;&#9;&#9;function(part)
-&#9;&#9;&#9;&#9;if part.Parent == Character then
-&#9;&#9;&#9;&#9;&#9;-- Had to comment this because lua do not preserve The connection upvalue
-&#9;&#9;&#9;&#9;&#9;--connection:disconnect()
-&#9;&#9;&#9;&#9;&#9;if i ~= #waypoints and bodyPosition then
-&#9;&#9;&#9;&#9;&#9;&#9;bodyPosition.position = waypoints[i + 1].CFrame.p
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;bodyPosition:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;Humanoid.PlatformStand = false
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;if i == #waypoints then
-&#9;&#9;&#9;&#9;&#9;&#9;wait(0.2)
-&#9;&#9;&#9;&#9;&#9;&#9;if handleConn then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;handleConn:disconnect()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;visitedWaypoints[i] = true
-&#9;&#9;&#9;&#9;&#9;waypoints[i].Parent = nil--:Destroy()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;end
-
-&#9;Torso.CFrame = CFrame.new(Torso.CFrame.p, destination)
-
-&#9;local bootsTouched = false
-&#9;handleConn = Handle.Touched:connect(function(hit)
-&#9;&#9;if hit.Parent then 
-&#9;&#9;&#9;if bootsTouched then return end
-&#9;&#9;&#9;if hit.Parent:FindFirstChild(&quot;Humanoid&quot;) then
-&#9;&#9;&#9;&#9;if hit.Parent.Humanoid.Health &lt;= Damage then
-&#9;&#9;&#9;&#9;&#9;SquishCharacter(hit.Parent)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;hit.Parent.Humanoid:TakeDamage(Damage)
-&#9;&#9;&#9;&#9;Sounds.Hit:Play()
-&#9;&#9;&#9;&#9;handleConn:disconnect()
-&#9;&#9;&#9;&#9;bootsTouched = true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-
-&#9;Debris:AddItem(bodyPosition, CoolDownTime - 1)
-&#9;bodyPosition.Parent = Torso
-&#9;wait(CoolDownTime - 2)
-&#9;if Torso:FindFirstChild(&quot;BodyPosition&quot;) then
-&#9;&#9;Humanoid.PlatformStand = false
-&#9;end
-&#9;if handleConn then
-&#9;&#9;handleConn:disconnect()
-&#9;end
-end
-
-function StartGuiRecharge()
-&#9;if not RechargeGuiClone or not RechargeGuiClone.Parent then
-&#9;&#9;return
-&#9;end
-&#9;local Bar = RechargeGuiClone:FindFirstChild(&quot;Bar&quot;)
-&#9;local RechargeText = RechargeGuiClone:FindFirstChild(&quot;RechargeText&quot;)
-&#9;if not Bar or not RechargeText then
-&#9;&#9;return
-&#9;end
-&#9;local Backing = Bar:FindFirstChild(&quot;Backing&quot;)
-&#9;local Fill = Bar:FindFirstChild(&quot;Fill&quot;)
-&#9;if not Backing or not Fill then
-&#9;&#9;return
-&#9;end
-&#9;RechargeText.Text = &quot;Recharging...&quot;
-&#9;local TimeRemaining = math.min(CoolDownTime, tick() - LastUse)
-&#9;Fill.Size = UDim2.new((TimeRemaining / CoolDownTime), 0, 1, 0)
-&#9;Fill:TweenSize(UDim2.new(1, 0, 1, 0), &quot;Out&quot;, &quot;Linear&quot;, (CoolDownTime - TimeRemaining), false, (function()
-&#9;&#9;RechargeText.Text = &quot;Ready&quot;
-&#9;end))
-end
-
-function Activated(MouseData)
-&#9;local MouseTarget = MouseData.Target
-&#9;local character = MouseTarget.Parent
-&#9;if character:IsA(&quot;Hat&quot;) or character:IsA(&quot;Tool&quot;) then
-&#9;&#9;character = character.Parent
-&#9;end
-&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if (tick() - LastUse) &gt; CoolDownTime then
-&#9;&#9;LastUse = tick()
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;Jump(MouseTarget.Position, MouseTarget)
-&#9;&#9;else
-&#9;&#9;&#9;Jump(MouseData.Position)
-&#9;&#9;end
-&#9;end
-end
-
-function FindClosestTorso()
-&#9;local NearestTorso = nil
-&#9;local NearestDistance = MaxJumpDistance
-&#9;for i, v in pairs(Players:GetPlayers()) do
-&#9;&#9;if v:IsA(&quot;Player&quot;) and v ~= Player and v.Character then
-&#9;&#9;&#9;local character = v.Character
-&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;local torso = character:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and torso then
-&#9;&#9;&#9;&#9;local DistanceApart = (torso.Position - Torso.Position).magnitude
-&#9;&#9;&#9;&#9;if DistanceApart &lt; NearestDistance then
-&#9;&#9;&#9;&#9;&#9;NearestTorso = torso
-&#9;&#9;&#9;&#9;&#9;NearestDistance = DistanceApart
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return NearestTorso
-end
-
-function CheckIfAlive()
-&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
-end
-
-function Equipped()
-&#9;Character = Tool.Parent
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;if PlayerGui then
-&#9;&#9;RechargeGuiClone = RechargeGui:Clone()
-&#9;&#9;RechargeGuiClone.Parent = PlayerGui
-&#9;end
-&#9;EquipBoots()
-&#9;StartGuiRecharge()
-&#9;ToolEquipped = true
-end
-
-function Unequipped()
-&#9;if PlayerGui and PlayerGui.Parent then
-&#9;&#9;PlayerGui:Destroy()
-&#9;&#9;PlayerGui = nil
-&#9;end
-&#9;for i, v in pairs({JumpConnection, HandleConnection}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;UnequipBoots()
-&#9;ToolEquipped = false
-end
-
-function OnServerInvoke(player, mode, value)
-end
-
-function InvokeClient(Mode, Value)
-&#9;local ClientReturn = nil
-&#9;pcall(function()
-&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-&#9;end)
-&#9;return ClientReturn
-end
-
-for i, v in pairs(Tool:GetChildren()) do
-&#9;if v:IsA(&quot;BasePart&quot;) and v ~= Handle and v.Name == &quot;Laser&quot; then
-&#9;&#9;v:Destroy()
-&#9;end
-end
-
-ServerControl.OnServerInvoke = OnServerInvoke
-
-Tool.Activated:connect(Activated)
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX24228A27718B4BED82DDCB17EC7D0234">
+		<Item class="Animation" referent="RBXF026C4F363D54A9583CD75790308DE51">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?ID=208636716</url></Content>
 				<string name="Name">Idle</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX49DF1E9D6A2143AFB8D4481295DBDBE4">
+		<Item class="LocalScript" referent="RBXA5A2D8A44DCC4839AA4B28CBDAC52FE9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Handle = Tool:WaitForChild("Handle")
 
-Players = game:GetService(&quot;Players&quot;)
-RunService = game:GetService(&quot;RunService&quot;)
-
-Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+Players = game:GetService("Players")
 
 Animations = {}
 LocalObjects = {}
 
-ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
-ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
 
 ToolEquipped = false
 
 function SetAnimation(Mode, Value)
-&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == Value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
-&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
-&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
-&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == Value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if Mode == "PlayAnimation" and Value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == Value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+		table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+	elseif Mode == "StopAnimation" and Value then
+		for i, v in pairs(Animations) do
+			if v.Animation == Value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	end
 end
 
 function CheckIfAlive()
-&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
+	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0) and true) or false)
 end
 
 function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;ToolEquipped = true
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;PlayerMouse = Player:GetMouse()
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;local Target = Mouse.Target
-&#9;&#9;local Position = Mouse.Hit.p
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true, Target = Target, Position = Position})
-&#9;end)
-&#9;Mouse.Button1Up:connect(function()
-&#9;&#9;local Target = Mouse.Target
-&#9;&#9;local Position = Mouse.Hit.p
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false, Target = Target, Position = Position})
-&#9;end)
-&#9;Mouse.KeyDown:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
-&#9;end)
-&#9;Mouse.KeyUp:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
-&#9;end)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Player:GetMouse()
+	Mouse.Button1Down:connect(function()
+		local Target = Mouse.Target
+		local Position = Mouse.Hit.p
+		InvokeServer("MouseClick", {Down = true, Target = Target, Position = Position})
+	end)
+	Mouse.Button1Up:connect(function()
+		local Target = Mouse.Target
+		local Position = Mouse.Hit.p
+		InvokeServer("MouseClick", {Down = false, Target = Target, Position = Position})
+	end)
+	Mouse.KeyDown:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = true})
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = false})
+	end)
 end
 
 function Unequipped()
-&#9;ToolEquipped = false
-&#9;LocalObjects = {}
-&#9;for i, v in pairs(Animations) do
-&#9;&#9;if v and v.AnimationTrack then
-&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs({ObjectLocalTransparencyModifier}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;Animations = {}
+	ToolEquipped = false
+	LocalObjects = {}
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	Animations = {}
 end
 
 function InvokeServer(Mode, Value)
-&#9;pcall(function()
-&#9;&#9;local ServerReturn = ServerControl:InvokeServer(Mode, Value)
-&#9;&#9;return ServerReturn
-&#9;end)
+	local ServerReturn = nil
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(Mode, Value)
+	end)
+	return ServerReturn
 end
 
 function OnClientInvoke(Mode, Value)
-&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
-&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
-&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
-&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
-&#9;elseif Mode == &quot;PlaySound&quot; and Value then
-&#9;&#9;Value:Play()
-&#9;elseif Mode == &quot;StopSound&quot; and Value then
-&#9;&#9;Value:Stop()
-&#9;elseif Mode == &quot;MousePosition&quot; then
-&#9;&#9;return PlayerMouse.Hit.p
-&#9;elseif Mode == &quot;SetLocalTransparencyModifier&quot; and Value and ToolEquipped then
-&#9;&#9;pcall(function()
-&#9;&#9;&#9;local ObjectFound = false
-&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
-&#9;&#9;&#9;&#9;if v == Value then
-&#9;&#9;&#9;&#9;&#9;ObjectFound = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not ObjectFound then
-&#9;&#9;&#9;&#9;table.insert(LocalObjects, Value)
-&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
-&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
-&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
-&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ((not v.AutoUpdate and (v.Object.LocalTransparencyModifier == 1 or  v.Object.LocalTransparencyModifier == 0)) or v.AutoUpdate) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(LocalObjects, i)
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
+	if Mode == "PlayAnimation" and Value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", Value)
+	elseif Mode == "StopAnimation" and Value then
+		SetAnimation("StopAnimation", Value)
+	elseif Mode == "PlaySound" and Value then
+		Value:Play()
+	elseif Mode == "StopSound" and Value then
+		Value:Stop()
+	elseif Mode == "MousePosition" then
+		return PlayerMouse.Hit.p
+	end
 end
 
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)
-ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
+ClientControl.OnClientInvoke = OnClientInvoke]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBXDB60E0443DEF4F158B6976E2B1BBE6D2">
+		<Item class="Script" referent="RBXCD53A18381C449B8ACA546E1756C6AEC">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
-				<ProtectedString name="Source">--Rescripted by Luckymaxer
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Handle = Tool:WaitForChild("Handle")
 
-Players = game:GetService(&quot;Players&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
-InsertService = game:GetService(&quot;InsertService&quot;)
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+InsertService = game:GetService("InsertService")
 
-FreezePlayer = script:WaitForChild(&quot;FreezePlayer&quot;)
-RechargeGui = script:WaitForChild(&quot;RechargeGui&quot;)
+Functions = require(script:WaitForChild("Functions"))
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+FreezePlayer = script:WaitForChild("FreezePlayer")
+RechargeGui = script:WaitForChild("RechargeGui")
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Gravity = 196.20
 
 Damage = 60
 CoolDownTime = 9
@@ -668,452 +286,514 @@ MaxJumpDistance = 60
 LastUse = 0
 PointsAlongJump = 18
 
-BasePart = Instance.new(&quot;Part&quot;)
-BasePart.Material = Enum.Material.Plastic
-BasePart.Shape = Enum.PartType.Block
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
-BasePart.Anchored = false
-BasePart.CanCollide = true
-BasePart.Locked = true
+Rate = (1 / 60)
 
-BaseBoot = BasePart:Clone()
-BaseBoot.Name = &quot;Boot&quot;
-BaseBoot.Size = Vector3.new(1, 1, 1.6)
-BaseBoot.CanCollide = false
-BootMesh = Handle:WaitForChild(&quot;Mesh&quot;):Clone()
-BootMesh.Parent = BaseBoot
+BasePart = Create("Part"){
+	Material = Enum.Material.Plastic,
+	Shape = Enum.PartType.Block,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	Anchored = false,
+	CanCollide = true,
+	Locked = true,
+}
+
+BaseBoot = Functions.SetProperties({Object = BasePart:Clone(), Properties = {
+	Name = "Boot",
+	Size = Vector3.new(1, 1, 1.6),
+	CanCollide = false,
+}})
+
+BootMesh = Create("SpecialMesh"){
+	Name = "Mesh",
+	MeshType = Enum.MeshType.FileMesh,
+	MeshId = (BaseUrl .. "97180581"),
+	TextureId = (BaseUrl .. "97180639"),
+	Scale = Vector3.new(1, 1, 1),
+	VertexColor = Vector3.new(1, 1, 1),
+	Offset = Vector3.new(0, 0, 0),
+	Parent = BaseBoot,
+}
 
 Grips = {
-&#9;Equipped = CFrame.new(0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1),
-&#9;Unequipped = CFrame.new(1.5, 3.5, -1.3, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+	Equipped = CFrame.new(0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+	Unequipped = CFrame.new(1.5, 3.5, -1.3, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 }
 
 Animations = {
-&#9;Idle = {Animation = Tool:WaitForChild(&quot;Idle&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
+	Idle = {Animation = Tool:WaitForChild("Idle"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
 }
 
 Sounds = {
-&#9;Hit = Handle:WaitForChild(&quot;Hit&quot;),
-&#9;Jump = Handle:WaitForChild(&quot;Jump&quot;)
+	Hit = Handle:WaitForChild("Hit"),
+	Jump = Handle:WaitForChild("Jump")
 }
 
-Handle.Transparency = 1
+ServerControl = (Tool:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Tool,
+})
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Tool,
+})
+
 ToolEquipped = false
 
-ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ServerControl.Name = &quot;ServerControl&quot;
-ServerControl.Parent = Tool
-
-ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ClientControl.Name = &quot;ClientControl&quot;
-ClientControl.Parent = Tool
-
+Handle.Transparency = 1
 Tool.Enabled = true
 
-function TagHumanoid(humanoid, player)
-&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;Creator_Tag.Name = &quot;creator&quot;
-&#9;Creator_Tag.Value = player
-&#9;Debris:AddItem(Creator_Tag, 2)
-&#9;Creator_Tag.Parent = humanoid
-end
-
-function UntagHumanoid(humanoid)
-&#9;for i, v in pairs(humanoid:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
 function EquipBoots()
-&#9;UnequipBoots()
-&#9;local LeftLeg = Character:FindFirstChild(&quot;Left Leg&quot;)
-&#9;local RightLeg = Character:FindFirstChild(&quot;Right Leg&quot;)
-&#9;for i, v in pairs({LeftLeg, RightLeg}) do
-&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;local Boot = BaseBoot:Clone()
-&#9;&#9;&#9;Boot.Name = (((v == LeftLeg and &quot;Left&quot;) or &quot;Right&quot;) .. &quot;Boot&quot;)
-&#9;&#9;&#9;local Weld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;Weld.Part0 = Boot
-&#9;&#9;&#9;Weld.Part1 = v
-&#9;&#9;&#9;Weld.C0 = CFrame.new(0, 0.57, 0.19)
-&#9;&#9;&#9;Weld.Parent = Boot
-&#9;&#9;&#9;if i == LeftLeg then
-&#9;&#9;&#9;&#9;LeftBoot = Boot
-&#9;&#9;&#9;&#9;LeftWeld = Weld
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;RightBoot = Boot
-&#9;&#9;&#9;&#9;RightWeld = Weld
-&#9;&#9;&#9;end
-&#9;&#9;&#9;Boot.Parent = Tool
-&#9;&#9;end
-&#9;end
+	UnequipBoots()
+	local LeftLeg = Character:FindFirstChild("Left Leg")
+	local RightLeg = Character:FindFirstChild("Right Leg")
+	for i, v in pairs({LeftLeg, RightLeg}) do
+		if v and v.Parent then
+			local Boot = Functions.SetProperties({Object = BaseBoot:Clone(), Properties = {
+				Name = (((v == LeftLeg and "Left") or "Right") .. "Boot"),
+			}})
+			local Weld = Create("Weld"){
+				Part0 = Boot,
+				Part1 = v,
+				C0 = CFrame.new(0, 0.57, 0.19),
+				Parent = Boot,
+			}
+			if i == LeftLeg then
+				LeftBoot = Boot
+				LeftWeld = Weld
+			else
+				RightBoot = Boot
+				RightWeld = Weld
+			end
+			Boot.Parent = Tool
+		end
+	end
 end
 
 function CreateDisplayBoots()
-&#9;for i = 1, 2 do
-&#9;&#9;local Boot = BaseBoot:Clone()
-&#9;&#9;Boot.Name = (((i == 1 and &quot;Left&quot;) or &quot;Right&quot;) .. &quot;Boot&quot;)
-&#9;&#9;local Weld = Instance.new(&quot;Weld&quot;)
-&#9;&#9;Weld.Part0 = Boot
-&#9;&#9;Weld.Part1 = Handle
-&#9;&#9;Weld.C0 = CFrame.new(((((Boot.Size.X / 2) + (Handle.Size.X / 2)) / 2.5) * ((i == 1 and -1) or 1)), 0, 0.19)
-&#9;&#9;Weld.Parent = Boot
-&#9;&#9;Boot.Parent = Tool
-&#9;end
+	for i = 1, 2 do
+		local Boot = Functions.SetProperties({Object = BaseBoot:Clone(), Properties = {
+			Name = (((i == 1 and "Left") or "Right") .. "Boot")
+		}})
+		local Weld = Create("Weld"){
+			Part0 = Boot,
+			Part1 = Handle,
+			C0 = CFrame.new(((((Boot.Size.X / 2) + (Handle.Size.X / 2)) / 2.5) * ((i == 1 and -1) or 1)), 0, 0.19),
+			Parent = Boot,
+		}
+		Boot.Parent = Tool
+	end
 end
 
 function UnequipBoots()
-&#9;for i, v in pairs(Tool:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) and (v.Name == &quot;LeftBoot&quot; or v.Name == &quot;RightBoot&quot;) then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and (v.Name == "LeftBoot" or v.Name == "RightBoot") then
+			v:Destroy()
+		end
+	end
 end
 
 function PointOnCircle(OriginX, OriginZ, Radius, Theta)
-&#9;local x = OriginX + Radius * math.cos(Theta)
-&#9;local z = OriginZ + Radius * math.sin(Theta)
-&#9;return x, z
+	local x = OriginX + Radius * math.cos(Theta)
+	local z = OriginZ + Radius * math.sin(Theta)
+	return x, z
 end
 
 function SquishCharacter(character)
-&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if humanoid and humanoid.Health &gt; 0 then
-&#9;&#9;UntagHumanoid(humanoid)
-&#9;&#9;TagHumanoid(humanoid, Player)
-&#9;end
-&#9;local lowestY = math.huge
-&#9;&#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;local squishedPoint = child.CFrame.p - (child.Size * 0.4)
-&#9;&#9;&#9;if squishedPoint.Y &lt; lowestY then
-&#9;&#9;&#9;&#9;lowestY = squishedPoint.Y
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;if not lowestY then
-&#9;&#9;return
-&#9;end
-&#9;for _, child in pairs(character:GetChildren()) do
-&#9;&#9;if child:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;child.Anchored = true
-&#9;&#9;&#9;local origCFrame = child.CFrame
-&#9;&#9;&#9;local offsetY = origCFrame.p.Y - lowestY
-&#9;&#9;&#9;child.FormFactor = &quot;Custom&quot;
-&#9;&#9;&#9;if child.Name ~= &quot;Head&quot; then
-&#9;&#9;&#9;&#9;child.Size = child.Size * Vector3.new(1.6, 0.2, 1.6)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;child.CFrame = (origCFrame - Vector3.new(0, offsetY, 0))
-&#9;&#9;&#9;if child.Name == &quot;Torso&quot; then
-&#9;&#9;&#9;&#9;child.CFrame = child.CFrame + Vector3.new(0, 0.1, 0)
-&#9;&#9;&#9;end
-&#9;&#9;elseif child:IsA(&quot;CharacterMesh&quot;) then
-&#9;&#9;&#9;local BodyParts = character:GetChildren()
-&#9;&#9;&#9;local BodyPart
-&#9;&#9;&#9;for j = 1, #BodyParts do
-&#9;&#9;&#9;&#9;for word in string.gmatch(tostring(child.BodyPart), string.gsub(BodyParts[j].Name, &quot; &quot;, &quot;&quot;)) do
-&#9;&#9;&#9;&#9;&#9;if BodyParts[j]:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;BodyPart = BodyParts[j]
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if BodyPart and not BodyPart:FindFirstChild(&quot;Mesh&quot;) then
-&#9;&#9;&#9;&#9;local newMesh = Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;newMesh.MeshId = &quot;http://www.roblox.com/asset/?id=&quot; .. tostring(child.MeshId)
-&#9;&#9;&#9;&#9;newMesh.TextureId = ((child.OverlayTextureId ~= 0 and &quot;http://www.roblox.com/asset/?id=&quot; .. tostring(child.OverlayTextureId)) or &quot;&quot;)
-&#9;&#9;&#9;&#9;if BodyPart.Name == &quot;Torso&quot; and tonumber(child.BaseTextureId) &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;newMesh.TextureId = ((child.BaseTextureId ~= 0 and &quot;http://www.roblox.com/asset/?id=&quot; .. tostring(child.BaseTextureId)) or &quot;&quot;)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;newMesh.Scale = Vector3.new(1, 0.2, 1)
-&#9;&#9;&#9;&#9;newMesh.Parent = BodyPart
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function IsTeamMate(Player1, Player2)
-&#9;return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid and humanoid.Health > 0 then
+		Functions.UntagHumanoid(humanoid)
+		Functions.TagHumanoid(humanoid, Player)
+	end
+	local LowestY = math.huge
+	for i, v in pairs(character:GetChildren()) do
+		if v:IsA("BasePart") then
+			local SquishedPoint = (v.CFrame.p - (v.Size * 0.4))
+			if SquishedPoint.Y < LowestY then
+				LowestY = SquishedPoint.Y
+			end
+		end
+	end
+	if not LowestY then
+		return
+	end
+	for i, v in pairs(character:GetChildren()) do
+		if v:IsA("BasePart") then
+			local OriginalCFrame = v.CFrame
+			local OffsetY = (OriginalCFrame.p.Y - LowestY)
+			Functions.SetProperties({Object = v, Properties = {
+				Anchored = true,
+				FormFactor = Enum.FormFactor.Custom,
+			}})
+			local OrigCFrame = v.CFrame
+			local OffsetY = (OrigCFrame.p.Y - LowestY)
+			if v.Name ~= "Head" then
+				v.Size = v.Size * Vector3.new(1.6, 0.2, 1.6)
+			else
+				local Mesh = v:FindFirstChild("Mesh")
+				if Mesh then
+					Mesh.Scale = Vector3.new(Mesh.Scale.X, ((Mesh.Scale.Y / 4) * 3), Mesh.Scale.Z)
+				end
+			end
+			v.CFrame = (OrigCFrame - Vector3.new(0, OffsetY, 0))
+			if v.Name == "Torso" then
+				v.CFrame = v.CFrame + Vector3.new(0, 0.1, 0)
+			end
+		elseif v:IsA("CharacterMesh") then
+			local BodyParts = character:GetChildren()
+			local BodyPart
+			for ii, vv in pairs(character:GetChildren()) do
+				if vv:IsA("BasePart") and string.lower(string.gsub(v.BodyPart.Name, " ", "")) == string.lower(vv.Name) then
+					local MeshPresent = false
+					for iii, vvv in pairs(vv:GetChildren()) do
+						if vvv:IsA("DataModelMesh") then
+							MeshPresent = true
+						end
+					end
+					if not MeshPresent then
+						local NewMesh = Create("SpecialMesh"){
+							MeshId = (BaseUrl .. tostring(v.MeshId)),
+							TextureId = ((v.OverlayTextureId ~= 0 and (BaseUrl .. v.OverlayTextureId)) or (v.BaseTextureId ~= 0 and (BaseUrl .. v.BaseTextureId)) or ""),
+							Scale = Vector3.new(1, 0.2, 1),
+							Parent = vv,
+						}
+					end
+				end
+			end
+		end
+	end
 end
 
 function Jump(Destination, TargetObject)
-&#9;
-&#9;local differenceVector = Torso.CFrame.p - Destination
-&#9;local distance = differenceVector.magnitude
-&#9;local dirVector = differenceVector.unit
-&#9;local halfPoint = differenceVector / 2 + Torso.CFrame.p
-&#9;local arcedHalfPoint = dirVector:Cross(Vector3.new(0, 1, 0)):Cross(dirVector) * distance / 2 + halfPoint
+	
+	if not ToolEquipped or not CheckIfAlive() then
+		return
+	end	
+	
+	local DifferenceVector = (Torso.CFrame.p - Destination)
+	local Distance = DifferenceVector.Magnitude
+	local DirVector = DifferenceVector.Unit
+	local HalfPoint = ((DifferenceVector / 2) + Torso.Position)
+	local ArcedHalfPoint = (DirVector:Cross(Vector3.new(0, 1, 0)):Cross(DirVector) * (Distance / 2) + HalfPoint)
+	
+	if Distance > MaxJumpDistance then
+		if RechargeGuiClone and RechargeGuiClone.Parent then
+			local RechargeText = RechargeGuiClone:FindFirstChild("RechargeText")
+			if RechargeText then
+				RechargeText.Text = (RechargeText.Text .. " ")
+				RechargeText.Text = "Too Far Away!"
+				local TextChanged = false
+				local TextChangedConnection = RechargeText.Changed:connect(function(Property)
+					if Property == "Text" then
+						TextChanged = true
+					end
+				end)
+				Delay(2, (function()
+					if TextChangedConnection then
+						TextChangedConnection:disconnect()
+					end
+					if not TextChanged then
+						RechargeText.Text = "Ready"
+					end
+				end))
+			end
+		end
+		LastUse = 0
+		return
+	end
+	if ToolUnequipped then
+		ToolUnequipped:disconnect()
+	end
+	local CurrentlyEquipped = true
+	ToolUnequipped = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+		if ToolUnequipped then
+			ToolUnequipped:disconnect()
+		end
+	end)
+	
+	StartGuiRecharge()
+	if TargetObject and TargetObject.Parent then
+		local character = TargetObject.Parent
+		if character and character:IsA("Hat") then
+			character = character.Parent
+		end
+		local humanoid = character:FindFirstChild("Humanoid")
+		if humanoid then
+			local freezePlayerCopy = FreezePlayer:Clone()
+			freezePlayerCopy.Disabled = false
+			freezePlayerCopy.Parent = character
+		end
+	end
 
-&#9;if distance &gt; MaxJumpDistance then
-&#9;&#9;if PlayerGui and PlayerGui:FindFirstChild(&quot;RechargeText&quot;) then
-&#9;&#9;&#9;PlayerGui:FindFirstChild(&quot;RechargeText&quot;).Text = &quot;Too Far Away!&quot;
-&#9;&#9;&#9;LastUse = 0
-&#9;&#9;end
-&#9;&#9;return
-&#9;end
-&#9;StartGuiRecharge()
-&#9;if TargetObject and TargetObject.Parent then
-&#9;&#9;local character = TargetObject.Parent
-&#9;&#9;if character and character:IsA(&quot;Hat&quot;) then
-&#9;&#9;&#9;character = character.Parent
-&#9;&#9;end
-&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;local freezePlayerCopy = FreezePlayer:Clone()
-&#9;&#9;&#9;freezePlayerCopy.Disabled = false
-&#9;&#9;&#9;freezePlayerCopy.Parent = character
-&#9;&#9;end
-&#9;end
+	local WayPoints = {}
+	for i = 1, PointsAlongJump do
+		if not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
+			break
+		end
+		local ObjectZ, ObjectY = PointOnCircle((Distance / 2), 0, (Distance / 2), (math.pi - (math.pi / PointsAlongJump) * i))
+		local NextPoint = CFrame.new(Torso.CFrame.p, Destination):pointToWorldSpace(Vector3.new(0, ObjectY, -ObjectZ))
+		local NextTargetPart = Functions.SetProperties({Object = BasePart:Clone(), Properties = {
+			Name = tostring(i),
+			BrickColor = BrickColor.new("Really red"),
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(1, 1, 1),
+			CanCollide = false,
+			Anchored = true,
+			CFrame = CFrame.new(NextPoint),
+		}})
+		Debris:AddItem(NextTargetPart, 10)
+		NextTargetPart.Parent = game:GetService("Workspace")
+		table.insert(WayPoints, NextTargetPart)
+	end
+	Humanoid.PlatformStand = true
+	Sounds.Jump:Play()
+	local BodyPosition = Create("BodyPosition"){
+		Parent = Torso,
+	}
+	local BodyGyro = Create("BodyGyro"){
+		maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+		Parent = Torso,
+	}
+	local CurrentWayPoint = 1
+	Spawn(function()
+		BodyGyro.cframe = CFrame.new(Torso.CFrame.p, Destination)
+		while BodyPosition and BodyPosition.Parent and ToolEquipped and CurrentlyEquipped and CheckIfAlive() do
+			local WayPoint = WayPoints[CurrentWayPoint]
+			local ConnectedParts = Functions.GetAllConnectedParts(Torso)
+			local Mass = 0
+			for i, v in pairs(ConnectedParts) do
+				Mass = (Mass + v:GetMass())
+			end 
+			local Mass = (Mass * Gravity * math.huge)
+			BodyPosition.maxForce = Vector3.new(Mass, Mass, Mass)
+			BodyPosition.position = WayPoint.Position
+			if (Torso.Position - WayPoint.Position).magnitude <= 10 then
+				CurrentWayPoint = (CurrentWayPoint + 1)
+				if CurrentWayPoint > #WayPoints then
+					CurrentWayPoint = #WayPoints
+				end
+				if CurrentWayPoint == #WayPoints then
+					break
+				end
+			end
+			wait(Rate)
+		end
+		for i, v in pairs({BodyPosition, BodyGyro}) do
+			if v and v.Parent then
+				v:Destroy()
+			end
+		end
+		Humanoid.PlatformStand = false
+		wait(0.5)
+		for i, v in pairs({LeftBootConnection, RightBootConnection}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		for i, v in pairs(WayPoints) do
+			if v and v.Parent then
+				v:Destroy()
+			end
+		end
+	end)
+	
+	if ToolUnequipped then
+		ToolUnequipped:disconnect()
+	end
 
-&#9;local waypoints = {}
-&#9;for i = 1, PointsAlongJump do
-&#9;&#9;local objectZ, objectY = PointOnCircle(distance * 0.5, 0, distance * 0.5, math.pi - (math.pi / PointsAlongJump) * i)
-&#9;&#9;local nextPoint = CFrame.new(Torso.CFrame.p, Destination):pointToWorldSpace(Vector3.new(0, objectY, -objectZ))
-&#9;&#9;local nextTargetPart = BasePart:Clone()
-&#9;&#9;nextTargetPart.BrickColor = BrickColor.new(&quot;Really red&quot;)
-&#9;&#9;nextTargetPart.Shape = Enum.PartType.Ball
-&#9;&#9;nextTargetPart.Size = Vector3.new(1, 1, 1)
-&#9;&#9;nextTargetPart.CanCollide = false
-&#9;&#9;nextTargetPart.Anchored = true
-&#9;&#9;nextTargetPart.CFrame = CFrame.new(nextPoint)
-&#9;&#9;nextTargetPart.Name = tostring(i)
-&#9;&#9;Debris:AddItem(nextTargetPart, 10)
-&#9;&#9;nextTargetPart.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;table.insert(waypoints, nextTargetPart)
-&#9;end
-&#9;Humanoid.PlatformStand = true
-&#9;Sounds.Jump:Play()
-&#9;local BodyVelocity = Instance.new(&quot;BodyVelocity&quot;)
-&#9;BodyVelocity.maxForce = Vector3.new(math.huge, math.huge, math.huge)
-&#9;BodyVelocity.Parent = Torso
-&#9;local BodyGyro = Instance.new(&quot;BodyGyro&quot;)
-&#9;BodyGyro.maxTorque = Vector3.new(math.huge, math.huge, math.huge)
-&#9;BodyGyro.Parent = Torso
-&#9;local CurrentWayPoint = 1
-&#9;Spawn(function()
-&#9;&#9;BodyGyro.cframe = CFrame.new(Torso.CFrame.p, Destination)
-&#9;&#9;while BodyVelocity and BodyVelocity.Parent do
-&#9;&#9;&#9;wait(0.00001)
-&#9;&#9;&#9;local waypoint = waypoints[CurrentWayPoint]
-&#9;&#9;&#9;BodyVelocity.velocity = CFrame.new(Torso.Position, waypoint.Position).lookVector * 30
-&#9;&#9;&#9;if (Torso.Position - waypoint.Position).magnitude &lt;= 5 then
-&#9;&#9;&#9;&#9;CurrentWayPoint = (CurrentWayPoint + 1)
-&#9;&#9;&#9;&#9;if CurrentWayPoint &gt; #waypoints then
-&#9;&#9;&#9;&#9;&#9;CurrentWayPoint = #waypoints
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if CurrentWayPoint == #waypoints then
-&#9;&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;for i, v in pairs({BodyVelocity, BodyGyro}) do
-&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;v:Destroy()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;Humanoid.PlatformStand = false
-&#9;&#9;for i, v in pairs({LeftBootConnection, RightBootConnection}) do
-&#9;&#9;&#9;if v then
-&#9;&#9;&#9;&#9;v:disconnect()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;for i, v in pairs(waypoints) do
-&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;v:Destroy()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-
-&#9;local BootsTouched = false
-&#9;for i, v in pairs({LeftBoot, RightBoot}) do
-&#9;&#9;local Weld = ((v == LeftBoot and LeftWeld) or RightWeld)
-&#9;&#9;local connection = v.Touched:connect(function(Hit)
-&#9;&#9;&#9;if not Hit or not Hit.Parent or BootsTouched then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not Weld or not Weld.Parent or not Weld.Part0 or not Weld.Part1 or Weld.Part0 ~= v then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local character = Hit.Parent
-&#9;&#9;&#9;if character:IsA(&quot;Hat&quot;) then
-&#9;&#9;&#9;&#9;character = character.Parent
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if character == Character then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local player = Players:GetPlayerFromCharacter(character)
-&#9;&#9;&#9;if player and IsTeamMate(Player, player) then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;if not humanoid or humanoid.Health == 0 then
-&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;end
-&#9;&#9;&#9;BootsTouched = true
-&#9;&#9;&#9;if humanoid and humanoid.Health &lt;= Damage then
-&#9;&#9;&#9;&#9;SquishCharacter(character)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;UntagHumanoid(humanoid)
-&#9;&#9;&#9;TagHumanoid(humanoid, Player)
-&#9;&#9;&#9;humanoid:TakeDamage(Damage)
-&#9;&#9;&#9;Sounds.Hit:Play()
-&#9;&#9;&#9;for i, v in pairs({LeftBootConnection, RightBootConnection}) do
-&#9;&#9;&#9;&#9;if v then
-&#9;&#9;&#9;&#9;&#9;v:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;if v == LeftBoot then
-&#9;&#9;&#9;LeftBootConnection = connection
-&#9;&#9;else
-&#9;&#9;&#9;RightBootConnection = connection
-&#9;&#9;end
-&#9;end
-&#9;local duration = (CoolDownTime - 1)
-&#9;Debris:AddItem(BodyVelocity, duration)
-&#9;Debris:AddItem(BodyGyro, duration)
-&#9;wait(duration - 1)
-&#9;if Torso:FindFirstChild(&quot;BodyVelocity&quot;) then
-&#9;&#9;Humanoid.PlatformStand = false
-&#9;end
-&#9;for i, v in pairs({LeftBootConnection, RightBootConnection}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
+	local BootsTouched = false
+	for i, v in pairs({LeftBoot, RightBoot}) do
+		local Weld = ((v == LeftBoot and LeftWeld) or RightWeld)
+		local connection = v.Touched:connect(function(Hit)
+			if not Hit or not Hit.Parent or CurrentWayPoint < (#WayPoints - 1) or BootsTouched or not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
+				return
+			end
+			if not Weld or not Weld.Parent or not Weld.Part0 or not Weld.Part1 or Weld.Part0 ~= v then
+				return
+			end
+			local character = Hit.Parent
+			if character:IsA("Hat") then
+				character = character.Parent
+			end
+			if character == Character then
+				return
+			end
+			local player = Players:GetPlayerFromCharacter(character)
+			if player and Functions.IsTeamMate(Player, player) then
+				return
+			end
+			local humanoid = character:FindFirstChild("Humanoid")
+			if not humanoid or humanoid.Health == 0 then
+				return
+			end
+			BootsTouched = true
+			if humanoid and humanoid.Health <= Damage then
+				SquishCharacter(character)
+			end
+			Functions.UntagHumanoid(humanoid)
+			Functions.TagHumanoid(humanoid, Player)
+			humanoid:TakeDamage(Damage)
+			Sounds.Hit:Play()
+			for i, v in pairs({LeftBootConnection, RightBootConnection}) do
+				if v then
+					v:disconnect()
+				end
+			end
+		end)
+		if v == LeftBoot then
+			LeftBootConnection = connection
+		else
+			RightBootConnection = connection
+		end
+	end
+	Debris:AddItem(BodyPosition, CoolDownTime)
+	Debris:AddItem(BodyGyro, CoolDownTime)
+	wait(CoolDownTime)
+	if CheckIfAlive() then
+		Humanoid.PlatformStand = false
+	end
+	for i, v in pairs({LeftBootConnection, RightBootConnection}) do
+		if v then
+			v:disconnect()
+		end
+	end
 end
 
 function StartGuiRecharge()
-&#9;if not RechargeGuiClone or not RechargeGuiClone.Parent then
-&#9;&#9;return
-&#9;end
-&#9;local Bar = RechargeGuiClone:FindFirstChild(&quot;Bar&quot;)
-&#9;local RechargeText = RechargeGuiClone:FindFirstChild(&quot;RechargeText&quot;)
-&#9;if not Bar or not RechargeText then
-&#9;&#9;return
-&#9;end
-&#9;local Backing = Bar:FindFirstChild(&quot;Backing&quot;)
-&#9;local Fill = Bar:FindFirstChild(&quot;Fill&quot;)
-&#9;if not Backing or not Fill then
-&#9;&#9;return
-&#9;end
-&#9;RechargeText.Text = &quot;Recharging...&quot;
-&#9;local TimeRemaining = math.min(CoolDownTime, tick() - LastUse)
-&#9;Fill.Size = UDim2.new((TimeRemaining / CoolDownTime), 0, 1, 0)
-&#9;Fill:TweenSize(UDim2.new(1, 0, 1, 0), &quot;Out&quot;, &quot;Linear&quot;, (CoolDownTime - TimeRemaining), false, (function()
-&#9;&#9;RechargeText.Text = &quot;Ready&quot;
-&#9;end))
+	if not RechargeGuiClone or not RechargeGuiClone.Parent then
+		return
+	end
+	local Bar = RechargeGuiClone:FindFirstChild("Bar")
+	local RechargeText = RechargeGuiClone:FindFirstChild("RechargeText")
+	if not Bar or not RechargeText then
+		return
+	end
+	local Backing = Bar:FindFirstChild("Backing")
+	local Fill = Bar:FindFirstChild("Fill")
+	if not Backing or not Fill then
+		return
+	end
+	RechargeText.Text = "Recharging..."
+	local TimeRemaining = math.min(CoolDownTime, tick() - LastUse)
+	Fill.Size = UDim2.new((TimeRemaining / CoolDownTime), 0, 1, 0)
+	Fill:TweenSize(UDim2.new(1, 0, 1, 0), "Out", "Linear", (CoolDownTime - TimeRemaining), false, (function()
+		RechargeText.Text = "Ready"
+	end))
 end
 
 function FindClosestTorso()
-&#9;local NearestTorso = nil
-&#9;local NearestDistance = MaxJumpDistance
-&#9;for i, v in pairs(Players:GetPlayers()) do
-&#9;&#9;if v:IsA(&quot;Player&quot;) and v ~= Player and v.Character then
-&#9;&#9;&#9;local character = v.Character
-&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;local torso = character:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and torso then
-&#9;&#9;&#9;&#9;local DistanceApart = (torso.Position - Torso.Position).magnitude
-&#9;&#9;&#9;&#9;if DistanceApart &lt; NearestDistance then
-&#9;&#9;&#9;&#9;&#9;NearestTorso = torso
-&#9;&#9;&#9;&#9;&#9;NearestDistance = DistanceApart
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;return NearestTorso
+	local NearestTorso = nil
+	local NearestDistance = MaxJumpDistance
+	for i, v in pairs(Players:GetPlayers()) do
+		if v:IsA("Player") and v ~= Player and v.Character then
+			local character = v.Character
+			local humanoid = character:FindFirstChild("Humanoid")
+			local torso = character:FindFirstChild("Torso")
+			if humanoid and humanoid.Health > 0 and torso then
+				local DistanceApart = (torso.Position - Torso.Position).magnitude
+				if DistanceApart < NearestDistance then
+					NearestTorso = torso
+					NearestDistance = DistanceApart
+				end
+			end
+		end
+	end
+	return NearestTorso
 end
 
 function Activated(MouseData)
-&#9;if not Tool.Enabled or not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;local MouseTarget = MouseData.Target
-&#9;if not MouseTarget or not MouseTarget.Parent then
-&#9;&#9;return
-&#9;end
-&#9;local character = MouseTarget.Parent
-&#9;if character:IsA(&quot;Hat&quot;) or character:IsA(&quot;Tool&quot;) then
-&#9;&#9;character = character.Parent
-&#9;end
-&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if (tick() - LastUse) &gt; CoolDownTime then
-&#9;&#9;LastUse = tick()
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;Jump(MouseData.Position, MouseTarget)
-&#9;&#9;else
-&#9;&#9;&#9;Jump(MouseData.Position)
-&#9;&#9;end
-&#9;end
+	if not Tool.Enabled or not CheckIfAlive() then
+		return
+	end
+	local MouseTarget = MouseData.Target
+	if not MouseTarget or not MouseTarget.Parent then
+		return
+	end
+	local character = MouseTarget.Parent
+	if character:IsA("Hat") or character:IsA("Tool") then
+		character = character.Parent
+	end
+	local humanoid = character:FindFirstChild("Humanoid")
+	if (tick() - LastUse) > CoolDownTime then
+		LastUse = tick()
+		if humanoid then
+			Jump(MouseData.Position, MouseTarget)
+		else
+			Jump(MouseData.Position)
+		end
+	end
 end
 
 function CheckIfAlive()
-&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
 end
 
 function Equipped()
-&#9;Character = Tool.Parent
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;if PlayerGui then
-&#9;&#9;RechargeGuiClone = RechargeGui:Clone()
-&#9;&#9;RechargeGuiClone.Parent = PlayerGui
-&#9;end
-&#9;Tool.Grip = Grips.Equipped
-&#9;Spawn(EquipBoots)
-&#9;Spawn(StartGuiRecharge)
-&#9;Spawn(function()
-&#9;&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Idle)
-&#9;end)
-&#9;ToolEquipped = true
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	Player = Players:GetPlayerFromCharacter(Character)
+	PlayerGui = Player:FindFirstChild("PlayerGui")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		if PlayerGui then
+			RechargeGuiClone = RechargeGui:Clone()
+			RechargeGuiClone.Parent = PlayerGui
+		end
+		Spawn(EquipBoots)
+		Spawn(StartGuiRecharge)
+		Spawn(function()
+			InvokeClient("PlayAnimation", Animations.Idle)
+		end)
+	end)
+	Tool.Grip = Grips.Equipped
+	ToolEquipped = true
 end
 
 function Unequipped()
-&#9;Tool.Grip = Grips.Unequipped
-&#9;if RechargeGuiClone and RechargeGuiClone.Parent then
-&#9;&#9;RechargeGuiClone:Destroy()
-&#9;end
-&#9;for i, v in pairs({LeftBootConnection, RightBootConnection}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;Spawn(function()
-&#9;&#9;InvokeClient(&quot;StopAnimation&quot;, Animations.Idle)
-&#9;end)
-&#9;Spawn(UnequipBoots)
-&#9;Spawn(CreateDisplayBoots)
-&#9;ToolEquipped = false
+	Tool.Grip = Grips.Unequipped
+	Spawn(function()
+		if RechargeGuiClone and RechargeGuiClone.Parent then
+			RechargeGuiClone:Destroy()
+		end
+		for i, v in pairs({LeftBootConnection, RightBootConnection}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		Spawn(function()
+			InvokeClient("StopAnimation", Animations.Idle)
+		end)
+		Spawn(UnequipBoots)
+		Spawn(CreateDisplayBoots)
+	end)
+	ToolEquipped = false
 end
 
 function OnServerInvoke(player, mode, value)
-&#9;if player ~= Player or not ToolEquipped or not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;if mode == &quot;MouseClick&quot; then
-&#9;&#9;local Down = value.Down
-&#9;&#9;if Down then
-&#9;&#9;&#9;Activated({Target = value.Target, Position = value.Position})
-&#9;&#9;end
-&#9;end
+	if player ~= Player or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	if mode == "MouseClick" then
+		local Down = value.Down
+		if Down then
+			Activated({Target = value.Target, Position = value.Position})
+		end
+	end
 end
 
 function InvokeClient(Mode, Value)
-&#9;local ClientReturn = nil
-&#9;pcall(function()
-&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-&#9;end)
-&#9;return ClientReturn
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
 end
 
 UnequipBoots()
@@ -1122,39 +802,38 @@ CreateDisplayBoots()
 ServerControl.OnServerInvoke = OnServerInvoke
 
 Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)
-</ProtectedString>
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX9B9A75323B49473EBC28F7FBB26FADA6">
+			<Item class="Script" referent="RBX61D674C7B12E4A29B5B0282989F14E72">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">FreezePlayer</string>
-					<ProtectedString name="Source">--Fixed by Luckymaxer
+					<ProtectedString name="Source"><![CDATA[--Fixed by Luckymaxer
 
 local MyCharacter = script.Parent
-local MyHumanoid = MyCharacter:FindFirstChild(&quot;Humanoid&quot;)
-local MyTorso = MyCharacter:FindFirstChild(&quot;Torso&quot;)
+local MyHumanoid = MyCharacter:FindFirstChild("Humanoid")
+local MyTorso = MyCharacter:FindFirstChild("Torso")
 
 if MyTorso and MyHumanoid then
-&#9;MyTorso.Anchored = true
-&#9;MyHumanoid.WalkSpeed = 0
-&#9;wait(2.5)
-&#9;if MyHumanoid.Health &gt; 0 then
-&#9;&#9;MyTorso.Anchored = false
-&#9;&#9;MyHumanoid.WalkSpeed = 16
-&#9;end
+	MyTorso.Anchored = true
+	MyHumanoid.WalkSpeed = 0
+	wait(2.5)
+	if MyHumanoid.Health > 0 then
+		MyTorso.Anchored = false
+		MyHumanoid.WalkSpeed = 16
+	end
 end
 
 script:Destroy()
-</ProtectedString>
+]]></ProtectedString>
 				</Properties>
 			</Item>
-			<Item class="ScreenGui" referent="RBXFB2D0DDD3C4B4B81AF821245984AA8C4">
+			<Item class="ScreenGui" referent="RBXAAE31508F054493587F7D38519F97BCC">
 				<Properties>
 					<string name="Name">RechargeGui</string>
 				</Properties>
-				<Item class="Frame" referent="RBXBFBCEE59DAEB4EA5BC5A6CB7DB75D67B">
+				<Item class="Frame" referent="RBX9AD2480E316A4FDEA1B2755D8CC1DDA1">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Color3 name="BackgroundColor3">4288914085</Color3>
@@ -1164,6 +843,10 @@ script:Destroy()
 						<bool name="ClipsDescendants">false</bool>
 						<bool name="Draggable">false</bool>
 						<string name="Name">Bar</string>
+						<Ref name="NextSelectionDown">null</Ref>
+						<Ref name="NextSelectionLeft">null</Ref>
+						<Ref name="NextSelectionRight">null</Ref>
+						<Ref name="NextSelectionUp">null</Ref>
 						<UDim2 name="Position">
 							<XS>0.5</XS>
 							<XO>-100</XO>
@@ -1182,7 +865,7 @@ script:Destroy()
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">4</int>
 					</Properties>
-					<Item class="Frame" referent="RBX3C04367A44BB49EC91147A0E0F94D98B">
+					<Item class="Frame" referent="RBX4D94840F62F3492B9B2A6C7ECA3C6C49">
 						<Properties>
 							<bool name="Active">false</bool>
 							<Color3 name="BackgroundColor3">4278255360</Color3>
@@ -1192,6 +875,10 @@ script:Destroy()
 							<bool name="ClipsDescendants">false</bool>
 							<bool name="Draggable">false</bool>
 							<string name="Name">Fill</string>
+							<Ref name="NextSelectionDown">null</Ref>
+							<Ref name="NextSelectionLeft">null</Ref>
+							<Ref name="NextSelectionRight">null</Ref>
+							<Ref name="NextSelectionUp">null</Ref>
 							<UDim2 name="Position">
 								<XS>0</XS>
 								<XO>0</XO>
@@ -1211,7 +898,7 @@ script:Destroy()
 							<int name="ZIndex">5</int>
 						</Properties>
 					</Item>
-					<Item class="Frame" referent="RBX40DE10A406BC40958BEE6D121478C3F3">
+					<Item class="Frame" referent="RBXAE6ED592499A44F7A2EB8556E89C1025">
 						<Properties>
 							<bool name="Active">false</bool>
 							<Color3 name="BackgroundColor3">4278190080</Color3>
@@ -1221,6 +908,10 @@ script:Destroy()
 							<bool name="ClipsDescendants">false</bool>
 							<bool name="Draggable">false</bool>
 							<string name="Name">Backing</string>
+							<Ref name="NextSelectionDown">null</Ref>
+							<Ref name="NextSelectionLeft">null</Ref>
+							<Ref name="NextSelectionRight">null</Ref>
+							<Ref name="NextSelectionUp">null</Ref>
 							<UDim2 name="Position">
 								<XS>0</XS>
 								<XO>0</XO>
@@ -1241,7 +932,7 @@ script:Destroy()
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="TextLabel" referent="RBXA259921CFBFE4E6384A4BE923E22C735">
+				<Item class="TextLabel" referent="RBX577F6D545E20440EB3290DA768209949">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Color3 name="BackgroundColor3">4288914085</Color3>
@@ -1253,6 +944,10 @@ script:Destroy()
 						<token name="Font">2</token>
 						<token name="FontSize">6</token>
 						<string name="Name">RechargeText</string>
+						<Ref name="NextSelectionDown">null</Ref>
+						<Ref name="NextSelectionLeft">null</Ref>
+						<Ref name="NextSelectionRight">null</Ref>
+						<Ref name="NextSelectionUp">null</Ref>
 						<UDim2 name="Position">
 							<XS>0.5</XS>
 							<XO>-200</XO>
@@ -1281,8 +976,156 @@ script:Destroy()
 					</Properties>
 				</Item>
 			</Item>
+			<Item class="ModuleScript" referent="RBXA3DDD1809F764213A772EB8A52851F90">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Functions</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Ray", "Bullet", "ParticlePart"}
+
+Functions = {
+	
+	CheckTableForString = (function(Table, String)
+		for i, v in pairs(Table) do
+			if string.lower(v) == string.lower(String) then
+				return true
+			end
+		end
+		return false
+	end),
+
+	CheckIntangible = (function(Hit)
+		if Hit and Hit.Parent then
+			if (Hit.Transparency >= 1 and not Hit.CanCollide) or Functions.CheckTableForString(ProjectileNames, Hit.Name) then
+				return true
+			end
+			local ObjectParent = Hit.Parent
+			local Character = ObjectParent.Parent
+			local Humanoid = Character:FindFirstChild("Humanoid")
+			if Humanoid and Humanoid.Health > 0 and ObjectParent:IsA("Hat") then
+				return true
+			end
+		end
+		return false
+	end),
+	
+	CastRay = (function(StartPos, Vec, Length, Ignore, DelayIfHit)
+		local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+		if RayHit and Functions.CheckIntangible(RayHit) then
+			if DelayIfHit then
+				wait()
+			end
+			RayHit, RayPos, RayNormal = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+		end
+		return RayHit, RayPos, RayNormal
+	end),
+
+	IsTeamMate = (function(Player1, Player2)
+		return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+	end),
+
+	TagHumanoid = (function(humanoid, player)
+		local Creator_Tag = Instance.new("ObjectValue")
+		Creator_Tag.Name = "creator"
+		Creator_Tag.Value = player
+		Debris:AddItem(Creator_Tag, 2)
+		Creator_Tag.Parent = humanoid
+	end),
+
+	UntagHumanoid = (function(humanoid)
+		for i, v in pairs(humanoid:GetChildren()) do
+			if v:IsA("ObjectValue") and v.Name == "creator" then
+				v:Destroy()
+			end
+		end
+	end),
+	
+	GetAllConnectedParts = (function(Object)
+		local Parts = {}
+		local function GetConnectedParts(Object)
+			for i, v in pairs(Object:GetConnectedParts()) do
+				local Ignore = false
+				for ii, vv in pairs(Parts) do
+					if v == vv then
+						Ignore = true
+					end
+				end
+				if not Ignore then
+					table.insert(Parts, v)
+					GetConnectedParts(v)
+				end
+			end
+		end
+		GetConnectedParts(Object)
+		return Parts
+	end),
+	
+	GetTotalParts = (function(MaxParts, PossibleParts, Parts)
+		if MaxParts < PossibleParts then
+			return MaxParts
+		elseif Parts >= MaxParts then
+			return 0
+		elseif MaxParts >= PossibleParts then
+			local PartCount = (MaxParts - PossibleParts)
+			if Parts <= MaxParts then
+				PartCount = (MaxParts - Parts)
+				if PartCount > PossibleParts then
+					return PossibleParts
+				else
+					return PartCount
+				end
+			elseif PartCount >= PossibleParts then
+				return PossibleParts
+			else
+				return PartCount
+			end
+		end
+	end),
+
+	GetParts = (function(Region, MaxParts, Ignore)
+		local Parts = {}
+		local RerunFailed = false
+		while #Parts < MaxParts and not RerunFailed do
+			local Region = Region
+			local PossibleParts = Functions.GetTotalParts(MaxParts, 100, #Parts)
+			local PartsNearby = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region, Ignore, PossibleParts)
+			if #PartsNearby == 0 then
+				RerunFailed = true
+			else
+				for i, v in pairs(PartsNearby) do
+					table.insert(Parts, v)
+					table.insert(Ignore, v)
+				end
+			end
+		end
+		return Parts
+	end),
+	
+	SetProperties = (function(Table)
+		local Object = Table.Object
+		local Properties = Table.Properties
+		if not Object or not Properties then
+			return
+		end
+		for i, v in pairs(Properties) do
+			pcall(function()
+				Object[i] = v
+			end)
+		end
+		return Object
+	end),
+	
+}
+
+return Functions]]></ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Part" referent="RBX3C5F7BBA4360412AA712924ED26C91D1">
+		<Item class="Part" referent="RBXF23232E9315945E19469778DE38FD0C7">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -1338,9 +1181,9 @@ script:Destroy()
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
-					<X>-0.189989075</X>
-					<Y>0.796577096</Y>
-					<Z>-0.599992394</Z>
+					<X>-0.189999998</X>
+					<Y>0.790000021</Y>
+					<Z>-0.600000024</Z>
 				</Vector3>
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
@@ -1350,7 +1193,7 @@ script:Destroy()
 					<Z>1.60000002</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXB115C45F7DAC4B838F671A9DA0B85224">
+			<Item class="SpecialMesh" referent="RBX75EA97F91E3F48B5B1CE6B9335817BFE">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -1375,7 +1218,7 @@ script:Destroy()
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBXC74747B165F040ADA32DF40360EE8EC7">
+			<Item class="Weld" referent="RBX78373266E0EB4F64B5B24AC1162568C5">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-0.600000024</X>
@@ -1406,12 +1249,12 @@ script:Destroy()
 						<R22>1</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX3C5F7BBA4360412AA712924ED26C91D1</Ref>
-					<Ref name="Part1">RBX4F31DF3480BB447AA62ACFC3A2007164</Ref>
+					<Ref name="Part0">RBXF23232E9315945E19469778DE38FD0C7</Ref>
+					<Ref name="Part1">RBX18BA8A950CE7493F8D0DFBA657E28D0D</Ref>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX78B36B082DD74FA89AA5F5C999BB2261">
+		<Item class="Part" referent="RBXE9F7B70FB59C47C88ADA64B5BCFD7D5B">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -1467,9 +1310,9 @@ script:Destroy()
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
-					<X>-0.189989075</X>
-					<Y>-0.403422982</Y>
-					<Z>0.600007653</Z>
+					<X>-0.189999998</X>
+					<Y>-0.410000026</Y>
+					<Z>0.600000024</Z>
 				</Vector3>
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
@@ -1479,7 +1322,7 @@ script:Destroy()
 					<Z>1.60000002</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX8FF9A755063A4070B74824017C3CFDD0">
+			<Item class="SpecialMesh" referent="RBX093BC0DE65184E07AD7901FC544F90FD">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -1504,7 +1347,7 @@ script:Destroy()
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX3E5E0A22BEB8409991C8CACF50D8E41E">
+			<Item class="Weld" referent="RBX0C7A4C0F7ED6417A80C072B497BD7FA1">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0.600000024</X>
@@ -1535,30 +1378,30 @@ script:Destroy()
 						<R22>1</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX78B36B082DD74FA89AA5F5C999BB2261</Ref>
-					<Ref name="Part1">RBX4F31DF3480BB447AA62ACFC3A2007164</Ref>
+					<Ref name="Part0">RBXE9F7B70FB59C47C88ADA64B5BCFD7D5B</Ref>
+					<Ref name="Part1">RBX18BA8A950CE7493F8D0DFBA657E28D0D</Ref>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBXD83F5423391D4A55BE896F4609EADF3F">
+		<Item class="Camera" referent="RBXA790674274F049718EB2347BECC4C0CA">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">5</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>1.60924757</X>
-					<Y>1.03490019</Y>
-					<Z>-2.22877669</Z>
-					<R00>-0.788501203</R00>
-					<R01>-0.160112038</R01>
-					<R02>0.593826592</R02>
-					<R10>7.4505806e-009</R10>
-					<R11>0.965519547</R11>
-					<R12>0.260330707</R12>
-					<R20>-0.615033269</R20>
-					<R21>0.20527108</R21>
-					<R22>-0.76131326</R22>
+					<X>1.52219069</X>
+					<Y>1.13238978</Y>
+					<Z>-2.25789022</Z>
+					<R00>-0.813684404</R00>
+					<R01>-0.177569434</R01>
+					<R02>0.553522229</R02>
+					<R10>1.4901163e-008</R10>
+					<R11>0.952203035</R11>
+					<R12>0.305465877</R12>
+					<R20>-0.581306994</R20>
+					<R21>0.248552829</R21>
+					<R22>-0.774792671</R22>
 				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
+				<float name="FieldOfView">65</float>
 				<CoordinateFrame name="Focus">
 					<X>0.326605201</X>
 					<Y>0.47259593</Y>
