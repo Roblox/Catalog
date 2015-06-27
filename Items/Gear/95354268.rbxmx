@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX966947F10B9E4BA6AA616B72C5F5B15D">
+	<Item class="Tool" referent="RBXA6B7660B1CCB47F0A1183F2AF710AE93">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -24,7 +24,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=115302207</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX93ACCBA6692B4DF9B06F19A3AEB35994">
+		<Item class="Script" referent="RBXCDD9D412612A4F21A8EDD1E52F5CB577">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -38,66 +38,63 @@ Players = game:GetService("Players")
 Debris = game:GetService("Debris")
 InsertService = game:GetService("InsertService")
 
-TelamonAI = script:WaitForChild("TelamonAI")
-CreatorTag = TelamonAI:WaitForChild("creator")
+AIScript = script:WaitForChild("AIScript")
+RemoverScript = script:WaitForChild("RemoverScript")
+
+Functions = require(script:WaitForChild("Functions"))
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+FigureModel = InsertService:LoadAsset(105428829)
+Figure = FigureModel:GetChildren()[1]:Clone()
+Debris:AddItem(FigureModel, 1)
 
 Sounds = {
 	LaserSound = Handle:WaitForChild("LaserSound")
 }
 
-BasePart = Instance.new("Part")
-BasePart.Material = Enum.Material.Plastic
-BasePart.Shape = Enum.PartType.Block
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
-BasePart.Anchored = false
-BasePart.CanCollide = true
-BasePart.Locked = true
+BasePart = Create("Part"){
+	Material = Enum.Material.Plastic,
+	Shape = Enum.PartType.Block,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	Anchored = false,
+	CanCollide = true,
+	Locked = true,
+}
 
+LaserDamage = 8
 ChanceToSpawn = 0.1
 Duration = 30
-AssetId = 105428829
-SpawnOffset = Vector3.new(15, 0, 15)
-
-RayPartsLeft, RayPartsRight = {}, {}
-
 CoolDown = 1
 
-FigureModel = InsertService:LoadAsset(AssetId)
-Figure = FigureModel:GetChildren()[1]:Clone()
-if FigureModel and FigureModel.Parent then
-	FigureModel:Destroy()
-end
+SpawnOffset = Vector3.new(15, 0, 15)
+
+RayPartsLeft = {}
+RayPartsRight = {}
 
 ToolEquipped = false
 
-ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
-ServerControl.Name = "ServerControl"
-ServerControl.Parent = Tool
+ServerControl = (Tool:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Tool,
+})
 
-ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
-ClientControl.Name = "ClientControl"
-ClientControl.Parent = Tool
+ClientControl = (Tool:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Tool,
+})
 
-Tool.Enabled = true
-
-function TagHumanoid(humanoid, player)
-	local Creator_Tag = Instance.new("ObjectValue")
-	Creator_Tag.Name = "creator"
-	Creator_Tag.Value = player
-	Debris:AddItem(Creator_Tag, 2)
-	Creator_Tag.Parent = humanoid
-end
-
-function UntagHumanoid(humanoid)
-	for i, v in pairs(humanoid:GetChildren()) do
-		if v:IsA("ObjectValue") and v.Name == "creator" then
-			v:Destroy()
-		end
+for i, v in pairs(Tool:GetChildren()) do
+	if v:IsA("BasePart") and v ~= Handle then
+		v:Destroy()
 	end
 end
+
+Tool.Enabled = true
 
 function ResetRayParts()
 	for i, v in pairs({RayPartsLeft, RayPartsRight}) do
@@ -128,7 +125,7 @@ function CastLightRay(StartPos, EndPos, Parts, EffectFunction)
 		end
 		local IsTeamMate = false
 		local player = Players:GetPlayerFromCharacter(character)
-		if player and not player.Neutral and not Player.Neutral and player.TeamColor == Player.TeamColor then
+		if player and Functions.IsTeamMate(Player, player) then
 			IsTeamMate = true
 		end
 		local humanoid = character:FindFirstChild("Humanoid")
@@ -137,16 +134,16 @@ function CastLightRay(StartPos, EndPos, Parts, EffectFunction)
 		end
 	end	
 	
-	local numSegments = math.floor(math.min((StartPos - EndPos).magnitude / SegLength, 50))
-	local initNumParts = #Parts
-	for i = numSegments, initNumParts, 1 do
+	local NumSegments = math.floor(math.min(((StartPos - EndPos).Magnitude / SegLength), 50))
+	local InitNumParts = #Parts
+	for i = NumSegments, InitNumParts, 1 do
 		if Parts[i] then
 			Parts[i]:Destroy()
-			Parts[i]=nil
+			Parts[i] = nil
 		end
 	end
 	
-	for i = 1, numSegments, 1 do
+	for i = 1, NumSegments, 1 do
 		if not Parts[i] then
 			local Laser = BasePart:Clone()
 			Laser.Name = "Laser"
@@ -155,15 +152,16 @@ function CastLightRay(StartPos, EndPos, Parts, EffectFunction)
 			Laser.Anchored = true
 			Laser.CanCollide = false
 			Laser.Parent = Tool
-			local tlight = Instance.new("PointLight")
-			tlight.Name = "Light"
-			tlight.Color = Color.Color
-			tlight.Range =((math.sin(tick()*3)+1)*1)+5
-			tlight.Brightness =((math.sin(tick()*3)+1)*1)+1
-			tlight.Parent = Laser
+			local tlight = Create("PointLight"){
+				Name = "Light",
+				Color = Color.Color,
+				Range = (((math.sin(tick() * 3) + 1) * 1) + 5),
+				Brightness = (((math.sin(tick() * 3) + 1) * 1) + 1),
+				Parent = Laser,
+			}
 			Parts[i] = Laser
 		end
-		Parts[i].CFrame = CFrame.new((((i - 0.4) * (EndPos - StartPos).unit * SegLength) + StartPos), EndPos)
+		Parts[i].CFrame = CFrame.new((((i - 0.4) * (EndPos - StartPos).Unit * SegLength) + StartPos), EndPos)
 	end
 	
 	return Parts
@@ -171,9 +169,9 @@ end
 
 function DamageFunction(humanoid)
 	if humanoid and humanoid.Health > 0 then
-		UntagHumanoid(humanoid)
-		TagHumanoid(humanoid, Player)
-		humanoid:TakeDamage(5)
+		Functions.UntagHumanoid(humanoid)
+		Functions.TagHumanoid(humanoid, Player)
+		humanoid:TakeDamage(LaserDamage)
 	end
 end
 
@@ -182,10 +180,13 @@ function ShootLaser()
 	Sounds.LaserSound:Play()
 	while ToolEquipped and (tick() - StartTime) <= 0.5 do
 		local StartPoint = Handle.Position + Handle.CFrame:vectorToWorldSpace(Vector3.new(-0.2, 0.8, -0.2))
-		local EndPoint = InvokeClient("MousePosition")
-		RayPartsLeft = CastLightRay(StartPoint, EndPoint, RayPartsLeft, DamageFunction)
+		local MousePosition = InvokeClient("MousePosition")
+		if MousePosition then
+			MousePosition = MousePosition.Position
+		end
+		RayPartsLeft = CastLightRay(StartPoint, MousePosition, RayPartsLeft, DamageFunction)
 		StartPoint = Handle.Position + Handle.CFrame:vectorToWorldSpace(Vector3.new(0.2, 0.8, -0.2))
-		RayPartsRight = CastLightRay(StartPoint, EndPoint, RayPartsRight, DamageFunction)
+		RayPartsRight = CastLightRay(StartPoint, MousePosition, RayPartsRight, DamageFunction)
 		wait()
 	end
 	Sounds.LaserSound:Stop()
@@ -203,15 +204,27 @@ function Activated()
 	if (not FigureCopy or not FigureCopy.Parent) and math.random() <= ChanceToSpawn then
 		FigureCopy = Figure:Clone()
 		if FigureCopy then
-			local AIScriptClone = TelamonAI:Clone()
-			AIScriptClone.Disabled = false
+			local Values = {
+				{Name = "Creator", Class = "ObjectValue", Value = Player},
+				{Name = "Tool", Class = "ObjectValue", Value = Tool},
+			}
+			for i, v in pairs(Values) do
+				local Value = Create(v.Class){
+					Name = v.Name,
+					Value = v.Value,
+					Parent = FigureCopy,
+				}
+			end
+			for i, v in pairs({AIScript, RemoverScript}) do
+				local ScriptClone = v:Clone()
+				ScriptClone.Disabled = false
+				ScriptClone.Parent = FigureCopy
+			end
 			Debris:AddItem(FigureCopy, Duration)
-			AIScriptClone.Parent = FigureCopy
 			FigureCopy.Parent = game:GetService("Workspace")
 			FigureCopy:MoveTo(Handle.Position + SpawnOffset)
 		end
 	end
-	local TargetPoint = Humanoid.TargetPoint
 	wait(CoolDown)
 	Tool.Enabled = true
 end
@@ -227,23 +240,20 @@ function Equipped()
 	if not CheckIfAlive() then
 		return
 	end
-	CreatorTag.Value = Player
 	ToolEquipped = true
 end
 
-
 function Unequipped()
-	for i, v in pairs({FigureCopy}) do
-		if v and v.Parent then
-			v:Destroy()
+	Spawn(function()
+		for i, v in pairs({FigureCopy}) do
+			if v and v.Parent then
+				v:Destroy()
+			end
 		end
-	end
-	ResetRayParts()
+		ResetRayParts()
+	end)
 	Sounds.LaserSound:Stop()
 	ToolEquipped = false
-end
-
-function OnServerInvoke(player, mode, value)
 end
 
 function InvokeClient(Mode, Value)
@@ -254,9 +264,9 @@ function InvokeClient(Mode, Value)
 	return ClientReturn
 end
 
-for i, v in pairs(Tool:GetChildren()) do
-	if v:IsA("BasePart") and v ~= Handle and v.Name == "Laser" then
-		v:Destroy()
+function OnServerInvoke(player, mode, value)
+	if player ~= Player or not mode then
+		return
 	end
 end
 
@@ -266,203 +276,169 @@ Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBXB46955F83E674CC1BF3B3888031A4AC7">
+			<Item class="Script" referent="RBXCBB887D86CE74B2888D054DFDB81D57D">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">TelamonAI</string>
-					<ProtectedString name="Source"><![CDATA[-----------------
---| Constants |--
------------------
+					<string name="Name">AIScript</string>
+					<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
 
-local THROWABLE_DAMAGE = 15
-local THROWABLE_CHANCE = 0.05
-local THROWABLE_TIMETOLIVE = 15
+Figure = script.Parent
 
-local ONE_STEP = 1 / 30
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
 
---------------------
---| WaitForChild |--
---------------------
+Functions = require(script:WaitForChild("Functions"))
+Creator = Figure:WaitForChild("Creator")
 
--- Waits for parent.child to exist, then returns it
-local function WaitForChild(parent, childName)
-	assert(parent, "ERROR: WaitForChild: parent is nil")
-	while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-	return parent[childName]
+Humanoid = Figure:WaitForChild("Humanoid")
+Torso = Figure:WaitForChild("Torso")
+Throwable = Figure:WaitForChild("Throwable")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+ThrowDamage = 15
+ThrowChance = 0.05
+Duration = 10
+
+Rate = (1 / 60)
+
+Sounds = {
+	Throw = script:WaitForChild("Throw"),
+	Swoosh = script:WaitForChild("Swoosh"),
+	Smack = script:WaitForChild("Smack"),
+}
+
+LastThrowTime = 0
+
+Humanoid.Health = Humanoid.MaxHealth
+
+function CheckIfAlive()
+	return (((Figure and Figure.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Throwable and Throwable.Parent) and true) or false)
 end
 
------------------
---| Variables |--
------------------
+function GetCreator()
+	local CreatorValue = Creator.Value
+	return ((CreatorValue and CreatorValue.Parent and ((CreatorValue:IsA("Player") and CreatorValue) or Players:GetPlayerFromCharacter(CreatorValue))) or nil)
+end
 
-local DebrisService = Game:GetService('Debris')
-local PlayersService = Game:GetService('Players')
-
-local ThrowSound = WaitForChild(script, 'Throw')
-local SwooshSound = WaitForChild(script, 'Swoosh')
-local SmackSound = WaitForChild(script, 'Smack')
-
-local Pet = script.Parent
-local PetHumanoid = WaitForChild(Pet, 'Humanoid')
-local Throwable = WaitForChild(Pet, 'Throwable')
-
-local CreatorTag = WaitForChild(script, 'creator')
-
-local MyPlayer = CreatorTag.Value
-local MyModel = MyPlayer.Character
-local MyHumanoid = MyModel.Humanoid
-
-local LastThrowTime = 0
-
------------------
---| Functions |--
------------------
-
--- Returns the closest living Humanoid to position who isn't in excludeList
-local function FindClosestHumanoid(position, excludeList) -- (Vector3, table)
-	if not position then print("Need a Vector3 position") return nil end
-
-	-- Change list values to keys so we can use indexing
-	local excludeSet = {}
-	if excludeList and type(excludeList) == "table" then
-		for _, l in ipairs(excludeList) do
-			excludeSet[l] = true
+function FindClosestPlayer()
+	local MaxDistance = 150
+	local ClosestPlayer = {Player = nil, Distance = MaxDistance}
+	local SearchVec = Vector3.new(MaxDistance, MaxDistance, MaxDistance)
+	local SearchRegion = Region3.new((Torso.Position - SearchVec), (Torso.Position + SearchVec))
+	local Creator = GetCreator()
+	local CreatorCharacter = ((Creator and Creator.Character) or nil)
+	local PartsInRegion = Functions.GetParts(SearchRegion, 500, {Figure, CreatorCharacter})
+	for i, v in pairs(PartsInRegion) do
+		local PartDistance = (Torso.Position - v.Position).Magnitude
+		local character = v.Parent
+		local humanoid = character:FindFirstChild("Humanoid")
+		if humanoid and humanoid:IsA("Humanoid") and humanoid.Health > 0 and PartDistance < ClosestPlayer.Distance then
+			ClosestPlayer.Player = character
+			ClosestPlayer.Distance = PartDistance
 		end
 	end
+	return ClosestPlayer.Player
+end
 
-	-- Search through Workspace children
-	local closestHumanoid = nil
-	for _, child in pairs(Game.Workspace:GetChildren()) do
-		if (child and child:FindFirstChild("Humanoid") and child.Humanoid.Health > 0 and not excludeSet[child.Humanoid])
-		and (not closestHumanoid or (child.Humanoid.Torso.Position - position).magnitude < (closestHumanoid.Torso.Position - position).magnitude) then
-			closestHumanoid = child.Humanoid
+function ThrowableReachedTarget(Part, TargetHumanoid)
+	local SmackSound = Sounds.Smack:Clone()
+	SmackSound.Parent = Part
+	SmackSound:Play()
+	if TargetHumanoid.Health > 0 then
+		Functions.UntagHumanoid(TargetHumanoid)
+		Functions.TagHumanoid(TargetHumanoid, GetCreator())
+		TargetHumanoid:TakeDamage(ThrowDamage)
+	end
+	Part.Transparency = 1
+	Part.CanCollide = false
+	Part.Anchored = true
+	Debris:AddItem(Part, 1)
+end
+
+function PickNewTarget(Part)
+	local Homing = Part:FindFirstChild('Homing')
+	if Homing then
+		local TargetPlayer = FindClosestPlayer(Part.Position)
+		if TargetPlayer then
+			local humanoid = TargetPlayer:FindFirstChild("humanoid")
+			local head = TargetPlayer:FindFirstChild("Head")
+			if humanoid and humanoid.Health > 0 and head then
+				Homing.Target = head
+				return
+			end
 		end
+		Homing:Destroy()
 	end
-	return closestHumanoid --NOTE: Can be nil
+	Part.CanCollide = false
 end
 
--- Removes any old creator tags and applies new ones to the specified target
-local function ApplyTags(target)
-	while target:FindFirstChild('creator') do
-		target.creator:Destroy()
+function TargetModelChanged(Property, Part, Target)
+	if Property == "Parent" and not Target.Parent then
+		PickNewTarget(Part)
 	end
-	local creatorTag = CreatorTag:Clone()
-	DebrisService:AddItem(creatorTag, 4)
-	creatorTag.Parent = target
 end
 
-local function OnThrowableReachedTarget(throwable, targetHumanoid)
-	local smackSound = throwable:FindFirstChild('Smack')
-	if smackSound then
-		smackSound:Play()
-	end
-	if targetHumanoid.Health > 0 then
-		ApplyTags(targetHumanoid)
-		targetHumanoid:TakeDamage(THROWABLE_DAMAGE)
-	end
-	throwable:Destroy()
-end
-
-local function PickNewTarget(throwable)
-	local homing = throwable:FindFirstChild('Homing')
-	if homing then
-		local targetHumanoid = FindClosestHumanoid(throwable.Position, {MyHumanoid, PetHumanoid})
-		if targetHumanoid and targetHumanoid.Torso then
-			local targetHead = targetHumanoid.Parent:FindFirstChild('Head')
-			homing.Target = targetHead or targetHumanoid.Torso
-			return
+while CheckIfAlive() do
+	local Creator = GetCreator()
+	if Creator then
+		local CreatorCharacter = Creator.Character
+		if CreatorCharacter and CreatorCharacter.Parent then
+			local CreatorHumanoid = CreatorCharacter:FindFirstChild("Humanoid")
+			local CreatorTorso = CreatorCharacter:FindFirstChild("Torso")
+			if CreatorHumanoid and CreatorHumanoid.Health > 0 and CreatorTorso then
+				Humanoid:MoveTo(CreatorTorso.Position + Vector3.new(-4, 0, -4))
+			end
 		end
-		-- Otherwise, fall
-		homing:Destroy()
-	end
-	-- Fall to kill plane
-	throwable.CanCollide = false
-end
-
--- Change target when the old target disappears
-local function OnTargetModelChanged(targetModel, property, throwable)
-	if property == 'Parent' and targetModel.Parent == nil then
-		PickNewTarget(throwable)
-	end
-end
-
---------------------
---| Script Logic |--
---------------------
-
-ThrowSound.Parent = Throwable --NOTE: To be played from hand
-SwooshSound.Parent = Throwable --NOTE: To be played from projectile
-SmackSound.Parent = Throwable --NOTE: To be played from projectile on hit
-
-PetHumanoid.Health = PetHumanoid.MaxHealth -- This never works
-Delay(1, function() PetHumanoid.Health = PetHumanoid.Health + 1 end) -- So at least trigger healing
-
-MyHumanoid.Died:connect(function()
-	MyHumanoid = nil
-end)
-
-PlayersService.PlayerRemoving:connect(function(player)
-	if player == MyPlayer then
-		MyHumanoid = nil
-	end
-end)
-
-while PetHumanoid and MyHumanoid and MyHumanoid.Health > 0 do
-	local torso = MyHumanoid.Torso
-	PetHumanoid:MoveTo(torso.Position + Vector3.new(-4, 0, -4), torso)
-
-	local now = tick()
-	if now - LastThrowTime > 0.5 and math.random() <= THROWABLE_CHANCE then
-		--print("Throw")
-		LastThrowTime = now
-		local targetHumanoid = FindClosestHumanoid(torso.Position, {MyHumanoid, PetHumanoid})
-		if targetHumanoid and targetHumanoid.Torso then
-			local targetModel = targetHumanoid.Parent
-			local targetHead = targetModel:FindFirstChild('Head')
-			Spawn(function()
-				ThrowSound:Play()
-				local throwable = Throwable:Clone()
-				throwable.Name = 'HomingTurkey'
-				local homing = Instance.new('RocketPropulsion')
-				homing.Name = 'Homing'
-				homing.Target = targetHead or targetHumanoid.Torso
-				homing.ReachedTarget:connect(function()
-					OnThrowableReachedTarget(throwable, targetHumanoid)
-				end)
-				targetModel.Changed:connect(function(property)
-					OnTargetModelChanged(targetModel, property, throwable)
-				end)
-				homing.Parent = throwable
-				DebrisService:AddItem(throwable, THROWABLE_TIMETOLIVE)
-				throwable.Parent = Workspace
-				throwable.Velocity = Vector3.new(0, 100, 0)
-				wait(0.5)
-				if throwable then
-					local projectileSwoosh = throwable:FindFirstChild('Swoosh')
-					if projectileSwoosh then
-						projectileSwoosh:Play()
+		local Now = tick()
+		if (Now - LastThrowTime) > 0.5 and math.random() <= ThrowChance then
+			LastThrow = Now
+			local TargetPlayer = FindClosestPlayer(Torso.Position)
+			if TargetPlayer then
+				local TargetHumanoid = TargetPlayer:FindFirstChild("Humanoid")
+				local TargetHead = TargetPlayer:FindFirstChild("Head")
+				if TargetHumanoid and TargetHumanoid.Health > 0 and TargetHead then
+					local Sound = Sounds.Throw:Clone()
+					Debris:AddItem(Sound, 1.5)
+					Sound.Parent = Throwable
+					Sound:Play()
+					local Projectile = Throwable:Clone()
+					Projectile.Name = "Projectile"
+					local Homing = Create("RocketPropulsion"){
+						Name = "Homing",
+						Target = TargetHead,
+					}
+					Homing.ReachedTarget:connect(function()
+						ThrowableReachedTarget(Projectile, TargetHumanoid)
+					end)
+					TargetPlayer.Changed:connect(function(Property)
+						TargetModelChanged(Property, Projectile, TargetPlayer)
+					end)
+					Homing.Parent = Projectile
+					Debris:AddItem(Projectile, Duration)
+					Projectile.Velocity = Vector3.new(0, 100, 0)
+					Projectile.Parent = game:GetService("Workspace")
+					wait(0.5)
+					if Projectile and Projectile.Parent then
+						local Sound = Sounds.Swoosh:Clone()
+						Sound.Parent = Projectile
+						Sound:Play()
+						Projectile.Size = Vector3.new(0.5, 1, 0.5)
+						Projectile.CanCollide = true
+						Homing:Fire()
 					end
-					throwable.Size = Vector3.new(0.5, 1, 0.5)
-					throwable.CanCollide = true
-					homing:Fire()
 				end
-			end)
+			end
 		end
 	end
-	wait(ONE_STEP)
+	wait(Rate)
 end
 
-DebrisService:AddItem(Pet, 0)
-]]></ProtectedString>
+Debris:AddItem(Figure, 0)]]></ProtectedString>
 				</Properties>
-				<Item class="ObjectValue" referent="RBX4CAAA4E740BF4ED7BCCC26DCCD006B81">
-					<Properties>
-						<string name="Name">creator</string>
-						<Ref name="Value">null</Ref>
-					</Properties>
-				</Item>
-				<Item class="Sound" referent="RBX4288E4E3CBAF4A7EBCCA8BCA7C8CE60B">
+				<Item class="Sound" referent="RBXBB6B1E4758C44DCCB9ACCA829A7CAC98">
 					<Properties>
 						<bool name="Looped">false</bool>
 						<string name="Name">Throw</string>
@@ -472,7 +448,7 @@ DebrisService:AddItem(Pet, 0)
 						<float name="Volume">0.5</float>
 					</Properties>
 				</Item>
-				<Item class="Sound" referent="RBX56D551275B994A22BCC50CF05DC24F13">
+				<Item class="Sound" referent="RBXFD1713D0452C4386BB887AAA0CCDDD15">
 					<Properties>
 						<bool name="Looped">true</bool>
 						<string name="Name">Swoosh</string>
@@ -482,7 +458,7 @@ DebrisService:AddItem(Pet, 0)
 						<float name="Volume">0.200000003</float>
 					</Properties>
 				</Item>
-				<Item class="Sound" referent="RBX3A826562A57F4385B3820B568C31B0C1">
+				<Item class="Sound" referent="RBX33ED0255BF98498FBA84C4745FF3604D">
 					<Properties>
 						<bool name="Looped">false</bool>
 						<string name="Name">Smack</string>
@@ -492,9 +468,299 @@ DebrisService:AddItem(Pet, 0)
 						<float name="Volume">0.5</float>
 					</Properties>
 				</Item>
+				<Item class="ModuleScript" referent="RBX8F4DE0CFC0AC46A4B597E4C3B4BF34FB">
+					<Properties>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">Functions</string>
+						<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Ray", "Bullet", "ParticlePart"}
+
+Functions = {
+	
+	CheckTableForString = (function(Table, String)
+		for i, v in pairs(Table) do
+			if string.lower(v) == string.lower(String) then
+				return true
+			end
+		end
+		return false
+	end),
+
+	CheckIntangible = (function(Hit)
+		if Hit and Hit.Parent then
+			if (Hit.Transparency >= 1 and not Hit.CanCollide) or Functions.CheckTableForString(ProjectileNames, Hit.Name) then
+				return true
+			end
+			local ObjectParent = Hit.Parent
+			local Character = ObjectParent.Parent
+			local Humanoid = Character:FindFirstChild("Humanoid")
+			if Humanoid and Humanoid.Health > 0 and ObjectParent:IsA("Hat") then
+				return true
+			end
+		end
+		return false
+	end),
+	
+	CastRay = (function(StartPos, Vec, Length, Ignore, DelayIfHit)
+		local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+		if RayHit and Functions.CheckIntangible(RayHit) then
+			if DelayIfHit then
+				wait()
+			end
+			RayHit, RayPos, RayNormal = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+		end
+		return RayHit, RayPos, RayNormal
+	end),
+
+	IsTeamMate = (function(Player1, Player2)
+		return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+	end),
+
+	TagHumanoid = (function(humanoid, player)
+		local Creator_Tag = Instance.new("ObjectValue")
+		Creator_Tag.Name = "creator"
+		Creator_Tag.Value = player
+		Debris:AddItem(Creator_Tag, 2)
+		Creator_Tag.Parent = humanoid
+	end),
+
+	UntagHumanoid = (function(humanoid)
+		for i, v in pairs(humanoid:GetChildren()) do
+			if v:IsA("ObjectValue") and v.Name == "creator" then
+				v:Destroy()
+			end
+		end
+	end),
+	
+	GetTotalParts = (function(MaxParts, PossibleParts, Parts)
+		if MaxParts < PossibleParts then
+			return MaxParts
+		elseif Parts >= MaxParts then
+			return 0
+		elseif MaxParts >= PossibleParts then
+			local PartCount = (MaxParts - PossibleParts)
+			if Parts <= MaxParts then
+				PartCount = (MaxParts - Parts)
+				if PartCount > PossibleParts then
+					return PossibleParts
+				else
+					return PartCount
+				end
+			elseif PartCount >= PossibleParts then
+				return PossibleParts
+			else
+				return PartCount
+			end
+		end
+	end),
+
+	GetParts = (function(Region, MaxParts, Ignore)
+		local Parts = {}
+		local RerunFailed = false
+		while #Parts < MaxParts and not RerunFailed do
+			local Region = Region
+			local PossibleParts = Functions.GetTotalParts(MaxParts, 100, #Parts)
+			local PartsNearby = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region, Ignore, PossibleParts)
+			if #PartsNearby == 0 then
+				RerunFailed = true
+			else
+				for i, v in pairs(PartsNearby) do
+					table.insert(Parts, v)
+					table.insert(Ignore, v)
+				end
+			end
+		end
+		return Parts
+	end),
+	
+}
+
+return Functions]]></ProtectedString>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="ModuleScript" referent="RBX8913C4F5B8084690809A2F1F93ECD887">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Functions</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Ray", "Bullet", "ParticlePart"}
+
+Functions = {
+	
+	CheckTableForString = (function(Table, String)
+		for i, v in pairs(Table) do
+			if string.lower(v) == string.lower(String) then
+				return true
+			end
+		end
+		return false
+	end),
+
+	CheckIntangible = (function(Hit)
+		if Hit and Hit.Parent then
+			if (Hit.Transparency >= 1 and not Hit.CanCollide) or Functions.CheckTableForString(ProjectileNames, Hit.Name) then
+				return true
+			end
+			local ObjectParent = Hit.Parent
+			local Character = ObjectParent.Parent
+			local Humanoid = Character:FindFirstChild("Humanoid")
+			if Humanoid and Humanoid.Health > 0 and ObjectParent:IsA("Hat") then
+				return true
+			end
+		end
+		return false
+	end),
+	
+	CastRay = (function(StartPos, Vec, Length, Ignore, DelayIfHit)
+		local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+		if RayHit and Functions.CheckIntangible(RayHit) then
+			if DelayIfHit then
+				wait()
+			end
+			RayHit, RayPos, RayNormal = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+		end
+		return RayHit, RayPos, RayNormal
+	end),
+
+	IsTeamMate = (function(Player1, Player2)
+		return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+	end),
+
+	TagHumanoid = (function(humanoid, player)
+		local Creator_Tag = Instance.new("ObjectValue")
+		Creator_Tag.Name = "creator"
+		Creator_Tag.Value = player
+		Debris:AddItem(Creator_Tag, 2)
+		Creator_Tag.Parent = humanoid
+	end),
+
+	UntagHumanoid = (function(humanoid)
+		for i, v in pairs(humanoid:GetChildren()) do
+			if v:IsA("ObjectValue") and v.Name == "creator" then
+				v:Destroy()
+			end
+		end
+	end),
+	
+	GetTotalParts = (function(MaxParts, PossibleParts, Parts)
+		if MaxParts < PossibleParts then
+			return MaxParts
+		elseif Parts >= MaxParts then
+			return 0
+		elseif MaxParts >= PossibleParts then
+			local PartCount = (MaxParts - PossibleParts)
+			if Parts <= MaxParts then
+				PartCount = (MaxParts - Parts)
+				if PartCount > PossibleParts then
+					return PossibleParts
+				else
+					return PartCount
+				end
+			elseif PartCount >= PossibleParts then
+				return PossibleParts
+			else
+				return PartCount
+			end
+		end
+	end),
+
+	GetParts = (function(Region, MaxParts, Ignore)
+		local Parts = {}
+		local RerunFailed = false
+		while #Parts < MaxParts and not RerunFailed do
+			local Region = Region
+			local PossibleParts = Functions.GetTotalParts(MaxParts, 100, #Parts)
+			local PartsNearby = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region, Ignore, PossibleParts)
+			if #PartsNearby == 0 then
+				RerunFailed = true
+			else
+				for i, v in pairs(PartsNearby) do
+					table.insert(Parts, v)
+					table.insert(Ignore, v)
+				end
+			end
+		end
+		return Parts
+	end),
+	
+}
+
+return Functions]]></ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX6CAC92BB755C412EAA2973C2226D688C">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">RemoverScript</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Model = script.Parent
+Humanoid = Model:FindFirstChild("Humanoid")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+Creator = Model:FindFirstChild("Creator")
+Tool = Model:FindFirstChild("Tool")
+
+function DestroyModel()
+	Debris:AddItem(Model, 5)
+end
+
+if not Creator or not Creator.Value or not Creator.Value:IsA("Player") or not Creator.Value.Parent or not Tool or not Tool.Value or not Tool.Value.Parent then
+	DestroyModel()
+	return
+end
+
+Creator = Creator.Value
+Tool = Tool.Value
+
+Character = Creator.Character
+if not Character then
+	DestroyModel()
+	return
+end
+
+Creator.Changed:connect(function(Property)
+	if Property == "Parent" and not Creator.Parent then
+		DestroyModel()
+	end
+end)
+
+Character.Changed:connect(function(Property)
+	if Property == "Parent" and not Character.Parent then
+		DestroyModel()
+	end
+end)
+
+Tool.Changed:connect(function(Property)
+	if Property == "Parent" then
+		local Player = ((Tool.Parent and ((Tool.Parent:IsA("Backpack") and Tool.Parent.Parent) or Players:GetPlayerFromCharacter(Tool.Parent))) or nil)
+		if (not Player or (Player and Player ~= Creator)) then
+			DestroyModel()
+		end
+	end
+end)
+
+if Humanoid then
+	Humanoid.Died:connect(function()
+		DestroyModel()
+	end)
+end]]></ProtectedString>
+				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBXDDC29887BD374CBEB0FB93D2625F3882">
+		<Item class="Part" referent="RBX4ACE2FE645A942C2B43D1A56550CE896">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -562,7 +828,7 @@ DebrisService:AddItem(Pet, 0)
 					<Z>0.799999893</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX1C96EA9DE2CA44FA8146CE12BFFF0CE9">
+			<Item class="SpecialMesh" referent="RBX5F5A56D92DD5418D95F88084E87D13BD">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -587,7 +853,7 @@ DebrisService:AddItem(Pet, 0)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX2C857855FE514D05BDAAFCDB0231F4B9">
+			<Item class="Sound" referent="RBX6697C40A5E034A4D81C6628A52328FF0">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">LaserSound</string>
@@ -598,146 +864,7 @@ DebrisService:AddItem(Pet, 0)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBXF1CEF953E94F4CC190844EDE886F48DF">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild("Handle")
-
-Players = game:GetService("Players")
-RunService = game:GetService("RunService")
-
-Camera = game:GetService("Workspace").CurrentCamera
-
-Animations = {}
-LocalObjects = {}
-
-ServerControl = Tool:WaitForChild("ServerControl")
-ClientControl = Tool:WaitForChild("ClientControl")
-
-ToolEquipped = false
-
-function SetAnimation(Mode, Value)
-	if Mode == "PlayAnimation" and Value and ToolEquipped and Humanoid then
-		for i, v in pairs(Animations) do
-			if v.Animation == Value.Animation then
-				v.AnimationTrack:Stop()
-				table.remove(Animations, i)
-			end
-		end
-		local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
-		table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
-		AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
-	elseif Mode == "StopAnimation" and Value then
-		for i, v in pairs(Animations) do
-			if v.Animation == Value.Animation then
-				v.AnimationTrack:Stop()
-				table.remove(Animations, i)
-			end
-		end
-	end
-end
-
-function CheckIfAlive()
-	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0) and true) or false)
-end
-
-function Equipped(Mouse)
-	Character = Tool.Parent
-	Player = Players:GetPlayerFromCharacter(Character)
-	Humanoid = Character:FindFirstChild("Humanoid")
-	ToolEquipped = true
-	if not CheckIfAlive() then
-		return
-	end
-	PlayerMouse = Player:GetMouse()
-	Mouse.Button1Down:connect(function()
-		InvokeServer("MouseClick", {Down = true})
-	end)
-	Mouse.Button1Up:connect(function()
-		InvokeServer("MouseClick", {Down = false})
-	end)
-	Mouse.KeyDown:connect(function(Key)
-		InvokeServer("KeyPress", {Key = Key, Down = true})
-	end)
-	Mouse.KeyUp:connect(function(Key)
-		InvokeServer("KeyPress", {Key = Key, Down = false})
-	end)
-end
-
-function Unequipped()
-	ToolEquipped = false
-	LocalObjects = {}
-	for i, v in pairs(Animations) do
-		if v and v.AnimationTrack then
-			v.AnimationTrack:Stop()
-		end
-	end
-	for i, v in pairs({ObjectLocalTransparencyModifier}) do
-		if v then
-			v:disconnect()
-		end
-	end
-	Animations = {}
-end
-
-function InvokeServer(Mode, Value)
-	pcall(function()
-		local ServerReturn = ServerControl:InvokeServer(Mode, Value)
-		return ServerReturn
-	end)
-end
-
-function OnClientInvoke(Mode, Value)
-	if Mode == "PlayAnimation" and Value and ToolEquipped and Humanoid then
-		SetAnimation("PlayAnimation", Value)
-	elseif Mode == "StopAnimation" and Value then
-		SetAnimation("StopAnimation", Value)
-	elseif Mode == "PlaySound" and Value then
-		Value:Play()
-	elseif Mode == "StopSound" and Value then
-		Value:Stop()
-	elseif Mode == "MousePosition" then
-		return PlayerMouse.Hit.p
-	elseif Mode == "SetLocalTransparencyModifier" and Value and ToolEquipped then
-		pcall(function()
-			local ObjectFound = false
-			for i, v in pairs(LocalObjects) do
-				if v == Value then
-					ObjectFound = true
-				end
-			end
-			if not ObjectFound then
-				table.insert(LocalObjects, Value)
-				if ObjectLocalTransparencyModifier then
-					ObjectLocalTransparencyModifier:disconnect()
-				end
-				ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
-					for i, v in pairs(LocalObjects) do
-						if v.Object and v.Object.Parent then
-							if ((not v.AutoUpdate and (v.Object.LocalTransparencyModifier == 1 or  v.Object.LocalTransparencyModifier == 0)) or v.AutoUpdate) then
-								v.Object.LocalTransparencyModifier = v.Transparency
-							end
-						else
-							table.remove(LocalObjects, i)
-						end
-					end
-				end)
-			end
-		end)
-	end
-end
-
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)
-ClientControl.OnClientInvoke = OnClientInvoke]]></ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX23D4B332116041A1B9F67B018DBB8918">
+		<Item class="LocalScript" referent="RBX5F3AAA8585B64C2A9D732E218FC1E0A9">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
@@ -772,7 +899,7 @@ Tool.Equipped:connect(OnEquipped)
 Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBXCB9DBE451C684DB3BB587C516DC79FAA">
+		<Item class="Camera" referent="RBX1453922D76D647FBA727EC7498C52690">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
@@ -806,6 +933,141 @@ Tool.Changed:connect(OnChanged)]]></ProtectedString>
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX9EB971540BC44E45897807325B51A0BF">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+UserInputService = game:GetService("UserInputService")
+
+Animations = {}
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+InputCheck = Instance.new("ScreenGui")
+InputCheck.Name = "InputCheck"
+InputButton = Instance.new("ImageButton")
+InputButton.Name = "InputButton"
+InputButton.Image = ""
+InputButton.BackgroundTransparency = 1
+InputButton.ImageTransparency = 1
+InputButton.Size = UDim2.new(1, 0, 1, 0)
+InputButton.Parent = InputCheck
+
+Rate = (1 / 60)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop(value.FadeTime)
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		PlayerMouse = Mouse
+		Mouse.Button1Down:connect(function()
+			InvokeServer("Button1Click", {Down = true})
+		end)
+		Mouse.Button1Up:connect(function()
+			InvokeServer("Button1Click", {Down = false})
+		end)
+		Mouse.KeyDown:connect(function(Key)
+			InvokeServer("KeyPress", {Key = Key, Down = true})
+		end)
+		Mouse.KeyUp:connect(function(Key)
+			InvokeServer("KeyPress", {Key = Key, Down = false})
+		end)
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			if UserInputService.TouchEnabled then
+				InputCheckClone = InputCheck:Clone()
+				InputCheckClone.InputButton.InputBegan:connect(function()
+					InvokeServer("Button1Click", {Down = true})
+				end)
+				InputCheckClone.InputButton.InputEnded:connect(function()
+					InvokeServer("Button1Click", {Down = false})
+				end)
+				InputCheckClone.Parent = PlayerGui
+			end
+		end
+	end)
+end
+
+function Unequipped()
+	if InputCheckClone and InputCheckClone.Parent then
+		InputCheckClone:Destroy()
+	end
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	pcall(function()
+		local ServerReturn = ServerControl:InvokeServer(mode, value)
+		return ServerReturn
+	end)
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MousePosition" then
+		return ((PlayerMouse and {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}) or nil)
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
