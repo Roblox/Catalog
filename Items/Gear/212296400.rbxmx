@@ -1,14 +1,14 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX82F2A74C8EFB47039262A83533B91C63">
+	<Item class="Tool" referent="RBXC88AE619DB79450ABE09CA453A844C17">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>1.5</X>
-				<Y>0.649999976</Y>
-				<Z>-1.89999998</Z>
+				<Y>1</Y>
+				<Z>-1.64999998</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -20,218 +20,11 @@
 				<R22>1</R22>
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
-			<string name="Name">MagiciansCloak</string>
+			<string name="Name">Magician&apos;sCloak</string>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=211683070 </url></Content>
 			<string name="ToolTip">Planes, trains and cloakomobiles</string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX964810920B1148968C4060E34FC69DFC">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">local sp=script.Parent
-
-
-function waitfor(a,b)
-&#9;while a:FindFirstChild(b)==nil do
-&#9;&#9;a.ChildAdded:wait()
-&#9;end
-&#9;return a:FindFirstChild(b)
-end
---[[floating code]]--
-local equalizingForce = 236 / 1.2 -- amount of force required to levitate a mass
-local gravity = .75 -- things float at &gt; 1
-
-local ghostEffect = nil
-local massCon1 = nil
-local massCon2 = nil
-
-
-local head = nil
-function recursiveGetLift(node)
-&#9;local m = 0
-&#9;local c = node:GetChildren()
-&#9;if (node:FindFirstChild(&quot;Head&quot;) ~= nil) then head = node:FindFirstChild(&quot;Head&quot;) end -- nasty hack to detect when your parts get blown off
-
-&#9;for i=1,#c do
-&#9;&#9;if c[i].className == &quot;Part&quot; then&#9;
-&#9;&#9;&#9;if (head ~= nil and (c[i].Position - head.Position).magnitude &lt; 10) then -- GROSS
-&#9;&#9;&#9;&#9;if c[i].Name == &quot;Handle&quot; then
-&#9;&#9;&#9;&#9;&#9;m = m + (c[i]:GetMass() * equalizingForce * 1) -- hack that makes hats weightless, so different hats don&apos;t change your jump height
-&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;m = m + (c[i]:GetMass() * equalizingForce * gravity)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;m = m + recursiveGetLift(c[i])
-&#9;end
-&#9;return m
-end
-
-
-function onMassChanged(child, char)
-&#9;print(&quot;Mass changed:&quot; .. child.Name .. &quot;    &quot; .. char.Name)
-&#9;if (ghostEffect ~= nil) then
-&#9;&#9;ghostEffect.force = Vector3.new(0, recursiveGetLift(char) ,0)
-&#9;end
-end
-
-
-
-function UpdateGhostState(isUnequipping)
-
-&#9;if isUnequipping == true then
-&#9;&#9;ghostEffect:Remove()
-&#9;&#9;ghostEffect = nil
-&#9;&#9;massCon1:disconnect()
-&#9;&#9;massCon2:disconnect()
-&#9;else
-&#9;&#9;if ghostEffect == nil then
-&#9;&#9;&#9;local char = script.Parent.Parent
-&#9;&#9;&#9;if char == nil then return end
-&#9;&#9;&#9;ghostEffect = Instance.new(&quot;BodyForce&quot;)
-&#9;&#9;&#9;ghostEffect.Name = &quot;GravityCoilEffect&quot;
-&#9;&#9;&#9;ghostEffect.force = Vector3.new(0, recursiveGetLift(char) ,0)
-&#9;&#9;&#9;ghostEffect.Parent = char.Head
-&#9;&#9;&#9;ghostChar = char
-&#9;&#9;&#9;massCon1 = char.ChildAdded:connect(function(child)  onMassChanged(child, char) end)
-&#9;&#9;&#9;massCon2 = char.ChildRemoved:connect(function(child)  onMassChanged(child, char) end)
-&#9;&#9;end
-&#9;end
-&#9;
-
-end
-
---[[end floating code]]--
-
-
-local speedboostscript=waitfor(sp,&quot;SpeedBoostScript&quot;)
-
-local LocalPlayer = game.Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
-local KeyDownConnection = nil
-local FreeFallingConnection = nil
-
-local MyHumanoid = nil
-local MyTorso = nil
-
-local IsFreeFalling = false
-
-local SpaceDown = false
-
-local LastTeleport = 0
-
-local teleportCool
-
-function OnFreeFalling(isfalling)
-&#9;print(&apos;Is Falling?&apos;..tostring(isfalling))
-&#9;IsFreeFalling = isfalling
-end
-
-function OnKeyDown(key)
-&#9;if key == &apos; &apos; then
-&#9;&#9;SpaceDown = true
-&#9;&#9;print(&apos;got space!&apos;)
-&#9;&#9;if IsFreeFalling then
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;UpdateGhostState(false)&#9;
-&#9;&#9;&#9;&#9;local bgyro = Instance.new(&apos;BodyGyro&apos;)
-&#9;&#9;&#9;&#9;bgyro.maxTorque = Vector3.new(math.huge,math.huge,math.huge)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;--bgyro.cframe = (MyTorso.CFrame-MyTorso.CFrame.p)*CFrame.Angles(-math.pi/2,0,0)
-&#9;&#9;&#9;&#9;bgyro.Parent = MyTorso&#9;
-&#9;&#9;&#9;&#9;--MyHumanoid.PlatformStand=true&#9;
-&#9;&#9;&#9;&#9;while IsFreeFalling and SpaceDown do
-&#9;&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;&#9;&#9;local dir = game.Workspace.CurrentCamera.CoordinateFrame.p-MyTorso.CFrame.p
-&#9;&#9;&#9;&#9;&#9;dir = Vector3.new(dir.x,0,dir.z).unit
-&#9;&#9;&#9;&#9;&#9;bgyro.cframe = CFrame.new(Vector3.new(), dir)*CFrame.Angles(math.pi/2,-math.pi,0)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;UpdateGhostState(true)&#9;
-&#9;&#9;&#9;&#9;bgyro:Destroy()
-&#9;&#9;&#9;&#9;--MyHumanoid.PlatformStand=false
-&#9;&#9;&#9;end)
-&#9;&#9;else
-&#9;&#9;&#9;print(&apos;Adding bforce&apos;)
-&#9;&#9;&#9;local bforce = Instance.new(&apos;BodyForce&apos;)
-&#9;&#9;&#9;bforce.force = Vector3.new(0,9000,0)
-&#9;&#9;&#9;bforce.Parent = MyTorso
-&#9;&#9;&#9;game.Debris:AddItem(bforce,.2)
-&#9;&#9;end
-&#9;end
-end
-
-function OnKeyUp(key)
-&#9;if key == &apos; &apos; then
-&#9;&#9;print(&apos;Got key up!&apos;)
-&#9;&#9;SpaceDown = false
-&#9;end
-end
-
-function Activated()
-
-&#9;local ntime = tick()
-&#9;if ntime - LastTeleport &gt; 2 then
-&#9;&#9;local dir = game.Workspace.CurrentCamera.CoordinateFrame.p-MyTorso.CFrame.p
-&#9;&#9;dir = Vector3.new(dir.x,0,dir.z).unit
-&#9;&#9;local bpos = Instance.new(&apos;BodyPosition&apos;)
-&#9;&#9;bpos.maxForce = Vector3.new(math.huge,0,math.huge)
-&#9;&#9;bpos.position = MyTorso.CFrame.p-dir*40
-&#9;&#9;bpos.Parent = MyTorso
-&#9;&#9;game.Debris:AddItem(bpos,.5)
-&#9;&#9;LastTeleport=ntime
-&#9;end
-end
-
-function Equipped()
-&#9;if sp.Parent:FindFirstChild(&quot;SpeedBoostScript&quot;)==nil then
-&#9;&#9;local s=speedboostscript:clone()
-&#9;&#9;local tooltag=Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;tooltag.Name=&quot;ToolTag&quot;
-&#9;&#9;tooltag.Value=sp
-&#9;&#9;tooltag.Parent=s
-&#9;&#9;s.Parent=sp.Parent
-&#9;&#9;s.Disabled=false
-&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;CoilSound&quot;)
-&#9;&#9;if sound~=nil then
-&#9;&#9;&#9;sound:Play()
-&#9;&#9;end
-&#9;end
-&#9;if sp.Parent then
-&#9;&#9;if sp.Parent:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;&#9;MyTorso = sp.Parent.Torso
-&#9;&#9;end
-&#9;&#9;if sp.Parent:FindFirstChild(&apos;Humanoid&apos;) then
-&#9;&#9;&#9;MyHumanoid = sp.Parent.Humanoid
-&#9;&#9;&#9;if not FreeFallingConnection then
-&#9;&#9;&#9;&#9;FreeFallingConnection = MyHumanoid.FreeFalling:connect(OnFreeFalling)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;if not KeyDownConnection then
-&#9;&#9;KeyDownConnection = Mouse.KeyDown:connect(OnKeyDown)
-&#9;&#9;KeyUpConnection = Mouse.KeyUp:connect(OnKeyUp)
-&#9;end
-end
-
-function Unequipped()
-&#9;KeyDownConnection:disconnect()
-&#9;KeyDownConnection=nil
-&#9;KeyUpConnection:disconnect()
-&#9;KeyUpConnection=nil
-&#9;FreeFallingConnection:disconnect()
-&#9;FreeFallingConnection=nil
-end
-
-sp.Equipped:connect(Equipped)
-sp.Unequipped:connect(Unequipped)
-sp.Activated:connect(Activated)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBXD8200B4F09614578A0CDAD05BAF2B90B">
+		<Item class="Part" referent="RBX21CB8C99F2CE49EC8B4FFB6A1CFFBA31">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -244,9 +37,9 @@ sp.Activated:connect(Activated)
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">21</int>
 				<CoordinateFrame name="CFrame">
-					<X>1.22173393</X>
-					<Y>25.08255</Y>
-					<Z>0.269999713</Z>
+					<X>-36.1200294</X>
+					<Y>72.7200623</Y>
+					<Z>-24.7299404</Z>
 					<R00>0.998436093</R00>
 					<R01>0.0559068173</R01>
 					<R02>2.39046557e-007</R02>
@@ -299,7 +92,7 @@ sp.Activated:connect(Activated)
 					<Z>2.4000001</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBXD88F794D968F496AB2F7A0747E30E271">
+			<Item class="Sound" referent="RBX39D9FF43DEA4429298A9AA6919D443B0">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">CoilSound</string>
@@ -309,7 +102,7 @@ sp.Activated:connect(Activated)
 					<float name="Volume">1</float>
 				</Properties>
 			</Item>
-			<Item class="SpecialMesh" referent="RBX8E90093204CA4B5093A5A41BDF51B9A7">
+			<Item class="SpecialMesh" referent="RBX9D5E22C76B734CAB9262B8C81B0CDF2A">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -318,11 +111,11 @@ sp.Activated:connect(Activated)
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
 						<X>0</X>
-						<Y>-0.25</Y>
-						<Z>-0.25</Z>
+						<Y>0</Y>
+						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
+						<X>0.899999976</X>
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
@@ -335,263 +128,248 @@ sp.Activated:connect(Activated)
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX30AC29985BDC4F1C8E158BD10AFE195F">
-			<Properties>
-				<bool name="Disabled">true</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">SpeedBoostScript</string>
-				<ProtectedString name="Source">--Made by Stickmasterluke
-
-
-sp=script.Parent
-local Handle = sp:WaitForChild(&apos;Transportation Cloak&apos;):WaitForChild(&apos;Handle&apos;)
-speedboost=1&#9;&#9;--100% speed bonus
-speedforsmoke=10&#9;--smoke apears when character running &gt;= 10 studs/second.
-
-
-
-function waitfor(a,b,c)
-&#9;local c=c or 5*60
-&#9;local d=tick()+c
-&#9;while a:FindFirstChild(b)==nil and tick()&lt;=d do
-&#9;&#9;wait()
-&#9;end
-&#9;return a:FindFirstChild(b)
-end
-
-local tooltag=waitfor(script,&quot;ToolTag&quot;,2)
-if tooltag~=nil then
-&#9;local tool=tooltag.Value
-&#9;local h=sp:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if h~=nil then
-&#9;&#9;h.WalkSpeed=16+16*speedboost
-&#9;&#9;local t=sp:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;if t~=nil then
-&#9;&#9;&#9;smokepart=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;smokepart.FormFactor=&quot;Custom&quot;
-&#9;&#9;&#9;smokepart.Size=Vector3.new(0,0,0)
-&#9;&#9;&#9;smokepart.TopSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;smokepart.BottomSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;smokepart.CanCollide=false
-&#9;&#9;&#9;smokepart.Transparency=1
-&#9;&#9;&#9;local weld=Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;weld.Name=&quot;SmokePartWeld&quot;
-&#9;&#9;&#9;weld.Part0=t
-&#9;&#9;&#9;weld.Part1=smokepart
-&#9;&#9;&#9;weld.C0=CFrame.new(0,-3.5,0)*CFrame.Angles(math.pi/4,0,0)
-&#9;&#9;&#9;weld.Parent=smokepart
-&#9;&#9;&#9;smokepart.Parent=sp
-&#9;&#9;&#9;smoke=Instance.new(&quot;Smoke&quot;)
-&#9;&#9;&#9;smoke.Enabled=t.Velocity.magnitude&gt;speedforsmoke
-&#9;&#9;&#9;smoke.RiseVelocity=2
-&#9;&#9;&#9;smoke.Opacity=.25
-&#9;&#9;&#9;smoke.Color = Color3.new(26/256,96/256,182/256)
-&#9;&#9;&#9;smoke.Size=.5
-&#9;&#9;&#9;smoke.Parent=smokepart
-&#9;&#9;&#9;Cloak= Handle:Clone()
-&#9;&#9;&#9;Handle.Transparency = 1
-&#9;&#9;&#9;if sp:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;&#9;&#9;weld=Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;weld.Name=&quot;cloakWeld&quot;
-&#9;&#9;&#9;&#9;weld.Part0=sp[&apos;Torso&apos;]
-&#9;&#9;&#9;&#9;weld.Part1=Cloak
-&#9;&#9;&#9;&#9;weld.C0=CFrame.Angles(-.07,.01,0)+Vector3.new(0,-.15,.5)
-&#9;&#9;&#9;&#9;weld.Parent=sp[&apos;Torso&apos;]
-&#9;&#9;&#9;&#9;Cloak.Parent = sp[&apos;Torso&apos;]
-&#9;&#9;&#9;end
-&#9;&#9;&#9;h.Running:connect(function(speed)
-&#9;&#9;&#9;&#9;if smoke and smoke~=nil then
-&#9;&#9;&#9;&#9;&#9;smoke.Enabled=speed&gt;speedforsmoke
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;end
-&#9;end
-&#9;while tool~=nil and tool.Parent==sp and h~=nil do
-&#9;&#9;sp.ChildRemoved:wait()
-&#9;end
-&#9;local h=sp:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if h~=nil then
-&#9;&#9;h.WalkSpeed=16
-&#9;end
-end
-
-if smokepart~=nil then
-&#9;smokepart:remove()
-end
-if Cloak then
-&#9;Cloak:remove()
-end
-Handle.Transparency = 0
-script:remove()
-
-
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBX5D917007910F4F18807493D652AEFDE3">
+		<Item class="Script" referent="RBX0DE03103911446D7A5F66976A58690AE">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">BottomSpinner</string>
-				<ProtectedString name="Source">--[[Super Util]]--
-function WaitForChild(parent,...)
-&#9;local debugprint = false
-&#9;for _, i in ipairs({...}) do
-&#9;&#9;if type(i)==&apos;boolean&apos; then
-&#9;&#9;&#9;debugprint = i
-&#9;&#9;else
-&#9;&#9;&#9;while not parent:FindFirstChild(i) do  
-&#9;&#9;&#9;&#9;wait(1/30) 
-&#9;&#9;&#9;&#9;if debugprint then
-&#9;&#9;&#9;&#9;&#9;print(script.Name..&apos;:&apos;..parent.Name..&apos; Waiting for &apos;.. i)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;parent=parent[i]
-&#9;&#9;end
-&#9;end
-&#9;return parent
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://wwww.roblox.com/asset/?id="
+
+Sounds = {
+	CoilSound = Handle:WaitForChild("CoilSound"),
+}
+
+BasePart = Create("Part"){
+	Shape = Enum.PartType.Block,
+	Material = Enum.Material.Plastic,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+	Anchored = false,
+}
+
+BaseEnchantmentCircle = BasePart:Clone()
+BaseEnchantmentCircle.Name = "EnchantmentCircle"
+BaseEnchantmentCircle.Transparency = 1
+BaseEnchantmentCircle.Size = Vector3.new(9.8, 0.2, 9.8)
+BaseEnchantmentCircle.CanCollide = false
+for i, v in pairs({"Top", "Bottom"}) do
+	local EnchantmentDecal = Create("Decal"){
+		Name = "Decal",
+		Transparency = 0,
+		Texture = (BaseUrl .. "212259445"),
+		Face = Enum.NormalId[v],
+		Parent = BaseEnchantmentCircle,
+	}
 end
 
-function ForEach(parent,func)
-&#9;if type(parent)==&apos;table&apos; then
-&#9;&#9;for _,i in pairs(parent) do
-&#9;&#9;&#9;func(i)
-&#9;&#9;end
-&#9;else
-&#9;&#9;for _,i in pairs(parent:GetChildren()) do
-&#9;&#9;&#9;func(i)
-&#9;&#9;end
-&#9;end
+SpeedForSmoke = 10
+
+ReloadTime = 3
+
+Rate = (1 / 60)
+
+MouseDown = false
+ToolEquipped = false
+
+Tool.Enabled = true
+
+function SetUpCloak(CreateNew)
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+	if not CreateNew then
+		return
+	end
+	SmokePart = BasePart:Clone()
+	SmokePart.Name = "SmokePart"
+	SmokePart.Transparency = 1
+	SmokePart.CanCollide = false
+	SmokeWeld = Create("Weld"){
+		Name = "Weld",
+		Part0 = Torso,
+		Part1 = SmokePart,
+		C0 = (CFrame.new(0, -3.5, 0) * CFrame.Angles((math.pi / 4), 0, 0)),
+		C1 = CFrame.new(0, 0, 0),
+		Parent = SmokePart,
+	}
+	Smoke = Create("Smoke"){
+		Name = "Smoke",
+		Enabled = (Torso.Velocity.magnitude > SpeedForSmoke),
+		RiseVelocity = 2,
+		Opacity = 0.25,
+		Color = Color3.new((255 / 255), (0 / 255), (50 / 255)),
+		Size = 0.5,
+		Parent = SmokePart,
+	}
+	Cloak = Handle:Clone()
+	Cloak.Name = "Cloak"
+	Cloak.Transparency = 0
+	Cloak.CanCollide = false
+	CloakWeld = Create("Weld"){
+		Name = "Weld",
+		Part0 = Torso,
+		Part1 = Cloak,
+		C0 = ((CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0) + Vector3.new(1.5, 1.5, -1.5)) * CFrame.Angles((math.pi / 2), 0, 0)),
+		C1 = Tool.Grip,
+		Parent = Cloak,
+	}
+	for i, v in pairs({Cloak, SmokePart}) do
+		v.Parent = Tool
+	end
+	Spawn(function()
+		EnchantmentCircle = BaseEnchantmentCircle:Clone()
+		local SpinVelocity = Create("BodyAngularVelocity"){
+			angularvelocity = Vector3.new(0, 1, 0),
+			maxTorque = Vector3.new(0, math.huge, 0),
+			Parent = EnchantmentCircle,
+		}
+		local SpinPosition = Create("BodyPosition"){
+			maxForce = Vector3.new(math.huge, math.huge, math.huge),
+			Parent = EnchantmentCircle,
+		}
+		local BodyGyro = Create("BodyGyro"){
+			maxTorque = Vector3.new(math.huge, 0, math.huge),
+			Parent = EnchantmentCircle,
+			cframe = CFrame.new(0, 0, 0)
+		}
+		EnchantmentCircle.CFrame = (CFrame.new(Torso.Position) * CFrame.new(0, -3, 0))
+		SpinPosition.position = EnchantmentCircle.CFrame.p
+		EnchantmentCircle.Parent = Tool
+		local StartTime = tick()
+		while EnchantmentCircle and EnchantmentCircle.Parent and ToolEquipped and CheckIfAlive() do
+			if math.abs(Torso.Velocity.Y) < 15 and Humanoid:GetState().Name ~= "Freefall" then
+				SpinPosition.position = (Torso.CFrame * CFrame.new(0, -3, 0)).p
+			end
+			Smoke.Enabled = (Torso.Velocity.Magnitude > SpeedForSmoke)
+			wait(Rate)
+		end
+		if EnchantmentCircle and EnchantmentCircle.Parent then
+			EnchantmentCircle:Destroy()
+		end
+	end)
+end
+function Activated()
+	if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped or MouseDown then
+		return
+	end
+	MouseDown = true
 end
 
-function MakeValue(class,name,value,parent)
-&#9;local temp = Instance.new(class)
-&#9;temp.Name = name
-&#9;temp.Value = value
-&#9;temp.Parent = parent
-&#9;return temp
-end&#9;
-
-function TweenProperty(obj, propName, inita, enda, length)
-&#9;--WARNING:possible floating point errors here
-&#9;local lastAlpha = 0
-&#9;local breakLoop = false
-&#9;--[[
-&#9;if obj.Changed then obj.Changed:connect(function(prop)
-&#9;&#9;&#9;if prop ==propName and math.abs(lastAlpha-obj[propName])&gt;.001 then
-&#9;&#9;&#9;&#9;breakLoop = true
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-&#9;--]]
-&#9;local startTime = tick()
-&#9;local diff = enda-inita
-&#9;while tick()-startTime&lt;length and not breakLoop do
-&#9;&#9;lastAlpha = (((tick()-startTime)/length)*diff)+inita
-&#9;&#9;obj[propName] = lastAlpha
-&#9;&#9;wait(1/30)
-&#9;end
-&#9;if not breakLoop then
-&#9;&#9;obj[propName] = enda&#9;
-&#9;end
+function CheckIfAlive()
+	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent) and true) or false)
 end
 
-
---[[Constants]]--
-local MAX_SIZE = Vector3.new(9.8,.2,9.8)
-local MIN_SIZE = Vector3.new(1,1,1)
---[[Workspace Variables]]--
-local Tool = script.Parent
-local MyHumanoid =nil
---[[Script Variables]]--
-local IsEquipped = false
-local IsFreeFalling = false
-local SpinPart = Instance.new(&apos;Part&apos;)
-SpinPart.Transparency = 1
-SpinPart.Size = MAX_SIZE
-SpinPart.CanCollide = false
-SpinPart.FormFactor = &apos;Custom&apos;
-local SpinDecal = Instance.new(&apos;Decal&apos;)
-SpinDecal.Texture = &apos;http://www.roblox.com/asset/?id=212259445&apos;
-SpinDecal.Parent = SpinPart
-SpinDecal.Face = &apos;Top&apos;
-do
-&#9;local tspin = Instance.new(&apos;BodyAngularVelocity&apos;)
-&#9;tspin.angularvelocity = Vector3.new(0,1,0)
-&#9;tspin.maxTorque =Vector3.new(math.huge,math.huge,math.huge)
-&#9;tspin.Parent = SpinPart
-end
-local SpinPos = Instance.new(&apos;BodyPosition&apos;)
-SpinPos.maxForce = Vector3.new(math.huge,math.huge,math.huge)
-SpinPos.Parent = SpinPart
-
---[[Script Functions]]--
-function OnFreeFalling(isfalling)
-&#9;IsFreeFalling = isfalling
-end
---[[Running Logic]]--
-
-function Equipped()
-&#9;IsEquipped = true
-&#9;local MyTorso = Tool.Parent:FindFirstChild(&apos;Torso&apos;)
-&#9;if Tool.Parent:FindFirstChild(&apos;Humanoid&apos;) then
-&#9;&#9;MyHumanoid = Tool.Parent.Humanoid
-&#9;&#9;if not FreeFallingConnection then
-&#9;&#9;&#9;FreeFallingConnection = MyHumanoid.FreeFalling:connect(OnFreeFalling)
-&#9;&#9;end
-&#9;end
-&#9;if MyTorso then
-&#9;&#9;Spawn(function()
-&#9;&#9;&#9;local startTime = tick()
-&#9;&#9;&#9;SpinPart.CFrame = CFrame.new(MyTorso.CFrame.p+Vector3.new(0,-2.8+(math.sin(tick())/3),0))
-&#9;&#9;&#9;SpinPart.Parent = MyTorso
-&#9;&#9;&#9;local fadeIn = true
-&#9;&#9;&#9;while IsEquipped do
-
-&#9;&#9;&#9;&#9;SpinDecal.Transparency=((math.sin(tick()-startTime)/2))
-&#9;&#9;&#9;&#9;if not IsFreeFalling then
-&#9;&#9;&#9;&#9;&#9;SpinPos.position = MyTorso.CFrame.p+Vector3.new(0,-2.8+(math.sin(tick())/3),0)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait()
-&#9;&#9;&#9;end
-&#9;&#9;&#9;SpinPart.Parent = nil
-&#9;&#9;&#9;
-&#9;&#9;end)
-&#9;end
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		Sounds.CoilSound:Play()
+		Humanoid.WalkSpeed = (16 * 2)
+		SetUpCloak(true)
+		Handle.Transparency = 1
+	end)
+	ToolEquipped = true
 end
 
 function Unequipped()
-&#9;IsEquipped = false
+	if CheckIfAlive() then
+		Humanoid.WalkSpeed = 16
+	end
+	Spawn(function()
+		SetUpCloak(false)
+	end)
+	Handle.Transparency = 0
+	ToolEquipped = false
 end
 
+SetUpCloak(false)
+
+Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)
-</ProtectedString>
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX2BE0A9BECD7449D8852A97C36949E5DF">
+		<Item class="LocalScript" referent="RBXB0F403BDD6684184BBB6C65712FAB710">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXD5A2DE0C1EFA4679B0F0C9342AFFD3EF">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>3.09131789</X>
-					<Y>25.3801918</Y>
-					<Z>3.26976132</Z>
-					<R00>0.87723577</R00>
-					<R01>-0.0927779227</R01>
-					<R02>0.471009225</R02>
-					<R10>7.4505806e-009</R10>
-					<R11>0.981146932</R11>
-					<R12>0.193263218</R12>
-					<R20>-0.480059862</R20>
-					<R21>-0.16953741</R21>
-					<R22>0.86069715</R22>
+					<X>-35.1449928</X>
+					<Y>72.8780289</Y>
+					<Z>-21.8256931</Z>
+					<R00>0.952054858</R00>
+					<R01>-0.034147203</R01>
+					<R02>0.304015666</R02>
+					<R10>-0</R10>
+					<R11>0.993751168</R11>
+					<R12>0.111618645</R12>
+					<R20>-0.305927396</R20>
+					<R21>-0.106267072</R21>
+					<R22>0.946105599</R22>
 				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
+				<float name="FieldOfView">75</float>
 				<CoordinateFrame name="Focus">
-					<X>1.4333657</X>
-					<Y>24.6999054</Y>
-					<Z>0.240108013</Z>
+					<X>-35.6802902</X>
+					<Y>72.6814957</Y>
+					<Z>-23.4915543</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -603,6 +381,369 @@ Tool.Unequipped:connect(Unequipped)
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX50DE05B67A3A4C8BAAD70538CF1D4488">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+RunService = game:GetService("RunService")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://wwww.roblox.com/asset/?id="
+
+Animations = {
+	Flying = {Animation = Tool:WaitForChild("Flying"), FadeTime = nil, Weight = nil, Speed = 0.5, Manual = true},
+}
+
+AnimationTracks = {}
+
+Gravity = 196.20
+JumpHeightPercentage = 0.25
+
+Gliding = false
+SpaceDown = false
+
+LastTeleport = 0
+
+BaseSpeed = 16
+IncreasedSpeed = (BaseSpeed * 1.5)
+FlightSpeed = (BaseSpeed * 3)
+
+ToolEquipped = false
+
+function CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.find(string.lower(String), string.lower(v)) then
+			return true
+		end
+	end
+	return false
+end
+
+function CheckIntangible(Hit)
+	local ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Bullet"}
+	if Hit and Hit.Parent then
+		if ((not Hit.CanCollide or CheckTableForString(ProjectileNames, Hit.Name)) and not Hit.Parent:FindFirstChild("Humanoid")) then
+			return true
+		end
+	end
+	return false
+end
+
+function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
+	local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+	if RayHit and CheckIntangible(RayHit) then
+		if DelayIfHit then
+			wait()
+		end
+		RayHit, RayPos, RayNormal = CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+	end
+	return RayHit, RayPos, RayNormal
+end
+
+function SetAnimation(mode, value)
+	if not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	local function StopAnimation(Animation)
+		for i, v in pairs(AnimationTracks) do
+			if v.Animation == Animation then
+				v.AnimationTrack:Stop(value.EndFadeTime)
+				if v.TrackStopped then
+					v.TrackStopped:disconnect()
+				end
+				table.remove(AnimationTracks, i)
+			end
+		end
+	end
+	if mode == "PlayAnimation" then
+		for i, v in pairs(AnimationTracks) do
+			if v.Animation == value.Animation then
+				if value.Speed then
+					v.AnimationTrack:AdjustSpeed(value.Speed)
+					return
+				elseif value.Weight or value.FadeTime then
+					v.AnimationTrack:AdjustWeight(value.Weight, value.FadeTime)
+					return
+				else
+					StopAnimation(value.Animation, false)
+				end
+			end
+		end
+		local AnimationMonitor = Create("Model"){}
+		local TrackEnded = Create("StringValue"){Name = "Ended"}
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		local TrackStopped
+		if not value.Manual then
+			TrackStopped = AnimationTrack.Stopped:connect(function()
+				if TrackStopped then
+					TrackStopped:disconnect()
+				end
+				StopAnimation(value.Animation, true)
+				TrackEnded.Parent = AnimationMonitor
+			end)
+		end
+		table.insert(AnimationTracks, {Animation = value.Animation, AnimationTrack = AnimationTrack, TrackStopped = TrackStopped})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+		if TrackStopped then
+			AnimationMonitor:WaitForChild(TrackEnded.Name)
+		end
+		return TrackEnded.Name
+	elseif mode == "StopAnimation" and value then
+		StopAnimation(value.Animation)
+	end
+end
+
+function GetAllConnectedParts(Object)
+	local Parts = {}
+	local function GetConnectedParts(Object)
+		for i, v in pairs(Object:GetConnectedParts()) do
+			local Ignore = false
+			for ii, vv in pairs(Parts) do
+				if v == vv then
+					Ignore = true
+				end
+			end
+			if not Ignore then
+				table.insert(Parts, v)
+				GetConnectedParts(v)
+			end
+		end
+	end
+	GetConnectedParts(Object)
+	return Parts
+end
+
+function SetGravityEffect(Table)
+	local Table = (Table or {})
+	local Multiplier = (Table.Multiplier or 1)
+	if not GravityEffect or not GravityEffect.Parent then
+		GravityEffect = Create(Table.Class or "BodyForce"){
+			Name = "GravityCoilEffect",
+		}
+		for i, v in pairs(Table.Properties or {}) do
+			pcall(function()
+				GravityEffect[i] = v
+			end)
+		end
+	end
+	local TotalMass = 0
+	local ConnectedParts = GetAllConnectedParts(Torso)
+	for i, v in pairs(ConnectedParts) do
+		if v:IsA("BasePart") then
+			TotalMass = (TotalMass + v:GetMass())
+		end
+	end
+	local TotalMass = ((TotalMass * Gravity) * Multiplier)
+	if GravityEffect:IsA("BodyVelocity") then
+		GravityEffect.maxForce = Vector3.new(0, TotalMass, 0)
+	elseif GravityEffect:IsA("BodyForce") then
+		GravityEffect.force = Vector3.new(0, TotalMass, 0)
+	end
+	GravityEffect.Parent = Torso
+	return GravityEffect
+end
+
+function HandleGravityEffect(Enabled, Table)
+	if not CheckIfAlive() then
+		return
+	end
+	for i, v in pairs(Torso:GetChildren()) do
+		if v:IsA("BodyForce") or v:IsA("BodyVelocity") then
+			Debris:AddItem(v, 0)
+		end
+	end
+	for i, v in pairs({ToolUnequipped1, DescendantAdded, DescendantRemoving}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	if Enabled then
+		CurrentlyEquipped = true
+		ToolUnequipped1 = Tool.Unequipped:connect(function()
+			CurrentlyEquipped = false
+		end)
+		SetGravityEffect(Table)
+		DescendantAdded = Character.DescendantAdded:connect(function()
+			if not CurrentlyEquipped or not CheckIfAlive() then
+				return
+			end
+			SetGravityEffect(Table)
+		end)
+		DescendantRemoving = Character.DescendantRemoving:connect(function()
+			if not CurrentlyEquipped or not CheckIfAlive() then
+				return
+			end
+			SetGravityEffect(Table)
+		end)
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Activated()
+	if not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	local Time = tick()
+	local Camera = game:GetService("Workspace").CurrentCamera
+	if (Time - LastTeleport) > 2 then
+		local Dir = Camera.CoordinateFrame.p - Torso.CFrame.p
+		Dir = Vector3.new(Dir.X, 0, Dir.Z).unit
+		local BodyPosition = Create("BodyPosition"){
+			maxForce = Vector3.new(math.huge, 0, math.huge),
+			position = (Torso.CFrame.p - Dir * 40),
+		}
+		Debris:AddItem(BodyPosition, 0.5)
+		BodyPosition.Parent = Torso
+		LastTeleport = Time
+	end
+end
+
+function IsFreeFalling()
+	return (CheckIfAlive() and Humanoid:GetState() == Enum.HumanoidStateType.Freefall)
+end
+
+function KeyPressed(Key, Down)
+	if Key == " " then
+		SpaceDown = Down
+		local CurrentState = Humanoid:GetState().Name
+		local RayHit, RayPos, RayNormal = CastRay(Torso.Position, Vector3.new(0, -1, 0), (Torso.Size.Y * 2 + 0.2), {Character}, false)
+		if SpaceDown and not Gliding and RayHit and CurrentState ~= "None" and CurrentState ~= "Freefall" and CurrentState ~= "FallingDown" and CurrentState ~= "GettingUp" then
+			if BodyForce and BodyForce.Parent then
+				Debris:AddItem(GravityEffect, 0)
+			end
+			BodyForce = SetGravityEffect({Multiplier = 3.5})
+			Debris:AddItem(BodyForce, 0.2)
+		elseif SpaceDown and not Gliding and IsFreeFalling() then
+			Gliding = true
+			HandleGravityEffect(true, {Class = "BodyVelocity", Properties = {P = 500, velocity = Vector3.new(0, -10, 0)}})
+			for i, v in pairs({BodyForce, BodyGyro}) do
+				if v and v.Parent then
+					Debris:AddItem(v, 0)
+				end
+			end
+			Torso.Velocity = Vector3.new(0, 0, 0)
+			Torso.RotVelocity = Vector3.new(0, 0, 0)
+			Humanoid.WalkSpeed = FlightSpeed
+			Humanoid.AutoRotate = false
+			BodyGyro = Create("BodyGyro"){
+				maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+				P = (10 ^ 5),
+				Parent = Torso,
+			}
+			SetAnimation("PlayAnimation", Animations.Flying)
+			while IsFreeFalling() and SpaceDown and Gliding and ToolEquipped do
+				local Camera = game:GetService("Workspace").CurrentCamera
+				local Velocity = Torso.Velocity
+				Velocity = Vector3.new(Velocity.X, 0, Velocity.Z)
+				local FlightDirection = Camera.CoordinateFrame.lookVector
+				if Velocity.Magnitude > 10 then
+					FlightDirection = Velocity.Unit
+				end
+				FlightDirection = (FlightDirection * Vector3.new(1, 0, 1))
+				local FlightCFrame = (CFrame.new(Torso.Position, (Torso.CFrame + FlightDirection * 2).p) * CFrame.Angles(-(math.pi / 2), (math.pi * 2), 0))
+				if tostring(FlightCFrame.p.X) ~= "-1.#IND" and FlightCFrame.p.Y ~= "-1.#IND" and FlightCFrame.p.Z ~= "-1.#IND" then
+					BodyGyro.cframe = FlightCFrame
+				end
+				wait()
+			end
+			SetAnimation("StopAnimation", Animations.Flying)
+			Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+			Humanoid.AutoRotate = true
+			if CheckIfAlive() then
+				Humanoid.WalkSpeed = ((ToolEquipped and IncreasedSpeed) or BaseSpeed)
+			end
+			Gliding = false
+			HandleGravityEffect(false)
+			Debris:AddItem(BodyGyro, 0)
+		end
+	end
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		Humanoid.WalkSpeed = IncreasedSpeed
+		Mouse.KeyDown:connect(function(Key)
+			KeyPressed(Key, true)
+		end)
+		Mouse.KeyUp:connect(function(Key)
+			KeyPressed(Key, false)
+		end)
+		for i, v in pairs({HumanoidDied}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		HumanoidDied = Humanoid.Died:connect(function()
+			if GravityEffect and GravityEffect.Parent then
+				Debris:AddItem(GravityEffect, 0)
+			end
+		end)
+		local CurrentlyEquipped = true
+		if ToolUnequipped2 then
+			ToolUnequipped2:disconnect()
+		end
+		ToolUnequipped2 = Tool.Unequipped:connect(function()
+			CurrentlyEquipped = false
+		end)
+	end)
+	ToolEquipped = true
+end
+
+function Unequipped()
+	SpaceDown = false
+	if CheckIfAlive() then
+		Humanoid.WalkSpeed = BaseSpeed
+		Humanoid.AutoRotate = true
+		Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+	end
+	for i, v in pairs(AnimationTracks) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	for i, v in pairs({HumanoidDied, ToolUnequipped2, BodyForce, BodyGyro, ToolUnequipped1, DescendantAdded, DescendantRemoving}) do
+		if tostring(v) == "Connection" then
+			v:disconnect()
+		elseif type(v) == "userdata" and v and v.Parent then
+			Debris:AddItem(v, 0)
+		end
+	end
+	HandleGravityEffect(false)
+	ToolEquipped = false
+end
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX274FA845E72D4D51BDD8B14875961356">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=257279573</url></Content>
+				<string name="Name">Flying</string>
 			</Properties>
 		</Item>
 	</Item>
