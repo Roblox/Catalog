@@ -1,0 +1,1240 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX9151F97C9B18406DA9AAE79F7917B534">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-1.125</Y>
+				<Z>0.25</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">PersonalSpaceCraft</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=297060529</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="LocalScript" referent="RBX151926A49ED841FC9B900519FF2D34DB">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+UserInputService = game:GetService("UserInputService")
+
+InputCheck = Instance.new("ScreenGui")
+InputCheck.Name = "InputCheck"
+InputFrame = Instance.new("Frame")
+InputFrame.Name = "InputButton"
+InputFrame.BackgroundTransparency = 1
+InputFrame.Size = UDim2.new(1, 0, 1, 0)
+InputFrame.Parent = InputCheck
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+FrameRate = (1 / 20)
+
+ToolEquipped = false
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	Mouse.Button1Down:connect(function()
+		InvokeServer("Mouse1", {Down = true})
+	end)
+	Mouse.Button1Up:connect(function()
+		InvokeServer("Mouse1", {Down = false})
+	end)
+	Mouse.KeyDown:connect(function(Key)
+		InvokeServer("Key", {Key = Key, Down = true})
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		InvokeServer("Key", {Key = Key, Down = false})
+	end)
+	if Jumping then
+		Jumping:disconnect()
+	end
+	Jumping = Humanoid.Jumping:connect(function()
+		InvokeServer("Dismount", {Dismount = true})
+	end)
+	Spawn(function()
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			InputCheckClone = InputCheck:Clone()
+			if UserInputService.TouchEnabled then
+				InputCheckClone = InputCheck:Clone()
+				InputCheckClone.InputButton.InputBegan:connect(function()
+					InvokeServer("Mouse1", {Down = true})
+				end)
+				InputCheckClone.InputButton.InputEnded:connect(function()
+					InvokeServer("Mouse1", {Down = false})
+				end)
+				InputCheckClone.Parent = PlayerGui
+			end
+		end
+		local CurrentlyEquipped = true
+		if ToolUnequipped then
+			ToolUnequipped:disconnect()
+		end
+		ToolUnequipped = Tool.Unequipped:connect(function()
+			CurrentlyEquipped = false
+		end)
+		while ToolEquipped and CheckIfAlive() and CurrentlyEquipped do
+			if Mouse then
+				InvokeServer("MouseUpdate", Mouse.Hit)
+			end
+			wait(FrameRate)
+		end
+	end)
+end
+
+function Unequipped()
+	if CheckIfAlive() then
+		Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+	end
+	if InputCheckClone then
+		Debris:AddItem(InputCheckClone, 0)
+	end
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	local ServerReturn = nil
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(mode, value)
+	end)
+	return ServerReturn
+end
+
+function OnClientInvoke(mode, value)
+	if not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXE0EFE8254DA04D7781CE72954D38AE4A">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=162861977</url></Content>
+				<string name="Name">Throw</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXD5343B6ACA414EC1A20817C598EB4DBE">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>1.63924551</X>
+					<Y>66.7073517</Y>
+					<Z>2.1675272</Z>
+					<R00>0.188245401</R00>
+					<R01>0.0180685744</R01>
+					<R02>-0.981956124</R02>
+					<R10>1.4548025e-008</R10>
+					<R11>0.999830723</R11>
+					<R12>0.0183974802</R12>
+					<R20>0.982122362</R20>
+					<R21>-0.00346325524</R21>
+					<R22>0.188213512</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>-5.90740237e-005</X>
+					<Y>1.1883796e-007</Y>
+					<Z>0.00149456959</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">1</float>
+				<Vector3 name="Velocity">
+					<X>-0.00402954966</X>
+					<Y>0.000395965995</Y>
+					<Z>-0.000186878344</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.75</X>
+					<Y>1.25</Y>
+					<Z>3</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX1956BCF67DDD4F3D850260718B1F2848">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=297060328</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>2</X>
+						<Y>2</Y>
+						<Z>2</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=297060434</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXFBF6A4A7674F43AC8B5E2721C4B45236">
+				<Properties>
+					<bool name="Looped">true</bool>
+					<string name="Name">Flying</string>
+					<float name="Pitch">1.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=297213102</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXA93DDBCADBA64DD991EC5A014E922C84">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">EngineOn</string>
+					<float name="Pitch">2</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=291431305</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX3D62571922EC4D96BA6DB3ACEA5DC97A">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">EngineOff</string>
+					<float name="Pitch">0.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=291431305</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX43767482FA04477F924302AAD649D960">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SpaceLaser</string>
+					<float name="Pitch">0.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=297223593</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX6FB3A6653FD046E4A4C80D6F07073723">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">DigitalBeep</string>
+					<float name="Pitch">0.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=297223569</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX52487D5CD0204827B5D11C65F56278FD">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">SystemShutDown</string>
+					<float name="Pitch">0.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=297233448</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXA7C6898D927A49E480BB4D61E21F3D50">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Alarm</string>
+					<float name="Pitch">0.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=297233472</url></Content>
+					<float name="Volume">0.5</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXCEBE23D42A194E32B8ADE62C63085970">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Explosion</string>
+					<float name="Pitch">0.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12221984</url></Content>
+					<float name="Volume">1</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Animation" referent="RBX393DA6F469E742F48CD349C42A2A72FF">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=264034706</url></Content>
+				<string name="Name">Sit</string>
+			</Properties>
+		</Item>
+		<Item class="Model" referent="RBXC7AD9D4E308F4DD18534AD21C4BDF940">
+			<Properties>
+				<CoordinateFrame name="ModelInPrimary">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">DisplayModel</string>
+				<Ref name="PrimaryPart">null</Ref>
+			</Properties>
+			<Item class="Part" referent="RBXCF47FB9E8A3F419C8CE2851A3BD6106C">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>7.44587708</X>
+						<Y>67.88974</Y>
+						<Z>-4.21852303</Z>
+						<R00>0.18824558</R00>
+						<R01>-3.1478703e-007</R01>
+						<R02>-0.982123196</R02>
+						<R10>1.45273633e-008</R10>
+						<R11>0.999999881</R11>
+						<R12>-3.22237611e-007</R12>
+						<R20>0.982123315</R20>
+						<R21>4.51691449e-008</R21>
+						<R22>0.188245535</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>-5.90740237e-005</X>
+						<Y>1.1883796e-007</Y>
+						<Z>0.00149456959</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>-0.00579746999</X>
+						<Y>0.00869713072</Y>
+						<Z>-0.000257416832</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.200000003</X>
+						<Y>0.200000003</Y>
+						<Z>0.200000003</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBX285F486DCCA54D2583B91F5870A33FAC">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.38888681</X>
+							<Y>-32.1258774</Y>
+							<Z>0.712191164</Z>
+							<R00>-0.0723608881</R00>
+							<R01>1.4548025e-008</R01>
+							<R02>0.997378886</R02>
+							<R10>0.0183492601</R10>
+							<R11>0.999830723</R11>
+							<R12>0.00133124355</R12>
+							<R20>-0.997210026</R20>
+							<R21>0.0183974802</R21>
+							<R22>-0.0723486394</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>3.78991747</X>
+							<Y>-33.2897224</Y>
+							<Z>8.20807266</Z>
+							<R00>-0.072360903</R00>
+							<R01>1.45480286e-008</R01>
+							<R02>0.997379124</R02>
+							<R10>-3.16649675e-007</R10>
+							<R11>0.99999994</R11>
+							<R12>-3.74857336e-008</R12>
+							<R20>-0.997379065</R20>
+							<R21>-3.20374966e-007</R21>
+							<R22>-0.072360903</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBXD5343B6ACA414EC1A20817C598EB4DBE</Ref>
+						<Ref name="Part1">RBXCF47FB9E8A3F419C8CE2851A3BD6106C</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX954B022D53454B55BF6CCF3A73AE9E98">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>8.82007217</X>
+						<Y>67.8897324</Y>
+						<Z>2.95098758</Z>
+						<R00>0.18824558</R00>
+						<R01>-3.1478703e-007</R01>
+						<R02>-0.982123196</R02>
+						<R10>1.45273633e-008</R10>
+						<R11>0.999999881</R11>
+						<R12>-3.22237611e-007</R12>
+						<R20>0.982123315</R20>
+						<R21>4.51691449e-008</R21>
+						<R22>0.188245535</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>-5.90740237e-005</X>
+						<Y>1.1883796e-007</Y>
+						<Z>0.00149456959</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">1</float>
+					<Vector3 name="Velocity">
+						<X>-0.00579660665</X>
+						<Y>0.0111744925</Y>
+						<Z>-0.000257579668</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.200000003</X>
+						<Y>0.200000003</Y>
+						<Z>0.200000003</Z>
+					</Vector3>
+				</Properties>
+				<Item class="Weld" referent="RBXBC532932298A4F5E813312C01A53B786">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.38888681</X>
+							<Y>-32.1258774</Y>
+							<Z>0.712191164</Z>
+							<R00>-0.0723608881</R00>
+							<R01>1.4548025e-008</R01>
+							<R02>0.997378886</R02>
+							<R10>0.0183492601</R10>
+							<R11>0.999830723</R11>
+							<R12>0.00133124355</R12>
+							<R20>-0.997210026</R20>
+							<R21>0.0183974802</R21>
+							<R22>-0.0723486394</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>-3.51009345</X>
+							<Y>-33.2897186</Y>
+							<Z>8.20807266</Z>
+							<R00>-0.072360903</R00>
+							<R01>1.45480286e-008</R01>
+							<R02>0.997379124</R02>
+							<R10>-3.16649675e-007</R10>
+							<R11>0.99999994</R11>
+							<R12>-3.74857336e-008</R12>
+							<R20>-0.997379065</R20>
+							<R21>-3.20374966e-007</R21>
+							<R22>-0.072360903</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBXD5343B6ACA414EC1A20817C598EB4DBE</Ref>
+						<Ref name="Part1">RBX954B022D53454B55BF6CCF3A73AE9E98</Ref>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX3C7603DE826A4916A42153F9E71C74E2">
+				<Properties>
+					<bool name="Anchored">false</bool>
+					<float name="BackParamA">-0.5</float>
+					<float name="BackParamB">0.5</float>
+					<token name="BackSurface">0</token>
+					<token name="BackSurfaceInput">0</token>
+					<float name="BottomParamA">-0.5</float>
+					<float name="BottomParamB">0.5</float>
+					<token name="BottomSurface">0</token>
+					<token name="BottomSurfaceInput">0</token>
+					<int name="BrickColor">194</int>
+					<CoordinateFrame name="CFrame">
+						<X>0.128022432</X>
+						<Y>64.1147461</Y>
+						<Z>1.0317055</Z>
+						<R00>0.18824549</R00>
+						<R01>-3.1478703e-007</R01>
+						<R02>-0.982122779</R02>
+						<R10>1.45480321e-008</R10>
+						<R11>0.99999994</R11>
+						<R12>-3.20374966e-007</R12>
+						<R20>0.982122838</R20>
+						<R21>4.54019755e-008</R21>
+						<R22>0.18824546</R22>
+					</CoordinateFrame>
+					<bool name="CanCollide">false</bool>
+					<float name="Elasticity">0.5</float>
+					<float name="Friction">0.300000012</float>
+					<float name="FrontParamA">-0.5</float>
+					<float name="FrontParamB">0.5</float>
+					<token name="FrontSurface">0</token>
+					<token name="FrontSurfaceInput">0</token>
+					<float name="LeftParamA">-0.5</float>
+					<float name="LeftParamB">0.5</float>
+					<token name="LeftSurface">0</token>
+					<token name="LeftSurfaceInput">0</token>
+					<bool name="Locked">true</bool>
+					<token name="Material">256</token>
+					<string name="Name">Part</string>
+					<float name="Reflectance">0</float>
+					<float name="RightParamA">-0.5</float>
+					<float name="RightParamB">0.5</float>
+					<token name="RightSurface">0</token>
+					<token name="RightSurfaceInput">0</token>
+					<Vector3 name="RotVelocity">
+						<X>-5.90740237e-005</X>
+						<Y>1.1883796e-007</Y>
+						<Z>0.00149456959</Z>
+					</Vector3>
+					<float name="TopParamA">-0.5</float>
+					<float name="TopParamB">0.5</float>
+					<token name="TopSurface">0</token>
+					<token name="TopSurfaceInput">0</token>
+					<float name="Transparency">0</float>
+					<Vector3 name="Velocity">
+						<X>-0.000154855195</X>
+						<Y>-0.00192975975</Y>
+						<Z>-3.35431105e-005</Z>
+					</Vector3>
+					<token name="formFactorRaw">3</token>
+					<token name="shape">1</token>
+					<Vector3 name="size">
+						<X>0.200000003</X>
+						<Y>0.200000003</Y>
+						<Z>0.200000003</Z>
+					</Vector3>
+				</Properties>
+				<Item class="SpecialMesh" referent="RBXF8752E6ECB0C4CDB97105703FDA60C4A">
+					<Properties>
+						<token name="LODX">2</token>
+						<token name="LODY">2</token>
+						<Content name="MeshId"><url>http://www.roblox.com/asset/?id=297060328</url></Content>
+						<token name="MeshType">5</token>
+						<string name="Name">Mesh</string>
+						<Vector3 name="Offset">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<Vector3 name="Scale">
+							<X>9</X>
+							<Y>9</Y>
+							<Z>9</Z>
+						</Vector3>
+						<Content name="TextureId"><url>http://www.roblox.com/asset/?id=297060434</url></Content>
+						<Vector3 name="VertexColor">
+							<X>1</X>
+							<Y>1</Y>
+							<Z>1</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="Weld" referent="RBX5D65DDD0DA9E46C29FA0309305AE9587">
+					<Properties>
+						<CoordinateFrame name="C0">
+							<X>-1.38888681</X>
+							<Y>-32.1258774</Y>
+							<Z>0.712191164</Z>
+							<R00>-0.0723608881</R00>
+							<R01>1.4548025e-008</R01>
+							<R02>0.997378886</R02>
+							<R10>0.0183492601</R10>
+							<R11>0.999830723</R11>
+							<R12>0.00133124355</R12>
+							<R20>-0.997210026</R20>
+							<R21>0.0183974802</R21>
+							<R22>-0.0723486394</R22>
+						</CoordinateFrame>
+						<CoordinateFrame name="C1">
+							<X>0.0111088995</X>
+							<Y>-29.5147285</Y>
+							<Z>0.0327232964</Z>
+							<R00>-0.0723608732</R00>
+							<R01>1.4547993e-008</R01>
+							<R02>0.997378647</R02>
+							<R10>-3.1700506e-007</R10>
+							<R11>1</R11>
+							<R12>-3.7585238e-008</R12>
+							<R20>-0.997378647</R20>
+							<R21>-3.1889374e-007</R21>
+							<R22>-0.0723608732</R22>
+						</CoordinateFrame>
+						<string name="Name">Weld</string>
+						<Ref name="Part0">RBXD5343B6ACA414EC1A20817C598EB4DBE</Ref>
+						<Ref name="Part1">RBX3C7603DE826A4916A42153F9E71C74E2</Ref>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBXF2DDD1272B0547878A79D0D1049F3E98">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>9.78635788</X>
+					<Y>74.3246536</Y>
+					<Z>-9.41802311</Z>
+					<R00>-0.75031662</R00>
+					<R01>-0.432431132</R01>
+					<R02>0.500028372</R02>
+					<R10>-1.49011612e-008</R10>
+					<R11>0.756382585</R11>
+					<R12>0.654129565</R12>
+					<R20>-0.661078691</R20>
+					<R21>0.490804285</R21>
+					<R22>-0.5675264</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">40</float>
+				<CoordinateFrame name="Focus">
+					<X>8.4862957</X>
+					<Y>72.6239319</Y>
+					<Z>-7.94246769</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX663E1F1310F54B119B6A586A64687133">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+Animations = {
+	Throw = {Animation = Tool:WaitForChild("Throw"), FadeTime = nil, Weight = nil, Speed = nil},
+	Sit = {Animation = Tool:WaitForChild("Sit"), FadeTime = 0.25, Weight = nil, Speed = nil}
+}
+
+Sounds = {
+	Flying = Handle:WaitForChild("Flying"),
+	EngineOn = Handle:WaitForChild("EngineOn"),
+	EngineOff = Handle:WaitForChild("EngineOff"),
+	SpaceLaser = Handle:WaitForChild("SpaceLaser"),
+	DigitalBeep = Handle:WaitForChild("DigitalBeep"),
+	SystemShutDown = Handle:WaitForChild("SystemShutDown"),
+	Alarm = Handle:WaitForChild("Alarm"),
+	Explosion = Handle:WaitForChild("Explosion"),
+}
+
+ParticlesBin = script:WaitForChild("Particles")
+Particles = {}
+for i, v in pairs(ParticlesBin:GetChildren()) do
+	if v:IsA("ParticleEmitter") then
+		Particles[v.Name] = v
+	end
+end
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+BasePart = Create("Part"){
+	Material = Enum.Material.Plastic,
+	FormFactor = Enum.FormFactor.Custom,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+}
+
+BasePlane = BasePart:Clone()
+BasePlane.Name = "Plane"
+BasePlane.Size = Vector3.new(1.75, 1.25, 3)
+BasePlane.CanCollide = true
+Create("SpecialMesh"){
+	Name = "Mesh",
+	MeshId = (BaseUrl .. "297060328"),
+	TextureId = (BaseUrl .. "297060434"),
+	Scale = Vector3.new(2, 2, 2),
+	VertexColor = Vector3.new(1, 1, 1),
+	Offset = Vector3.new(0, 0, 0),
+	Parent = BasePlane,
+}
+
+Rate = (1 / 30)
+Gravity = 196.20
+
+Control = 0
+EndFlight = false
+
+MouseDown = Create("BoolValue"){
+	Value = false,
+}
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Tool,
+})
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Tool,
+})
+
+DisplayModel = Tool:FindFirstChild("DisplayModel")
+if DisplayModel then
+	DisplayModel:Destroy()
+end
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+for i, v in pairs(Tool:GetChildren()) do
+	if v:IsA("BasePart") and v ~= Handle then
+		v:Destroy()
+	end
+end
+
+function ThrowPlane()
+	
+	if not CheckIfAlive() or not ToolEquipped or not CurrentlyEquipped then
+		return
+	end
+	
+	Plane = BasePlane:Clone()
+	Plane.Name = (Player.Name .. "'s SpaceCraft")
+	Plane.CanCollide = false
+	Plane.CFrame = Handle.CFrame
+	
+	local PlaneSounds = {}
+	
+	for i, v in pairs(Sounds) do
+		local Sound = v:Clone()
+		PlaneSounds[Sound.Name] = Sound
+		Sound.Parent = Plane
+	end
+	
+	local FireEmitters = {
+		Vector3.new(1.5, 0.1, 7),
+		Vector3.new(-1.5, 0.1, 7),
+		Vector3.new(0.75, -1.85,6),
+		Vector3.new(-0.75, -1.85,6),	
+	}
+	
+	local PlaneMesh = Plane.Mesh
+	
+	BodyPosition = Create("BodyPosition"){
+		maxForce = Vector3.new(math.huge, math.huge, math.huge),
+		position = Plane.Position,
+		Parent = Plane,
+	}
+	
+	BodyGyro = Create("BodyGyro"){
+		maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+		Parent = Plane,
+	}
+	
+	Plane.Parent = game:GetService("Workspace")
+	
+	local Delta = 0
+	Mode = 0
+	EndFlight = false
+	PlaneGoTo = nil
+	
+	Spawn(function()
+		local EaseRate = (1 / 60)
+		local ChangeRate = 30
+		local Duration = 1.5
+		local Frames = (Duration * ChangeRate)
+		for i = 1, Frames do
+			if not Plane or not Plane.Parent or not CheckIfAlive() or not ToolEquipped or EndFlight then
+				return
+			end
+			local Size = ((Vector3.new(7.5, 5.25, 13) / Frames) * i)
+			local Scale = ((Vector3.new(9, 9, 9) / Frames) * i)
+			if (Size.X * Size.Y * Size.Z) > BasePlane:GetMass() then
+				local OrigCF = Plane.CFrame
+				Plane.Size = Size
+				PlaneMesh.Scale = Scale
+				Plane.CFrame = OrigCF
+			end
+			wait(EaseRate)
+		end	
+		Mode = 1
+	end)
+	
+	local ParticleParts = {}
+	
+	local Flames = {}
+	local Smokes = {}
+	
+	if MouseDownChanged then
+		MouseDownChanged:disconnect()
+	end
+	
+	local LastValue = MouseDown.Value	
+	
+	MouseDownChanged = MouseDown.Changed:connect(function()
+		if not CheckIfAlive() or not ToolEquipped or LastValue == MouseDown.Value then
+			return
+		end
+		LastValue = MouseDown.Value
+		for i, v in pairs({Flames, Smokes}) do
+			for ii, vv in pairs(v) do
+				if vv and vv.Parent then
+					vv.Enabled = false
+					Debris:AddItem(vv, 1.5)
+				end
+			end
+		end
+		if MouseDown.Value then
+			Sounds.EngineOn:Play()
+			PlaneSounds.Flying:Play()
+			for i, v in pairs(ParticleParts) do
+				if v.Part and v.Part.Parent and v.Weld and v.Weld.Parent and v.Weld.Part0 == Plane and v.Weld.Part1 == v.Part then
+					local Flame = Particles.Fire:Clone()
+					Flame.Enabled = true
+					table.insert(Flames, Flame)
+					Flame.Parent = v.Part
+				end
+			end
+		elseif not MouseDown.Value then
+			Sounds.EngineOff:Play()
+			PlaneSounds.Flying:Stop()
+			for i, v in pairs(ParticleParts) do
+				if v.Part and v.Part.Parent and v.Weld and v.Weld.Parent and v.Weld.Part0 == Plane and v.Weld.Part1 == v.Part then
+					local Smoke = Particles.Smoke:Clone()
+					Smoke.Enabled = true
+					table.insert(Smokes, Smoke)
+					Debris:AddItem(Smoke, 3)
+					Delay(1.5, (function()
+						Smoke.Enabled = false
+					end))
+					Smoke.Parent = v.Part
+				end
+			end
+		end
+	end)
+	local RandomEffect = {Tick = 0, Delay = -1}
+	while CheckIfAlive() and ToolEquipped and Plane and Plane.Parent and not EndFlight and CurrentlyEquipped do
+		local Speed = ((MouseDown.Value and 10) or 4)
+		if Mode == 0 then
+			BodyPosition.position = (Plane.Position + Plane.CFrame.lookVector * Speed)
+			BodyGyro.cframe = CFrame.new(Plane.Position, BodyPosition.position)
+		elseif (Mode == 1) then
+			if not Plane or not Plane.Parent then
+				EndFlight = true
+				break
+			end
+			Plane.CanCollide = true
+			for i, v in pairs(FireEmitters) do
+				local ParticlePart = BasePart:Clone()
+				ParticlePart.Name = "Effect"
+				ParticlePart.Transparency = 1
+				ParticlePart.Size = Vector3.new(0.2, 0.2, 0.2)
+				ParticlePart.CanCollide = false
+				local Weld = Create("Weld"){
+					Part0 = Plane,
+					Part1 = ParticlePart,
+					C0 = (CFrame.new(v) * CFrame.Angles((math.pi / 2), 0, 0)),
+					C1 = CFrame.new(0, 0, 0),
+					Parent = ParticlePart,
+				}
+				table.insert(ParticleParts, {Part = ParticlePart, Weld = Weld})
+				ParticlePart.Parent = Plane
+			end
+			TorsoWeld = Create("Weld"){
+				Part0 = Plane,
+				Part1 = Torso,
+				C0 = (CFrame.new(-0.1, 1, 0.5) * CFrame.Angles(0, 0, 0)),
+				C1 = (CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)),
+				Parent = Plane,
+			}
+			Spawn(function()
+				InvokeClient("PlayAnimation", Animations.Sit)
+			end)
+			Humanoid.Sit = true
+			Plane.Parent = Tool
+			Mode = 3
+		elseif Mode == 3 then
+			if not TorsoWeld or not TorsoWeld.Parent or TorsoWeld.Part0 ~= Plane or TorsoWeld.Part1 ~= Torso then
+				EndFlight = true
+				break
+			end
+			Control = 1
+			Humanoid.Sit = true
+			local DeltaSpeed = (Speed * (Delta / Rate))
+			BodyPosition.position = (Plane.Position + Plane.CFrame.lookVector * DeltaSpeed)
+			BodyGyro.cframe = (CFrame.new(BodyPosition.position) * CFrame.Angles(Plane.CFrame:toEulerAnglesXYZ()))
+			if PlaneGoTo then
+				local PlaneGoToWorld = (Plane.Position + PlaneGoTo)
+				BodyGyro.cframe = CFrame.new(Plane.Position, PlaneGoToWorld)
+			end
+			local Now = tick()
+			if (Now - RandomEffect.Tick) >= RandomEffect.Delay then
+				if RandomEffect.Delay >= 0 then
+					local RandomSounds = {PlaneSounds.SpaceLaser, PlaneSounds.DigitalBeep, PlaneSounds.SystemShutDown, PlaneSounds.Alarm}
+					local Sound = RandomSounds[math.random(1, #RandomSounds)]
+					Sound.Pitch = (math.random(750, 1250) * 0.001)
+					Sound.Volume = (math.random(500, 750) * 0.001)
+					Sound:Play()
+				end
+				RandomEffect.Tick = Now
+				RandomEffect.Delay = (math.random(2500, 10000) * 0.001)
+			end
+		end	
+		Delta = wait()
+	end
+	Spawn(function()
+		InvokeClient("StopAnimation", Animations.Sit)
+	end)
+	if MouseDownChanged then
+		MouseDownChanged:disconnect()
+	end
+	Debris:AddItem(Plane, 5)
+	Plane.Parent = game:GetService("Workspace")
+	for i, v in pairs(ParticleParts) do
+		if v.Part and v.Part.Parent then
+			if v.Weld then
+				v.Weld.Part0 = nil
+				v.Weld.Part1 = nil
+			end
+			v.Part.Anchored = true
+			v.Part.CanCollide = false
+			for ii, vv in pairs(v.Part:GetChildren()) do
+				if vv:IsA("ParticleEmitter") then
+					vv.Enabled = false
+				end
+			end
+		end
+	end
+	Plane.Anchored = true
+	Plane.CanCollide = false
+	local Explosion = Create("Explosion"){
+		BlastPressure = 0,
+		BlastRadius = 50,
+		ExplosionType = Enum.ExplosionType.NoCraters,
+		Position = Plane.Position,
+		Parent = game:GetService("Workspace")
+	}
+	local SoundPart = BasePart:Clone()
+	SoundPart.Name = "Effect"
+	SoundPart.Transparency = 1
+	SoundPart.Size = Vector3.new(0.2, 0.2, 0.2)
+	SoundPart.CanCollide = false
+	SoundPart.Anchored = true
+	local Sound = Sounds.Explosion:Clone()
+	Sound.Parent = SoundPart
+	Debris:AddItem(SoundPart, 2)
+	SoundPart.Parent = game:GetService("Workspace")
+	SoundPart.CFrame = CFrame.new(Explosion.Position)
+	Sound:Play()
+	local EaseRate = (1 / 60)
+	local ChangeRate = 30
+	local Duration = 0.25
+	local Frames = (Duration * ChangeRate)
+	for i = 1, Frames do
+		if not Plane or not Plane.Parent then
+			return
+		end
+		local Size = (Vector3.new(7.5, 5.25, 13) - ((Vector3.new(7.5, 5.25, 13) / Frames) * i))
+		local Scale = (Vector3.new(9, 9, 9) - ((Vector3.new(9, 9, 9) / Frames) * i))
+		--if (Size.X * Size.Y * Size.Z) > BasePlane:GetMass() then
+			local OrigCF = Plane.CFrame
+			Plane.Size = Size
+			PlaneMesh.Scale = Scale
+			Plane.CFrame = OrigCF
+--		end
+		wait(EaseRate)
+	end	
+	if Plane and Plane.Parent then
+		Plane:Destroy()
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent and Player:IsA("Player")) and true) or false)
+end
+
+function Activated()
+	if not CheckIfAlive() or not ToolEquipped or not Tool.Enabled or (Plane and Plane.Parent) then
+		return
+	end
+	Tool.Enabled = false
+	if AnimationTrack then
+		AnimationTrack:Stop()
+	end
+	CurrentlyEquipped = true
+	if ToolUnequipped then
+		ToolUnequipped:disconnect()
+	end
+	ToolUnequipped = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+	end)
+	local Animation = Animations.Throw
+	AnimationTrack = Humanoid:LoadAnimation(Animation.Animation)
+	AnimationTrack.KeyframeReached:connect(function(Keyframe)
+		if not CheckIfAlive() or not ToolEquipped or not CurrentlyEquipped then
+			Tool.Enabled = true
+			return
+		end
+		if Keyframe == "throw" then
+			Handle.Transparency = 1
+			ThrowPlane()
+			Handle.Transparency = 0
+			Tool.Enabled = true
+		end
+	end)
+	AnimationTrack:Play(Animation.FadeTime, Animation.Weight, Animation.Speed)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	ToolEquipped = true
+	Tool.Enabled = true
+end
+
+function Unequipped()
+	if AnimationTrack then
+		AnimationTrack:Stop()
+	end
+	MouseDown.Value = false
+	ToolEquipped = false
+	Tool.Enabled = true
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+function OnServerInvoke(client, action, value)
+	if client ~= Player or not action or not CheckIfAlive() or not ToolEquipped then
+		return
+	end
+	if action == "Mouse1" then
+		local Down = value.Down
+		MouseDown.Value = Down
+	elseif action == "Key" then
+		local Key = value.Key
+		local Down = value.Down
+	elseif action == "MouseUpdate" then
+		local hit = value
+		if Control == 1 and MouseDown.Value and Plane and Plane.Parent then
+			PlaneGoTo = (hit.p - Plane.Position)
+		end
+	elseif action == "Dismount" and Mode == 3 then
+		local Dismount = value.Dismount
+		if Dismount then
+			EndFlight = true
+		end
+	end
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="Folder" referent="RBXD1E272C91FF54D57B0C42F640C1AC98A">
+				<Properties>
+					<string name="Name">Particles</string>
+				</Properties>
+				<Item class="ParticleEmitter" referent="RBX15631BD0F1F84541BA6E4C76BEB22B98">
+					<Properties>
+						<Vector3 name="Acceleration">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<ColorSequence name="Color">0 1 0 0 0 1 1 1 0.498039 0 </ColorSequence>
+						<float name="Drag">0</float>
+						<token name="EmissionDirection">1</token>
+						<bool name="Enabled">false</bool>
+						<NumberRange name="Lifetime">0.35 0.35 </NumberRange>
+						<float name="LightEmission">0.5</float>
+						<bool name="LockedToPart">false</bool>
+						<string name="Name">Fire</string>
+						<float name="Rate">1000</float>
+						<NumberRange name="RotSpeed">0 0 </NumberRange>
+						<NumberRange name="Rotation">0 0 </NumberRange>
+						<NumberSequence name="Size">0 0 0 0.25 0.5 0.25 0.5 0.5 0.135 1 0.75 0 </NumberSequence>
+						<NumberRange name="Speed">12.5 12.5 </NumberRange>
+						<Content name="Texture"><url>http://www.roblox.com/asset/?id=262362794</url></Content>
+						<NumberSequence name="Transparency">0 1 0 0.5 0.25 0 0.75 0.125 0.075 1 1 0 </NumberSequence>
+						<float name="VelocityInheritance">0.25</float>
+						<float name="VelocitySpread">12.5</float>
+						<float name="ZOffset">0</float>
+					</Properties>
+				</Item>
+				<Item class="ParticleEmitter" referent="RBXD99AE99B226D485D91CFE4E71ACB3ACD">
+					<Properties>
+						<Vector3 name="Acceleration">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+						<ColorSequence name="Color">0 1 1 1 0 1 0.392157 0.392157 0.392157 0 </ColorSequence>
+						<float name="Drag">0</float>
+						<token name="EmissionDirection">1</token>
+						<bool name="Enabled">false</bool>
+						<NumberRange name="Lifetime">1.25 1.25 </NumberRange>
+						<float name="LightEmission">0.100000001</float>
+						<bool name="LockedToPart">false</bool>
+						<string name="Name">Smoke</string>
+						<float name="Rate">10</float>
+						<NumberRange name="RotSpeed">0 0 </NumberRange>
+						<NumberRange name="Rotation">0 0 </NumberRange>
+						<NumberSequence name="Size">0 0 0 1 5 0 </NumberSequence>
+						<NumberRange name="Speed">1 1 </NumberRange>
+						<Content name="Texture"><url>http://www.roblox.com/asset/?id=292289455</url></Content>
+						<NumberSequence name="Transparency">0 0.75 0 0.5 0.5 0 0.75 0 0 1 1 0 </NumberSequence>
+						<float name="VelocityInheritance">0</float>
+						<float name="VelocitySpread">15</float>
+						<float name="ZOffset">0</float>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
