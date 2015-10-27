@@ -119,24 +119,6 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBXEE76C29A1EAC41888368F91D6E1E3CCA">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313724674</url></Content>
-				<string name="Name">InsertDisk</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX34F8DDBD6A1C49268403AC2BEDE847A8">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313735596</url></Content>
-				<string name="Name">Hold</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBX8F9089527D9D445D80901704D12E3BB2">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313740555</url></Content>
-				<string name="Name">LookThrough</string>
-			</Properties>
-		</Item>
 		<Item class="Camera" referent="RBX06AF8F7D8A564A749237728B979C5A83">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
@@ -594,6 +576,7 @@ Animations = {
 	Hold = {Animation = Tool:WaitForChild("Hold"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
 	InsertDisk = {Animation = Tool:WaitForChild("InsertDisk"), FadeTime = 0.125, Weight = nil, Speed = 0.375, Duration = ((1 / 0.375) / 2.5)},
 	LookThrough = {Animation = Tool:WaitForChild("LookThrough"), FadeTime = 0.5, Weight = nil, Speed = nil, Duration = nil},
+	HoldDisk = {Animation = Tool:WaitForChild("HoldDisk"), FadeTime = 0.5, Weight = nil, Speed = nil, Duration = nil},
 }
 
 Grips = {
@@ -752,37 +735,16 @@ function Activated()
 	end)
 	if not InView then
 		InView = true
-		local Animation = Animations.InsertDisk
 		local Disk = MakeDisk(LeftArm, CFrame.new(0, (((LeftArm.Size.Y / 2) + (BaseDisk.Size.Y / 2)) * -1), 0))
-		Spawn(function()
-			InvokeClient("PlayAnimation", Animation)
-		end)
-		wait(Animation.Duration)
 		if ToolEquipped and CurrentlyEquipped and CheckIfAlive() then
-			if Disk and Disk.Parent then
-				Disk:Destroy()
-			end
-			local Disk, AttachWeld = MakeDisk(Handle, CFrame.new(0, 0.5, -0.26))
-			wait(0.75)
-			local Frames = 20
-			local FrameRate = (1 / 15)
-			local SizeInterval = (Disk.Size.Y / Frames)
-			local OriginalOffset = AttachWeld.C0
-			for i = 1, Frames do
-				if not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
-					break
-				end
-				AttachWeld.C0 = (OriginalOffset * CFrame.new(0, -(SizeInterval * i), 0))
-				wait(FrameRate)
-			end
-			if Disk and Disk.Parent then
-				Disk:Destroy()
-			end
 			local Animation = Animations.LookThrough
-			wait(Animation.FadeTime)
 			if ToolEquipped and CurrentlyEquipped and CheckIfAlive() then
 				CreatePlayerManager(true)
 				Tool.Grip = Grips.Active
+				Spawn(function()
+					InvokeClient("PlayAnimation", Animation)
+				end)
+			local Animation = Animations.HoldDisk
 				Spawn(function()
 					InvokeClient("PlayAnimation", Animation)
 				end)
@@ -818,27 +780,9 @@ function Activated()
 			Spawn(function()
 				InvokeClient("StopAnimation", Animations.LookThrough)
 			end)
-			if ToolEquipped and CurrentlyEquipped and CheckIfAlive() then
-				local Disk, AttachWeld = MakeDisk(Handle, CFrame.new(0, (0.5 - BaseDisk.Size.Y), -0.26))
-				wait(0.25)
-				local Frames = 20
-				local FrameRate = (1 / 15)
-				local SizeInterval = (Disk.Size.Y / Frames)
-				local OriginalOffset = AttachWeld.C0
-				for i = 1, Frames do
-					if not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
-						break
-					end
-					AttachWeld.C0 = (OriginalOffset * CFrame.new(0, (SizeInterval * i), 0))
-					wait(FrameRate)
-				end
-				if ToolEquipped and CurrentlyEquipped and CheckIfAlive() then
-					wait(0.25)
-					if Disk and Disk.Parent then
-						Disk:Destroy()
-					end
-				end
-			end
+			Spawn(function()
+				InvokeClient("StopAnimation", Animations.HoldDisk)
+			end)
 		end
 	end
 	Tool.Enabled = true
@@ -1344,7 +1288,7 @@ Assets = {
 	Disk = {MeshId = 313456639, TextureId = 313456028},
 	Slides = {313456848, 313456876, 313456804},
 	Images = {},
-	Animations = {313735596, 313724674, 313740555},
+	Animations = {313735596, 313724674, 313740555, 313776454},
 }
 
 return Assets]]></ProtectedString>
@@ -1544,6 +1488,30 @@ end
 ClientControl.OnClientInvoke = OnClientInvoke
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX7C0DDB14633D4F978CE1D88583217FFF">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313724674</url></Content>
+				<string name="Name">InsertDisk</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXD1CB0063DAC8436C9A200799A6AC4505">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313740555</url></Content>
+				<string name="Name">LookThrough</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX8A6E957C62D44FE987C089FB559A27AB">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313776454</url></Content>
+				<string name="Name">HoldDisk</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX1545055D6E33454180FDD709B0266804">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=313735596</url></Content>
+				<string name="Name">Hold</string>
 			</Properties>
 		</Item>
 	</Item>
