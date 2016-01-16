@@ -1,0 +1,680 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX996C92C35B9D4D3BA9ADBFA6AC216767">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-1</Y>
+				<Z>-0.25</Z>
+				<R00>0.999999881</R00>
+				<R01>-1.79154525e-010</R01>
+				<R02>-0.000424307043</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>-4.22228624e-007</R12>
+				<R20>0.000424306985</R20>
+				<R21>4.2222851e-007</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">PersonalJets-DesertEdition</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>http://www.roblox.com/asset?id=342887197</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBXFC9D5BA597DE401E8EFAF4D5EFA66E44">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Functions = require(script:WaitForChild("Functions"))
+
+BasePart = Create("Part"){
+	Material = Enum.Material.Plastic,
+	FormFactor = Enum.FormFactor.Custom,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	Anchored = false,
+	CanCollide = true,
+	Locked = true,
+}
+
+BaseJet = Handle:Clone()
+BaseJet.Name = "Jet"
+BaseJet.Transparency = 0
+
+BaseMissile = BasePart:Clone()
+BaseMissile.Name = "Missile"
+BaseMissile.Size = Vector3.new(0.5, 0.5, 0.75)
+Create("SpecialMesh"){
+	Name = "Mesh",
+	MeshType = Enum.MeshType.FileMesh,
+	MeshId = (BaseUrl .. "94690081"),
+	TextureId = (BaseUrl .. "94689966"),
+	Scale = Vector3.new(0.65, 0.65, 0.65),
+	VertexColor = Vector3.new(1, 0.85, 0.85),
+	Offset = Vector3.new(0, 0, 0),
+	Parent = BaseMissile,
+}
+
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Tool,
+})
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Tool,
+})
+
+for i, v in pairs(Tool:GetChildren()) do
+	if v:IsA("BasePart") and v ~= Handle then
+		v:Destroy()
+	end
+end
+
+Damage = 30
+CoolDown = 3
+
+AttackRadius = 30
+AttackSpeed = 100
+AttackTimeMax = 3
+
+OrbitRadius = 5
+OrbitVerticalOffset = 5
+OrbitSpeedFactor = 2
+OrbitGyroTorque = Vector3.new(400, 400, 400)
+
+MaxJets = 3
+JetLaunchDelay = 1
+
+Jets = {}
+TimeToLive = 30
+
+Gravity = 196.20
+OneStep = (1 / 30)
+
+NumberOfOrbitingJets = 0
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function GetNearbyObjects(Region)
+	local IgnoreList = {Character}
+	for i, v in pairs(Players:GetChildren()) do
+		if v:IsA("Player") and v ~= Player and v.Character and v.Character.Parent and Functions.IsTeamMate(Player, v) then
+			table.insert(IgnoreList, v.Character)
+		end
+	end
+	return Functions.GetParts(Region, 500, IgnoreList)
+end
+
+function FindClosestHumanoid(Position, MaxRadius)
+	if not Position then
+		return
+	end
+	local MaxRadius = (MaxRadius or 75)
+	local NearbyObjects = GetNearbyObjects(Region3.new((Torso.Position - Vector3.new(MaxRadius, MaxRadius, MaxRadius)), (Torso.Position + Vector3.new(MaxRadius, MaxRadius, MaxRadius))))
+	local HumanoidsHit = {}
+	local HumanoidsNearby = {}
+	local PlayersNearby = {}
+	for i, v in pairs(NearbyObjects) do
+		local character = v.Parent
+		if character then
+			local humanoid = character:FindFirstChild("Humanoid")
+			local torso = character:FindFirstChild("Torso")
+			if humanoid and humanoid.Health > 0 and torso and not Functions.CheckTableForInstance(HumanoidsHit, humanoid) then
+				local player = Players:GetPlayerFromCharacter(character)
+				if player then
+					table.insert(PlayersNearby, player)
+				end
+				local DistanceApart = (Position - torso.Position).Magnitude
+				table.insert(HumanoidsHit, humanoid)
+				table.insert(HumanoidsNearby, {Distance = DistanceApart, Player = (player or nil), Character = character, Humanoid = humanoid, Torso = torso})
+			end
+		end
+	end
+	table.sort(HumanoidsNearby, (function(a, b) --Sort nearby humanoids so that closest is first in the table.
+		return a.Distance < b.Distance
+	end))
+	if #HumanoidsNearby == 0 then --If no humanoids were found, return nothing
+		return nil
+	else
+		if #PlayersNearby > 0 then --Return closest player
+			for i, v in pairs(HumanoidsNearby) do
+				if v.Player then
+					return v
+				end
+			end
+		end
+		return HumanoidsNearby[1] --No player, return closest humanoid
+	end
+end
+
+function JetLogic(Jet, BodyPosition, BodyGyro, JetNumber)
+	local ShootReload = {Min = 4, Max = 8}
+	local SelectedReload = math.random(ShootReload.Min, ShootReload.Max)
+	local LastShot = (tick() - (math.random(-(math.random(ShootReload.Min, ShootReload.Max) * 1000), 0) * 0.001))
+	local JustShot = false
+	while Jet and Jet.Parent and ToolEquipped and CheckIfAlive() do
+		local Now = tick()
+		--Update Orbit
+		local Theta = ((tick() * OrbitSpeedFactor) + (JetNumber * (2 * math.pi / MaxJets)))
+		local Offset = Vector3.new(OrbitRadius * math.cos(Theta), OrbitVerticalOffset, OrbitRadius * math.sin(Theta))
+		BodyPosition.position = (Torso.Position + Offset)
+		if not JustShot then
+			BodyGyro.cframe = CFrame.new(Jet.Position, BodyPosition.position)
+			--Check for targets
+			if (Now - LastShot) > SelectedReload then
+				local Target = FindClosestHumanoid(Jet.Position)
+				if Target then
+					if ToolEquipped and CheckIfAlive() then --Attack
+						local TargetTorso = Target.Torso
+						local DistanceApart = (TargetTorso.Position - Torso.Position).Magnitude
+						if DistanceApart < AttackRadius then
+							LastShot = Now
+							local SpawnPosition = (Jet.CFrame * CFrame.new(0, -((Jet.Size.Y / 2) + (BaseMissile.Size.X / 2)), 0)).p
+							local Missile = BaseMissile:Clone()
+							local Mass = (Missile:GetMass() * Gravity)
+							local ShootDirection = CFrame.new(SpawnPosition, TargetTorso.Position)
+							local Force = 30
+							local Velocity = (ShootDirection.lookVector * Force)
+							JustShot = true
+							BodyGyro.cframe = CFrame.new(Jet.Position, TargetTorso.Position)
+							local BodyVelocity = Create("BodyVelocity"){
+								maxForce = Vector3.new(Mass, Mass, Mass),
+								velocity = Velocity,
+								Parent = Missile,
+							}
+							local BodyGyro = Create("BodyGyro"){
+								maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+								cframe = ShootDirection,
+								Parent = Missile,
+							}
+							local Fire = Create("Fire"){
+								Color = Color3.new((236 / 255), (139 / 255), (70 / 255)),
+								SecondaryColor = Color3.new((139 / 255), (80 / 255), (55 / 255)),
+								Heat = 2,
+								Size = 2,
+								Enabled = true,
+								Parent = Missile,
+							}
+							local AlreadyHit = false
+							Missile.Touched:connect(function(Hit)
+								if not Hit or not Hit.Parent or Hit == Jet or AlreadyHit or Functions.CheckTableForInstance(Jets, Hit) then
+									return
+								end
+								local character = Hit.Parent
+								if character:IsA("Hat") or character:IsA("Accoutrement") or character:IsA("Tool") then
+									character = character.Parent
+								end
+								local humanoid = character:FindFirstChild("Humanoid")
+								if humanoid and humanoid.Health > 0 then
+									local player = Players:GetPlayerFromCharacter(character)
+									if (not player or (player and not Functions.IsTeamMate(Player, player))) then
+										Functions.UntagHumanoid(humanoid)
+										Functions.TagHumanoid(humanoid, Player)
+										humanoid:TakeDamage(22)
+									end
+								end
+								AlreadyHit = true
+								Missile.Name = "Effect"
+								Missile.Transparency = 1
+								Missile.Anchored = true
+								Missile.CanCollide = false
+								Fire.Enabled = false
+								local Explosion = Create("Explosion"){
+									ExplosionType = Enum.ExplosionType.NoCraters,
+									BlastPressure = 0,
+									BlastRadius = 2,
+									Position = Missile.Position,
+									Parent = game:GetService("Workspace"),
+								}
+								Debris:AddItem(Missile, 1.5)
+							end)
+							Debris:AddItem(Missile, 5)
+							Missile.CanCollide = false
+							Missile.CFrame = ShootDirection
+							Missile.Parent = game:GetService("Workspace")
+							Missile.Velocity = Velocity
+							Delay(1, (function()
+								JustShot = false
+							end))
+						end
+					end
+				end
+			end
+		end
+		wait(OneStep)
+	end
+	if Jet and Jet.Parent then
+		Jet:Destroy()
+	end
+end
+
+function AddNewJet(JetNumber)
+	local Jet = BaseJet:Clone()
+	Jet.CanCollide = true
+	Jet.CFrame = Handle.CFrame
+	local Mass = ((Jet:GetMass() * Gravity) * 100)
+	local BodyPosition = Create("BodyPosition"){
+		maxForce = Vector3.new(Mass, Mass, Mass),
+		position = Handle.Position,
+		Parent = Jet,
+	}
+	local BodyGyro = Create("BodyGyro"){
+		MaxTorque = OrbitGyroTorque,
+		Parent = Jet,
+	}
+	Jet.Changed:connect(function(Property)
+		if not Jet or not Jet.Parent then
+			NumberOfOrbitingJets = (NumberOfOrbitingJets - 1)
+		end
+	end)
+	table.insert(Jets, Jet)
+	Debris:AddItem(Jet, TimeToLive)
+	Jet.Parent = game:GetService("Workspace")
+	Spawn(function()
+		JetLogic(Jet, BodyPosition, BodyGyro, JetNumber)
+	end)
+end
+
+function Activated()
+	if not ToolEquipped or not CheckIfAlive() or not Tool.Enabled then
+		return
+	end
+	Tool.Enabled = false
+	Jets = {}
+	NumberOfOrbitingJets = 0
+	for i = 1, (MaxJets - NumberOfOrbitingJets) do
+		AddNewJet(NumberOfOrbitingJets)
+		NumberOfOrbitingJets = (NumberOfOrbitingJets + 1)
+		wait(JetLaunchDelay)
+	end
+	wait(CoolDown)
+	Tool.Enabled = true
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent) and true) or false)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	ToolEquipped = true
+end
+
+function Unequipped()
+	ToolEquipped = false
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+function OnServerInvoke(player, Mode, Value)
+	if player ~= Player or not ToolEquipped or not CheckIfAlive() or not Mode or not Value then
+		return
+	end
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBX1C3DF2FB74C3449BAE0771C76D0FE8C0">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Functions</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Functions = {}
+
+function Functions.Clamp(Number, Min, Max)
+	return math.max(math.min(Max, Number), Min)
+end
+
+function Functions.GetPercentage(Start, End, Number)
+	return (((Number - Start) / (End - Start)) * 100)
+end
+
+function Functions.Round(Number, RoundDecimal)
+	local WholeNumber, Decimal = math.modf(Number)
+	return ((Decimal >= RoundDecimal and math.ceil(Number)) or (Decimal < RoundDecimal and math.floor(Number)))
+end
+
+function Functions.IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function Functions.TagHumanoid(humanoid, player)
+	local Creator_Tag = Create("ObjectValue"){
+		Name = "creator",
+		Value = player,
+	}
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
+
+function Functions.UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
+
+function Functions.GetAllConnectedParts(Object)
+	local Parts = {}
+	local function GetConnectedParts(Object)
+		for i, v in pairs(Object:GetConnectedParts()) do
+			local Ignore = false
+			for ii, vv in pairs(Parts) do
+				if v == vv then
+					Ignore = true
+				end
+			end
+			if not Ignore then
+				table.insert(Parts, v)
+				GetConnectedParts(v)
+			end
+		end
+	end
+	GetConnectedParts(Object)
+	return Parts
+end
+
+function Functions.CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.find(string.lower(String), string.lower(v)) then
+			return true
+		end
+	end
+	return false
+end
+
+function Functions.CheckIntangible(Hit)
+	local ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Bullet"}
+	if Hit and Hit.Parent then
+		if ((not Hit.CanCollide or Functions.CheckTableForString(ProjectileNames, Hit.Name)) and not Hit.Parent:FindFirstChild("Humanoid")) then
+			return true
+		end
+	end
+	return false
+end
+
+function Functions.CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
+	local RayHit, RayPos, RayNormal, RaySurface = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+	if RayHit and Functions.CheckIntangible(RayHit) then
+		if DelayIfHit then
+			wait()
+		end
+		RayHit, RayPos, RayNormal, RaySurface = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+	end
+	return RayHit, RayPos, RayNormal, RaySurface
+end
+
+function Functions.CheckTableForInstance(Table, Instance)
+	for i, v in pairs(Table) do
+		if v == Instance then
+			return true
+		end
+	end
+	return false
+end
+
+function Functions.GetTotalParts(MaxParts, PossibleParts, Parts)
+	if MaxParts < PossibleParts then
+		return MaxParts
+	elseif Parts >= MaxParts then
+		return 0
+	elseif MaxParts >= PossibleParts then
+		local PartCount = (MaxParts - PossibleParts)
+		if Parts <= MaxParts then
+			PartCount = (MaxParts - Parts)
+			if PartCount > PossibleParts then
+				return PossibleParts
+			else
+				return PartCount
+			end
+		elseif PartCount >= PossibleParts then
+			return PossibleParts
+		else
+			return PartCount
+		end
+	end
+end
+	
+function Functions.GetParts(Region, MaxParts, Ignore)
+	local Parts = {}
+	local RerunFailed = false
+	while #Parts < MaxParts and not RerunFailed do
+		local Region = Region
+		local PossibleParts = Functions.GetTotalParts(MaxParts, 100, #Parts)
+		local PartsNearby = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region, Ignore, PossibleParts)
+		if #PartsNearby == 0 then
+			RerunFailed = true
+		else
+			for i, v in pairs(PartsNearby) do
+				table.insert(Parts, v)
+				table.insert(Ignore, v)
+			end
+		end
+	end
+	return Parts
+end
+
+return Functions]]></ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX4968110AA952489B8E38A4C0BE9BEE2B">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.00465000002</X>
+					<Y>17.3236046</Y>
+					<Z>22.0094242</Z>
+					<R00>-0.44691816</R00>
+					<R01>0.0187286083</R01>
+					<R02>-0.894377947</R02>
+					<R10>-8.88508475e-006</R10>
+					<R11>0.999780715</R11>
+					<R12>0.0209402256</R12>
+					<R20>0.894573867</R20>
+					<R21>0.00936651323</R21>
+					<R22>-0.44682005</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.75</X>
+					<Y>0.200000003</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBXB120A7C392FE4F0E8BC8CC46902F4275">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=113216991</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.375</X>
+						<Y>0.375</Y>
+						<Z>0.375</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=342873009 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBXA3DBC6D8E12A416980DB2BD02913B066">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>0.78248775</X>
+					<Y>19.3405647</Y>
+					<Z>23.5468941</Z>
+					<R00>0.87728858</R00>
+					<R01>-0.376406968</R01>
+					<R02>0.2977961</R02>
+					<R10>-1.49011594e-008</R10>
+					<R11>0.62045598</R11>
+					<R12>0.784241259</R12>
+					<R20>-0.479963243</R20>
+					<R21>-0.688005924</R21>
+					<R22>0.544318974</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">40</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.00666904449</X>
+					<Y>17.2623329</Y>
+					<Z>22.104454</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX29F2D443554844BAA5B4ED6F9DC0D383">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)]]></ProtectedString>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
