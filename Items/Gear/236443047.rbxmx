@@ -1,229 +1,80 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX457D96F1C4724388AF090E8F6383A7B2">
+	<Item class="Tool" referent="RBX1009653AB089446B967DCAED298079FD">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
-				<X>0</X>
+				<X>-1.5</X>
 				<Y>0</Y>
 				<Z>0</Z>
-				<R00>1</R00>
+				<R00>0</R00>
 				<R01>0</R01>
-				<R02>0</R02>
-				<R10>0</R10>
-				<R11>1</R11>
+				<R02>-1</R02>
+				<R10>-1</R10>
+				<R11>8.90154915e-005</R11>
 				<R12>0</R12>
-				<R20>0</R20>
-				<R21>0</R21>
-				<R22>1</R22>
+				<R20>8.90154915e-005</R20>
+				<R21>1</R21>
+				<R22>0</R22>
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
-			<string name="Name">NonMagicCarpet</string>
-			<Content name="TextureId"><url>rbxassetid://233555795</url></Content>
+			<string name="Name">RegularCarpet</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=233555795</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX65A50BFA5A8848B4853CA63E2CE6FCC3">
+		<Item class="Script" referent="RBX1A419D567148450AAEAC8E948F04A72D">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Server</string>
-				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
-local Remote = Tool:WaitForChild("Remote")
-local Handle = Tool:WaitForChild("Handle")
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
 
-local FriendlyFire = false
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
 
---returns the wielding player of this tool
-function getPlayer()
-	local char = Tool.Parent
-	return game:GetService("Players"):GetPlayerFromCharacter(char)
-end
+InsertService = game:GetService("InsertService")
+Debris = game:GetService("Debris")
 
---helpfully checks a table for a specific value
-function contains(t, v)
-	for _, val in pairs(t) do
-		if val == v then
-			return true
+CarpetModel = InsertService:LoadAsset(266360667)
+Carpet = CarpetModel:GetChildren()[1]:Clone()
+Debris:AddItem(CarpetModel, 1)
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function Activated()
+	if not Tool.Enabled then
+		return
+	end
+	Tool.Enabled = false
+	Handle.Transparency = 1
+	CarpetModel = Carpet:Clone()
+	local HumanoidRootPart = CarpetModel.HumanoidRootPart
+	local AnimateScript = CarpetModel.AnimateScript
+	Debris:AddItem(CarpetModel, 60)
+	AnimateScript.Disabled = false
+	for i, v in pairs(CarpetModel:GetChildren()) do
+		if v:IsA("BasePart") then
+			v.Friction = 2
+			v.Elasticity = 0
 		end
 	end
-	return false
+	local BodyVelocity = Instance.new("BodyVelocity")
+	BodyVelocity.velocity = Vector3.new(0, -8, 0)
+	BodyVelocity.Parent = HumanoidRootPart
+	HumanoidRootPart.CFrame = ((Handle.CFrame * CFrame.new(0, 0, 0)) * CFrame.Angles((math.pi / 2), -(math.pi / 2), 0))
+	CarpetModel.Parent = game:GetService("Workspace")
+	Debris:AddItem(Tool, 0)
+	Tool:Destroy()
 end
 
---tags a human for the ROBLOX KO system
-function tagHuman(human)
-	local tag = Instance.new("ObjectValue")
-	tag.Value = getPlayer()
-	tag.Name = "creator"
-	tag.Parent = human
-	game:GetService("Debris"):AddItem(tag)
-end
-
---used by checkTeams
-function sameTeam(otherHuman)
-	local player = getPlayer()
-	local otherPlayer = game:GetService("Players"):GetPlayerFromCharacter(otherHuman.Parent)
-	if player and otherPlayer then
-		if player == otherPlayer then
-			return true
-		end
-		if otherPlayer.Neutral then
-			return false
-		end
-		return player.TeamColor == otherPlayer.TeamColor
-	end
-	return false
-end
-
---use this to determine if you want this human to be harmed or not, returns boolean
-function checkTeams(otherHuman)
-	return not (sameTeam(otherHuman) and not FriendlyFire)
-end
-
-function toggleHidden(model, hidden)
-	local trans = 0
-	if hidden then
-		trans = 1
-	end
-	
-	for _, obj in pairs(model:GetChildren()) do
-		if obj:IsA("BasePart") then
-			obj.Transparency = trans
-		end
-	end
-end
-
-function unanchor(model)
-	for _, obj in pairs(model:GetChildren()) do
-		if obj:IsA("BasePart") then
-			obj.Anchored = false
-		end
-	end
-end
-
-function onEquip()
-	local sound = Handle.Flop:Clone()
-	Handle:Destroy()
-	
-	local root = Tool.Parent.HumanoidRootPart
-	
-	local model = game:GetService("InsertService"):LoadAsset(236140654):GetChildren()[1]
-	unanchor(model)
-	
-	local connection
-	connection = model.HumanoidRootPart.Touched:connect(function(part)
-		if part:IsGrounded() then
-			local w = Instance.new("Weld")
-			w.Part0 = part
-			w.Part1 = model.HumanoidRootPart
-			w.C0 = part.CFrame:toObjectSpace(model.HumanoidRootPart.CFrame)
-			w.Parent = w.Part0
-			connection:disconnect()
-		end
-	end)
-	
-	sound.Parent = model.HumanoidRootPart
-	
-	toggleHidden(model, true)
-	
-	model.Parent = workspace
-	model:SetPrimaryPartCFrame(root.CFrame * CFrame.new(0, -3, -2))
-	model.AnimationController:LoadAnimation(Tool.CarpetFlop):Play()
-	wait(0.2)
-	
-	toggleHidden(model, false)
-	wait(0.6)
-	
-	sound:Play()
-	game:GetService("Debris"):AddItem(model, 60)
-	game:GetService("Debris"):AddItem(Tool, 0)
-end
-
-Tool.Equipped:connect(onEquip)]]></ProtectedString>
+Tool.Activated:connect(Activated)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX19B8C9BF59A6437CB5B331008B49193B">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Client</string>
-				<ProtectedString name="Source"><![CDATA[local Player = game:GetService("Players").LocalPlayer
-local UIS = game:GetService("UserInputService")
-local Mouse = Player:GetMouse()
-local Tool = script.Parent
-local Remote = Tool:WaitForChild("Remote")
-local Tracks = {}
-local InputType = Enum.UserInputType
-
-local BeganConnection, EndedConnection
-
-function playAnimation(animName, ...)
-	if Tracks[animName] then
-		Tracks[animName]:Play()
-	else
-		local anim = Tool:FindFirstChild(animName)
-		if anim and Tool.Parent and Tool.Parent:FindFirstChild("Humanoid") then
-			Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
-			playAnimation(animName, ...)
-		end
-	end
-end
-
-function stopAnimation(animName)
-	if Tracks[animName] then
-		Tracks[animName]:Stop()
-	end
-end
-
-function inputBegan(input)
-	if input.UserInputType == InputType.MouseButton1 then
-		Remote:FireServer("LeftDown")
-	end
-end
-
-function inputEnded(input)
-	if input.UserInputType == InputType.MouseButton1 then
-		Remote:FireServer("LeftUp")
-	end
-end
-
-function onRemote(func, ...)
-	if func == "PlayAnimation" then
-		playAnimation(...)
-	elseif func == "StopAnimation" then
-		stopAnimation(...)
-	end
-end
-
-function onEquip()
-	BeganConnection = UIS.InputBegan:connect(inputBegan)
-	EndedConnection = UIS.InputEnded:connect(inputEnded)
-end
-
-function onUnequip()
-	if BeganConnection then
-		BeganConnection:disconnect()
-		BeganConnection = nil
-	end
-	
-	if EndedConnection then
-		EndedConnection:disconnect()
-		EndedConnection = nil
-	end
-end
-
-Tool.Equipped:connect(onEquip)
-Tool.Unequipped:connect(onUnequip)
-Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="RemoteEvent" referent="RBXF5920B8A51AB411AB96D8569B340E3A3">
-			<Properties>
-				<string name="Name">Remote</string>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBX54FDAF5C1CF143D7AF5E4D87526F574B">
+		<Item class="Part" referent="RBXE41468C08C77473CBF59C687F95F9807">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -250,6 +101,9 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<R22>0.867075086</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -291,11 +145,11 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX28BCD834CAAA4DA485B6172396E793D8">
+			<Item class="SpecialMesh" referent="RBX606407936A414CBC9578BC28C51BCD9C">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>rbxassetid://233555251</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=233555251</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -308,7 +162,7 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<Content name="TextureId"><url>rbxassetid://233555762</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=233555762</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -316,31 +170,15 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX30A155A1C2104070B5754278B56379D6">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">Flop</string>
-					<float name="Pitch">0.800000012</float>
-					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><url>rbxassetid://101090565</url></Content>
-					<float name="Volume">0.5</float>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX7C9E2E37074F42AEB2F36CE4BD514CA4">
-			<Properties>
-				<Content name="AnimationId"><url>rbxassetid://236140080</url></Content>
-				<string name="Name">CarpetFlop</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBXB1131D6BBA0D4791991F6E19B0A7F7C6">
+		<Item class="Camera" referent="RBX4C3CE7F2A7854091B186EA69E1826ECD">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>-1.74492836</X>
-					<Y>43.4090118</Y>
-					<Z>-3.03037047</Z>
+					<X>-1.74002981</X>
+					<Y>43.4005737</Y>
+					<Z>-3.04060316</Z>
 					<R00>-0.806569874</R00>
 					<R01>0.316714168</R01>
 					<R02>-0.499136478</R02>
@@ -353,9 +191,9 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.267489076</X>
-					<Y>41.8231392</Y>
-					<Z>-1.01450217</Z>
+					<X>-0.262590528</X>
+					<Y>41.8147011</Y>
+					<Z>-1.02473485</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
