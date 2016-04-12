@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBXEEAAA580C48E40F09D0BBD6DCCDBAF75">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,13 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">InvisibilityCloak</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">TrololoCapeOfInvisibility</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=129414426</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX19E27A43798341A984D5E911A13DFEF8">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -36,18 +38,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0</X>
-					<Y>17</Y>
-					<Z>23</Z>
-					<R00>-1</R00>
-					<R01>0</R01>
-					<R02>-0</R02>
-					<R10>-0</R10>
-					<R11>1</R11>
-					<R12>-0</R12>
-					<R20>-0</R20>
-					<R21>0</R21>
-					<R22>-1</R22>
+					<X>-0.239998996</X>
+					<Y>17.2386608</Y>
+					<Z>23.2437458</Z>
+					<R00>1</R00>
+					<R01>1.44189284e-014</R01>
+					<R02>-2.26124191e-015</R02>
+					<R10>-1.43675287e-014</R10>
+					<R11>0.999773443</R11>
+					<R12>0.0212856699</R12>
+					<R20>2.56764634e-015</R20>
+					<R21>-0.0212856699</R21>
+					<R22>0.999773443</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<float name="Elasticity">0.5</float>
@@ -91,7 +93,7 @@
 					<Z>2.4000001</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBXE8E25D7BC7C64E3385D15EAA19A39EFF">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,7 +118,7 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX6A0EC534C5BF4C11BFDCEAE0D2F6B833">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">WooshStart</string>
@@ -126,7 +128,7 @@
 					<float name="Volume">0.5</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX4">
+			<Item class="Sound" referent="RBXA769DB1897B3494BA433848F9E219A85">
 				<Properties>
 					<bool name="Looped">false</bool>
 					<string name="Name">WooshEnd</string>
@@ -137,213 +139,65 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX5">
+		<Item class="LocalScript" referent="RBX0B8CBEBDC2CD43D4ACC8B51E0C97CD1C">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">ToolScript</string>
-				<ProtectedString name="Source">-----------------
---| Constants |--
------------------
+				<string name="Name">MouseIcon</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
-local COOLDOWN = 3
-local EFFECT_LENGTH = 8
-local WALKSPEED_BOOST = 10
-local INCREMENT = 0.1
-local REGION_OFFSET = Vector3.new(15, 15, 15)
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
 
------------------
---| Variables |--
------------------
+Tool = script.Parent
 
-local Tool = script.Parent
-local Handle = Tool:WaitForChild(&apos;Handle&apos;)
+Mouse = nil
 
-local WooshStart = Handle:WaitForChild(&apos;WooshStart&apos;)
-local WooshEnd = Handle:WaitForChild(&apos;WooshEnd&apos;)
-local ConfusionScript = script:WaitForChild(&apos;ConfusionScript&apos;)
-
-local Character = nil
-local Humanoid = nil
-local Torso = nil
-
-local Cape = nil
-local Invisible = false
-local HitList = {}
-
-Equipped = false
-
------------------
---| Functions |--
------------------
-
--- Returns all objects under instance with Transparency
-local function GetTransparentsRecursive(instance, partsTable)
-&#9;local partsTable = partsTable or {}
-&#9;for _, child in pairs(instance:GetChildren()) do
-&#9;&#9;if (child:IsA(&apos;BasePart&apos;) and child.Name ~= &quot;HumanoidRootPart&quot;) or child:IsA(&apos;Decal&apos;) then
-&#9;&#9;&#9;table.insert(partsTable, child)
-&#9;&#9;end
-&#9;&#9;GetTransparentsRecursive(child, partsTable)
-&#9;end
-&#9;return partsTable
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
 end
 
--- Returns a character ancestor and its Humanoid, or nil
-local function FindCharacterAncestor(subject)
-&#9;if subject and subject ~= Workspace then
-&#9;&#9;local humanoid = subject:FindFirstChild(&apos;Humanoid&apos;)
-&#9;&#9;if humanoid then
-&#9;&#9;&#9;return subject, humanoid
-&#9;&#9;else
-&#9;&#9;&#9;return FindCharacterAncestor(subject.Parent)
-&#9;&#9;end
-&#9;end
-&#9;return nil
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
 end
 
-local function ConfuseNearbyPlayers()
-&#9;HitList = {}
-&#9;local region3 = Region3.new(Torso.Position - REGION_OFFSET, Torso.Position + REGION_OFFSET)
-&#9;local parts = Workspace:FindPartsInRegion3(region3, Character, 100)
-&#9;for _, part in pairs(parts) do
-&#9;&#9;local character, humanoid  = FindCharacterAncestor(part)
-&#9;&#9;if character and humanoid and not HitList[character] then
-&#9;&#9;&#9;HitList[character] = true
-&#9;&#9;&#9;local confusionScriptClone = ConfusionScript:Clone()
-&#9;&#9;&#9;confusionScriptClone.Disabled = false
-&#9;&#9;&#9;confusionScriptClone.Parent = humanoid
-&#9;&#9;end
-&#9;end
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
 end
-
-local function ApplyEffect(yesPlease, delay) --Fix implemented by Luckymaxer
-&#9;local objectsWithTransparency = GetTransparentsRecursive(Character)
-&#9;if delay then
-&#9;&#9;local AllAltered = false
-&#9;&#9;repeat
-&#9;&#9;&#9;local lastObject = nil
-&#9;&#9;&#9;for _, object in pairs(objectsWithTransparency) do
-&#9;&#9;&#9;&#9;object.Transparency = object.Transparency + (yesPlease and INCREMENT or -INCREMENT)
-&#9;&#9;&#9;&#9;lastObject = object
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local AllCurrentlyAltered = true
-&#9;&#9;&#9;for i, v in pairs(objectsWithTransparency) do
-&#9;&#9;&#9;&#9;if (yesPlease and v.Transparency &lt; 1 or not yesPlease and v.Transparency &gt; 0) then
-&#9;&#9;&#9;&#9;&#9;AllCurrentlyAltered = false
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if AllCurrentlyAltered then
-&#9;&#9;&#9;&#9;AllAltered = true
-&#9;&#9;&#9;end
-&#9;&#9;&#9;wait()
-&#9;&#9;until AllAltered or not Equipped
-&#9;else
-&#9;&#9;for _, object in pairs(objectsWithTransparency) do
-&#9;&#9;&#9;object.Transparency = ((yesPlease and 1) or 0)
-&#9;&#9;end
-&#9;end
-&#9;Humanoid.WalkSpeed = Humanoid.WalkSpeed + (yesPlease and WALKSPEED_BOOST or -WALKSPEED_BOOST)
-&#9;local sound = yesPlease and WooshStart or WooshEnd
-&#9;sound:Play()
-&#9;if not yesPlease then
-&#9;&#9;ConfuseNearbyPlayers()
-&#9;end
-&#9;Invisible = yesPlease
-end
-
-local function OnEquipped()
-&#9;Character = Tool.Parent
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;Torso = Character:WaitForChild(&apos;Torso&apos;)
-
-&#9;Spawn(function()
-&#9;&#9;Cape = Handle:Clone()
-&#9;&#9;Cape.Name = &apos;Cape&apos;
-&#9;&#9;local weld = Instance.new(&apos;Weld&apos;)
-&#9;&#9;weld.Part0 = Torso
-&#9;&#9;weld.Part1 = Cape
-&#9;&#9;weld.C0 = CFrame.new(0, -0.15, 0.4)
-&#9;&#9;weld.Parent = Cape
-&#9;&#9;Cape.Parent = Character
-&#9;&#9;Handle.Transparency = 1
-&#9;end)
-end
-
-local function OnActivated()
-&#9;if Tool.Enabled and Humanoid.Health &gt; 0 then
-&#9;&#9;Tool.Enabled = false
-&#9;&#9;Equipped = true
-&#9;&#9;
-&#9;&#9;ApplyEffect(true, true)
-&#9;&#9;wait(EFFECT_LENGTH)
-&#9;&#9;if Invisible then
-&#9;&#9;&#9;ApplyEffect(false, true)
-&#9;&#9;end
-
-&#9;&#9;wait(COOLDOWN)
-&#9;&#9;Tool.Enabled = true
-&#9;end
-end
-
-local function OnUnequipped()
-&#9;Equipped = false
-&#9;if Invisible then
-&#9;&#9;ApplyEffect(false, false)
-&#9;end
-&#9;Handle.Transparency = 0
-&#9;if Cape then
-&#9;&#9;Cape:Destroy()
-&#9;&#9;Cape = nil
-&#9;end
-end
-
---------------------
---| Script Logic |--
---------------------
 
 Tool.Equipped:connect(OnEquipped)
-Tool.Activated:connect(OnActivated)
-Tool.Unequipped:connect(OnUnequipped)
-</ProtectedString>
+Tool.Changed:connect(OnChanged)
+]]></ProtectedString>
 			</Properties>
-			<Item class="LocalScript" referent="RBX6">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">ConfusionScript</string>
-					<ProtectedString name="Source">local Humanoid = script.Parent
-Humanoid.WalkSpeed = Humanoid.WalkSpeed * -1
-wait(2.5)
-Humanoid.WalkSpeed = Humanoid.WalkSpeed * -1
-script:Destroy()
-</ProtectedString>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX7">
+		<Item class="Camera" referent="RBXFF7396E3564340E3AB12D30365E9523F">
 			<Properties>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>1.01822257</X>
-					<Y>17.5682983</Y>
-					<Z>19.6486435</Z>
-					<R00>-0.963162363</R00>
-					<R01>-0.0422212668</R01>
-					<R02>0.265585482</R02>
-					<R10>-3.7252903e-009</R10>
-					<R11>0.987598181</R11>
-					<R12>0.157002732</R12>
-					<R20>-0.268920571</R20>
-					<R21>0.15121913</R21>
-					<R22>-0.951217413</R22>
+					<X>1.15735352</X>
+					<Y>17.8081493</Y>
+					<Z>27.492218</Z>
+					<R00>0.951537788</R00>
+					<R01>-0.0454363599</R01>
+					<R02>0.30415687</R02>
+					<R10>-3.72528985e-009</R10>
+					<R11>0.989025533</R11>
+					<R12>0.147745222</R12>
+					<R20>-0.307531863</R20>
+					<R21>-0.140585154</R21>
+					<R22>0.941095173</R22>
 				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
+				<float name="FieldOfView">45</float>
 				<CoordinateFrame name="Focus">
-					<X>0.752635956</X>
-					<Y>17.4112949</Y>
-					<Z>20.599865</Z>
+					<X>-0.214392692</X>
+					<Y>17.141819</Y>
+					<Z>23.2478828</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -356,6 +210,407 @@ script:Destroy()
 				</CoordinateFrame>
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX7CA48D1056804C9D9507DC3C0DEBFAFE">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+ConfusionScript = script:WaitForChild("ConfusionScript")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+BasePart = Create("Part"){
+	Shape = Enum.PartType.Block,
+	Material = Enum.Material.Plastic,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+	Anchored = false,
+}
+
+Sounds = {
+	WooshStart = Handle:WaitForChild("WooshStart"),
+	WooshEnd = Handle:WaitForChild("WooshEnd"),
+}
+
+Duration = 8
+CoolDown = 3
+
+TransparentObjects = {}
+
+ToolEquipped = false
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function GetTotalParts(MaxParts, PossibleParts, Parts)
+	if MaxParts < PossibleParts then
+		return MaxParts
+	elseif Parts >= MaxParts then
+		return 0
+	elseif MaxParts >= PossibleParts then
+		local PartCount = (MaxParts - PossibleParts)
+		if Parts <= MaxParts then
+			PartCount = (MaxParts - Parts)
+			if PartCount > PossibleParts then
+				return PossibleParts
+			else
+				return PartCount
+			end
+		elseif PartCount >= PossibleParts then
+			return PossibleParts
+		else
+			return PartCount
+		end
+	end
+end
+
+function GetParts(Region, MaxParts, Ignore)
+	local Parts = {}
+	local RerunFailed = false
+	while #Parts < MaxParts and not RerunFailed do
+		local Region = Region
+		local PossibleParts = GetTotalParts(MaxParts, 100, #Parts)
+		local PartsNearby = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region, Ignore, PossibleParts)
+		if #PartsNearby == 0 then
+			RerunFailed = true
+		else
+			for i, v in pairs(PartsNearby) do
+				table.insert(Parts, v)
+				table.insert(Ignore, v)
+			end
+		end
+	end
+	return Parts
+end
+
+function CheckTableForInstance(Table, Instance)
+	for i, v in pairs(Table) do
+		if v == Instance then
+			return true
+		end
+	end
+	return false
+end
+
+function CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.lower(v) == string.lower(String) then
+			return true
+		end
+	end
+	return false
+end
+
+function GetPlayersNearby(Radius)
+	local NegativeRegion = (Torso.Position - Vector3.new(Radius, Radius, Radius))
+	local PositiveRegion = (Torso.Position + Vector3.new(Radius, Radius, Radius))
+	local Region = Region3.new(NegativeRegion, PositiveRegion)
+	local IgnoreList = {Character}
+	for i, v in pairs(Players:GetChildren()) do
+		if v:IsA("Player") and v ~= Player and v.Character and v.Character.Parent and IsTeamMate(Player, v) then
+			table.insert(IgnoreList, v.Character)
+		end
+	end
+	local Parts = GetParts(Region, 500, IgnoreList)
+	local Humanoids = {}
+	for i, v in pairs(Parts) do
+		local character = v.Parent
+		if character:IsA("Hat") then
+			character = character.Parent
+		end
+		local humanoid = character:FindFirstChild("Humanoid")
+		local torso = character:FindFirstChild("Torso")
+		if humanoid and humanoid.Health > 0 and torso and not CheckTableForInstance(Humanoids, humanoid) then
+			table.insert(Humanoids, humanoid)
+		end
+	end
+	return Humanoids
+end
+
+function GetAllObjectsWithProperty(Parent, Property, Type)
+	local Objects = {}
+	local function GetObjects(Parent)
+		for i, v in pairs(Parent:GetChildren()) do
+			local PropertyExists = false
+			pcall(function()
+				local Property = v[Property]
+				if type(Property) == Type then
+					PropertyExists = true
+				end
+			end)
+			if PropertyExists then
+				table.insert(Objects, v)
+			end
+			GetObjects(v)
+		end
+	end
+	GetObjects(Parent)
+	return Objects
+end
+
+function GetTransparentObjects(Parent)
+	local Objects = {}
+	local IgnoreObjects = {"HumanoidRootPart"}
+	for i, v in pairs(GetAllObjectsWithProperty(Parent, "Transparency", "number")) do
+		table.insert(Objects, v)
+	end
+	for i, v in pairs(Objects) do
+		if CheckTableForString(IgnoreObjects, v.Name) then
+			table.remove(Objects, i)
+		end
+	end
+	return Objects
+end
+
+function ResetTransparency(Object)
+	local PartNames = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
+	if not Object then
+		for i, v in pairs({DescendantAdded, DescendantRemoving}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		for i, v in pairs(TransparentObjects) do
+			v.Object.Transparency = ((CheckTableForString(PartNames, v.Object.Name) and 0) or v.Transparency)
+		end
+		TransparentObjects = {}
+	else
+		local Objects = GetAllObjectsWithProperty(Object, "Transparency", "number")
+		for i, v in pairs(TransparentObjects) do
+			for ii, vv in pairs(Objects) do
+				if v.Object == vv then
+					v.Object.Transparency = ((CheckTableForString(PartNames, v.Object.Name) and 0) or v.Transparency)
+					table.remove(TransparentObjects, i)
+					break
+				end
+			end
+		end
+	end
+end
+
+function SetTransparency(Parent, Invisible, Delay)
+	local Objects = {}
+	if type(Parent) == "table" then
+		Objects = Parent
+	else
+		for i, v in pairs(GetTransparentObjects(Parent)) do
+			table.insert(Objects, {Object = v, Transparency = v.Transparency})
+		end
+	end
+	if ToolUnequipped1 then
+		ToolUnequipped1:disconnect()
+	end
+	local CurrentlyEquipped = true
+	ToolUnequipped1 = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+	end)
+	Spawn(function()
+		if Delay then
+			local AllAltered = false
+			while not AllAltered and ToolEquipped and CurrentlyEquipped and CheckIfAlive() do
+				local AllCurrentlyAltered = true
+				for i, v in pairs(Objects) do
+					if ((Invisible and v.Object.Transparency < 1) or (not Invisible and v.Object.Transparency > v.Transparency)) then
+						v.Object.Transparency = (v.Object.Transparency + (0.1 * ((Invisible and 1) or -1)))
+						AllCurrentlyAltered = false
+					end
+				end
+				if AllCurrentlyAltered then
+					AllAltered = true
+				end
+				wait()
+			end
+			if ToolUnequipped1 then
+				ToolUnequipped1:disconnect()
+			end
+		end
+		if not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
+			return
+		end
+		for i, v in pairs(Objects) do
+			if Invisible then
+				v.Object.Transparency = 1
+			else
+				ResetTransparency(v.Object)
+			end
+		end
+	end)
+	return Objects
+end
+
+function Activated()
+	if not Tool.Enabled or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	if Character:FindFirstChild("Invisible") then
+		return
+	end
+	Tool.Enabled = false
+	Invisible = Create("BoolValue"){
+		Name = "Invisible",
+		Value = true,
+	}
+	Debris:AddItem(Invisible, (Duration + 2))
+	Invisible.Parent = Character
+	for i, v in pairs({ToolUnequipped2, DescendantAdded, DescendantRemoving}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	local CurrentlyEquipped = true
+	ToolUnequipped2 = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+	end)
+	Humanoid.WalkSpeed = 26
+	Sounds.WooshStart:Play()
+	TransparentObjects = SetTransparency(Character, true, true)
+	DescendantAdded = Character.ChildAdded:connect(function(Child)
+		local Objects = SetTransparency(Child, true, false)
+		for i, v in pairs(Objects) do
+			table.insert(TransparentObjects, v)
+		end
+	end)
+	DescendantRemoving = Character.ChildRemoved:connect(function(Child)
+		ResetTransparency(Child)
+	end)
+	wait(Duration)
+	Sounds.WooshEnd:Play()
+	for i, v in pairs({ToolUnequipped2, DescendantAdded, DescendantRemoving}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	if CurrentlyEquipped then
+		if CheckIfAlive() then
+			Humanoid.WalkSpeed = 16
+		end
+		SetTransparency(TransparentObjects, false, true)
+		TransparentObjects = {}
+		local PlayersNearby = GetPlayersNearby(15)
+		for i, v in pairs(PlayersNearby) do
+			local character = v.Parent
+			if character then
+				local ConfusionScriptCopy = ConfusionScript:Clone()
+				ConfusionScriptCopy.Disabled = false
+				ConfusionScriptCopy.Parent = character
+			end
+		end
+	end
+	wait(CoolDown)
+	Tool.Enabled = true
+end
+
+function MakeCape(MakeNew)
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+	if not MakeNew then
+		return
+	end
+	Cape = Handle:Clone()
+	Cape.Name = "Cape"
+	Cape.Transparency = 0
+	local Weld = Create("Weld"){
+		Part0 = Torso,
+		Part1 = Cape,
+		C0 = CFrame.new(0, -0.15, 0.4),
+		Parent = Cape,
+	}
+	Handle.Transparency = 1
+	Cape.Parent = Tool
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent) and true) or false)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		MakeCape(true)
+	end)
+	ToolEquipped = true
+end
+
+function Unequipped()
+	Spawn(function()
+		for i, v in pairs(Sounds) do
+			v:Stop()
+		end
+		for i, v in pairs({ToolUnequipped2, DescendantAdded, DescendantRemoving}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		if Invisible and Invisible.Parent then
+			Invisible:Destroy()
+		end
+		if CheckIfAlive() then
+			Humanoid.WalkSpeed = 16
+		end
+		Handle.Transparency = 0
+		MakeCape(false)
+		ResetTransparency()
+		ToolEquipped = false
+	end)
+end
+
+MakeCape(false)
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX4AF860AAC2B048139600753BBF5FCF89">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">ConfusionScript</string>
+					<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
+
+Character = script.Parent
+Humanoid = Character:FindFirstChild("Humanoid")
+
+Debris = game:GetService("Debris")
+
+if Humanoid then
+	Humanoid.WalkSpeed = (math.abs(Humanoid.WalkSpeed) * -1)
+	wait(2.5)
+	Humanoid.WalkSpeed = (math.abs(Humanoid.WalkSpeed) * 1)
+end
+
+Debris:AddItem(script, 0.5)
+script:Destroy()]]></ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
 	</Item>
 </roblox>
