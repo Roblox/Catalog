@@ -1,37 +1,520 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX964F8400DEF14E27AC71A2A2F3C760F0">
+	<Item class="Tool" referent="RBX2F08119F1C0C4BA8B3B8DF10461030B3">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
 				<Y>0.100000001</Y>
-				<Z>0.75</Z>
-				<R00>0.999999642</R00>
-				<R01>0.000909994473</R01>
-				<R02>0</R02>
-				<R10>-8.09999978e-009</R10>
-				<R11>8.90114916e-006</R11>
-				<R12>1</R12>
-				<R20>0.000909994473</R20>
-				<R21>-0.999999642</R21>
-				<R22>8.9011528e-006</R22>
+				<Z>1.04999995</Z>
+				<R00>1</R00>
+				<R01>8.9011528e-006</R01>
+				<R02>7.9229831e-011</R02>
+				<R10>0</R10>
+				<R11>-8.9010764e-006</R11>
+				<R12>0.99999994</R12>
+				<R20>8.9011528e-006</R20>
+				<R21>-1</R21>
+				<R22>-8.90107549e-006</R22>
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
-			<string name="Name">Daggers</string>
+			<string name="Name">ElfDualDaggers</string>
 			<bool name="RequiresHandle">true</bool>
-			<Content name="TextureId"><url>http://www.roblox.com/asset?id= 165709672 </url></Content>
+			<Content name="TextureId"><url>rbxassetid://492903215</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Animation" referent="RBXBC0A1C00CE2D4C408D64E371B87838EA">
+		<Item class="Script" referent="RBXCF6ED306CBBD4AB2AC59AC5FDA75A1F7">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=214744167</url></Content>
-				<string name="Name">LeftSlash</string>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+BasePart = Create("Part"){
+	Shape = Enum.PartType.Block,
+	Material = Enum.Material.Plastic,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+	Anchored = false,
+}
+
+Animations = {
+	Equip = {Animation = Tool:WaitForChild("Equip"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+	LeftSlash = {Animation = Tool:WaitForChild("LeftSlash"), FadeTime = nil, Weight = nil, Speed = 8, Duration = 0.25},
+	RightSlash = {Animation = Tool:WaitForChild("RightSlash"), FadeTime = nil, Weight = nil, Speed = 8, Duration = 0.25},
+	DoubleSlash = {Animation = Tool:WaitForChild("DoubleSlash"), FadeTime = nil, Weight = nil, Speed = 1.5, Duration = 0.75},
+}
+
+Sounds = {
+	Unsheath = Handle:WaitForChild("Unsheath"),
+	Swing1 = Handle:WaitForChild("Swing1"),
+	Swing2 = Handle:WaitForChild("Swing2"),
+	Swing3 = Handle:WaitForChild("Swing3"),
+	Swing4 = Handle:WaitForChild("Swing4"),
+	CatScream = Handle:WaitForChild("CatScream"),
+}
+
+Gravity = 196.20
+
+SlashDamage = 15
+
+Clicks = 0
+FirstClick = false
+SoundDelay = false
+Lunging = false
+ToolEquipped = false
+
+DisplayModel = Tool:FindFirstChild("DisplayModel")
+if DisplayModel then
+	DisplayModel:Destroy()
+end
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Tool,
+})
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Tool,
+})
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function TagHumanoid(humanoid, player)
+	local Creator_Tag = Create("ObjectValue"){
+		Name = "creator",
+		Value = player,
+	}
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
+
+function GetAllConnectedParts(Object)
+	local Parts = {}
+	local function GetConnectedParts(Object)
+		for i, v in pairs(Object:GetConnectedParts()) do
+			local Ignore = false
+			for ii, vv in pairs(Parts) do
+				if v == vv then
+					Ignore = true
+				end
+			end
+			if not Ignore then
+				table.insert(Parts, v)
+				GetConnectedParts(v)
+			end
+		end
+	end
+	GetConnectedParts(Object)
+	return Parts
+end
+
+function Lunge(MousePosition)
+	if not CheckIfAlive() or not ToolEquipped then
+		return
+	end
+	local Direction = CFrame.new(Torso.Position, Vector3.new(MousePosition.X, Torso.Position.Y, MousePosition.Z))
+	Torso.CFrame = Direction
+	local Parts = GetAllConnectedParts(Torso)
+	local Mass = 0
+	for i, v in pairs(Parts) do
+		Mass = (Mass + v:GetMass())
+	end
+	Mass = (Mass * Gravity * 100)
+	local BodyVelocity = Create("BodyVelocity"){
+		maxForce = Vector3.new(Mass, 0, Mass),
+		velocity = (Direction.lookVector * 100),
+	}
+	local BodyGyro = Create("BodyGyro"){
+		maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+		cframe = Direction,
+	}
+	for i, v in pairs({BodyVelocity, BodyGyro}) do
+		Debris:AddItem(v, 0.5)
+		v.Parent = Torso
+	end
+end
+
+function Activated()
+	if not Tool.Enabled or not ToolEquipped then
+		return
+	end
+	Clicks = (Clicks + 1)
+	if not FirstClick then
+		FirstClick = true
+		local CurrentlyEquipped = true
+		ToolUnequipped = Tool.Unequipped:connect(function()
+			CurrentlyEquipped = false
+		end)
+		wait(0.15)
+		if ToolUnequipped then
+			ToolUnequipped:disconnect()
+		end
+		if not CurrentlyEquipped then
+			return
+		end
+		if not FakeHandle or not FakeHandle.Parent then
+			return
+		end
+		Tool.Enabled = false
+		local SingleClickAnims = {}
+		local DoubleClickAnims = {}
+		local SlashSounds = {Sounds.Swing1, Sounds.Swing2, Sounds.Swing3, Sounds.Swing4}
+		local Lungable = false
+		if (FakeHandle and FakeHandle.Parent) and not Lunging then
+			Lunging = true
+			Lungable = true
+			table.insert(DoubleClickAnims, Animations.DoubleSlash)
+			Delay(2, (function()
+				Lunging = false
+			end))
+		end
+		for i, v in pairs({Handle, FakeHandle}) do
+			if v and v.Parent then
+				table.insert(SingleClickAnims, ((v == FakeHandle and Animations.LeftSlash) or Animations.RightSlash))
+			end
+		end
+		SlashSounds[math.random(1, #SlashSounds)]:Play()
+		AnimationChosen = (((Clicks < 2 or #DoubleClickAnims == 0) and SingleClickAnims[math.random(1, #SingleClickAnims)]) or DoubleClickAnims[math.random(1, #DoubleClickAnims)])
+		Spawn(function()
+			InvokeClient("PlayAnimation", AnimationChosen)
+		end)
+		if Clicks >= 2 and Lungable then
+			Spawn(function()
+				local MousePosition = InvokeClient("MousePosition")
+				if MousePosition then
+					Lunge(MousePosition.Position)
+				end
+			end)
+		end
+		wait(AnimationChosen.Duration)
+		Spawn(function()
+			InvokeClient("StopAnimation", AnimationChosen)
+		end)
+		AnimationChosen = nil
+		FirstClick = false
+		Clicks = 0
+		Tool.Enabled = true
+	end
+end
+
+function PartTouched(Table)
+	local Part = Table.Part
+	local Animation = Table.Animation
+	if not Part or not Animation then
+		return
+	end
+	local TouchedConnection
+	TouchedConnection = Part.Touched:connect(function(Hit)
+		if not Hit or not Hit.Parent or (AnimationChosen ~= Animations.DoubleSlash and AnimationChosen ~= Animation) then
+			return
+		end
+		local character = Hit.Parent
+		if character:IsA("Hat") then
+			character = character.Parent
+		end
+		local player = Players:GetPlayerFromCharacter(character)
+		if player == Player or IsTeamMate(Player, player) then
+			return
+		end
+		local humanoid = character:FindFirstChild("Humanoid")
+		if not humanoid or humanoid.Health == 0 then
+			return
+		end
+		local HealthAfter = (humanoid.Health - SlashDamage)
+		UntagHumanoid(humanoid)
+		TagHumanoid(humanoid, Player)
+		humanoid:TakeDamage(SlashDamage)
+		if HealthAfter <= 0 and not SoundDelay then
+			SoundDelay = true
+			Spawn(function()
+				local Sound = Sounds.CatScream:Clone()
+				Debris:AddItem(Sound, 2)
+				Sound.Parent = Handle
+				Sound:Play()
+				wait(2)
+				SoundDelay = false
+			end)
+		end
+	end)
+end
+
+function EquipDaggers(CreateNew)
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+	if not CreateNew then
+		return
+	end
+	local LeftArm = Character:FindFirstChild("Left Arm")
+	if LeftArm then
+		FakeHandle = Handle:Clone()
+		FakeHandle.Name = "FakeHandle"
+		local Weld = Create("Weld"){
+			Part0 = LeftArm,
+			Part1 = FakeHandle,
+			C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0),
+			C1 = Tool.Grip,
+			Parent = FakeHandle,
+		}
+		PartTouched({Part = FakeHandle, Animation = Animations.LeftSlash})
+		FakeHandle.Parent = Tool
+	end
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent) and true) or false)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		Sounds.Unsheath:Play()
+		Spawn(function()
+			InvokeClient("PlayAnimation", Animations.Equip)
+		end)
+		Handle.Transparency = 0
+		EquipDaggers(true)
+		ToolEquipped = true
+	end)
+end
+
+function Unequipped()
+	Clicks = 0
+	FirstClick = false
+	for i, v in pairs({ToolUnequipped}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	Handle.Transparency = 0
+	Spawn(function()
+		EquipDaggers(false)
+	end)
+	ToolEquipped = false
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+function OnServerInvoke(player, Mode, Value)
+	if player ~= Player or not CheckIfAlive() or not ToolEquipped or not Mode or not Value then
+		return
+	end
+end
+
+EquipDaggers(false)
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX1FC043B2D70F46E18A5347304F46B757">
+		<Item class="LocalScript" referent="RBX574032EECEC04FE390AB1B538A0B67FE">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+ContentProvider = game:GetService("ContentProvider")
+
+Animations = {}
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+Equipped = false
+
+ClientControl.OnClientInvoke = (function(Mode, Value)
+	if Mode == "PlayAnimation" and Equipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == Value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+		table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+	elseif Mode == "StopAnimation" and Value then
+		for i, v in pairs(Animations) do
+			if v.Animation == Value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	elseif Mode == "Preload" and Value then
+		ContentProvider:Preload(Value)
+	elseif Mode == "PlaySound" and Value then
+		Value:Play()
+	elseif Mode == "StopSound" and Value then
+		Value:Stop()
+	elseif Mode == "MousePosition" then
+		return ((PlayerMouse and {Position = PlayerMouse.Hit.p}) or nil)
+	elseif Mode == "DisableJump" then
+		DisableJump(Value)
+	end
+end)
+
+function InvokeServer(Mode, Value)
+	local ServerReturn
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(Mode, Value)
+	end)
+	return ServerReturn
+end
+
+function DisableJump(Boolean)
+	if PreventJump then
+		PreventJump:disconnect()
+	end
+	if Boolean then
+		PreventJump = Humanoid.Changed:connect(function(Property)
+			if Property ==  "Jump" then
+				Humanoid.Jump = false
+			end
+		end)
+	end
+end
+
+function CheckIfAlive()
+	return (Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Equipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Player:GetMouse()
+	Mouse.Button1Down:connect(function()
+		InvokeServer("MouseClick", {Down = true})
+	end)
+	Mouse.KeyDown:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = true})
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = false})
+	end)
+end
+
+function Unequipped()
+	Equipped = false
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	if PreventJump then
+		PreventJump:disconnect()
+	end
+	Animations = {}
+end
+
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX14AC1A9E788645D183A2DA8CAE514B47">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX716BE46C4B56484DB43911BBA24DAC3E">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=187562176</url></Content>
+				<string name="Name">Equip</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX7F89F918CBEA41DD838AD3230DA117BD">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -44,20 +527,20 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>5.20097923</X>
-					<Y>29.3574677</Y>
-					<Z>0.0397516191</Z>
-					<R00>-0.892369926</R00>
-					<R01>-0.112581246</R01>
-					<R02>0.437032938</R02>
-					<R10>-0.111795366</R10>
-					<R11>-0.883056283</R11>
-					<R12>-0.455751717</R12>
-					<R20>0.437233925</R20>
-					<R21>-0.455557644</R21>
-					<R22>0.775430083</R22>
+					<X>0.585965991</X>
+					<Y>11.3625135</Y>
+					<Z>-0.975831985</Z>
+					<R00>0.385405898</R00>
+					<R01>0.598680198</R01>
+					<R02>-0.702171206</R02>
+					<R10>0.140786976</R10>
+					<R11>-0.790199518</R11>
+					<R12>-0.596459448</R12>
+					<R20>-0.911943734</R20>
+					<R21>0.131022438</R21>
+					<R22>-0.38883388</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">true</bool>
+				<bool name="CanCollide">false</bool>
 				<PhysicalProperties name="CustomPhysicalProperties">
 					<CustomPhysics>false</CustomPhysics>
 				</PhysicalProperties>
@@ -90,33 +573,19 @@
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
-					<X>0</X>
+					<X>-1.40129846e-045</X>
 					<Y>0</Y>
-					<Z>0</Z>
+					<Z>-1.40129846e-045</Z>
 				</Vector3>
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.5</X>
-					<Y>0.5</Y>
-					<Z>2</Z>
+					<X>0.200000003</X>
+					<Y>0.75</Y>
+					<Z>3</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBXDB9A4E99E3084B21BEE31E95F379970C">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">SlashSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<bool name="Playing">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
-					<double name="TimePosition">0</double>
-					<float name="Volume">0.699999988</float>
-					<float name="xmlRead_MaxDistance_3">10000</float>
-					<float name="xmlRead_MinDistance_3">10</float>
-				</Properties>
-			</Item>
-			<Item class="SpecialMesh" referent="RBXB9311CD0ACEB42BBAE07A708F057C89B">
+			<Item class="SpecialMesh" referent="RBX525F5A794685403B9F1944C35F9621EF">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -129,9 +598,9 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>1.125</X>
+						<Y>1.125</Y>
+						<Z>1.125</Z>
 					</Vector3>
 					<Content name="TextureId"><url>rbxassetid://492903104</url></Content>
 					<Vector3 name="VertexColor">
@@ -141,20 +610,116 @@
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Sound" referent="RBXE119E545BF934E49A4BF8D8FC9A250E0">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing1</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310429</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXA00B5A078DE64A7383455B87E0035DB5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing2</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310436</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX4FCE3C2A32574A318BE0B500340B15D8">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing3</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310447</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX6320901694DC45498A747F99CE409F57">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing4</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310455</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXDEF315CAA45B418CB7A7BB8BF2A32570">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Unsheath</string>
+					<float name="Pitch">1.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12222225</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX33851610B283435C8ED8DADDFD771465">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">CatScream</string>
+					<float name="Pitch">0.800000012</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=290013736</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Animation" referent="RBXBFAF4B41ED534413A9AF4570947B2F7A">
+		<Item class="Animation" referent="RBXD784A1B37E99493996BE4970F7192902">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=214744245</url></Content>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=188741151</url></Content>
+				<string name="Name">DoubleSlash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXA561C1068FA845A1A9DCC97055784BCB">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=374918686</url></Content>
+				<string name="Name">LeftSlash</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXE76AC83257614ACF83B8FFB0595DED32">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=374918146</url></Content>
 				<string name="Name">RightSlash</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBXD2A6C66913E744EC89E24B9FBB3ABE33">
+		<Item class="Animation" referent="RBX95DF07B368554B4498B44EAC6A63590F">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=214744412</url></Content>
-				<string name="Name">Strike</string>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=374938401</url></Content>
+				<string name="Name">DualSlash</string>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX035B933C974942509842BD21AE157D9E">
+		<Item class="Part" referent="RBX2934255E7A35466584C4360F299EAB00">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -167,18 +732,18 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>8.81027412</X>
-					<Y>27.8743362</Y>
-					<Z>0.160136998</Z>
-					<R00>-0.891871274</R00>
-					<R01>-0.437934577</R01>
-					<R02>-0.113044195</R02>
-					<R10>-0.111406036</R10>
-					<R11>0.454946846</R11>
-					<R12>-0.883522511</R12>
-					<R20>0.438354135</R20>
-					<R21>-0.775394559</R21>
-					<R22>-0.454542547</R22>
+					<X>-2.10189104</X>
+					<Y>8.92644978</Y>
+					<Z>0.801820993</Z>
+					<R00>0.38540116</R00>
+					<R01>0.702646673</R01>
+					<R02>0.598125219</R02>
+					<R10>0.140790045</R10>
+					<R11>0.595832884</R11>
+					<R12>-0.790671587</R12>
+					<R20>-0.911945283</R20>
+					<R21>0.388935775</R21>
+					<R22>0.130709007</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<PhysicalProperties name="CustomPhysicalProperties">
@@ -196,7 +761,7 @@
 				<token name="LeftSurfaceInput">0</token>
 				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
-				<string name="Name">FakeHandleDisplay</string>
+				<string name="Name">FakeHandle</string>
 				<float name="Reflectance">0</float>
 				<float name="RightParamA">-0.5</float>
 				<float name="RightParamB">0.5</float>
@@ -213,33 +778,19 @@
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
-					<X>0</X>
+					<X>-1.40129846e-045</X>
 					<Y>0</Y>
-					<Z>0</Z>
+					<Z>-1.40129846e-045</Z>
 				</Vector3>
 				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.5</X>
-					<Y>0.5</Y>
-					<Z>2</Z>
+					<X>0.200000003</X>
+					<Y>0.75</Y>
+					<Z>3</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBX5F612C9600BD45BAAF4CA1437F6AC2A2">
-				<Properties>
-					<bool name="Looped">false</bool>
-					<string name="Name">SlashSound</string>
-					<float name="Pitch">1</float>
-					<bool name="PlayOnRemove">false</bool>
-					<bool name="Playing">false</bool>
-					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
-					<double name="TimePosition">0</double>
-					<float name="Volume">0.699999988</float>
-					<float name="xmlRead_MaxDistance_3">10000</float>
-					<float name="xmlRead_MinDistance_3">10</float>
-				</Properties>
-			</Item>
-			<Item class="SpecialMesh" referent="RBX0F745FA961534D14BCB7EB5EA1F79525">
+			<Item class="SpecialMesh" referent="RBXCDEADF5385DF4420A9328DB19A9CAA20">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -252,9 +803,9 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1</X>
-						<Y>1</Y>
-						<Z>1</Z>
+						<X>1.125</X>
+						<Y>1.125</Y>
+						<Z>1.125</Z>
 					</Vector3>
 					<Content name="TextureId"><url>rbxassetid://492903104</url></Content>
 					<Vector3 name="VertexColor">
@@ -264,77 +815,149 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX7A6083CA3D2441A28571938A1919F369">
+			<Item class="Sound" referent="RBX421D72BB4B6849498E4B7DA324A2E1B2">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing1</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310429</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX67D7E1AE625742C2A561CCFD11F58171">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing2</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310436</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX48A26B419C0441F69A33B11FF7DF6A53">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing3</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310447</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXC919B910157A401CA7405F9206429808">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Swing4</string>
+					<float name="Pitch">6</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=169310455</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBXCF2C396AF6444EC0B45EF2EA96F99A0F">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">Unsheath</string>
+					<float name="Pitch">1.75</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12222225</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX4A925A52C2B6408F9ED6E64AC9FF8EA5">
+				<Properties>
+					<bool name="Looped">false</bool>
+					<string name="Name">CatScream</string>
+					<float name="Pitch">0.800000012</float>
+					<bool name="PlayOnRemove">false</bool>
+					<bool name="Playing">false</bool>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=290013736</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+					<float name="xmlRead_MinDistance_3">10</float>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBXC3EA567A766E4C12AE5C720F7167EAED">
 				<Properties>
 					<CoordinateFrame name="C0">
-						<X>15.3150377</X>
-						<Y>14.5000963</Y>
-						<Z>4.26434851</Z>
-						<R00>-0.793521285</R00>
-						<R01>0.000909870083</R01>
-						<R02>0.608538389</R02>
-						<R10>-0.60853821</R10>
-						<R11>0.000805363699</R11>
-						<R12>-0.793521523</R12>
-						<R20>-0.00121206418</R20>
-						<R21>-0.999998868</R21>
-						<R22>-8.49328353e-005</R22>
+						<X>-2.71543241</X>
+						<Y>8.75570297</Y>
+						<Z>6.80929041</Z>
+						<R00>0.385405898</R00>
+						<R01>0.140786976</R01>
+						<R02>-0.911943734</R02>
+						<R10>0.598680198</R10>
+						<R11>-0.790199518</R11>
+						<R12>0.131022438</R12>
+						<R20>-0.702171206</R20>
+						<R21>-0.596459448</R21>
+						<R22>-0.38883388</R22>
 					</CoordinateFrame>
 					<CoordinateFrame name="C1">
-						<X>18.3067036</X>
-						<Y>-1.89013374</Y>
-						<Z>13.669734</Z>
-						<R00>-0.792969465</R00>
-						<R01>-3.49989715e-022</R01>
-						<R02>0.609261394</R02>
-						<R10>5.42312864e-006</R10>
-						<R11>1</R11>
-						<R12>7.05834236e-006</R12>
-						<R20>-0.609261394</R20>
-						<R21>8.9011528e-006</R21>
-						<R22>-0.792969465</R22>
+						<X>0.284532845</X>
+						<Y>-4.15364218</Y>
+						<Z>8.21027946</Z>
+						<R00>0.38540116</R00>
+						<R01>0.140790045</R01>
+						<R02>-0.911945283</R02>
+						<R10>0.702646673</R10>
+						<R11>0.595832884</R11>
+						<R12>0.388935775</R12>
+						<R20>0.598125219</R20>
+						<R21>-0.790671587</R21>
+						<R22>0.130709007</R22>
 					</CoordinateFrame>
-					<string name="Name">DisplayWeld</string>
-					<Ref name="Part0">RBX1FC043B2D70F46E18A5347304F46B757</Ref>
-					<Ref name="Part1">RBX035B933C974942509842BD21AE157D9E</Ref>
+					<string name="Name">Weld</string>
+					<Ref name="Part0">RBX7F89F918CBEA41DD838AD3230DA117BD</Ref>
+					<Ref name="Part1">RBX2934255E7A35466584C4360F299EAB00</Ref>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX6361367B88714271B96E47E42152EE2D">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=214747217</url></Content>
-				<string name="Name">Idle</string>
-			</Properties>
-		</Item>
-		<Item class="Animation" referent="RBXD08F567D4D67480FB5926C99C3560DD6">
-			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=214748382</url></Content>
-				<string name="Name">Walk</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBXDF82632357404230AA6CA0CD12CC2E99">
+		<Item class="Camera" referent="RBX00022E02D96A42169322001450857952">
 			<Properties>
 				<CoordinateFrame name="CFrame">
-					<X>11.8247623</X>
-					<Y>27.8847027</Y>
-					<Z>-1.80325103</Z>
-					<R00>-0.422570854</R00>
-					<R01>-0.0189872757</R01>
-					<R02>0.90613097</R02>
-					<R10>-0</R10>
-					<R11>0.999780595</R11>
-					<R12>0.0209496282</R12>
-					<R20>-0.906329989</R20>
-					<R21>0.00885270257</R21>
-					<R22>-0.42247808</R22>
+					<X>-1.18604302</X>
+					<Y>8.74238205</Y>
+					<Z>-0.759901345</Z>
+					<R00>-0.894922078</R00>
+					<R01>0.00544797443</R01>
+					<R02>0.446189374</R02>
+					<R10>-4.65661287e-010</R10>
+					<R11>0.999925613</R11>
+					<R12>-0.0122090951</R12>
+					<R20>-0.446222663</R20>
+					<R21>-0.0109261889</R21>
+					<R22>-0.89485532</R22>
 				</CoordinateFrame>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
-				<float name="FieldOfView">40</float>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>8.83453083</X>
-					<Y>27.8155689</Y>
-					<Z>-0.40907371</Z>
+					<X>-2.01149321</X>
+					<Y>8.76496887</Y>
+					<Z>0.895580709</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
