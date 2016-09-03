@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0F5D0F030AA14E699CED5C11ACB0CAA9">
+	<Item class="Tool" referent="RBXA794942AC06E4660AF925335908AD764">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -21,10 +21,11 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Balligator</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>rbxassetid://273348382</url></Content>
 			<string name="ToolTip">Keth&apos;s Balligator</string>
 		</Properties>
-		<Item class="Part" referent="RBX193CDD0317114B858D9B7EF1D321BD9D">
+		<Item class="Part" referent="RBX7FC19A8A082A434292D1A69B1583D289">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -37,20 +38,23 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>4.9000001</X>
-					<Y>4.29999876</Y>
-					<Z>3.0999999</Z>
-					<R00>0</R00>
-					<R01>0</R01>
-					<R02>1</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>-0</R12>
-					<R20>-1</R20>
-					<R21>0</R21>
-					<R22>0</R22>
+					<X>0.127403766</X>
+					<Y>3.66003728</Y>
+					<Z>-0.12102057</Z>
+					<R00>0.188666224</R00>
+					<R01>-0.0213926379</R01>
+					<R02>0.981808186</R02>
+					<R10>-1.42632945e-014</R10>
+					<R11>0.999762714</R11>
+					<R12>0.0217838492</R12>
+					<R20>-0.98204124</R20>
+					<R21>-0.00410987623</R21>
+					<R22>0.188621446</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -61,7 +65,7 @@
 				<float name="LeftParamB">0.5</float>
 				<token name="LeftSurface">0</token>
 				<token name="LeftSurfaceInput">0</token>
-				<bool name="Locked">false</bool>
+				<bool name="Locked">true</bool>
 				<token name="Material">256</token>
 				<string name="Name">Handle</string>
 				<float name="Reflectance">0</float>
@@ -92,7 +96,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXCA5D0E301DB8462A9C569336A5ACA708">
+			<Item class="SpecialMesh" referent="RBXD6E5345C9E4A4CDF9C7FBEA823FBE7E2">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -118,11 +122,12 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX6079B921D54F4F9CBA50EEF341A14968">
+		<Item class="Script" referent="RBX3636F6602C4C48118FCA5CD4794AA641">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Control</string>
+				<string name="ScriptGuid"></string>
 				<ProtectedString name="Source"><![CDATA[local tool = script.Parent
 local handle = tool.Handle
 local remote = script.Parent.Remote
@@ -130,6 +135,8 @@ local spawns = remote.Spawn
 local meshes = script.Parent.Meshes:GetChildren()
 local balligator
 local last = 0
+
+RemoverScript = script:WaitForChild("RemoverScript")
 
 local spawning = false
 
@@ -154,6 +161,18 @@ function SpawnGator(player)
 	model.Name = "Balligator"
 	model.Parent = player.Character
 	gator.Parent = model
+	
+	local RemoverScriptCopy = RemoverScript:Clone()
+	local ToolValue = Instance.new("ObjectValue")
+	ToolValue.Name = "Tool"
+	ToolValue.Value = tool
+	ToolValue.Parent = model
+	local Creator = Instance.new("ObjectValue")
+	Creator.Name = "Creator"
+	Creator.Value = player
+	Creator.Parent = model
+	RemoverScriptCopy.Disabled = false
+	RemoverScriptCopy.Parent = model
 	
 	wait(1/2)
 	
@@ -186,11 +205,9 @@ function SpawnGator(player)
 	gator:SetNetworkOwner(player)
 return model end
 
-tool.AncestryChanged:connect(function()
-	if tool.Parent == game.Workspace then
-		balligator:Destroy()
-		handle.Transparency = 0
-	end
+tool.Unequipped:connect(function()
+	balligator:Destroy()
+	handle.Transparency = 0
 end)
 
 function spawns.OnServerInvoke(player)
@@ -204,16 +221,76 @@ function spawns.OnServerInvoke(player)
 	end
 return balligator end]]></ProtectedString>
 			</Properties>
+			<Item class="Script" referent="RBXCD97C32EB3774281ACFB981D22B61D2A">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">RemoverScript</string>
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Model = script.Parent
+Humanoid = Model:FindFirstChild("Humanoid")
+
+Debris = game:GetService("Debris")
+
+Creator = Model:FindFirstChild("Creator")
+Tool = Model:FindFirstChild("Tool")
+
+function DestroyModel()
+	Debris:AddItem(Model, 0.5)
+end
+
+if not Creator or not Creator.Value or not Creator.Value:IsA("Player") or not Creator.Value.Parent or not Tool or not Tool.Value or not Tool.Value.Parent then
+	DestroyModel()
+	return
+end
+
+Creator = Creator.Value
+Tool = Tool.Value
+
+Character = Creator.Character
+if not Character then
+	DestroyModel()
+	return
+end
+
+Creator.Changed:connect(function(Property)
+	if Property == "Parent" and not Creator.Parent then
+		DestroyModel()
+	end
+end)
+
+Character.Changed:connect(function(Property)
+	if Property == "Parent" and not Character.Parent then
+		DestroyModel()
+	end
+end)
+
+Tool.Changed:connect(function(Property)
+	if Property == "Parent" then
+		DestroyModel()
+	end
+end)
+
+if Humanoid then
+	Humanoid.Died:connect(function()
+		DestroyModel()
+	end)
+end]]></ProtectedString>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX6574741B90374C3FB9E69740A3F14942">
+		<Item class="LocalScript" referent="RBX388732F2527A48D0A971260478DA52D8">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalControl</string>
-				<ProtectedString name="Source"><![CDATA[local player = game.Players.LocalPlayer
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[tool = script.Parent
+local player = game.Players.LocalPlayer
 
 wait()
-local mouse = player:GetMouse()
 local remote = script.Parent:WaitForChild("Remote")
 local spawn = remote.Spawn
 local last = 0
@@ -228,48 +305,50 @@ function Jump(ball)
 	end
 end
 
-mouse.Button1Down:connect(function()
-	model = spawn:InvokeServer()
-	gator, ball = model.Handle, model.Part
-	local close = false
-	while model and model.Parent == player.Character do
-		gator.BodyPosition.position = ball.Position + Vector3.new(0,1.15,0)
-		--gator.Position = ball.Position + Vector3.new(0,1.15,0)
-		local ang = math.atan2(ball.Velocity.x, ball.Velocity.z)
-		gator.BodyGyro.cframe = CFrame.Angles(0,ang + math.pi,0)
-		local rel = (player.Character.Torso.Position - ball.Position)
-		if 6 > rel.magnitude then
-			close = true
+tool.Equipped:connect(function(mouse)
+	mouse.Button1Down:connect(function()
+		model = spawn:InvokeServer()
+		gator, ball = model.Handle, model.Part
+		local close = false
+		while model and model.Parent == player.Character do
+			gator.BodyPosition.position = ball.Position + Vector3.new(0,1.15,0)
+			--gator.Position = ball.Position + Vector3.new(0,1.15,0)
+			local ang = math.atan2(ball.Velocity.x, ball.Velocity.z)
+			gator.BodyGyro.cframe = CFrame.Angles(0,ang + math.pi,0)
+			local rel = (player.Character.Torso.Position - ball.Position)
+			if 6 > rel.magnitude then
+				close = true
+			end
+			if 3 < rel.magnitude and rel.magnitude < 7 and close then
+				ball.BodyVelocity.velocity = Vector3.new(rel.z, 0, -1*rel.x).unit*3
+			else
+				close = false
+				ball.BodyVelocity.velocity = rel.unit*math.min(rel.magnitude*1.5 - 6, 17)
+			end
+			wait()
+			if math.random(1,100) == 1 and (game.Workspace.DistributedGameTime - last) > 1 then
+				Jump(ball)
+			end
 		end
-		if 3 < rel.magnitude and rel.magnitude < 7 and close then
-			ball.BodyVelocity.velocity = Vector3.new(rel.z, 0, -1*rel.x).unit*3
-		else
-			close = false
-			ball.BodyVelocity.velocity = rel.unit*math.min(rel.magnitude*1.5 - 6, 17)
-		end
-		wait()
-		if math.random(1,100) == 1 and (game.Workspace.DistributedGameTime - last) > 1 then
-			Jump(ball)
-		end
-	end
+	end)
 end)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Folder" referent="RBX895E63251C5E4377B7A913CFAC4A0C7E">
+		<Item class="Folder" referent="RBX233A1490E8CB4772BE4BA361B68AA4B3">
 			<Properties>
 				<string name="Name">Remote</string>
 			</Properties>
-			<Item class="RemoteFunction" referent="RBX73A35826BF8D43E1B8A7306F95D586E2">
+			<Item class="RemoteFunction" referent="RBX042EF1CD95024053AAA26877E0711CEF">
 				<Properties>
 					<string name="Name">Spawn</string>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Folder" referent="RBX56157D7C724740A78C8427F9A8AF8A0E">
+		<Item class="Folder" referent="RBX4DD8C07F028B4E6BB8BA1CF7EB298866">
 			<Properties>
 				<string name="Name">Meshes</string>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX364B5CAA08774BAE985D6215A635B668">
+			<Item class="SpecialMesh" referent="RBX14C0E94EC4504336AA2F64D0A5C59EE0">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -294,6 +373,44 @@ end)]]></ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX05C58082EB2946B183537E31E65A4587">
+			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>-2.12751794</X>
+					<Y>4.82309103</Y>
+					<Z>0.885677576</Z>
+					<R00>0.450393498</R00>
+					<R01>0.432413369</R01>
+					<R02>-0.781130195</R02>
+					<R10>-1.4901163e-008</R10>
+					<R11>0.874892294</R11>
+					<R12>0.484317571</R12>
+					<R20>0.892830253</R20>
+					<R21>-0.218133464</R21>
+					<R22>0.39404577</R22>
+				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<float name="FieldOfView">35</float>
+				<CoordinateFrame name="Focus">
+					<X>-0.971448064</X>
+					<Y>4.10630274</Y>
+					<Z>0.302491248</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
 		</Item>
 	</Item>
 </roblox>
