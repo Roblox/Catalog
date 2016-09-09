@@ -1,0 +1,694 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX5F5F3613C0214F0A8227728AACBBF8FA">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>-1.5</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>0</R00>
+				<R01>0</R01>
+				<R02>-1</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>1</R20>
+				<R21>0</R21>
+				<R22>0</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">FlyingCarpetOfBooks</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>rbxassetid://498209233</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Animation" referent="RBXE78BDD4113B643D18C3DC083D68E34A0">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=225279725</url></Content>
+				<string name="Name">Sit</string>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX60D1872F5AE444C7B10FA950DC534B3F">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+RemovalMonitor = script:WaitForChild("RemovalMonitor")
+
+CarpetPieces = {
+	{MeshId = 223079795, Angle = 160},
+}
+
+CarpetSize = Vector3.new(6, 0.5, 6.5)
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Rate = (1 / 10)
+
+BasePart = Instance.new("Part")
+BasePart.Material = Enum.Material.Plastic
+BasePart.Shape = Enum.PartType.Block
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.CanCollide = true
+BasePart.Locked = true
+
+Animations = {
+	Sit = {Animation = Tool:WaitForChild("Sit"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+}
+
+Grips = {
+	Normal = CFrame.new(-1.5, 0, 0, 0, 0, -1, -0, 1, 0, 1, 0, 0),
+	Flying = CFrame.new(-1.5, 0, -0.5, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+}
+
+Flying = false
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
+ClientControl.Parent = Tool
+
+Handle.Transparency = 0
+Tool.Grip = Grips.Normal
+Tool.Enabled = true
+
+function CleanUp()
+	Handle.Transparency = 0
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Activated()
+	if not Tool.Enabled then
+		return
+	end
+	Tool.Enabled = false
+	Flying = not Flying
+	if Flying then
+		CleanUp()
+		--Handle.Transparency = 1
+		local CarpetParts = {}
+		--[[Seat = Instance.new("Seat")
+		Seat.Name = "Seat"
+		Seat.Transparency = 1
+		Seat.Material = Enum.Material.Plastic
+		Seat.Shape = Enum.PartType.Block
+		Seat.TopSurface = Enum.SurfaceType.Smooth
+		Seat.BottomSurface = Enum.SurfaceType.Smooth
+		Seat.FormFactor = Enum.FormFactor.Custom
+		Seat.Size = Vector3.new(0.5, 0.2, 0.5)
+		Seat.CanCollide = true
+		Seat.Locked = true
+		Seat.Disabled = false
+		local SeatWeld = Instance.new("Weld")
+		SeatWeld.Name = "Weld"
+		SeatWeld.Part0 = Handle
+		SeatWeld.Part1 = Seat
+		SeatWeld.C0 = (CFrame.new(-1.5, 0, -3.25) * CFrame.Angles(0, math.pi, 0))
+		SeatWeld.C1 = CFrame.new(0, 0, 0)
+		SeatWeld.Parent = Seat
+		Seat.Parent = Tool]]
+		
+		Spawn(function()
+			InvokeClient("PlayAnimation", Animations.Sit)
+			Tool.Grip = Grips.Flying
+		end)
+		
+		FlightSpin = Instance.new("BodyGyro")
+		FlightSpin.Name = "FlightSpin"
+		FlightSpin.P = 1000000
+		FlightSpin.maxTorque = Vector3.new(FlightSpin.P, FlightSpin.P, FlightSpin.P)
+		FlightSpin.cframe = Torso.CFrame
+		
+		FlightPower = Instance.new("BodyVelocity")
+		FlightPower.Name = "FlightPower"
+		FlightPower.velocity = Vector3.new(0, 0, 0)
+		FlightPower.P = 1000000
+		FlightPower.maxForce = Vector3.new(FlightPower.P, FlightPower.P, FlightPower.P)
+		FlightPower.P = 10000
+		
+		FlightHold = Instance.new("BodyPosition")
+		FlightHold.Name = "FlightHold"
+		FlightHold.P = 100000
+		FlightHold.maxForce = Vector3.new(0, 0, 0)
+		FlightHold.position = Torso.Position
+		
+		FlightSpin.Parent = Torso
+		FlightPower.Parent = Torso
+		FlightHold.Parent = Torso
+		
+		Spawn(function()
+			local LastPlace = nil
+			while Flying and ToolEquipped and CheckIfAlive() do
+				
+				local CurrentPlace = Handle.Position
+				local Velocity = Torso.Velocity
+				Velocity = Vector3.new(Velocity.X, 0, Velocity.Z).magnitude
+				
+				if LastPlace and Velocity > 10 then
+					
+				elseif not LastPlace then
+					LastPlace = CurrentPlace
+				end
+				
+				wait(Rate)
+			end
+		end)
+	elseif not Flying then
+		Torso.Velocity = Vector3.new(0, 0, 0)
+		Torso.RotVelocity = Vector3.new(0, 0, 0)
+		for i, v in pairs({FlightSpin, FlightPower, FlightHold}) do
+			if v and v.Parent then
+				v:Destroy()
+			end
+		end
+		--[[if Seat and Seat.Parent and Seat.Occupant and Seat.Occupant:IsA("Humanoid") then
+			local humanoid = Seat.Occupant
+			humanoid.Sit = false
+		end]]
+		CleanUp()
+		Spawn(function()
+			Tool.Grip = Grips.Normal
+			InvokeClient("StopAnimation", Animations.Sit)
+		end)
+	end
+	
+	wait(2)
+	
+	Tool.Enabled = true
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	Tool.Grip = Grips.Normal
+	ToolEquipped = true
+end
+
+function Unequipped()
+	Flying = false
+	for i, v in pairs({FlightSpin, FlightPower, FlightHold}) do
+		if v and v.Parent then
+			v:Destroy()
+		end
+	end
+	CleanUp()
+	Handle.Transparency = 0
+	ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+	if player ~= Player or not ToolEquipped or not value or not CheckIfAlive() then
+		return
+	end
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+CleanUp()
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX9F71189C77DB48CA80E32FCE3BE57AB7">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">RemovalMonitor</string>
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Model = script.Parent
+
+Debris = game:GetService("Debris")
+
+Removing = false
+
+function RemoveModel()
+	if Removing then
+		return
+	end
+	local Parts = {}
+	for i, v in pairs(Model:GetChildren()) do
+		if v:IsA("Model") then
+			table.insert(Parts, v)
+		end
+	end
+	if #Parts == 0 then
+		Removing = true
+		Model.Name = ""
+		Debris:AddItem(Model, 1)
+	end
+end
+
+Model.ChildRemoved:connect(function(Child)
+	RemoveModel()
+end)
+
+RemoveModel()
+
+]]></ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX7EAEF9FEDE0D489FB1EEBAD053FE310E">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+
+Camera = game:GetService("Workspace").CurrentCamera
+
+Animations = {}
+LocalObjects = {}
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+Rate = (1 / 60)
+
+CameraSpeed = {
+	X = 15,
+	Z = 20
+}
+
+Controls = {
+	Forward = {
+		Mode = false,
+		Keys = {Key = "w", ByteKey = 17}
+	},
+	Backward = {
+		Mode = false,
+		Keys = {Key = "s", ByteKey = 18}
+	},
+	Left = {
+		Mode = false,
+		Keys = {Key = "a", ByteKey = 20}
+	},
+	Right = {
+		Mode = false,
+		Keys = {Key = "d", ByteKey = 19}
+	},
+}
+
+ToolEquipped = false
+
+function HandleFlightControl()
+	if not CheckIfAlive() then
+		return
+	end
+	if FightMonitor then
+		FightMonitor:disconnect()
+	end
+	FightMonitor = Torso.ChildAdded:connect(function(Child)
+		if Flying then
+			return
+		end
+		if Child.Name == "FlightHold" then
+			local FlightSpin = Torso:FindFirstChild("FlightSpin")
+			local FlightPower = Torso:FindFirstChild("FlightPower")
+			local FlightHold = Torso:FindFirstChild("FlightHold")
+			if not FlightSpin or not FlightPower or not FlightHold then
+				return
+			end
+			local Camera = game:GetService("Workspace").CurrentCamera
+			Camera.CameraType = Enum.CameraType.Track
+			Flying = true
+			Humanoid.WalkSpeed = 0
+			Humanoid.PlatformStand = true
+			Humanoid.AutoRotate = false
+			DisableJump(true)
+			Torso.Velocity = Vector3.new(0, 0, 0)
+			Torso.RotVelocity = Vector3.new(0, 0, 0)
+			local IsMoving = false
+			while Flying and FlightSpin.Parent and FlightPower.Parent and FlightHold.Parent and CheckIfAlive() do
+				local NewPush = Vector3.new(0, 0, 0)
+				local ForwardVector = Camera.CoordinateFrame:vectorToWorldSpace(Vector3.new(0, 0, -1))
+				local SideVector = Camera.CoordinateFrame:vectorToWorldSpace(Vector3.new(-1, 0, 0))
+				NewPush = (NewPush + (((Controls.Forward.Mode and not Controls.Backward.Mode) and (ForwardVector * CameraSpeed.Z)) or ((not Controls.Forward.Mode and Controls.Backward.Mode) and (ForwardVector * CameraSpeed.Z * -1)) or NewPush))
+				NewPush = (NewPush + (((Controls.Left.Mode and not Controls.Right.Mode) and (SideVector * CameraSpeed.X)) or ((not Controls.Left.Mode and Controls.Right.Mode) and (SideVector * CameraSpeed.X * -1)) or NewPush))
+				FlightSpin.cframe = CFrame.new(Vector3.new(0, 0, 0), ForwardVector)
+				if NewPush.magnitude < 1 then
+					FlightHold.maxForce = Vector3.new((FlightHold.P * 100), (FlightHold.P * 100), (FlightHold.P * 100))
+					FlightPower.maxForce = Vector3.new(0, 0, 0)
+					if IsMoving then
+						FlightHold.position = Torso.Position
+					end
+					IsMoving = false
+				else
+					IsMoving = true
+					FlightHold.maxForce = Vector3.new(0, 0, 0)
+					FlightPower.maxForce = Vector3.new((FlightPower.P * 100), (FlightPower.P * 100), (FlightPower.P * 100))
+				end
+				FlightPower.velocity = NewPush
+				wait(Rate)
+			end
+			Flying = false
+			if CheckIfAlive() then
+				local Camera = game:GetService("Workspace").CurrentCamera
+				Camera.CameraType = Enum.CameraType.Custom
+				Torso.Velocity = Vector3.new(0, 0, 0)
+				Torso.RotVelocity = Vector3.new(0, 0, 0)
+				Humanoid.WalkSpeed = 16
+				Humanoid.PlatformStand = false
+				Humanoid.AutoRotate = true
+				DisableJump(false)
+				Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+			end
+		end
+	end)
+end
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function DisableJump(Boolean)
+	if PreventJump then
+		PreventJump:disconnect()
+	end
+	if Boolean then
+		PreventJump = Humanoid.Changed:connect(function(Property)
+			if Property ==  "Jump" then
+				Humanoid.Jump = false
+			end
+		end)
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function KeyPress(Key, Down)
+	local Key = string.lower(Key)
+	local ByteKey = string.byte(Key)
+	for i, v in pairs(Controls) do
+		if Key == v.Keys.Key or ByteKey == v.Keys.ByteKey then
+			Controls[i].Mode = Down
+		end
+	end
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	Mouse.KeyDown:connect(function(Key)
+		KeyPress(Key, true)
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		KeyPress(Key, false)
+	end)
+	Spawn(HandleFlightControl)
+end
+
+function Unequipped()
+	Flying = false
+	LocalObjects = {}
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	for i, v in pairs({PreventJump, FightMonitor}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	for i, v in pairs(Controls) do
+		Controls[i].Mode = false
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	local ServerReturn
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(mode, value)
+	end)
+	return ServerReturn
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX59A99A371CB24C6AAF94C780BCCC8F26">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX4881BE58795F4B1DAC97C88265579F59">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>0.203930438</X>
+					<Y>18.8109169</Y>
+					<Z>0.361120701</Z>
+					<R00>0.58951658</R00>
+					<R01>0.0144996811</R01>
+					<R02>-0.807626188</R02>
+					<R10>-0.0245884471</R10>
+					<R11>0.999697685</R11>
+					<R12>-1.36777508e-014</R12>
+					<R20>0.807382047</R20>
+					<R21>0.0198582746</R21>
+					<R22>0.589694858</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>3</X>
+					<Y>5</Y>
+					<Z>0.25</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX45FD7CF6ABC04D46B35763A219CC5581">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>rbxassetid://498209642</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>0.5</X>
+						<Y>0.600000024</Y>
+						<Z>0.600000024</Z>
+					</Vector3>
+					<Content name="TextureId"><url>rbxassetid://498209313</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX4F95009B3F394EE98A9E9FEFA9AC7AB0">
+			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>7.14653778</X>
+					<Y>18.1579914</Y>
+					<Z>-3.14989376</Z>
+					<R00>-0.469463229</R00>
+					<R01>0.066819936</R01>
+					<R02>0.880420029</R02>
+					<R10>-0</R10>
+					<R11>0.997132421</R11>
+					<R12>-0.0756778717</R12>
+					<R20>-0.882952094</R20>
+					<R21>-0.0355279781</R21>
+					<R22>-0.468116939</R22>
+				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<float name="FieldOfView">40</float>
+				<CoordinateFrame name="Focus">
+					<X>1.86399531</X>
+					<Y>18.6120605</Y>
+					<Z>-0.341180205</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
