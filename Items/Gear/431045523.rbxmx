@@ -1,12 +1,14 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Hat" referent="RBX4E5F5C64BA6F4AA8BD8513C112081C5E">
+	<Item class="Tool" referent="RBX7CC1966041FB4A9B94FC33FF7D0134E4">
 		<Properties>
-			<CoordinateFrame name="AttachmentPoint">
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>-0.25</Y>
-				<Z>0.360000014</Z>
+				<Y>-0.949999988</Y>
+				<Z>-0.800000012</Z>
 				<R00>1</R00>
 				<R01>0</R01>
 				<R02>0</R02>
@@ -17,9 +19,146 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">Empty</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">AttackParrot</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>rbxassetid://534874222</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBXC013D70BD5FF4680BEF977B183321E44">
+		<Item class="Script" referent="RBX4B4E6DB68FDB4B1C9A341C6A77C4449A">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+BirdModule = require(191816425)
+
+MaxBirds = 1
+Birds = {}
+Duration = (60 * 1)
+
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
+ClientControl.Parent = Tool
+
+Tool.Enabled = true
+
+function RemoveDeadBirds()
+	for i, v in pairs(Birds) do
+		if not v or not v.Parent then
+			table.remove(Birds, i)
+		end
+	end
+end
+
+function SpawnBird(Position)
+	if not Bird then
+		return
+	end
+	local NewBird = Bird:Clone()
+	local OwnerRef = NewBird:WaitForChild("OwnerRef")
+	OwnerRef.Value = Character
+	local ToolRef = NewBird:WaitForChild("ToolRef")
+	ToolRef.Value = Tool
+	table.insert(Birds, NewBird)
+	local Angle = (math.pi * 2 * #Birds / (MaxBirds + 1))
+	local SpawnPosition = (Position + 5 * (Vector3.new(math.sin(Angle), 1, math.cos(Angle))))
+	NewBird:TranslateBy(SpawnPosition - NewBird:GetModelCFrame().p)
+	Debris:AddItem(NewBird, Duration)
+	NewBird.Parent = game:GetService("Workspace")
+end
+
+function Activated()
+	local MouseData = InvokeClient("MouseData")
+	if not MouseData or not MouseData.Position or not Tool.Enabled or not CheckIfAlive() then
+		return
+	end
+	Tool.Enabled = false
+	RemoveDeadBirds()
+	local AddedBird = false
+	while #Birds < MaxBirds do
+		SpawnBird(RootPart.Position)
+		wait(1)
+		AddedBird = true
+	end
+	if AddedBird then
+		Tool.Enabled = true
+	end
+	wait(0.5)
+	for i, v in pairs(Birds) do
+		local BirdTarget = v:FindFirstChild("TargetPoint")
+		if BirdTarget then
+			BirdTarget.Value = MouseData.Position
+		end
+	end
+	wait(1.5)
+	Tool.Enabled = true
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and RootPart and RootPart.Parent) and true) or false)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	RootPart = Character:FindFirstChild("HumanoidRootPart")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	BirdData = BirdModule.GetTable({Key = "AttackParrot", Player = Player})
+	if not BirdData then
+		return
+	end
+	BirdFunctions = BirdData.GetData({Player = Player, Tool = Tool, Character = Character})
+	if not BirdFunctions then
+		return
+	end
+	Bird = BirdFunctions.CreateBird()
+	ToolEquipped = true
+end
+
+function Unequipped()
+	ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+	if player ~= Player or not mode or not value or not CheckIfAlive() or not ToolEquipped then
+		return
+	end
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXFDCB2B1A5E2B46F180A78CEFD82B0D81">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -30,22 +169,22 @@
 				<float name="BottomParamB">0.5</float>
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
-				<int name="BrickColor">194</int>
+				<int name="BrickColor">199</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.0189420003</X>
-					<Y>0.500006974</Y>
-					<Z>-0.0331799984</Z>
-					<R00>0.987869203</R00>
-					<R01>-7.03712547e-022</R01>
-					<R02>-0.155284181</R02>
-					<R10>7.35045193e-022</R10>
-					<R11>1</R11>
-					<R12>1.44356144e-022</R12>
-					<R20>0.155284181</R20>
-					<R21>-2.56745901e-022</R21>
-					<R22>0.987869203</R22>
+					<X>0.00246599992</X>
+					<Y>17.3253746</Y>
+					<Z>22.0072651</Z>
+					<R00>0.125025585</R00>
+					<R01>0.020440856</R01>
+					<R02>-0.991942942</R02>
+					<R10>-1.45103656e-014</R10>
+					<R11>0.999787748</R11>
+					<R12>0.0206025131</R12>
+					<R20>0.992153525</R20>
+					<R21>-0.00257584127</R21>
+					<R22>0.124999046</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">false</bool>
+				<bool name="CanCollide">true</bool>
 				<PhysicalProperties name="CustomPhysicalProperties">
 					<CustomPhysics>false</CustomPhysics>
 				</PhysicalProperties>
@@ -82,19 +221,19 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<token name="formFactorRaw">0</token>
+				<token name="formFactorRaw">3</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>1</X>
-					<Y>1</Y>
-					<Z>2</Z>
+					<X>0.5</X>
+					<Y>2</Y>
+					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX7031185EE4874F42AD8F9335DB968E7A">
+			<Item class="SpecialMesh" referent="RBX389382625FE141BB80C39C1788C238B5">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=0</url></Content>
+					<Content name="MeshId"><url>rbxassetid://534527009</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -103,11 +242,11 @@
 						<Z>0</Z>
 					</Vector3>
 					<Vector3 name="Scale">
-						<X>1.79999995</X>
-						<Y>1.60000002</Y>
-						<Z>1.60000002</Z>
+						<X>1.5</X>
+						<Y>1.5</Y>
+						<Z>1.5</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=419757102</url></Content>
+					<Content name="TextureId"><url>rbxassetid://534527620</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -115,6 +254,187 @@
 					</Vector3>
 				</Properties>
 			</Item>
+		</Item>
+		<Item class="Animation" referent="RBXC145EB7552D148E995DB0395CA11085A">
+			<Properties>
+				<Content name="AnimationId"><null></null></Content>
+				<string name="Name">Blow</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXF07EEED385774C838EA359AF5E084A15">
+			<Properties>
+				<Content name="AnimationId"><null></null></Content>
+				<string name="Name">Hold</string>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX1E183987792840BE8718A54DDC57938F">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MouseIcon</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX75069B0AB3BE4DD38334BEF597048579">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+
+Animations = {}
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+Rate = (1 / 60)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop(value.FadeTime)
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Mouse
+end
+
+function Unequipped()
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	pcall(function()
+		local ServerReturn = ServerControl:InvokeServer(mode, value)
+		return ServerReturn
+	end)
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MouseData" then
+		return ((PlayerMouse and {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}) or nil)
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXCD873FD04C6241B3A9554203B3FAE063">
+			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>1.69482803</X>
+					<Y>17.9035015</Y>
+					<Z>18.8916416</Z>
+					<R00>-0.878792167</R00>
+					<R01>-0.0563939512</R01>
+					<R02>0.473860979</R02>
+					<R10>-0</R10>
+					<R11>0.992992818</R11>
+					<R12>0.118175536</R12>
+					<R20>-0.477204949</R20>
+					<R21>0.103851736</R21>
+					<R22>-0.872634113</R22>
+				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<float name="FieldOfView">35</float>
+				<CoordinateFrame name="Focus">
+					<X>0.747106314</X>
+					<Y>17.6671505</Y>
+					<Z>20.6369095</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
 		</Item>
 	</Item>
 </roblox>
