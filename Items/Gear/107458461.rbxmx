@@ -19,7 +19,9 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Fake_Cake</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=107432825</url></Content>
 			<string name="ToolTip">It&apos;s funny because it&apos;s a reference...yeah.</string>
 		</Properties>
@@ -50,6 +52,9 @@
 					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -121,98 +126,100 @@
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">PoisonedFood</string>
-					<ProtectedString name="Source">local PlayersService = Game:GetService(&apos;Players&apos;)
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[local PlayersService = Game:GetService('Players')
 
 local Food = script.Parent
 
-while not script:FindFirstChild(&quot;Creator&quot;) or not script.Creator.Value do wait() end
+while not script:FindFirstChild("Creator") or not script.Creator.Value do wait() end
 local creator = script.Creator.Value
 
-while not script:FindFirstChild(&quot;Eating&quot;) do wait() end
+while not script:FindFirstChild("Eating") do wait() end
 local eatingScript = script.Eating
 
-while not script:FindFirstChild(&quot;TextSpammer&quot;) do wait() end
+while not script:FindFirstChild("TextSpammer") do wait() end
 local TextSpammer = script.TextSpammer
 
 
 function AddGuis(player)
-&#9;local playerGui= player.playerGui
-&#9;if not playerGui then return end
-&#9;local screenGui = Instance.new(&apos;ScreenGui&apos;)
-&#9;screenGui.Parent = playerGui
-&#9;local nscript = TextSpammer:Clone()
-&#9;nscript.Parent = screenGui
-&#9;nscript.Disabled = false
+	local playerGui= player.PlayerGui
+	if not playerGui then return end
+	local screenGui = Instance.new('ScreenGui')
+	screenGui.Parent = playerGui
+	local nscript = TextSpammer:Clone()
+	nscript.Parent = screenGui
+	nscript.Disabled = false
 end
 
--- When someone steps on the food, drop what they&apos;re holding and attach the food to them along with an eatingScript
+-- When someone steps on the food, drop what they're holding and attach the food to them along with an eatingScript
 -- (They must: Not be the creator, be alive, have a right arm, not be eating, and not be poisoned)
 Food.Touched:connect(function(otherPart)
-&#9;if otherPart and otherPart.Parent and otherPart.Parent:IsA(&quot;Model&quot;) and not otherPart.Parent:FindFirstChild(&apos;ForceField&apos;) then
-&#9;&#9;local otherModel = otherPart.Parent
-&#9;&#9;local otherPlayer = PlayersService:GetPlayerFromCharacter(otherModel)
-&#9;&#9;if otherPlayer and otherPlayer == creator then
-&#9;&#9;&#9;return
-&#9;&#9;end
-&#9;&#9;if otherModel:FindFirstChild(&quot;Humanoid&quot;) and otherModel.Humanoid.Health &gt; 0 and otherModel:FindFirstChild(&quot;Right Arm&quot;) then
-&#9;&#9;&#9;local otherHumanoid = otherModel.Humanoid
-&#9;&#9;&#9;if not otherHumanoid:FindFirstChild(eatingScript.Name) and not otherHumanoid:FindFirstChild(&quot;Poisoned&quot;) then
-&#9;&#9;&#9;&#9;if Food:FindFirstChild(&quot;SelfDestruct&quot;) then Food.SelfDestruct:Destroy() end -- lol
-&#9;&#9;&#9;&#9;if Food:FindFirstChild(&quot;BodyGyro&quot;) then Food.BodyGyro:Destroy() end
-&#9;&#9;&#9;&#9;local children = otherModel:GetChildren()
-&#9;&#9;&#9;&#9;for i = 1, #children do -- Remove current Tool
-&#9;&#9;&#9;&#9;&#9;local child = children[i]
-&#9;&#9;&#9;&#9;&#9;if child and child:IsA(&quot;Tool&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;child.Parent = Workspace
-&#9;&#9;&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if otherPlayer then
-&#9;&#9;&#9;&#9;&#9;Spawn(function() AddGuis(otherPlayer) end)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;Food.Parent = otherModel
-&#9;&#9;&#9;&#9;local weld = Instance.new(&quot;Weld&quot;, Game.JointsService)
-&#9;&#9;&#9;&#9;weld.Part0 = otherModel[&quot;Right Arm&quot;]
-&#9;&#9;&#9;&#9;weld.Part1 = Food
-&#9;&#9;&#9;&#9;weld.C1 = CFrame.Angles(math.pi/2, 0, 0) + Vector3.new(0, 0, 1.4)
-&#9;&#9;&#9;&#9;local eatingScriptClone = eatingScript:Clone()
-&#9;&#9;&#9;&#9;Game:GetService(&quot;Debris&quot;):AddItem(eatingScriptClone, 30) -- In case non-player humanoids pick it up
-&#9;&#9;&#9;&#9;eatingScriptClone.Parent = otherHumanoid
-&#9;&#9;&#9;&#9;eatingScriptClone.Disabled = false
-&#9;&#9;&#9;&#9;--script:Destroy()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if otherPart and otherPart.Parent and otherPart.Parent:IsA("Model") and not otherPart.Parent:FindFirstChild('ForceField') then
+		local otherModel = otherPart.Parent
+		local otherPlayer = PlayersService:GetPlayerFromCharacter(otherModel)
+		if otherPlayer and otherPlayer == creator then
+			return
+		end
+		if otherModel:FindFirstChild("Humanoid") and otherModel.Humanoid.Health > 0 and otherModel:FindFirstChild("Right Arm") then
+			local otherHumanoid = otherModel.Humanoid
+			if not otherHumanoid:FindFirstChild(eatingScript.Name) and not otherHumanoid:FindFirstChild("Poisoned") then
+				if Food:FindFirstChild("SelfDestruct") then Food.SelfDestruct:Destroy() end -- lol
+				if Food:FindFirstChild("BodyGyro") then Food.BodyGyro:Destroy() end
+				local children = otherModel:GetChildren()
+				for i = 1, #children do -- Remove current Tool
+					local child = children[i]
+					if child and child:IsA("Tool") then
+						child.Parent = Workspace
+						break
+					end
+				end
+				if otherPlayer then
+					Spawn(function() AddGuis(otherPlayer) end)
+				end
+				Food.Parent = otherModel
+				local weld = Instance.new("Weld", Game.JointsService)
+				weld.Part0 = otherModel["Right Arm"]
+				weld.Part1 = Food
+				weld.C1 = CFrame.Angles(math.pi/2, 0, 0) + Vector3.new(0, 0, 1.4)
+				local eatingScriptClone = eatingScript:Clone()
+				Game:GetService("Debris"):AddItem(eatingScriptClone, 30) -- In case non-player humanoids pick it up
+				eatingScriptClone.Parent = otherHumanoid
+				eatingScriptClone.Disabled = false
+				--script:Destroy()
+			end
+		end
+	end
 end)
-</ProtectedString>
+]]></ProtectedString>
 				</Properties>
 				<Item class="LocalScript" referent="RBX4">
 					<Properties>
 						<bool name="Disabled">true</bool>
 						<Content name="LinkedSource"><null></null></Content>
 						<string name="Name">Eating</string>
-						<ProtectedString name="Source">local hungryHumanoid = script.Parent
+						<string name="ScriptGuid"></string>
+						<ProtectedString name="Source"><![CDATA[local hungryHumanoid = script.Parent
 
 -- Waits for script.childName to exist then returns it
 local function scriptWaitForChild(childName)
-&#9;while not script:FindFirstChild(childName) do wait() end
-&#9;return script[childName]
+	while not script:FindFirstChild(childName) do wait() end
+	return script[childName]
 end
 
-local eatAnimation = scriptWaitForChild(&quot;EatAnimation&quot;)
+local eatAnimation = scriptWaitForChild("EatAnimation")
 
 -- Feed the Humanoid this script is attached to, then remove their food and attach poisonScript
-if hungryHumanoid and hungryHumanoid:IsA(&quot;Humanoid&quot;) and hungryHumanoid.Parent then
-&#9;local food = hungryHumanoid.Parent:FindFirstChild(&quot;Food&quot;)
-&#9;local eatAnimTrack = hungryHumanoid:LoadAnimation(eatAnimation)
-&#9;if eatAnimTrack then eatAnimTrack:Play() end
-&#9;
-&#9;wait(2.2) -- Nom nom nom
-&#9;if food then food:Destroy() end
+if hungryHumanoid and hungryHumanoid:IsA("Humanoid") and hungryHumanoid.Parent then
+	local food = hungryHumanoid.Parent:FindFirstChild("Food")
+	local eatAnimTrack = hungryHumanoid:LoadAnimation(eatAnimation)
+	if eatAnimTrack then eatAnimTrack:Play() end
+	
+	wait(2.2) -- Nom nom nom
+	if food then food:Destroy() end
 end
 wait(20)
 script:Destroy()
-</ProtectedString>
+]]></ProtectedString>
 					</Properties>
 					<Item class="Animation" referent="RBX5">
 						<Properties>
@@ -226,86 +233,87 @@ script:Destroy()
 						<bool name="Disabled">true</bool>
 						<Content name="LinkedSource"><null></null></Content>
 						<string name="Name">TextSpammer</string>
-						<ProtectedString name="Source">--[[local oldMessages = 
+						<string name="ScriptGuid"></string>
+						<ProtectedString name="Source"><![CDATA[--[[local oldMessages = 
 {
-&#9;&quot;IT&apos;S A LIE&quot;,
-&#9;&quot;YOU&apos;LL NEVER MAKE IT&quot;,
-&#9;&quot;YOU&apos;RE JUST LIKE EVERYONE ELSE&quot;,
-&#9;&quot;I DIDN&apos;T EVEN BAKE IT&quot;,
-&#9;&quot;YOU&apos;RE WASTING YOUR TIME&quot;,
-&#9;&quot;YOU NEVER APPRECIATE ME&quot;,
-&#9;&quot;IT&apos;S TOO LATE&quot;,
+	"IT'S A LIE",
+	"YOU'LL NEVER MAKE IT",
+	"YOU'RE JUST LIKE EVERYONE ELSE",
+	"I DIDN'T EVEN BAKE IT",
+	"YOU'RE WASTING YOUR TIME",
+	"YOU NEVER APPRECIATE ME",
+	"IT'S TOO LATE",
 }--]]
 
 
 local Messages = 
 {
-&#9;&quot;REPOST FOR FREE BC&quot;,
-&#9;&quot;PLZ DONATE&quot;,
-&#9;&quot;IM SUCH A HAXOR&quot;,
-&#9;&quot;PLAY MY ESCAPE THE OBBY FOR FREE VIP/ADMIN&quot;,
-&#9;&quot;WHAT A NOOB&quot;,
-&#9;&quot;THIS IS SO EPIC!!&quot;,
-&#9;&quot;F1RST&quot;,
-&#9;&quot;WHY U SO MAD BRO&quot;,
-&#9;&quot;YOLO&quot;,
+	"REPOST FOR FREE BC",
+	"PLZ DONATE",
+	"IM SUCH A HAXOR",
+	"PLAY MY ESCAPE THE OBBY FOR FREE VIP/ADMIN",
+	"WHAT A NOOB",
+	"THIS IS SO EPIC!!",
+	"F1RST",
+	"WHY U SO MAD BRO",
+	"YOLO",
 }
 
 local StartPositions =
 {
-&#9;function() return UDim2.new(1,0,math.random(),0),&apos;Right&apos; end,
-&#9;function() return UDim2.new(-1,0,math.random(),0),&apos;Left&apos; end,
-&#9;function() return UDim2.new(math.random(),0,1,0),&apos;Right&apos; end,
-&#9;function() return UDim2.new(math.random(),0,-1,0),&apos;Left&apos; end,
+	function() return UDim2.new(1,0,math.random(),0),'Right' end,
+	function() return UDim2.new(-1,0,math.random(),0),'Left' end,
+	function() return UDim2.new(math.random(),0,1,0),'Right' end,
+	function() return UDim2.new(math.random(),0,-1,0),'Left' end,
 }
-Game:GetService(&quot;ContentProvider&quot;):Preload(&quot;http://www.roblox.com/asset/?id=107450062&quot;)
-local TalkSound = Instance.new(&apos;Sound&apos;)
-TalkSound.SoundId = &apos;http://www.roblox.com/asset/?id=107450062&apos;
+Game:GetService("ContentProvider"):Preload("http://www.roblox.com/asset/?id=107450062")
+local TalkSound = Instance.new('Sound')
+TalkSound.SoundId = 'http://www.roblox.com/asset/?id=107450062'
 TalkSound.Parent = script.Parent
 wait(1)
 TalkSound:Play()
 
 --game.Debris:AddItem(TalkSound,
 
-local TemplateText = Instance.new(&apos;TextLabel&apos;)
-TemplateText.Font = &apos;ArialBold&apos;
-TemplateText.FontSize = &apos;Size48&apos;
-TemplateText.TextXAlignment = &apos;Left&apos;
-TemplateText.TextYAlignment = &apos;Top&apos;
+local TemplateText = Instance.new('TextLabel')
+TemplateText.Font = 'ArialBold'
+TemplateText.FontSize = 'Size48'
+TemplateText.TextXAlignment = 'Left'
+TemplateText.TextYAlignment = 'Top'
 
 local spawnedAll = false
 
 for i=1,400,1 do
-&#9;Spawn(function()
-&#9;&#9;local text = TemplateText:Clone()
-&#9;&#9;text.Position, text.TextXAlignment = StartPositions[math.random(1,4)]()
-&#9;&#9;text.Text = Messages[math.random(#Messages)]
-&#9;&#9;if math.random(1,20)==1 then
-&#9;&#9;&#9;text.TextColor3 = Color3.new(1,1,1   )
-&#9;&#9;&#9;text.ZIndex = 2
-&#9;&#9;end
-&#9;&#9;text.Parent = script.Parent
-&#9;&#9;text:TweenPosition(UDim2.new((math.random()*.6)+.2,0,math.random(),0), &quot;Out&quot;, &quot;Quad&quot;, (math.random()*2)+1, true)
-&#9;&#9;while not spawnedAll do wait() end
-&#9;&#9;wait(3)
-&#9;&#9;for i = 1, 20,1 do
-&#9;&#9;&#9;text.TextTransparency = text.TextTransparency+(1/20)
-&#9;&#9;&#9;wait(1/20)
-&#9;&#9;end
-&#9;end)
-&#9;&#9;wait((math.random()+.1)/30)
+	Spawn(function()
+		local text = TemplateText:Clone()
+		text.Position, text.TextXAlignment = StartPositions[math.random(1,4)]()
+		text.Text = Messages[math.random(#Messages)]
+		if math.random(1,20)==1 then
+			text.TextColor3 = Color3.new(1,1,1   )
+			text.ZIndex = 2
+		end
+		text.Parent = script.Parent
+		text:TweenPosition(UDim2.new((math.random()*.6)+.2,0,math.random(),0), "Out", "Quad", (math.random()*2)+1, true)
+		while not spawnedAll do wait() end
+		wait(3)
+		for i = 1, 20,1 do
+			text.TextTransparency = text.TextTransparency+(1/20)
+			wait(1/20)
+		end
+	end)
+		wait((math.random()+.1)/30)
 end
 spawnedAll=true
 wait(3)
 for i = 1, 20,1 do
-&#9;TalkSound.Volume = TalkSound.Volume-(.5*(1/20))
-&#9;wait(1/20)
+	TalkSound.Volume = TalkSound.Volume-(.5*(1/20))
+	wait(1/20)
 end
 wait(10)
 TalkSound:Destroy()
 script.Parent:Destroy()
 
-</ProtectedString>
+]]></ProtectedString>
 					</Properties>
 				</Item>
 			</Item>
@@ -314,11 +322,12 @@ script.Parent:Destroy()
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">SelfDestruct</string>
-					<ProtectedString name="Source">-- Calls Destroy on this script&apos;s Parent after TimeToLive
-while not script:FindFirstChild(&quot;TimeToLive&quot;) do wait() end -- Irony
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[-- Calls Destroy on this script's Parent after TimeToLive
+while not script:FindFirstChild("TimeToLive") do wait() end -- Irony
 wait(script.TimeToLive.Value)
 if script.Parent then script.Parent:Destroy() end
-</ProtectedString>
+]]></ProtectedString>
 				</Properties>
 				<Item class="NumberValue" referent="RBX8">
 					<Properties>
@@ -329,12 +338,18 @@ if script.Parent then script.Parent:Destroy() end
 			</Item>
 			<Item class="Sound" referent="RBX9">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Throw</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=105943656</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
 		</Item>
@@ -343,31 +358,32 @@ if script.Parent then script.Parent:Destroy() end
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">ThrowingTool</string>
-				<ProtectedString name="Source">local COOLDOWN = 0.75 -- Seconds until another can be thrown
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[local COOLDOWN = 0.75 -- Seconds until another can be thrown
 local TIME_TO_LIVE = 10 -- Seconds until each old one is destroyed
 local THROW_SPEED = 100
 
 -- Waits for parent.child to exist, then returns it
 local function WaitForChild(parent, childName)
-&#9;assert(parent, &quot;ERROR: WaitForChild: parent is nil&quot;)
-&#9;while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
-&#9;return parent[childName]
+	assert(parent, "ERROR: WaitForChild: parent is nil")
+	while not parent:FindFirstChild(childName) do parent.ChildAdded:wait() end
+	return parent[childName]
 end
 
-local PlayersService = Game:GetService(&apos;Players&apos;)
-local DebrisService = Game:GetService(&apos;Debris&apos;)
+local PlayersService = Game:GetService('Players')
+local DebrisService = Game:GetService('Debris')
 
 local Tool = script.Parent
 local ToolHandle = Tool.Handle
 
-local ThrowSound = WaitForChild(ToolHandle, &apos;Throw&apos;)
+local ThrowSound = WaitForChild(ToolHandle, 'Throw')
 
 --[[
 -- {PoisonApple, PoisonCake, PoisonPorkChop}
-local BaseIdUrl = &apos;http://www.roblox.com/asset/?id=&apos;
-local IconIds = {&apos;87862872&apos;, &apos;87863072&apos;, &apos;87871704&apos;}
-local MeshIds = {&apos;87862943&apos;, &apos;87863104&apos;, &apos;87863169&apos;}
-local TextureIds = {&apos;87862921&apos;, &apos;87863090&apos;, &apos;87863148&apos;}
+local BaseIdUrl = 'http://www.roblox.com/asset/?id='
+local IconIds = {'87862872', '87863072', '87871704'}
+local MeshIds = {'87862943', '87863104', '87863169'}
+local TextureIds = {'87862921', '87863090', '87863148'}
 local HandleSizes = {Vector3.new(1.2, 1.2, 1.2), Vector3.new(1.08, 1.11, 1.14), Vector3.new(0.45, 1.82, 1.33)}
 --]]
 
@@ -375,61 +391,61 @@ local MyModel = nil
 local MyPlayer = nil
 
 local function OnEquipped()
-&#9;MyModel = Tool.Parent
-&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(MyModel)
+	MyModel = Tool.Parent
+	MyPlayer = PlayersService:GetPlayerFromCharacter(MyModel)
 end
 
 local function OnActivated()
-&#9;if not MyModel or not MyModel:FindFirstChild(&apos;Humanoid&apos;) or not Tool.Enabled then return end
-&#9;Tool.Enabled = false
-&#9;ToolHandle.Transparency = 1
+	if not MyModel or not MyModel:FindFirstChild('Humanoid') or not Tool.Enabled then return end
+	Tool.Enabled = false
+	ToolHandle.Transparency = 1
 
-&#9;ThrowSound:Play()
+	ThrowSound:Play()
 
-&#9;local handleClone = ToolHandle:Clone()
-&#9;DebrisService:AddItem(handleClone, 30)
-&#9;handleClone.Velocity = (MyModel.Humanoid.TargetPoint - ToolHandle.CFrame.p).unit * THROW_SPEED
-&#9;handleClone.Name = &apos;Food&apos;
-&#9;handleClone.Parent = Workspace
-&#9;handleClone.Transparency = 0
-&#9;handleClone.CanCollide = true
-&#9;Instance.new(&apos;BodyGyro&apos;, handleClone) -- Keeps it upright
-&#9;local selfDestructScript = handleClone:FindFirstChild(&apos;SelfDestruct&apos;)
-&#9;if selfDestructScript and selfDestructScript:FindFirstChild(&apos;TimeToLive&apos;) then
-&#9;&#9;selfDestructScript.TimeToLive.Value = TIME_TO_LIVE
-&#9;&#9;selfDestructScript.Disabled = false
-&#9;end
-&#9;local foodScript = handleClone:FindFirstChild(&apos;PoisonedFood&apos;)
-&#9;if foodScript then
-&#9;&#9;local creator = Instance.new(&apos;ObjectValue&apos;, foodScript)
-&#9;&#9;creator.Name = &apos;Creator&apos;
-&#9;&#9;creator.Value = MyPlayer
-&#9;&#9;foodScript.Disabled = false
-&#9;end
+	local handleClone = ToolHandle:Clone()
+	DebrisService:AddItem(handleClone, 30)
+	handleClone.Velocity = (MyModel.Humanoid.TargetPoint - ToolHandle.CFrame.p).unit * THROW_SPEED
+	handleClone.Name = 'Food'
+	handleClone.Parent = Workspace
+	handleClone.Transparency = 0
+	handleClone.CanCollide = true
+	Instance.new('BodyGyro', handleClone) -- Keeps it upright
+	local selfDestructScript = handleClone:FindFirstChild('SelfDestruct')
+	if selfDestructScript and selfDestructScript:FindFirstChild('TimeToLive') then
+		selfDestructScript.TimeToLive.Value = TIME_TO_LIVE
+		selfDestructScript.Disabled = false
+	end
+	local foodScript = handleClone:FindFirstChild('PoisonedFood')
+	if foodScript then
+		local creator = Instance.new('ObjectValue', foodScript)
+		creator.Name = 'Creator'
+		creator.Value = MyPlayer
+		foodScript.Disabled = false
+	end
 
-&#9;--[[ Load new item (while we wait)
-&#9;local index = math.random(3)
-&#9;ToolHandle.Mesh.MeshId = BaseIdUrl .. MeshIds[index]
-&#9;ToolHandle.Mesh.TextureId = BaseIdUrl .. TextureIds[index]
-&#9;ToolHandle.Size = HandleSizes[index] -- This breaks the weld
-&#9;MyWeld.Parent = Game.JointsService -- Fix the weld
-&#9;Tool.TextureId = BaseIdUrl .. IconIds[index] -- Change the tool icon
-&#9;--]]
+	--[[ Load new item (while we wait)
+	local index = math.random(3)
+	ToolHandle.Mesh.MeshId = BaseIdUrl .. MeshIds[index]
+	ToolHandle.Mesh.TextureId = BaseIdUrl .. TextureIds[index]
+	ToolHandle.Size = HandleSizes[index] -- This breaks the weld
+	MyWeld.Parent = Game.JointsService -- Fix the weld
+	Tool.TextureId = BaseIdUrl .. IconIds[index] -- Change the tool icon
+	--]]
 
-&#9;wait(COOLDOWN)
+	wait(COOLDOWN)
 
-&#9;ToolHandle.Transparency = 0
-&#9;Tool.Enabled = true
+	ToolHandle.Transparency = 0
+	Tool.Enabled = true
 end
 
 local function OnUnequipped()
-&#9;ToolHandle.Transparency = 0
+	ToolHandle.Transparency = 0
 end
 
 Tool.Equipped:connect(OnEquipped)
 Tool.Activated:connect(OnActivated)
 Tool.Unequipped:connect(OnUnequipped)
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX11">
@@ -437,40 +453,39 @@ Tool.Unequipped:connect(OnUnequipped)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
-local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[local MOUSE_ICON = 'rbxasset://textures/GunCursor.png'
+local RELOADING_ICON = 'rbxasset://textures/GunWaitCursor.png'
 
 local Tool = script.Parent
 
 local Mouse = nil
 
 local function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
-&#9;end
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+	end
 end
 
 local function OnEquipped(mouse)
-&#9;Mouse = mouse
-&#9;UpdateIcon()
+	Mouse = mouse
+	UpdateIcon()
 end
 
 local function OnChanged(property)
-&#9;if property == &apos;Enabled&apos; then
-&#9;&#9;UpdateIcon()
-&#9;end
+	if property == 'Enabled' then
+		UpdateIcon()
+	end
 end
 
 Tool.Equipped:connect(OnEquipped)
 Tool.Changed:connect(OnChanged)
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Camera" referent="RBX12">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
+				<CoordinateFrame name="CFrame">
 					<X>0.601464272</X>
 					<Y>0.717151165</Y>
 					<Z>-1.08813715</Z>
@@ -484,6 +499,8 @@ Tool.Changed:connect(OnChanged)
 					<R21>0.332143605</R21>
 					<R22>-0.643511534</R22>
 				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
 					<X>-0.330000043</X>
@@ -499,6 +516,8 @@ Tool.Changed:connect(OnChanged)
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
