@@ -19,7 +19,9 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">CampingLantern</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=123239881</url></Content>
 			<string name="ToolTip">Mosquitoes... how relaxing.</string>
 		</Properties>
@@ -50,6 +52,9 @@
 					<R22>-1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -122,10 +127,11 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">CampingLanternMain</string>
-				<ProtectedString name="Source">local Tool = script.Parent
-local Handle = Tool:WaitForChild(&apos;Handle&apos;)
-local SpotLightProxy = Tool:WaitForChild(&apos;SpotLightProxy&apos;)
-local Light = SpotLightProxy:WaitForChild(&apos;SpotLight&apos;)
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
+local Handle = Tool:WaitForChild('Handle')
+local SpotLightProxy = Tool:WaitForChild('SpotLightProxy')
+local Light = SpotLightProxy:WaitForChild('SpotLight')
 local Humanoid;
 local Character;
 
@@ -137,182 +143,183 @@ local ANIM_Hold, ANIM_Equip, ANIM_Swish;
 local Swarm = {}
 
 local function rand11()
-&#9;return math.random()*2 - 1
+	return math.random()*2 - 1
 end
 
 local CurrentSpeed = 20
 local LastAnimate;
 local function AnimateSwarm()
-&#9;local desiredSpeed = (Handle.Velocity.magnitude &gt; 1) and 20 or 8
-&#9;--
-&#9;local time = tick()
-&#9;local dt = time-LastAnimate
-&#9;LastAnimate = time
-&#9;--
-&#9;if CurrentSpeed &gt; desiredSpeed then
-&#9;&#9;CurrentSpeed = math.max(desiredSpeed, CurrentSpeed - dt*10)
-&#9;else
-&#9;&#9;CurrentSpeed = math.min(desiredSpeed, CurrentSpeed + dt*10)
-&#9;end
-&#9;--
-&#9;for i, swarmItem in pairs(Swarm) do
-&#9;&#9;local at = swarmItem.Part.Position
-&#9;&#9;local to = Handle.Position
-&#9;&#9;if Handle.Velocity.magnitude &gt; 2 then
-&#9;&#9;&#9;to = to + Handle.Velocity.unit * 6
-&#9;&#9;end
-&#9;&#9;--
-&#9;&#9;swarmItem.Thrust.MaxSpeed = CurrentSpeed
-&#9;&#9;--
-&#9;&#9;local r = (at-to).magnitude
-&#9;&#9;if Running and r &lt; 6 then
-&#9;&#9;&#9;swarmItem.TargetPart.Position = 
-&#9;&#9;&#9;&#9;swarmItem.Part.Position + 
-&#9;&#9;&#9;&#9;&#9;(CFrame.new(to,at)*CFrame.Angles(rand11()*0.9, 0, rand11()*0.9)).lookVector*5
-&#9;&#9;else
-&#9;&#9;&#9;if r &gt; 8 or (not Running and r &gt; 4)  then
-&#9;&#9;&#9;&#9;-- swarmItem.LastAnimated = tick()
-&#9;&#9;&#9;&#9;-- local randomPointNearby = (Handle.CFrame * 
-&#9;&#9;&#9;&#9;--                            CFrame.Angles(0, rand11()*math.pi, 0) * 
-&#9;&#9;&#9;&#9;--                            CFrame.Angles(math.acos(rand11()), 0, 0) *
-&#9;&#9;&#9;&#9;--                            CFrame.new(0, 0, (Running and -math.random(5,8) or -math.random(1,4)))).p
-&#9;&#9;&#9;&#9;swarmItem.TargetPart.Position = at + 
-&#9;&#9;&#9;&#9;&#9;(CFrame.new(at, to)*CFrame.Angles(rand11()*1, 0, rand11()*1)).lookVector*30
-&#9;&#9;&#9;&#9;-- local newTo = CFrame.new(at, randomPointNearby) * CFrame.new(0, 0, -15)
-&#9;&#9;&#9;&#9;-- swarmItem.TargetPart.Position = newTo.p
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	local desiredSpeed = (Handle.Velocity.magnitude > 1) and 20 or 8
+	--
+	local time = tick()
+	local dt = time-LastAnimate
+	LastAnimate = time
+	--
+	if CurrentSpeed > desiredSpeed then
+		CurrentSpeed = math.max(desiredSpeed, CurrentSpeed - dt*10)
+	else
+		CurrentSpeed = math.min(desiredSpeed, CurrentSpeed + dt*10)
+	end
+	--
+	for i, swarmItem in pairs(Swarm) do
+		local at = swarmItem.Part.Position
+		local to = Handle.Position
+		if Handle.Velocity.magnitude > 2 then
+			to = to + Handle.Velocity.unit * 6
+		end
+		--
+		swarmItem.Thrust.MaxSpeed = CurrentSpeed
+		--
+		local r = (at-to).magnitude
+		if Running and r < 6 then
+			swarmItem.TargetPart.Position = 
+				swarmItem.Part.Position + 
+					(CFrame.new(to,at)*CFrame.Angles(rand11()*0.9, 0, rand11()*0.9)).lookVector*5
+		else
+			if r > 8 or (not Running and r > 4)  then
+				-- swarmItem.LastAnimated = tick()
+				-- local randomPointNearby = (Handle.CFrame * 
+				--                            CFrame.Angles(0, rand11()*math.pi, 0) * 
+				--                            CFrame.Angles(math.acos(rand11()), 0, 0) *
+				--                            CFrame.new(0, 0, (Running and -math.random(5,8) or -math.random(1,4)))).p
+				swarmItem.TargetPart.Position = at + 
+					(CFrame.new(at, to)*CFrame.Angles(rand11()*1, 0, rand11()*1)).lookVector*30
+				-- local newTo = CFrame.new(at, randomPointNearby) * CFrame.new(0, 0, -15)
+				-- swarmItem.TargetPart.Position = newTo.p
+			end
+		end
+	end
 end
 
 local function CreateSwarm()
-&#9;for i = 1, 10 do
-&#9;&#9;local swarmItem = {}
-&#9;&#9;--
-&#9;&#9;local swarmPart = Instance.new(&apos;Part&apos;)
-&#9;&#9;swarmPart.TopSurface = &apos;Smooth&apos;
-&#9;&#9;swarmPart.BottomSurface = &apos;Smooth&apos;
-&#9;&#9;swarmPart.FormFactor = &apos;Custom&apos;
-&#9;&#9;swarmPart.Size = Vector3.new()
-&#9;&#9;swarmPart.BrickColor = BrickColor.new(&apos;New Yeller&apos;) -- not a typo, our naming just sucks... I mean really, &quot;yeller&quot;?
-&#9;&#9;swarmPart.CanCollide = false
-&#9;&#9;swarmPart.CFrame = Handle.CFrame*CFrame.new(0,-0.1,0.1)
-&#9;&#9;swarmPart.Parent = Character
-&#9;&#9;--
-&#9;&#9;local swarmPartTarget = Instance.new(&apos;Part&apos;)
-&#9;&#9;swarmPartTarget.Parent = nil
-&#9;&#9;swarmPartTarget.Position = Handle.Position
-&#9;&#9;--
-&#9;&#9;local thrust = Instance.new(&apos;RocketPropulsion&apos;)
-&#9;&#9;thrust.TargetRadius = 0
-&#9;&#9;thrust.Target = swarmPartTarget
-&#9;&#9;thrust.MaxTorque = Vector3.new(2,2,2)
-&#9;&#9;thrust.MaxThrust = 200
-&#9;&#9;thrust.ThrustD = 0
-&#9;&#9;thrust.ThrustP = 100
-&#9;&#9;thrust.TurnD = 0
-&#9;&#9;thrust.TurnP = 200
-&#9;&#9;thrust.MaxSpeed = 20
-&#9;&#9;thrust.Parent = swarmPart
-&#9;&#9;--
-&#9;&#9;swarmItem.Part = swarmPart
-&#9;&#9;swarmItem.TargetPart = swarmPartTarget
-&#9;&#9;swarmItem.Thrust = thrust
-&#9;&#9;swarmItem.LastDirectionChange = 0
-&#9;&#9;swarmItem.LastAnimated = 0
-&#9;&#9;table.insert(Swarm, swarmItem)
-&#9;&#9;--
-&#9;&#9;thrust:Fire()
-&#9;&#9;--
-&#9;&#9;swarmPart.Velocity = Vector3.new(rand11(),rand11(),rand11()).unit*50
-&#9;&#9;swarmPartTarget.Position = Handle.Position + Vector3.new(rand11(),rand11(),rand11()).unit*(math.random()*4+2)
-&#9;end
-&#9;LastAnimate = tick()
-&#9;AnimateSwarm()
+	for i = 1, 10 do
+		local swarmItem = {}
+		--
+		local swarmPart = Instance.new('Part')
+		swarmPart.TopSurface = 'Smooth'
+		swarmPart.BottomSurface = 'Smooth'
+		swarmPart.FormFactor = 'Custom'
+		swarmPart.Size = Vector3.new()
+		swarmPart.BrickColor = BrickColor.new('New Yeller') -- not a typo, our naming just sucks... I mean really, "yeller"?
+		swarmPart.CanCollide = false
+		swarmPart.CFrame = Handle.CFrame*CFrame.new(0,-0.1,0.1)
+		swarmPart.Parent = Character
+		--
+		local swarmPartTarget = Instance.new('Part')
+		swarmPartTarget.Parent = nil
+		swarmPartTarget.Position = Handle.Position
+		--
+		local thrust = Instance.new('RocketPropulsion')
+		thrust.TargetRadius = 0
+		thrust.Target = swarmPartTarget
+		thrust.MaxTorque = Vector3.new(2,2,2)
+		thrust.MaxThrust = 200
+		thrust.ThrustD = 0
+		thrust.ThrustP = 100
+		thrust.TurnD = 0
+		thrust.TurnP = 200
+		thrust.MaxSpeed = 20
+		thrust.Parent = swarmPart
+		--
+		swarmItem.Part = swarmPart
+		swarmItem.TargetPart = swarmPartTarget
+		swarmItem.Thrust = thrust
+		swarmItem.LastDirectionChange = 0
+		swarmItem.LastAnimated = 0
+		table.insert(Swarm, swarmItem)
+		--
+		thrust:Fire()
+		--
+		swarmPart.Velocity = Vector3.new(rand11(),rand11(),rand11()).unit*50
+		swarmPartTarget.Position = Handle.Position + Vector3.new(rand11(),rand11(),rand11()).unit*(math.random()*4+2)
+	end
+	LastAnimate = tick()
+	AnimateSwarm()
 end
 
 local function DestroySwarm()
-&#9;for _, item in pairs(Swarm) do
-&#9;&#9;item.Part:Destroy()
-&#9;end
-&#9;Swarm = {}
+	for _, item in pairs(Swarm) do
+		item.Part:Destroy()
+	end
+	Swarm = {}
 end
 
 local function Flicker()
-&#9;--now everbody lets make some noise!
-&#9;local x = 4*tick()
-&#9;local frac = math.abs(math.cos(x/12)^5 * (math.sin(x)^4*math.cos(x+1)^2+
-&#9;                                          0.5*math.cos(x+2)-math.sin(3*x+2)))
-&#9;frac = math.min(frac, 1)
-&#9;Light.Brightness = (1-frac)*1.5
+	--now everbody lets make some noise!
+	local x = 4*tick()
+	local frac = math.abs(math.cos(x/12)^5 * (math.sin(x)^4*math.cos(x+1)^2+
+	                                          0.5*math.cos(x+2)-math.sin(3*x+2)))
+	frac = math.min(frac, 1)
+	Light.Brightness = (1-frac)*1.5
 end
 
 Tool.Equipped:connect(function(mouse)
-&#9;local w = Instance.new(&apos;Weld&apos;, Handle)
-&#9;w.Name = &apos;HandleWeld&apos;
-&#9;w.C0 = CFrame.new(0,7,0)*CFrame.Angles(-math.pi/2,0,0)
-&#9;w.Part0 = Handle
-&#9;w.Part1 = SpotLightProxy
-&#9;--
-&#9;Equipped = true
-&#9;Character = Tool.Parent
-&#9;Humanoid = Character:WaitForChild(&apos;Humanoid&apos;)
-&#9;--
-&#9;ANIM_Equip = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Equip&apos;))
-&#9;ANIM_Hold  = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Hold&apos;))
-&#9;ANIM_Swish = Humanoid:LoadAnimation(Tool:WaitForChild(&apos;ANIM_Swish&apos;))
-&#9;--
-&#9;ANIM_Equip:Play()
-&#9;repeat until ANIM_Equip.KeyframeReached:wait() == &apos;Complete&apos;
-&#9;--
-&#9;ANIM_Hold:Play(0)
-&#9;CreateSwarm()
-&#9;--
-&#9;Running = false
-&#9;mouse.Button1Down:connect(function()
-&#9;&#9;if Running then return end
-&#9;&#9;Running = true
-&#9;&#9;--
-&#9;&#9;ANIM_Swish:Play()
-&#9;&#9;repeat until ANIM_Swish.KeyframeReached:wait() == &apos;Complete&apos;
-&#9;&#9;--
-&#9;&#9;Running = false
-&#9;end)
-&#9;--
-&#9;while Equipped do
-&#9;&#9;AnimateSwarm()
-&#9;&#9;Flicker()
-&#9;&#9;wait()
-&#9;end
+	local w = Instance.new('Weld', Handle)
+	w.Name = 'HandleWeld'
+	w.C0 = CFrame.new(0,7,0)*CFrame.Angles(-math.pi/2,0,0)
+	w.Part0 = Handle
+	w.Part1 = SpotLightProxy
+	--
+	Equipped = true
+	Character = Tool.Parent
+	Humanoid = Character:WaitForChild('Humanoid')
+	--
+	ANIM_Equip = Humanoid:LoadAnimation(Tool:WaitForChild('ANIM_Equip'))
+	ANIM_Hold  = Humanoid:LoadAnimation(Tool:WaitForChild('ANIM_Hold'))
+	ANIM_Swish = Humanoid:LoadAnimation(Tool:WaitForChild('ANIM_Swish'))
+	--
+	ANIM_Equip:Play()
+	repeat until ANIM_Equip.KeyframeReached:wait() == 'Complete'
+	--
+	ANIM_Hold:Play(0)
+	CreateSwarm()
+	--
+	Running = false
+	mouse.Button1Down:connect(function()
+		if Running then return end
+		Running = true
+		--
+		ANIM_Swish:Play()
+		repeat until ANIM_Swish.KeyframeReached:wait() == 'Complete'
+		--
+		Running = false
+	end)
+	--
+	while Equipped do
+		AnimateSwarm()
+		Flicker()
+		wait()
+	end
 end)
 
 Tool.Unequipped:connect(function()
-&#9;Equipped = false
-&#9;DestroySwarm()
-&#9;if ANIM_Swish then
-&#9;&#9;ANIM_Equip:Stop()
-&#9;&#9;ANIM_Hold:Stop()
-&#9;&#9;ANIM_Swish:Stop()
-&#9;end
-end)</ProtectedString>
+	Equipped = false
+	DestroySwarm()
+	if ANIM_Swish then
+		ANIM_Equip:Stop()
+		ANIM_Hold:Stop()
+		ANIM_Swish:Stop()
+	end
+end)]]></ProtectedString>
 			</Properties>
 			<Item class="Script" referent="RBX4">
 				<Properties>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">MotorizeRightGrip</string>
-					<ProtectedString name="Source">function Create(ty)
-&#9;return function(data)
-&#9;&#9;local obj = Instance.new(ty)
-&#9;&#9;for k, v in pairs(data) do
-&#9;&#9;&#9;if type(k) == &apos;number&apos; then
-&#9;&#9;&#9;&#9;v.Parent = obj
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;obj[k] = v
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;return obj
-&#9;end
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[function Create(ty)
+	return function(data)
+		local obj = Instance.new(ty)
+		for k, v in pairs(data) do
+			if type(k) == 'number' then
+				v.Parent = obj
+			else
+				obj[k] = v
+			end
+		end
+		return obj
+	end
 end
 
 local Tool = script.Parent.Parent
@@ -322,64 +329,64 @@ local Motor6DGrip = nil
 local EquippedNum = 0
 
 Tool.Equipped:connect(function()
-&#9;EquippedNum = EquippedNum + 1
-&#9;local myEquip = EquippedNum
-&#9;--some vars
-&#9;local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
-&#9;local Character = Player.Character
+	EquippedNum = EquippedNum + 1
+	local myEquip = EquippedNum
+	--some vars
+	local Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+	local Character = Player.Character
 
-&#9;local rightarm = Character:FindFirstChild(&apos;Right Arm&apos;)
-&#9;if rightarm and rightarm:FindFirstChild(&apos;RightGrip&apos;) then
-&#9;&#9;local rightGrip = rightarm[&apos;RightGrip&apos;]
-&#9;&#9;local handle = rightGrip.Part1
+	local rightarm = Character:FindFirstChild('Right Arm')
+	if rightarm and rightarm:FindFirstChild('RightGrip') then
+		local rightGrip = rightarm['RightGrip']
+		local handle = rightGrip.Part1
 
-&#9;&#9;--kill my joint when the normal joint is removed
-&#9;&#9;--this must be done here so that the joint is removed 
-&#9;&#9;--_right away_ after unequipping and the character doesn&apos;t 
-&#9;&#9;--glitch up.
-&#9;&#9;local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
-&#9;&#9;&#9;if ch == rightGrip then
-&#9;&#9;&#9;&#9;Motor6DGrip:Remove()
-&#9;&#9;&#9;&#9;Motor6DGrip = nil
-&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;if handle and Character:FindFirstChild(&apos;Torso&apos;) then
-&#9;&#9;&#9;&#9;&#9;if Tool.Parent.Parent:IsA(&apos;Player&apos;) then
-&#9;&#9;&#9;&#9;&#9;&#9;--the sword has been deselected
-&#9;&#9;&#9;&#9;&#9;&#9;--put the sword far away so the user doesn&apos;t notice that the handle doesn&apos;t
-&#9;&#9;&#9;&#9;&#9;&#9;--update for about 0.1 seconds after selecting the tool.
-&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = CFrame.new(100000, 100000, 100000)
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;--if in the workspace, position the handle where it should be dropped
-&#9;&#9;&#9;&#9;&#9;&#9;--use the size of the handle to make sure it&apos;s dropped far enough away
-&#9;&#9;&#9;&#9;&#9;&#9;handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
+		--kill my joint when the normal joint is removed
+		--this must be done here so that the joint is removed 
+		--_right away_ after unequipping and the character doesn't 
+		--glitch up.
+		local armChildRemovedConn = rightarm.ChildRemoved:connect(function(ch)
+			if ch == rightGrip then
+				Motor6DGrip:Remove()
+				Motor6DGrip = nil
+				--
+				if handle and Character:FindFirstChild('Torso') then
+					if Tool.Parent.Parent:IsA('Player') then
+						--the sword has been deselected
+						--put the sword far away so the user doesn't notice that the handle doesn't
+						--update for about 0.1 seconds after selecting the tool.
+						handle.CFrame = CFrame.new(100000, 100000, 100000)
+					else
+						--if in the workspace, position the handle where it should be dropped
+						--use the size of the handle to make sure it's dropped far enough away
+						handle.CFrame = Character.Torso.CFrame * CFrame.new(0, 0, -(handle.Size.magnitude+2))
+					end
+				end
+			end
+		end)
 
-&#9;&#9;--make my new joint
-&#9;&#9;Motor6DGrip = Create&apos;Motor6D&apos;{
-&#9;&#9;&#9;Name = &apos;RightGrip_Motor&apos;,
-&#9;&#9;&#9;Part0 = rightarm,
-&#9;&#9;&#9;Part1 = handle,
-&#9;&#9;&#9;C0 = CFrame.new(0, -1,   0);
-&#9;&#9;&#9;C1 = CFrame.new(0,  1.3, 0);
-&#9;&#9;}
-&#9;&#9;--kill the old weld
-&#9;&#9;rightGrip.Part1 = nil
-&#9;&#9;rightGrip.Part0 = nil
-&#9;&#9;Motor6DGrip.Parent = rightGrip.Parent
-&#9;end
+		--make my new joint
+		Motor6DGrip = Create'Motor6D'{
+			Name = 'RightGrip_Motor',
+			Part0 = rightarm,
+			Part1 = handle,
+			C0 = CFrame.new(0, -1,   0);
+			C1 = CFrame.new(0,  1.3, 0);
+		}
+		--kill the old weld
+		rightGrip.Part1 = nil
+		rightGrip.Part0 = nil
+		Motor6DGrip.Parent = rightGrip.Parent
+	end
 end)
 
 Tool.Unequipped:connect(function()
-&#9;EquippedNum = EquippedNum + 1
-&#9;if armChildRemovedConn then
-&#9;&#9;armChildRemovedConn:disconnect()
-&#9;&#9;armChildRemovedConn = nil
-&#9;end
+	EquippedNum = EquippedNum + 1
+	if armChildRemovedConn then
+		armChildRemovedConn:disconnect()
+		armChildRemovedConn = nil
+	end
 end)
-</ProtectedString>
+]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
@@ -414,20 +421,23 @@ end)
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>6.24500036</X>
+					<X>6.20000029</X>
 					<Y>65.5</Y>
 					<Z>112.900009</Z>
 					<R00>-1</R00>
 					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
+					<R02>-0</R02>
+					<R10>-0</R10>
 					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
+					<R12>-0</R12>
+					<R20>-0</R20>
 					<R21>0</R21>
 					<R22>-1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -475,16 +485,51 @@ end)
 					<float name="Brightness">1.5</float>
 					<Color3 name="Color">4294967295</Color3>
 					<bool name="Enabled">true</bool>
+					<token name="Face">5</token>
 					<string name="Name">SpotLight</string>
 					<float name="Range">30</float>
+					<bool name="Shadows">false</bool>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBX9FCCB3D0457843E5BCB080D5C9E00C18">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>6.20000029</X>
+						<Y>-65.5</Y>
+						<Z>112.900009</Z>
+						<R00>-1</R00>
+						<R01>-0</R01>
+						<R02>-0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>-0</R20>
+						<R21>-0</R21>
+						<R22>-1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>6.20000029</X>
+						<Y>-65.5</Y>
+						<Z>112.900009</Z>
+						<R00>-1</R00>
+						<R01>-0</R01>
+						<R02>-0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>-0</R20>
+						<R21>-0</R21>
+						<R22>-1</R22>
+					</CoordinateFrame>
+					<string name="Name">Handle_Weld</string>
+					<Ref name="Part0">RBX1</Ref>
+					<Ref name="Part1">RBX8</Ref>
 				</Properties>
 			</Item>
 		</Item>
 		<Item class="Camera" referent="RBX10">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
+				<CoordinateFrame name="CFrame">
 					<X>5.07823086</X>
 					<Y>66.5617218</Y>
 					<Z>115.235451</Z>
@@ -498,6 +543,8 @@ end)
 					<R21>-0.341804057</R21>
 					<R22>0.834091246</R22>
 				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
 					<X>6.20000029</X>
@@ -513,6 +560,8 @@ end)
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
 				<string name="Name">Camera</string>
 			</Properties>
 		</Item>
