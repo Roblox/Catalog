@@ -1,10 +1,9 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX1ACB16A3638C4C9EBBCE5610CADEDBC4">
 		<Properties>
-			<int name="ActivationState">0</int>
-			<int name="BackendToolState">2</int>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
@@ -18,13 +17,15 @@
 				<R12>1</R12>
 				<R20>0</R20>
 				<R21>-1</R21>
-				<R22>-0</R22>
+				<R22>0</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">WarRock</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=10884137</url></Content>
-			<bool name="archivable">true</bool>
+			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX4ED2E5A3A0D74039859E6B73D3A2EFC7">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -51,9 +52,10 @@
 					<R22>0.000288462848</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
-				<bool name="DraggingV1">false</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
-				<token name="FormFactor">0</token>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
@@ -86,7 +88,7 @@
 					<Y>0</Y>
 					<Z>0</Z>
 				</Vector3>
-				<bool name="archivable">true</bool>
+				<token name="formFactorRaw">0</token>
 				<token name="shape">0</token>
 				<Vector3 name="size">
 					<X>1</X>
@@ -94,18 +96,23 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="Sound" referent="RBX2">
+			<Item class="Sound" referent="RBX8214566CECFE495FB2F84EC9929F6AF7">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
-					<int name="PlayCount">-1</int>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxasset://sounds/swoosh.wav</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.699999988</float>
-					<bool name="archivable">true</bool>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="SpecialMesh" referent="RBX3">
+			<Item class="SpecialMesh" referent="RBX89908D816CA54535A86BC301E15CF020">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -128,21 +135,21 @@
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<bool name="archivable">true</bool>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX4">
+		<Item class="Script" referent="RBX1E43A8352075489EBF6547FCD75F0DB2">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Slingshot</string>
-				<string name="Source">Tool = script.Parent
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[Tool = script.Parent
 VELOCITY = 50 -- constant
 loaded=false
 
-local Pellet = Instance.new(&quot;Part&quot;)
-Pellet.Name=&quot;Snowball&quot;
+local Pellet = Instance.new("Part")
+Pellet.Name="Snowball"
 Pellet.Locked = true
 Pellet.BackSurface = 0
 Pellet.BottomSurface = 0
@@ -156,19 +163,22 @@ Pellet.BrickColor = BrickColor.new(1)
 script.Parent.PelletScript:clone().Parent = Pellet
 
 function fire(mouse_pos)
-Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 0.7
-Tool.Parent.Torso[&quot;Right Shoulder&quot;].DesiredAngle = 3.6
-wait(.1)
-Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 1
-Tool.Handle.Transparency=1
+	local Torso = Tool.Parent:FindFirstChild("Torso") or Tool.Parent:FindFirstChild("UpperTorso")
+	local RightArm = Tool.Parent:FindFirstChild("RightUpperArm")
+	local RightShoulder = Torso:FindFirstChild("Right Shoulder") or RightArm:FindFirstChild("RightShoulder")
+	RightShoulder.MaxVelocity = 0.7
+	RightShoulder.DesiredAngle = 3.6
+	wait(.1)
+	RightShoulder.MaxVelocity = 1
+	Tool.Handle.Transparency=1
 	Tool.Handle.Fire:play()
 
--- find player&apos;s head pos
+-- find player's head pos
 
 	local vCharacter = Tool.Parent
 	local vPlayer = game.Players:playerFromCharacter(vCharacter)
 
-	local head = vCharacter:findFirstChild(&quot;Head&quot;)
+	local head = vCharacter:findFirstChild("Head")
 	if head == nil then return end
 
 	local dir = mouse_pos - head.Position
@@ -208,9 +218,9 @@ Tool.Handle.Transparency=1
 
 	missile.PelletScript.Disabled = false
 
-	local creator_tag = Instance.new(&quot;ObjectValue&quot;)
+	local creator_tag = Instance.new("ObjectValue")
 	creator_tag.Value = vCharacter
-	creator_tag.Name = &quot;creator&quot;
+	creator_tag.Name = "creator"
 	creator_tag.Parent = missile
 	
 	missile.Parent = game.Workspace
@@ -224,7 +234,7 @@ function computeLaunchAngle(dx,dy,grav)
 	
 	local g = math.abs(grav)
 	local inRoot = (VELOCITY*VELOCITY*VELOCITY*VELOCITY) - (g * ((g*dx*dx) + (2*dy*VELOCITY*VELOCITY)))
-	if inRoot &lt;= 0 then
+	if inRoot <= 0 then
 		return .25 * math.pi
 	end
 	local root = math.sqrt(inRoot)
@@ -233,7 +243,7 @@ function computeLaunchAngle(dx,dy,grav)
 	local inATan2 = ((VELOCITY*VELOCITY) - root) / (g*dx)
 	local answer1 = math.atan(inATan1)
 	local answer2 = math.atan(inATan2)
-	if answer1 &lt; answer2 then return answer1 end
+	if answer1 < answer2 then return answer1 end
 	return answer2
 end
 
@@ -248,6 +258,9 @@ end
 
 Tool.Enabled = true
 function onActivated()
+	local Torso = Tool.Parent:FindFirstChild("Torso") or Tool.Parent:FindFirstChild("UpperTorso")
+	local RightArm = Tool.Parent:FindFirstChild("RightUpperArm")
+	local RightShoulder = Torso:FindFirstChild("Right Shoulder") or RightArm:FindFirstChild("RightShoulder")
 	if not Tool.Enabled then
 		return
 	end
@@ -257,67 +270,67 @@ function onActivated()
 	local character = Tool.Parent;
 	local humanoid = character.Humanoid
 	if humanoid == nil then
-		print(&quot;Humanoid not found&quot;)
+		print("Humanoid not found")
 		return 
 	end
-if loaded==true then
-	loaded=false
-	local targetPos = humanoid.TargetPoint
+	if loaded==true then
+		loaded=false
+		local targetPos = humanoid.TargetPoint
 
-	fire(targetPos)
-	wait(.2)
-	Tool.Enabled = true
-elseif loaded==false then
-Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 0.6
-Tool.Parent.Torso[&quot;Right Shoulder&quot;].DesiredAngle = -3.6
-	wait(.1)
-Tool.Handle.Transparency=0
-wait(.1)
-	loaded=true
+		fire(targetPos)
+		wait(.2)
+		Tool.Enabled = true
+	elseif loaded==false then
+		RightShoulder.MaxVelocity = 0.6
+		RightShoulder.DesiredAngle = -3.6
+		wait(.1)
+		Tool.Handle.Transparency=0
+		wait(.1)
+		loaded=true
 	end
 	Tool.Enabled = true
 end
 
 script.Parent.Activated:connect(onActivated)
-</string>
-				<bool name="archivable">true</bool>
+]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5">
+		<Item class="LocalScript" referent="RBX4F68D6EC25CC40D8AB00C40E60A6C294">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
-				<string name="Source">Tool=script.Parent
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[Tool=script.Parent
 function onEquippedLocal(mouse)
 	if mouse == nil then
-		print(&quot;Mouse not found&quot;)
+		print("Mouse not found")
 		return 
 	end
-	mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
 end
 
-Tool.Equipped:connect(onEquippedLocal)</string>
-				<bool name="archivable">true</bool>
+Tool.Equipped:connect(onEquippedLocal)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX6">
+		<Item class="Script" referent="RBX2FF4FFC0A47B4714950C0DC889FEE76F">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">PelletScript</string>
-				<string name="Source">local debris = game:service(&quot;Debris&quot;)
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[local debris = game:service("Debris")
 pellet = script.Parent
 damage = 8
 
 function onTouched(hit)
-	humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
+	humanoid = hit.Parent:findFirstChild("Humanoid")
 	if humanoid~=nil then
 		tagHumanoid(humanoid)
 		humanoid:TakeDamage(damage)
 	else
 		damage = damage / 2
-		if damage &lt; 1 then
+		if damage < 1 then
 			connection:disconnect()
 		end
 	end
@@ -325,11 +338,11 @@ end
 
 function tagHumanoid(humanoid)
 	-- todo: make tag expire
-	local tag = pellet:findFirstChild(&quot;creator&quot;)
+	local tag = pellet:findFirstChild("creator")
 	if tag ~= nil then
 		-- kill all other tags
-		while(humanoid:findFirstChild(&quot;creator&quot;) ~= nil) do
-			humanoid:findFirstChild(&quot;creator&quot;).Parent = nil
+		while(humanoid:findFirstChild("creator") ~= nil) do
+			humanoid:findFirstChild("creator").Parent = nil
 		end
 
 		local new_tag = tag:clone()
@@ -342,8 +355,7 @@ connection = pellet.Touched:connect(onTouched)
 
 
 wait(10)
-pellet.Parent = nil</string>
-				<bool name="archivable">true</bool>
+pellet.Parent = nil]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
