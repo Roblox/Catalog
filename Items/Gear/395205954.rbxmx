@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXFF053DA2A11A4C0DB078CF47752B2DE7">
+	<Item class="Tool" referent="RBX5A2DC0E542214AA98D18321C8D072B7C">
 		<Properties>
 			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
@@ -10,13 +10,13 @@
 				<Y>1.5</Y>
 				<Z>-4.5</Z>
 				<R00>1</R00>
-				<R01>0</R01>
-				<R02>0</R02>
-				<R10>0</R10>
+				<R01>3.05180438e-005</R01>
+				<R02>-3.05171125e-005</R02>
+				<R10>-3.05171125e-005</R10>
 				<R11>1</R11>
-				<R12>-3.9340253e-007</R12>
-				<R20>0</R20>
-				<R21>3.9340253e-007</R21>
+				<R12>3.05180438e-005</R12>
+				<R20>3.05180438e-005</R20>
+				<R21>-3.05171125e-005</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
@@ -25,7 +25,7 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=395086996</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX68D8936E9255421FA47A71D036C0248A">
+		<Item class="Part" referent="RBXEB0B02AE6BBE4719B2CA8B6A7DE31A2B">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -42,14 +42,14 @@
 					<Y>42.521843</Y>
 					<Z>-0.0320693702</Z>
 					<R00>1</R00>
-					<R01>6.7363233e-011</R01>
-					<R02>-9.93993066e-009</R02>
-					<R10>-6.98236802e-010</R10>
-					<R11>0.997983038</R11>
-					<R12>-0.0634822845</R12>
-					<R20>9.91560523e-009</R20>
-					<R21>0.0634822845</R21>
-					<R22>0.997983038</R22>
+					<R01>2.953269e-005</R01>
+					<R02>-3.14708013e-005</R02>
+					<R10>-3.14708013e-005</R10>
+					<R11>0.997983336</R11>
+					<R12>-0.0634750873</R12>
+					<R20>2.953269e-005</R20>
+					<R21>0.0634750873</R21>
+					<R22>0.997983336</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<PhysicalProperties name="CustomPhysicalProperties">
@@ -101,7 +101,7 @@
 					<Z>5</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX590ADF77974E41BDAB5057B77B633EF3">
+			<Item class="SpecialMesh" referent="RBX892B50EA112C49719050A9A320A5CF4F">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -127,18 +127,20 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBXF8055717C66B4C05B0A2E76720276C3A">
+		<Item class="Animation" referent="RBX64EC92DFD84B44A09F98107A758B5C8E">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=106772613</url></Content>
 				<string name="Name">Sit</string>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBXEA7971AF6E5545609514B00DE81616A2">
+		<Item class="LocalScript" referent="RBX77E88BBC1BE54B4A905F964852F6F300">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid">{AF589031-FA8C-4C5D-8A89-36B3AD392B11}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatars by StarWars
 
 Tool = script.Parent
 Handle = Tool:WaitForChild("Handle")
@@ -151,6 +153,7 @@ Create = RbxUtility.Create
 
 Animations = {
 	Sit = {Animation = Tool:WaitForChild("Sit"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+	R15Sit = {Animation = Tool:WaitForChild("R15Sit"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
 }
 
 AnimationTracks = {}
@@ -285,7 +288,15 @@ function SetUpMovement()
 	for i, v in pairs(Controls) do
 		v.Down = false
 	end
-	SetAnimation("PlayAnimation", Animations.Sit)
+	
+	if Humanoid then
+		if Humanoid.RigType == Enum.HumanoidRigType.R6 then
+			SetAnimation("PlayAnimation", Animations.Sit)
+		elseif Humanoid.RigType == Enum.HumanoidRigType.R15 then
+			SetAnimation("PlayAnimation", Animations.R15Sit)
+		end
+	end
+	
 	TurnGyro = Create("BodyGyro"){ --Handle rotation
 		maxTorque = Vector3.new(math.huge, math.huge, math.huge),
 		Parent = Torso,
@@ -320,7 +331,7 @@ function Equipped(Mouse)
 	Character = Tool.Parent
 	Player = Players:GetPlayerFromCharacter(Character)
 	Humanoid = Character:FindFirstChild("Humanoid")
-	Torso = Character:FindFirstChild("Torso")
+	Torso = Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso")
 	if not CheckIfAlive() then
 		return
 	end
@@ -365,12 +376,14 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX81AFE98465E9453CB1637F567B6E3098">
+		<Item class="Script" referent="RBX6B721F7EC84743F78FF8ED2B3D210842">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
+				<string name="ScriptGuid">{4F394E88-00F5-486C-8195-0C515F2D44D1}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatars by StarWars
 
 Tool = script.Parent
 Handle = Tool:WaitForChild("Handle")
@@ -449,7 +462,7 @@ function Equipped(Mouse)
 	Character = Tool.Parent
 	Player = Players:GetPlayerFromCharacter(Character)
 	Humanoid = Character:FindFirstChild("Humanoid")
-	Torso = Character:FindFirstChild("Torso")
+	Torso = Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso")
 	if not CheckIfAlive() then
 		return
 	end
@@ -471,11 +484,13 @@ SpawnReindeer(false)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="ModuleScript" referent="RBX1EB5309FB92A426FB2C61DC0AE98680D">
+			<Item class="ModuleScript" referent="RBX37984E3EE8A54F95BA016C26E163E51A">
 				<Properties>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">Dragon</string>
+					<string name="ScriptGuid">{2C4C73F7-110A-440B-A4C7-6675AFFB3361}</string>
 					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatar by StarWars
 
 RbxUtility = LoadLibrary("RbxUtility")
 Create = RbxUtility.Create
@@ -574,11 +589,12 @@ AnimateCopy.Parent = Dragon
 
 return Dragon]]></ProtectedString>
 				</Properties>
-				<Item class="Script" referent="RBXA8CE4279765049FA939F8563439BF53A">
+				<Item class="Script" referent="RBX01E0FF86D0A948F6ACFB2BD4A4EC5667">
 					<Properties>
 						<bool name="Disabled">true</bool>
 						<Content name="LinkedSource"><null></null></Content>
 						<string name="Name">Animate</string>
+						<string name="ScriptGuid">{3E6E4973-F295-47B6-8D3F-0A1389322E50}</string>
 						<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Figure = script.Parent
@@ -614,7 +630,7 @@ end)]]></ProtectedString>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Model" referent="RBX33041F20B7E949AA82661F673FF56F42">
+		<Item class="Model" referent="RBXD66743CF96174F5180D0C0CE770C82A5">
 			<Properties>
 				<CoordinateFrame name="ModelInPrimary">
 					<X>0</X>
@@ -633,7 +649,7 @@ end)]]></ProtectedString>
 				<string name="Name">DisplayModel</string>
 				<Ref name="PrimaryPart">null</Ref>
 			</Properties>
-			<Item class="Part" referent="RBXA5CF18B259704D739E91090C6E8A7B54">
+			<Item class="Part" referent="RBXB88C5ED6CA4A4164A2ABF1763634D61B">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -650,14 +666,14 @@ end)]]></ProtectedString>
 						<Y>42.4341469</Y>
 						<Z>-3.56839657</Z>
 						<R00>1</R00>
-						<R01>6.7363233e-011</R01>
-						<R02>-9.93993066e-009</R02>
-						<R10>-6.98236802e-010</R10>
-						<R11>0.997983038</R11>
-						<R12>-0.0634822845</R12>
-						<R20>9.91560523e-009</R20>
-						<R21>0.0634822845</R21>
-						<R22>0.997983038</R22>
+						<R01>2.953269e-005</R01>
+						<R02>-3.14708013e-005</R02>
+						<R10>-3.14708013e-005</R10>
+						<R11>0.997983336</R11>
+						<R12>-0.0634750873</R12>
+						<R20>2.953269e-005</R20>
+						<R21>0.0634750873</R21>
+						<R22>0.997983336</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<PhysicalProperties name="CustomPhysicalProperties">
@@ -709,7 +725,7 @@ end)]]></ProtectedString>
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBXB652409F6F1F4AF4B5C9D2864401DEBF">
+				<Item class="Weld" referent="RBX4EBE25D864744ECE8CCB691EBC2BB086">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.0165940002</X>
@@ -740,12 +756,12 @@ end)]]></ProtectedString>
 							<R22>1</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX68D8936E9255421FA47A71D036C0248A</Ref>
-						<Ref name="Part1">RBXA5CF18B259704D739E91090C6E8A7B54</Ref>
+						<Ref name="Part0">RBXEB0B02AE6BBE4719B2CA8B6A7DE31A2B</Ref>
+						<Ref name="Part1">RBXB88C5ED6CA4A4164A2ABF1763634D61B</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX2C6CD85B67324091B26E0831177704C6">
+			<Item class="Part" referent="RBX4FC314F3BD16472BA1DF67E61FFC0DA8">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -762,14 +778,14 @@ end)]]></ProtectedString>
 						<Y>40.9369965</Y>
 						<Z>6.34392118</Z>
 						<R00>1</R00>
-						<R01>6.7363233e-011</R01>
-						<R02>-9.93993066e-009</R02>
-						<R10>-6.98236802e-010</R10>
-						<R11>0.997983038</R11>
-						<R12>-0.0634822845</R12>
-						<R20>9.91560523e-009</R20>
-						<R21>0.0634822845</R21>
-						<R22>0.997983038</R22>
+						<R01>2.953269e-005</R01>
+						<R02>-3.14708013e-005</R02>
+						<R10>-3.14708013e-005</R10>
+						<R11>0.997983336</R11>
+						<R12>-0.0634750873</R12>
+						<R20>2.953269e-005</R20>
+						<R21>0.0634750873</R21>
+						<R22>0.997983336</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<PhysicalProperties name="CustomPhysicalProperties">
@@ -821,7 +837,7 @@ end)]]></ProtectedString>
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX9D769CB2A03B4E5FA61606987796467E">
+				<Item class="Weld" referent="RBXE11EB89D99B3496296095839DB142027">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.0165940002</X>
@@ -852,12 +868,12 @@ end)]]></ProtectedString>
 							<R22>1</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX68D8936E9255421FA47A71D036C0248A</Ref>
-						<Ref name="Part1">RBX2C6CD85B67324091B26E0831177704C6</Ref>
+						<Ref name="Part0">RBXEB0B02AE6BBE4719B2CA8B6A7DE31A2B</Ref>
+						<Ref name="Part1">RBX4FC314F3BD16472BA1DF67E61FFC0DA8</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX5AA22D4078CA49CB9A1EE83DB451BC4D">
+			<Item class="Part" referent="RBX86A8CC49CD0A4583AB72D8797640BCF9">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -874,14 +890,14 @@ end)]]></ProtectedString>
 						<Y>44.5661087</Y>
 						<Z>-6.10486507</Z>
 						<R00>1</R00>
-						<R01>6.7363233e-011</R01>
-						<R02>-9.93993066e-009</R02>
-						<R10>-6.98236802e-010</R10>
-						<R11>0.997983038</R11>
-						<R12>-0.0634822845</R12>
-						<R20>9.91560523e-009</R20>
-						<R21>0.0634822845</R21>
-						<R22>0.997983038</R22>
+						<R01>2.953269e-005</R01>
+						<R02>-3.14708013e-005</R02>
+						<R10>-3.14708013e-005</R10>
+						<R11>0.997983336</R11>
+						<R12>-0.0634750873</R12>
+						<R20>2.953269e-005</R20>
+						<R21>0.0634750873</R21>
+						<R22>0.997983336</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<PhysicalProperties name="CustomPhysicalProperties">
@@ -933,7 +949,7 @@ end)]]></ProtectedString>
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX39BB40F6AF774A4CA0D923A493B0EEBE">
+				<Item class="Weld" referent="RBX754804A8AC19433199CB77720E78614E">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.0165940002</X>
@@ -964,12 +980,12 @@ end)]]></ProtectedString>
 							<R22>1</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX68D8936E9255421FA47A71D036C0248A</Ref>
-						<Ref name="Part1">RBX5AA22D4078CA49CB9A1EE83DB451BC4D</Ref>
+						<Ref name="Part0">RBXEB0B02AE6BBE4719B2CA8B6A7DE31A2B</Ref>
+						<Ref name="Part1">RBX86A8CC49CD0A4583AB72D8797640BCF9</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXDEE861BFCA1C4F44AFEC4640F6D9B293">
+			<Item class="Part" referent="RBX5F4FA5C90F52412EB84C02911249B90C">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -986,14 +1002,14 @@ end)]]></ProtectedString>
 						<Y>42.4341469</Y>
 						<Z>-3.56839657</Z>
 						<R00>1</R00>
-						<R01>6.7363233e-011</R01>
-						<R02>-9.93993066e-009</R02>
-						<R10>-6.98236802e-010</R10>
-						<R11>0.997983038</R11>
-						<R12>-0.0634822845</R12>
-						<R20>9.91560523e-009</R20>
-						<R21>0.0634822845</R21>
-						<R22>0.997983038</R22>
+						<R01>2.953269e-005</R01>
+						<R02>-3.14708013e-005</R02>
+						<R10>-3.14708013e-005</R10>
+						<R11>0.997983336</R11>
+						<R12>-0.0634750873</R12>
+						<R20>2.953269e-005</R20>
+						<R21>0.0634750873</R21>
+						<R22>0.997983336</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
 					<PhysicalProperties name="CustomPhysicalProperties">
@@ -1045,7 +1061,7 @@ end)]]></ProtectedString>
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX02D5F73CCB8242F2AA67479E571D8C08">
+				<Item class="Weld" referent="RBXF7A1EFA338F6453AA8D2775388C9BE8B">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.0165940002</X>
@@ -1076,47 +1092,16 @@ end)]]></ProtectedString>
 							<R22>1</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX68D8936E9255421FA47A71D036C0248A</Ref>
-						<Ref name="Part1">RBXDEE861BFCA1C4F44AFEC4640F6D9B293</Ref>
+						<Ref name="Part0">RBXEB0B02AE6BBE4719B2CA8B6A7DE31A2B</Ref>
+						<Ref name="Part1">RBX5F4FA5C90F52412EB84C02911249B90C</Ref>
 					</Properties>
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBXCE85D483E52A4A298308ED2FD3134BAD">
+		<Item class="Animation" referent="RBXC3BED39455B14BE8BFAAA1A704A4F312">
 			<Properties>
-				<CoordinateFrame name="CFrame">
-					<X>-6.70848989</X>
-					<Y>48.3811073</Y>
-					<Z>-15.3111019</Z>
-					<R00>-0.899156988</R00>
-					<R01>0.18905209</R01>
-					<R02>-0.394684851</R02>
-					<R10>-0</R10>
-					<R11>0.90187639</R11>
-					<R12>0.431994289</R12>
-					<R20>0.437626362</R20>
-					<R21>0.388430685</R21>
-					<R22>-0.810928345</R22>
-				</CoordinateFrame>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<float name="FieldOfView">40</float>
-				<CoordinateFrame name="Focus">
-					<X>-5.70204353</X>
-					<Y>47.2795219</Y>
-					<Z>-13.2432346</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<bool name="HeadLocked">false</bool>
-				<string name="Name">ThumbnailCamera</string>
+				<Content name="AnimationId"><url>rbxassetid://516629257</url></Content>
+				<string name="Name">R15Sit</string>
 			</Properties>
 		</Item>
 	</Item>
