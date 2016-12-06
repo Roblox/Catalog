@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX201831B23CE1442C8C9860840B0609DB">
+	<Item class="Tool" referent="RBXB2F5531693EA48A1836A439FD795E7AB">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,13 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">StarWarsChopper</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=178394990</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBXFA69550FD4374A479C897918FCA2DF7A">
+		<Item class="Part" referent="RBX766402DA08604185987FB4C7D0EAF2DD">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -50,6 +52,9 @@
 					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -91,7 +96,7 @@
 					<Z>1.25</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXCD860AD32B83458CAD4FD659B3D38F50">
+			<Item class="SpecialMesh" referent="RBXE22F2D8BB138476EBC918F0F9A31CD10">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,211 +122,216 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBXF052F7A5E4CB4A80B332363A69F28A21">
+		<Item class="Script" referent="RBXE6255C55939E41F3A5C86F7BF8F1D56A">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid">{72D58C7A-A2C7-42DF-94DE-463A62FA798F}</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatars by StarWars
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-Mesh = Handle:WaitForChild(&quot;Mesh&quot;)
+Handle = Tool:WaitForChild("Handle")
+Mesh = Handle:WaitForChild("Mesh")
 
-Players = game:GetService(&quot;Players&quot;)
-InsertService = game:GetService(&quot;InsertService&quot;)
+Players = game:GetService("Players")
+InsertService = game:GetService("InsertService")
 
-Remover = script:WaitForChild(&quot;Remover&quot;)
+Remover = script:WaitForChild("Remover")
 
-FakeHandle = Tool:FindFirstChild(&quot;FakeHandle&quot;)
+FakeHandle = Tool:FindFirstChild("FakeHandle")
 if FakeHandle then
-&#9;FakeHandle:Destroy()
-&#9;Handle.Transparency = 0
+	FakeHandle:Destroy()
+	Handle.Transparency = 0
 end
 
 ChopperModel = InsertService:LoadAsset(178339458)
 Chopper = ChopperModel:GetChildren()[1]:Clone()
 if ChopperModel and ChopperModel.Parent then
-&#9;ChopperModel:Destroy()
+	ChopperModel:Destroy()
 end
 
 MaxDistance = 10
 
-ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ClientControl.Name = &quot;ClientControl&quot;
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
 ClientControl.Parent = Tool
 
-ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ServerControl.Name = &quot;ServerControl&quot;
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
 ServerControl.Parent = Tool
 
-DisplayModel = Tool:FindFirstChild(&quot;DisplayModel&quot;)
+DisplayModel = Tool:FindFirstChild("DisplayModel")
 if DisplayModel then
-&#9;DisplayModel:Destroy()
+	DisplayModel:Destroy()
 end
 
 Handle.Transparency = 0
 Tool.Enabled = true
 
 ClientControl.OnServerInvoke = (function(player, Mode, Value)
-&#9;if Mode == &quot;Click&quot; and Player == player then
-&#9;&#9;if Value and (not PlayerChopper or not PlayerChopper.Parent) then
-&#9;&#9;&#9;Handle.Transparency = 1
-&#9;&#9;&#9;MakeChopper()
-&#9;&#9;end
-&#9;end
+	if Mode == "Click" and Player == player then
+		if Value and (not PlayerChopper or not PlayerChopper.Parent) then
+			Handle.Transparency = 1
+			MakeChopper()
+		end
+	end
 end)
 
 function MakeChopper()
-&#9;if PlayerChopper and PlayerChopper.Parent then
-&#9;&#9;PlayerChopper:Destroy()
-&#9;end
-&#9;PlayerChopper = Chopper:Clone()
-&#9;ChopperTorso = PlayerChopper:FindFirstChild(&quot;Torso&quot;)
-&#9;PlayerChopper:FindFirstChild(&quot;Creator&quot;).Value = Player
-&#9;local RemoverClone = Remover:Clone()
-&#9;RemoverClone.Disabled = false
-&#9;RemoverClone.Parent = PlayerChopper
-&#9;PlayerChopper.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;ChopperTorso.CFrame = Torso.CFrame - Torso.CFrame.lookVector * ((ChopperTorso.Size.Z / 2) + (Torso.Size.Z / 2) + 5)
-&#9;ChopperTorso.CFrame = ChopperTorso.CFrame - Vector3.new(0, (Torso.Size.Y / 2), 0)
+	if PlayerChopper and PlayerChopper.Parent then
+		PlayerChopper:Destroy()
+	end
+	PlayerChopper = Chopper:Clone()
+	ChopperTorso = PlayerChopper:FindFirstChild("Torso")
+	PlayerChopper:FindFirstChild("Creator").Value = Player
+	local RemoverClone = Remover:Clone()
+	RemoverClone.Disabled = false
+	RemoverClone.Parent = PlayerChopper
+	PlayerChopper.Parent = game:GetService("Workspace")
+	ChopperTorso.CFrame = Torso.CFrame - Torso.CFrame.lookVector * ((ChopperTorso.Size.Z / 2) + (Torso.Size.Z / 2) + 5)
+	ChopperTorso.CFrame = ChopperTorso.CFrame - Vector3.new(0, (Torso.Size.Y / 2), 0)
 end
 
 function Equipped()
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;Handle.Transparency = 0
-&#9;if not Player or not Humanoid or Humanoid.Health == 0 or not Torso then
-&#9;&#9;return
-&#9;end
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso")
+	Handle.Transparency = 0
+	if not Player or not Humanoid or Humanoid.Health == 0 or not Torso then
+		return
+	end
 end
 
 function Unequipped()
-&#9;for i, v in pairs({PlayerChopper}) do
-&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-&#9;Handle.Transparency = 0
+	for i, v in pairs({PlayerChopper}) do
+		if v and v.Parent then
+			v:Destroy()
+		end
+	end
+	Handle.Transparency = 0
 end
 
 Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBXEBA1DD6E1DC74E459A398A94B8B17206">
+			<Item class="Script" referent="RBX681AFDA5EED64D0DB13BF4591292264F">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">Remover</string>
-					<ProtectedString name="Source">--Made by Luckymaxer
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Figure = script.Parent
-Creator = Figure:WaitForChild(&quot;Creator&quot;).Value
+Creator = Figure:WaitForChild("Creator").Value
 
-Debris = game:GetService(&quot;Debris&quot;)
+Debris = game:GetService("Debris")
 
 function DestroyModel()
-&#9;Debris:AddItem(Figure, 2)
+	Debris:AddItem(Figure, 2)
 end
 
-if Creator:IsA(&quot;Player&quot;) then
-&#9;Character = Creator.Character
-&#9;if Character then
-&#9;&#9;Character.Changed:connect(function(Property)
-&#9;&#9;&#9;if not Character.Parent then
-&#9;&#9;&#9;&#9;DestroyModel()
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;else
-&#9;&#9;DestroyModel()
-&#9;end
+if Creator:IsA("Player") then
+	Character = Creator.Character
+	if Character then
+		Character.Changed:connect(function(Property)
+			if not Character.Parent then
+				DestroyModel()
+			end
+		end)
+	else
+		DestroyModel()
+	end
 else
-&#9;DestroyModel()
-end</ProtectedString>
+	DestroyModel()
+end]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBXC144953A4ADB424D951A99A68EAC5705">
+		<Item class="LocalScript" referent="RBX329166AB456740AFA4A941223427F248">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid">{D0013D09-14A5-4704-AC1F-8F1F1CA59C9C}</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Handle = Tool:WaitForChild("Handle")
 
-Players = game:GetService(&quot;Players&quot;)
+Players = game:GetService("Players")
 
-ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
-ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
+ClientControl = Tool:WaitForChild("ClientControl")
+ServerControl = Tool:WaitForChild("ServerControl")
 
 function Click(Down)
-&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
-&#9;&#9;return
-&#9;end
-&#9;pcall(function()
-&#9;&#9;ClientControl:InvokeServer(&quot;Click&quot;, Down)
-&#9;end)
+	if not Player or not Humanoid or Humanoid.Health == 0 then
+		return
+	end
+	pcall(function()
+		ClientControl:InvokeServer("Click", Down)
+	end)
 end
 
 function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if not Player or not Humanoid or Humanoid.Health == 0 then
-&#9;&#9;return
-&#9;end
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;Click(true)
-&#9;end)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	if not Player or not Humanoid or Humanoid.Health == 0 then
+		return
+	end
+	Mouse.Button1Down:connect(function()
+		Click(true)
+	end)
 end
 
 function Unequipped()
 end
 
 Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBXD94D42C02B674A1291BE97056A3840A5">
+		<Item class="LocalScript" referent="RBX946B078EBA5D4C44A8A55160B768F45B">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
-Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
-Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
 
 Tool = script.Parent
 
 Mouse = nil
 
 function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
-&#9;end
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
 end
 
 function OnEquipped(ToolMouse)
-&#9;Mouse = ToolMouse
-&#9;UpdateIcon()
+	Mouse = ToolMouse
+	UpdateIcon()
 end
 
 function OnChanged(Property)
-&#9;if Property == &quot;Enabled&quot; then
-&#9;&#9;UpdateIcon()
-&#9;end
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
 end
 
 Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)</ProtectedString>
+Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Model" referent="RBXA22BD272A302482DB6AAD75E385EB9BD">
+		<Item class="Model" referent="RBX1990F05CBADD43A8B376E1A10F6C4CBC">
 			<Properties>
 				<CoordinateFrame name="ModelInPrimary">
 					<X>0</X>
@@ -340,7 +350,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 				<string name="Name">DisplayModel</string>
 				<Ref name="PrimaryPart">null</Ref>
 			</Properties>
-			<Item class="Part" referent="RBXBF7FEB069ED447CABBFF4C6BA25406A4">
+			<Item class="Part" referent="RBX660475EEFF7B487C928CEC302A64C01C">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -367,6 +377,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -409,7 +422,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX6637BEF18BE14BF68F26E650515E36FA">
+			<Item class="Part" referent="RBX94BBFBB1540A4F1990F5296E2FDD50E3">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -436,6 +449,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -478,7 +494,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX2430505B921C4D079811A62953F1D871">
+			<Item class="Part" referent="RBXB4DCDAD27944497495B9E1A3167E74ED">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -505,6 +521,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -547,7 +566,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX3B8ECE8B6C994D89B54964284590AD47">
+			<Item class="Part" referent="RBX2B5B8E2F2A824FF68747546EB858543C">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -574,6 +593,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -616,7 +638,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX3642C2FD45DB4D09B973D8DDEF1AB3D5">
+			<Item class="Part" referent="RBXDA801B91FCE84A10B0AC196E57B130C6">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -643,6 +665,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -685,7 +710,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX82F9889C0CA44324AC3DCFEF2CF559AC">
+			<Item class="Part" referent="RBX5A2DD34CCF4941BEB3EFD132D7BB7D3F">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -712,6 +737,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -754,7 +782,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXE0EF0D2E812F41039884806A1B17F166">
+			<Item class="Part" referent="RBXD5E1CECC0A2E41A6A83DADC13DC85B99">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -781,6 +809,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815285</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -822,7 +853,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX04F80832E79549FA92F37BC78607D931">
+				<Item class="Weld" referent="RBX7377EA0296DB46778003112ECE0E6FC6">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -853,11 +884,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBXBF7FEB069ED447CABBFF4C6BA25406A4</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBX660475EEFF7B487C928CEC302A64C01C</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX6AB9D7E6418F407EAC7AD4B585C6B8D1">
+				<Item class="Weld" referent="RBX6163455D44764F35B71C6E133359D6A1">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -888,11 +919,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBX6637BEF18BE14BF68F26E650515E36FA</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBX94BBFBB1540A4F1990F5296E2FDD50E3</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX2F61C6A7471E44F5B76F214AA5246A1F">
+				<Item class="Weld" referent="RBX011C31012F624556A291C84A681BC234">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -923,11 +954,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBX2430505B921C4D079811A62953F1D871</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBXB4DCDAD27944497495B9E1A3167E74ED</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX58869B1308E944ABBA08B59E0D1F80F6">
+				<Item class="Weld" referent="RBX1E3EFC7C3BEB4261BF59271CF2E7E085">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -958,11 +989,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBX3B8ECE8B6C994D89B54964284590AD47</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBX2B5B8E2F2A824FF68747546EB858543C</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXB3BC41D1FAC741F3A0413EE0FDF8162D">
+				<Item class="Weld" referent="RBX97CE78CD64FD47DEBCC8C1AF9EE4CCFD">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -993,11 +1024,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBX3642C2FD45DB4D09B973D8DDEF1AB3D5</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBXDA801B91FCE84A10B0AC196E57B130C6</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX1A517BCA834F4507963BD88510E35723">
+				<Item class="Weld" referent="RBX4D0EE30D5F734E6081828C503DE97FB0">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -1028,11 +1059,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBX82F9889C0CA44324AC3DCFEF2CF559AC</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBX5A2DD34CCF4941BEB3EFD132D7BB7D3F</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX13EEFF3556444ED2BE015B4626CC41A9">
+				<Item class="Weld" referent="RBXDA98AE679F134E51872AFD8E15FAF97D">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -1063,11 +1094,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBX30DEC497F2FB46D8B7CB599340BA137F</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBXEB03FE80C05F4F338A7042A7A047EA22</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX9B5E7935F75040538B0DA0A6C1E03144">
+				<Item class="Weld" referent="RBX1C4935592570461488A2F4E070B923D0">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>35.1249962</X>
@@ -1098,11 +1129,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
-						<Ref name="Part1">RBXC107C6C598F242DABE31C5D17A4C13BE</Ref>
+						<Ref name="Part0">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
+						<Ref name="Part1">RBX949161A49B6B45C7A67815ABD551CEC5</Ref>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXB4898AF02AF1417D91B8EAB2DDD65174">
+				<Item class="Weld" referent="RBX0D8372626DCF4BE9B54D43CFB7A5C2C8">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-1.50190234</X>
@@ -1133,11 +1164,11 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 							<R22>0.99999994</R22>
 						</CoordinateFrame>
 						<string name="Name">DisplayWeld</string>
-						<Ref name="Part0">RBXFA69550FD4374A479C897918FCA2DF7A</Ref>
-						<Ref name="Part1">RBXE0EF0D2E812F41039884806A1B17F166</Ref>
+						<Ref name="Part0">RBX766402DA08604185987FB4C7D0EAF2DD</Ref>
+						<Ref name="Part1">RBXD5E1CECC0A2E41A6A83DADC13DC85B99</Ref>
 					</Properties>
 				</Item>
-				<Item class="SpecialMesh" referent="RBX867AA11FCD764F4A986B58DCA1189FBE">
+				<Item class="SpecialMesh" referent="RBXF0DDCE5326EE42F2AF6D769A8C287DFA">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -1163,7 +1194,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX30DEC497F2FB46D8B7CB599340BA137F">
+			<Item class="Part" referent="RBXEB03FE80C05F4F338A7042A7A047EA22">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1190,6 +1221,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1232,7 +1266,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXC107C6C598F242DABE31C5D17A4C13BE">
+			<Item class="Part" referent="RBX949161A49B6B45C7A67815ABD551CEC5">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1259,6 +1293,9 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 						<R22>0.999815226</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1301,42 +1338,6 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-		</Item>
-		<Item class="Camera" referent="RBX8021EAACD3CC4F62986173C727993065">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-3.65192246</X>
-					<Y>18.8436584</Y>
-					<Z>17.3496189</Z>
-					<R00>-0.956488848</R00>
-					<R01>0.0959481969</R01>
-					<R02>-0.275541395</R02>
-					<R10>7.4505806e-009</R10>
-					<R11>0.944382191</R11>
-					<R12>0.328849912</R12>
-					<R20>0.291768938</R20>
-					<R21>0.31454128</R21>
-					<R22>-0.903291047</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-3.10083985</X>
-					<Y>18.1859589</Y>
-					<Z>19.1562004</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
