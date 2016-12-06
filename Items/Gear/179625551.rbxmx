@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXC34D3477341044F78E86D80DC33A6EEF">
+	<Item class="Tool" referent="RBX6BB859BFFD24468F9D4843AA5F8BE6EA">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -21,10 +21,11 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Haunted Pizza</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=179155697</url></Content>
 			<string name="ToolTip">Haunted Pizza</string>
 		</Properties>
-		<Item class="Part" referent="RBX81CD026782934ECBA52E85742E984EB4">
+		<Item class="Part" referent="RBX4784830064724E688EC226A3AE3D17C6">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -51,6 +52,9 @@
 					<R22>-1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -92,7 +96,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXF925256BBD3446DCA413B3CACC5A6ED5">
+			<Item class="SpecialMesh" referent="RBX20FFF7C324D543029CD0902EC55DE25D">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,34 +121,48 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXBF31690F8FFD4AF3A617A659A5A99645">
+			<Item class="Sound" referent="RBX15F36344E5AF478880D1DB0715A94FB6">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">DrinkSound</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=22593942</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3A65DB6504B84593AD928D806F1B0166">
+			<Item class="Sound" referent="RBX98C2FE28EA0A40538D5EBDB71B06AB9F">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">OpenSound</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=179559824</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBXFD7798DDA50244E9A6B552C0A551B13D">
+		<Item class="Script" referent="RBX7B80BE80CA6945348891FCD79C72F472">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">PizzaScript</string>
-				<ProtectedString name="Source">--[[ alexnewtron 2014 ]]--
+				<string name="ScriptGuid">{91FAD462-D6D9-4890-A8EF-50B4CE32DDF2}</string>
+				<ProtectedString name="Source"><![CDATA[--[[ alexnewtron 2014 ]]--
 -- voice by ejob
+--Updated for R15 avatars by StarWars
 
 local Tool = script.Parent;
 enabled = true;
@@ -152,92 +170,57 @@ enabled = true;
 ghostChar = nil;
 ghostHuman = nil;
 
+
 function makeMeGhostly(trans)
-&#9;if ghostChar == nil then return end
-&#9;local parts = {&quot;Head&quot;, &quot;Torso&quot;, &quot;Left Leg&quot;, &quot;Right Leg&quot;, &quot;Left Arm&quot;, &quot;Right Arm&quot;}
-&#9;for i=1,#parts do
-&#9;&#9;local p = ghostChar:FindFirstChild(parts[i])
-&#9;&#9;if p ~= nil then p.Transparency = trans end
-&#9;end&#9;
+	if ghostChar == nil then return end
+	for i, v in pairs(ghostChar:GetChildren()) do
+		if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+			v.Transparency = trans
+		end
+	end	
 end
 
 function onActivated()
-&#9;if not enabled  then
-&#9;&#9;return;
-&#9;end
-&#9;enabled = false;
-&#9;Tool.GripForward = Vector3.new(.995, -.0995, -0)
-&#9;Tool.GripPos = Vector3.new(1.5, -0.9, -0.5)
-&#9;Tool.GripRight = Vector3.new(1, 0, 0.01)
-&#9;Tool.GripUp = Vector3.new(0.0995, .995, 0)
-&#9;Tool.Handle.DrinkSound:Play();
-&#9;wait(.8);
-&#9;local h = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;);
-&#9;if (h ~= nil) then
-&#9;&#9;if (h.MaxHealth &gt; h.Health + 1.6) then
-&#9;&#9;&#9;h.Health = h.Health + 1.6
-&#9;&#9;else&#9;
-&#9;&#9;&#9;h.Health = h.MaxHealth
-&#9;&#9;end
-&#9;&#9;makeMeGhostly(.5)&#9;
-&#9;&#9;h.WalkSpeed = 21;
-&#9;end
-&#9;Tool.GripForward = Vector3.new(0, 0, -1)
-&#9;Tool.GripPos = Vector3.new(0, 0, -0.55)
-&#9;Tool.GripRight = Vector3.new(-1, 0, 0.013)
-&#9;Tool.GripUp = Vector3.new(0,1,0)
-&#9;enabled = true;
+	if not enabled  then
+		return;
+	end
+	enabled = false;
+	Tool.GripForward = Vector3.new(.995, -.0995, -0)
+	Tool.GripPos = Vector3.new(1.5, -0.9, -0.5)
+	Tool.GripRight = Vector3.new(1, 0, 0.01)
+	Tool.GripUp = Vector3.new(0.0995, .995, 0)
+	Tool.Handle.DrinkSound:Play();
+	wait(.8);
+	local h = Tool.Parent:FindFirstChild("Humanoid");
+	if (h ~= nil) then
+		if (h.MaxHealth > h.Health + 1.6) then
+			h.Health = h.Health + 1.6
+		else	
+			h.Health = h.MaxHealth
+		end
+		makeMeGhostly(.5)	
+		h.WalkSpeed = 21;
+	end
+	Tool.GripForward = Vector3.new(0, 0, -1)
+	Tool.GripPos = Vector3.new(0, 0, -0.55)
+	Tool.GripRight = Vector3.new(-1, 0, 0.013)
+	Tool.GripUp = Vector3.new(0,1,0)
+	enabled = true;
 end
 function onEquipped()
-&#9;Tool.Handle.OpenSound:play();
-&#9;ghostChar = Tool.Parent;
-&#9;ghostHuman = Tool.Parent:FindFirstChild(&quot;Humanoid&quot;);
+	Tool.Handle.OpenSound:play();
+	ghostChar = Tool.Parent;
+	ghostHuman = Tool.Parent:FindFirstChild("Humanoid");
 end
 function onUnequipped()
-&#9;makeMeGhostly(0);
-&#9;if (ghostHuman ~= nil) then
-&#9;&#9;ghostHuman.WalkSpeed = 16;
-&#9;end
+	makeMeGhostly(0);
+	if (ghostHuman ~= nil) then
+		ghostHuman.WalkSpeed = 16;
+	end
 end
 script.Parent.Activated:connect(onActivated);
 script.Parent.Equipped:connect(onEquipped);
-script.Parent.Unequipped:connect(onUnequipped)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX611BF03E458B4FDBAE06CC38E3F13FDA">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-5.50328064</X>
-					<Y>95.5509109</Y>
-					<Z>126.549889</Z>
-					<R00>-0.941594899</R00>
-					<R01>0.247886896</R01>
-					<R02>-0.227927715</R02>
-					<R10>-0</R10>
-					<R11>0.6768502</R11>
-					<R12>0.73612076</R12>
-					<R20>0.336747587</R20>
-					<R21>0.693127573</R21>
-					<R22>-0.63731879</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-5.04743147</X>
-					<Y>94.0786896</Y>
-					<Z>127.824509</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+script.Parent.Unequipped:connect(onUnequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
