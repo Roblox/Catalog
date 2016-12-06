@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXC8736AAE307E42CE88104FD5BEC901FD">
+	<Item class="Tool" referent="RBX864121FC80894F00BD61967D90DA72F6">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">false</bool>
@@ -21,10 +21,11 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">CrocodilePal</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=254916693</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX6FAB6258CC1F42A39A5832598291D7AF">
+		<Item class="Part" referent="RBXB757BFD94FE74DCB9089360E334CE7E1">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -40,17 +41,20 @@
 					<X>-0.383926988</X>
 					<Y>17.1302452</Y>
 					<Z>21.518177</Z>
-					<R00>-0.660274506</R00>
-					<R01>0.0146978311</R01>
-					<R02>-0.750880897</R02>
-					<R10>-1.47259778e-014</R10>
-					<R11>0.99980849</R11>
-					<R12>0.0195703693</R12>
-					<R20>0.751024723</R20>
-					<R21>0.0129218157</R21>
-					<R22>-0.660148084</R22>
+					<R00>-0.660370231</R00>
+					<R01>0.0147501696</R01>
+					<R02>-0.750802159</R02>
+					<R10>-1.35181472e-005</R10>
+					<R11>0.999806821</R11>
+					<R12>0.0196540374</R12>
+					<R20>0.750946999</R20>
+					<R21>0.0129889902</R21>
+					<R22>-0.660242438</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -92,7 +96,7 @@
 					<Z>4</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX67D337AC2D0E49708452FF3A92DFD9BD">
+			<Item class="SpecialMesh" referent="RBX5149CDBE45214D89BC222092D0ECFCDB">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -118,12 +122,14 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBXDCA403D8DD61454DB1FBAD237EFDC39B">
+		<Item class="Script" referent="RBX5822679E493D47EEA91006EB69F1C5DD">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
+				<string name="ScriptGuid">{768791DE-10A1-4DF2-9D23-EEF718F15D50}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatar by StarWars
 
 Tool = script.Parent
 Handle = Tool:WaitForChild("Handle")
@@ -133,6 +139,8 @@ Debris = game:GetService("Debris")
 InsertService = game:GetService("InsertService")
 
 Remover = script:WaitForChild("Remover")
+
+AIScript = script:WaitForChild("AIScript")
 
 NPCModel = InsertService:LoadAsset(255119149)
 NPC = NPCModel:GetChildren()[1]:Clone()
@@ -166,7 +174,7 @@ function MakeNPC()
 	end
 	PlayerNPC = NPC:Clone()
 	NPCHumanoid = PlayerNPC:FindFirstChild("Humanoid")
-	NPCTorso = PlayerNPC:FindFirstChild("Torso")
+	NPCTorso = PlayerNPC:FindFirstChild("Torso") or PlayerNPC:FindFirstChild("UpperTorso")
 	if not NPCHumanoid or not NPCTorso then
 		return
 	end
@@ -194,10 +202,14 @@ function MakeNPC()
 		ScriptClone.Disabled = false
 		ScriptClone.Parent = PlayerNPC
 	end
-	local AIScript = PlayerNPC:FindFirstChild("AIScript")
-	if AIScript then
-		AIScript.Disabled = false
+	local OldAIScript = PlayerNPC:FindFirstChild("AIScript")
+	local NewAIScript = AIScript:Clone()
+	NewAIScript.Parent = PlayerNPC
+	if OldAIScript then
+		OldAIScript:Destroy()
 	end
+	NewAIScript.Disabled = false	
+	
 	NPCHumanoid.Died:connect(function()
 		Debris:AddItem(PlayerNPC, 3)
 	end)
@@ -285,7 +297,7 @@ function Equipped()
 	Character = Tool.Parent
 	Player = Players:GetPlayerFromCharacter(Character)
 	Humanoid = Character:FindFirstChild("Humanoid")
-	Torso = Character:FindFirstChild("Torso")
+	Torso = Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso")
 	if not CheckIfAlive() then
 		return
 	end
@@ -333,11 +345,12 @@ Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX33AA57DC108743FB9472A03C28467C05">
+			<Item class="Script" referent="RBX57D0F95038274C84A50794EFD898F3A2">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">Remover</string>
+					<string name="ScriptGuid">{B377C5B6-976B-4EF3-BF63-33DB4B91FAA2}</string>
 					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Model = script.Parent
@@ -395,12 +408,347 @@ if Humanoid then
 end]]></ProtectedString>
 				</Properties>
 			</Item>
+			<Item class="Script" referent="RBX601AAD7C4DE343C1A71542DBC096BA86">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">AIScript</string>
+					<string name="ScriptGuid">{3FFE4B46-2AF7-4BBA-B36A-97F804B652BC}</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatar by StarWars
+
+Figure = script.Parent
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+RunService = game:GetService("RunService")
+
+Functions = require(script:WaitForChild("Functions"))
+
+LastMove = 0
+
+BasePart = Instance.new("Part")
+BasePart.Shape = Enum.PartType.Block
+BasePart.Material = Enum.Material.Plastic
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.CanCollide = true
+BasePart.Locked = true
+BasePart.Anchored = false
+
+Figures = {}
+
+function IncludeFigure(Child)
+	if not Child or not Child.Parent then
+		return
+	end
+	local Player = Players:GetPlayerFromCharacter(Child)
+	if Player then
+		return
+	end
+	for i, v in pairs(Figures) do
+		if v.Figure == Child then
+			return
+		end
+	end
+	local Figure = {Figure = Child, TouchDebounce = false, Connections = {}}
+	local Humanoid = Child:FindFirstChild("Humanoid")
+	local Head = Child:FindFirstChild("Head")
+	local Torso = Child:FindFirstChild("Torso")
+	if not Humanoid or not Humanoid:IsA("Humanoid") or Humanoid.Health == 0 or not Head or not Torso then
+		return
+	end
+	local Neck = Torso:FindFirstChild("Neck")
+	if not Neck then
+		return
+	end
+	for i, v in pairs({Humanoid, Head, Torso, Neck}) do
+		Figure[v.Name] = v
+	end
+	local Values = {"Creator", "Mode", "Follow", "Target", "TargetPos", "Offset", "Damage", "MaxDistance"}
+	for i, v in pairs(Values) do
+		local Value = Child:FindFirstChild(v)
+		if not Value then
+			return
+		end
+		Figure[v] = Value
+	end
+	local HumanoidChanged = Humanoid.Changed:connect(function(Property)
+		if Property == "Sit" and Humanoid.Sit then
+			Humanoid.Sit = false
+			Humanoid.Jump = true
+		end
+	end)
+	local FigureRemoved = Child.Changed:connect(function(Property)
+		if Property == "Parent" and not Child.Parent then
+			for i, v in pairs(Figures) do
+				if v == Figure then
+					for ii, vv in pairs(v.Connections) do
+						if vv then
+							vv:disconnect()
+						end
+					end
+					table.remove(Figures, i)
+				end
+			end
+		end
+	end)
+	for i ,v in pairs({HumanoidChanged, FigureRemoved}) do
+		table.insert(Figure.Connections, v)
+	end
+	for i, v in pairs(Child:GetChildren()) do
+		if v:IsA("BasePart") then
+			local TouchedConnection
+			TouchedConnection = v.Touched:connect(function(Hit)
+				if not Hit or not Hit.Parent or Figure.TouchDebounce then
+					return
+				end
+				local Connected = false
+				local ConnectedParts = v:GetConnectedParts()
+				if #ConnectedParts <= 1 then
+					return
+				end
+				for i, v in pairs(ConnectedParts) do
+					if v == Torso then
+						Connected = true
+					end
+				end
+				if not Connected then
+					return
+				end
+				local character = Hit.Parent
+				if character:IsA("Hat") then
+					character = character.Parent
+				end
+				if character ~= Figure.Target.Value then
+					return
+				end
+				local player = Players:GetPlayerFromCharacter(character)
+				local CreatorValue = Figure.Creator.Value
+				if not CreatorValue then
+					return
+				end
+				local CreatorPlayer = ((CreatorValue:IsA("Player") and CreatorValue) or Players:GetPlayerFromCharacter(CreatorValue))
+				if player then
+					if player == CreatorPlayer then
+						return
+					end
+					if player and CreatorPlayer and Functions.IsTeamMate(CreatorPlayer, player) then
+						return
+					end
+				end
+				local creator = character:FindFirstChild("Creator")
+				if creator and creator:IsA("ObjectValue") and creator.Value == CreatorValue then
+					return
+				end
+				local humanoid = character:FindFirstChild("Humanoid")
+				if not humanoid or not humanoid:IsA("Humanoid") or humanoid.Health == 0 then
+					return
+				end
+				Figure.TouchDebounce = true
+				Functions.UntagHumanoid(humanoid)
+				Functions.TagHumanoid(humanoid, CreatorPlayer)
+				humanoid:TakeDamage(Figure.Damage.Value)
+				wait(0.25)
+				Figure.TouchDebounce = false
+			end)
+			table.insert(Figure.Connections, TouchedConnection)
+		end
+	end
+	table.insert(Figures, Figure)
+end
+
+function SecureJump(Table)
+	local Humanoid = Table.Humanoid
+	local Torso = Table.Torso
+	if not Humanoid or Humanoid.Jump or not Torso then
+		return
+	end
+	local TargetPoint = Torso.Velocity.Unit
+	local Blockage, BlockagePos = Functions.CastRay((Torso.CFrame + CFrame.new(Torso.Position, Vector3.new(TargetPoint.X, Torso.Position.Y, TargetPoint.Z)).lookVector * (Torso.Size.Z / 2)).p, Torso.CFrame.lookVector, (Torso.Size.Z * 2.5), {Figure, (((Creator and Creator.Value and Creator.Value:IsA("Player") and Creator.Value.Character) and Creator.Value.Character) or nil)}, false)
+	local Jumpable = false
+	if Blockage then
+		Jumpable = true
+		if Blockage:IsA("Terrain") then
+			local CellPos = Blockage:WorldToCellPreferSolid((BlockagePos - Vector3.new(0, 2, 0)))
+			local CellMaterial, CellShape, CellOrientation = Blockage:GetCell(CellPos.X, CellPos.Y, CellPos.Z)
+			if CellMaterial == Enum.CellMaterial.Water then
+				Jumpable = false
+			end
+		elseif Blockage.Parent:FindFirstChild("Humanoid") then
+			Jumpable = false
+		end
+	end
+	if Jumpable then
+		Humanoid.Jump = true
+	end
+end
+
+RunService.Stepped:connect(function()
+	_, Time = wait(0.05)
+	for i, v in pairs(Figures) do
+		Spawn(function()
+			pcall(function()
+				if v and v.Figure and v.Figure.Parent then
+					Spawn(function()
+						SecureJump(v)
+					end)
+					local Disabled = v.Figure:FindFirstChild("Disabled")
+					if not Disabled then
+						local CreatorValue = v.Creator.Value
+						if CreatorValue then
+							local CreatorPlayer = ((CreatorValue:IsA("Player") and CreatorValue) or Players:GetPlayerFromCharacter(v.Creator.Value))
+							if CreatorPlayer then
+								local CreatorCharacter = CreatorPlayer.Character
+								if CreatorCharacter and CreatorCharacter.Parent then
+									local CreatorTorso = CreatorCharacter:FindFirstChild("Torso") or CreatorCharacter:FindFirstChild("UpperTorso")
+									if CreatorTorso then
+										local DistanceApart = (CreatorTorso.Position - v.Torso.Position).magnitude
+										if DistanceApart > v.MaxDistance.Value then
+											v.Mode.Value = "Follow"
+										end
+									end
+								end
+							end
+						end
+						if v.Mode.Value == "Follow" then
+							local FollowValue = v.Follow.Value
+							if FollowValue then
+								if FollowValue:IsA("Player") and FollowValue.Character and FollowValue.Character.Parent then
+									FollowValue = FollowValue.Character
+								end
+								local FollowHumanoid = FollowValue:FindFirstChild("Humanoid")
+								local FollowTorso = FollowValue:FindFirstChild("Torso") or FollowValue:FindFirstChild("UpperTorso")
+								if FollowHumanoid and FollowHumanoid.Health > 0 and FollowTorso then
+									--if (v.Torso.Position - FollowTorso.Position).magnitude > 5 then
+										v.Humanoid:MoveTo((FollowTorso.CFrame * CFrame.new(v.Offset.Value)).p)
+									--end
+								end
+							end
+						elseif v.Mode.Value == "MoveTo" then
+							v.Humanoid:MoveTo(v.TargetPos.Value)
+							LastMove = Time
+							v.Mode.Value = "Nothing"
+						elseif v.Mode.Value == "Attack" then
+							local TargetCharacter = v.Target.Value
+							local TargetDisabled = v.Target:FindFirstChild("Disabled")
+							local NotFound = false
+							if not TargetDisabled or not TargetDisabled.Value then
+								if TargetCharacter and TargetCharacter.Parent then
+									local TargetHumanoid = TargetCharacter:FindFirstChild("Humanoid")
+									local TargetTorso = TargetCharacter:FindFirstChild("Torso") or TargetCharacter:FindFirstChild("UpperTorso")
+									local creator = TargetCharacter:FindFirstChild("Creator")
+									if TargetHumanoid and TargetHumanoid.Health > 0 and TargetTorso and (not creator or (creator and v.Creator.Value ~= creator.Value and not Functions.IsTeamMate(v.Creator.Value, creator.Value))) then
+										local ChaseOffset = Vector3.new(((math.random() - 0.5) * 5), ((math.random() - 0.5) * 5), ((math.random() - 0.5) * 5))
+										v.Humanoid:MoveTo((TargetTorso.CFrame * CFrame.new(ChaseOffset)).p)
+									else
+										NotFound = true
+									end
+								else
+									NotFound = true
+								end
+							end
+							if NotFound then
+								v.Target.Value = nil
+								v.Mode.Value = "Follow"
+							end
+						elseif v.Mode.Value == "Nothing" then
+							if (Time - LastMove) >= 30 then
+								v.Mode.Value = "Follow"
+							end
+						end
+					end
+				end
+			end)
+		end)
+	end
+end)
+
+IncludeFigure(Figure)]]></ProtectedString>
+				</Properties>
+				<Item class="ModuleScript" referent="RBX91FEE9F5AB03461A95215F6056753672">
+					<Properties>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">Functions</string>
+						<string name="ScriptGuid"></string>
+						<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Ray", "Bullet", "ParticlePart"}
+
+Functions = {
+	
+	CheckTableForString = (function(Table, String)
+		for i, v in pairs(Table) do
+			if string.lower(v) == string.lower(String) then
+				return true
+			end
+		end
+		return false
+	end),
+
+	CheckIntangible = (function(Hit)
+		if Hit and Hit.Parent then
+			if (Hit.Transparency >= 1 and not Hit.CanCollide) or Functions.CheckTableForString(ProjectileNames, Hit.Name) then
+				return true
+			end
+			local ObjectParent = Hit.Parent
+			local Character = ObjectParent.Parent
+			local Humanoid = Character:FindFirstChild("Humanoid")
+			if Humanoid and Humanoid.Health > 0 and ObjectParent:IsA("Hat") then
+				return true
+			end
+		end
+		return false
+	end),
+	
+	CastRay = (function(StartPos, Vec, Length, Ignore, DelayIfHit)
+		local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+		if RayHit and Functions.CheckIntangible(RayHit) then
+			if DelayIfHit then
+				wait()
+			end
+			RayHit, RayPos, RayNormal = Functions.CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+		end
+		return RayHit, RayPos, RayNormal
+	end),
+
+	IsTeamMate = (function(Player1, Player2)
+		return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+	end),
+
+	TagHumanoid = (function(humanoid, player)
+		local Creator_Tag = Instance.new("ObjectValue")
+		Creator_Tag.Name = "creator"
+		Creator_Tag.Value = player
+		Debris:AddItem(Creator_Tag, 2)
+		Creator_Tag.Parent = humanoid
+	end),
+
+	UntagHumanoid = (function(humanoid)
+		for i, v in pairs(humanoid:GetChildren()) do
+			if v:IsA("ObjectValue") and v.Name == "creator" then
+				v:Destroy()
+			end
+		end
+	end),
+}
+
+return Functions]]></ProtectedString>
+					</Properties>
+				</Item>
+			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX10E11699C2AB4E1DB877A1962DC5F660">
+		<Item class="LocalScript" referent="RBX961DD960CCA0448AB96282A8674B3171">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
+				<string name="ScriptGuid">{B88DBC13-6826-4BF1-B132-C456DD21BA18}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Mouse_Icon = "rbxasset://textures/GunCursor.png"
@@ -431,11 +779,12 @@ Tool.Equipped:connect(OnEquipped)
 Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX51057C8F23EE4421A7C19F7BAB16B725">
+		<Item class="LocalScript" referent="RBX598F1775051D4E4F876C4A545B8BF268">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid">{0D27A611-2850-4FFC-842D-C3865060E2B9}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Tool = script.Parent
@@ -564,42 +913,6 @@ end
 ClientControl.OnClientInvoke = OnClientInvoke
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX9BA260B5570E4426AB3DC47EEDFA9830">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>2.27239323</X>
-					<Y>18.371357</Y>
-					<Z>21.5343018</Z>
-					<R00>-0.252692103</R00>
-					<R01>-0.499493867</R01>
-					<R02>0.82864511</R02>
-					<R10>-0</R10>
-					<R11>0.856439352</R11>
-					<R12>0.516247809</R12>
-					<R20>-0.967546701</R20>
-					<R21>0.130451739</R21>
-					<R22>-0.216415465</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-0.24072361</X>
-					<Y>16.8056793</Y>
-					<Z>22.1906471</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
