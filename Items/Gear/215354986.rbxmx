@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX79FF4F23E19F43038A424827BBD0166E">
+	<Item class="Tool" referent="RBX8F79813CF09440828D485A90E6127748">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -21,10 +21,11 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">HeartAirBalloon</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=213023668</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX01DE3ED0062C4E7FB4E348786A7BCE20">
+		<Item class="Part" referent="RBX5C4AF714CC52402F82AB51E9183233C5">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -51,6 +52,9 @@
 					<R22>0.740665197</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -92,7 +96,7 @@
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXA12CAC0FF21F45F08CBD1714A41E06A0">
+			<Item class="SpecialMesh" referent="RBX4E8CEED5C157402C8F4CEB77DB811F0B">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -118,246 +122,250 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX352DE11AB7454E18A67560B6043570DE">
+		<Item class="LocalScript" referent="RBX18D67BC12C294D4AB9B5D27D5FC86566">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Handle = Tool:WaitForChild("Handle")
 
-Players = game:GetService(&quot;Players&quot;)
-RunService = game:GetService(&quot;RunService&quot;)
-ContextActionService = game:GetService(&quot;ContextActionService&quot;)
-UserInputService = game:GetService(&quot;UserInputService&quot;)
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+ContextActionService = game:GetService("ContextActionService")
+UserInputService = game:GetService("UserInputService")
 
-Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+Camera = game:GetService("Workspace").CurrentCamera
 
 Animations = {}
 LocalObjects = {}
 
-ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
-ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
 
 ToolEquipped = false
 
 function SetAnimation(mode, value)
-&#9;if mode == &quot;PlayAnimation&quot; and value and ToolEquipped and Humanoid then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
-&#9;&#9;table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
-&#9;&#9;AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
-&#9;elseif mode == &quot;StopAnimation&quot; and value then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	end
 end
 
 function DisableJump(Boolean)
-&#9;if PreventJump then
-&#9;&#9;PreventJump:disconnect()
-&#9;end
-&#9;if Boolean then
-&#9;&#9;PreventJump = Humanoid.Changed:connect(function(Property)
-&#9;&#9;&#9;if Property ==  &quot;Jump&quot; then
-&#9;&#9;&#9;&#9;Humanoid.Jump = false
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
+	if PreventJump then
+		PreventJump:disconnect()
+	end
+	if Boolean then
+		PreventJump = Humanoid.Changed:connect(function(Property)
+			if Property ==  "Jump" then
+				Humanoid.Jump = false
+			end
+		end)
+	end
 end
 
 function CheckIfAlive()
-&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Player and Player.Parent) and true) or false)
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
 end
 
 function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;ToolEquipped = true
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;PlayerMouse = Player:GetMouse()
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
-&#9;end)
-&#9;Mouse.Button1Up:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
-&#9;end)
-&#9;Mouse.KeyDown:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
-&#9;end)
-&#9;Mouse.KeyUp:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
-&#9;end)
-&#9;Mouse.Move:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseMove&quot;, {Position = Mouse.Hit.p, Target = Mouse.Target})
-&#9;end)
-&#9;if UserInputService.TouchEnabled then
-&#9;&#9;ContextActionService:BindActionToInputTypes(&quot;Remove&quot;, function()
-&#9;&#9;&#9;Spawn(function()
-&#9;&#9;&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = &quot;x&quot;, Down = true})
-&#9;&#9;&#9;end)
-&#9;&#9;end, true, &quot;&quot;)
-&#9;&#9;ContextActionService:SetTitle(&quot;Remove&quot;, &quot;Remove&quot;)
-&#9;end
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Player:GetMouse()
+	Mouse.Button1Down:connect(function()
+		InvokeServer("MouseClick", {Down = true})
+	end)
+	Mouse.Button1Up:connect(function()
+		InvokeServer("MouseClick", {Down = false})
+	end)
+	Mouse.KeyDown:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = true})
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = false})
+	end)
+	Mouse.Move:connect(function()
+		InvokeServer("MouseMove", {Position = Mouse.Hit.p, Target = Mouse.Target})
+	end)
+	if UserInputService.TouchEnabled then
+		ContextActionService:BindActionToInputTypes("Remove", function()
+			Spawn(function()
+				InvokeServer("KeyPress", {Key = "x", Down = true})
+			end)
+		end, true, "")
+		ContextActionService:SetTitle("Remove", "Remove")
+	end
 end
 
 function Unequipped()
-&#9;ToolEquipped = false
-&#9;LocalObjects = {}
-&#9;if UserInputService.TouchEnabled then
-&#9;&#9;ContextActionService:UnbindAction(&quot;Remove&quot;)
-&#9;end
-&#9;for i, v in pairs(Animations) do
-&#9;&#9;if v and v.AnimationTrack then
-&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;end
-&#9;end
-&#9;for i, v in pairs({PreventJump, ObjectLocalTransparencyModifier}) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;Animations = {}
+	ToolEquipped = false
+	LocalObjects = {}
+	if UserInputService.TouchEnabled then
+		ContextActionService:UnbindAction("Remove")
+	end
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	for i, v in pairs({PreventJump, ObjectLocalTransparencyModifier}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	Animations = {}
 end
 
 function InvokeServer(mode, value)
-&#9;pcall(function()
-&#9;&#9;local ServerReturn = ServerControl:InvokeServer(mode, value)
-&#9;&#9;return ServerReturn
-&#9;end)
+	pcall(function()
+		local ServerReturn = ServerControl:InvokeServer(mode, value)
+		return ServerReturn
+	end)
 end
 
 function OnClientInvoke(mode, value)
-&#9;if mode == &quot;PlayAnimation&quot; and value and ToolEquipped and Humanoid then
-&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, value)
-&#9;elseif mode == &quot;StopAnimation&quot; and value then
-&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, value)
-&#9;elseif mode == &quot;PlaySound&quot; and value then
-&#9;&#9;value:Play()
-&#9;elseif mode == &quot;StopSound&quot; and value then
-&#9;&#9;value:Stop()
-&#9;elseif mode == &quot;MousePosition&quot; then
-&#9;&#9;return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
-&#9;elseif mode == &quot;DisableJump&quot; then
-&#9;&#9;DisableJump(value)
-&#9;elseif mode == &quot;SetCamera&quot; then
-&#9;&#9;pcall(function()
-&#9;&#9;&#9;Camera[value.Property] = value.Value
-&#9;&#9;end)
-&#9;elseif mode == &quot;GetCamera&quot; then
-&#9;&#9;local PropertyReturned = false
-&#9;&#9;local PropertyValue = nil
-&#9;&#9;pcall(function()
-&#9;&#9;&#9;PropertyValue = Camera[value.Property]
-&#9;&#9;&#9;PropertyReturned = true
-&#9;&#9;end)
-&#9;&#9;return ((PropertyReturned and PropertyValue) or nil)
-&#9;elseif mode == &quot;SetLocalTransparencyModifier&quot; and value and ToolEquipped then
-&#9;&#9;pcall(function()
-&#9;&#9;&#9;local ObjectFound = false
-&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
-&#9;&#9;&#9;&#9;if v == value then
-&#9;&#9;&#9;&#9;&#9;ObjectFound = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not ObjectFound then
-&#9;&#9;&#9;&#9;table.insert(LocalObjects, value)
-&#9;&#9;&#9;&#9;if ObjectLocalTransparencyModifier then
-&#9;&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier:disconnect()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
-&#9;&#9;&#9;&#9;&#9;for i, v in pairs(LocalObjects) do
-&#9;&#9;&#9;&#9;&#9;&#9;if v.Object and v.Object.Parent then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local CurrentTransparency = v.Object.LocalTransparencyModifier
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if ((not v.AutoUpdate and (CurrentTransparency == 1 or  CurrentTransparency == 0)) or v.AutoUpdate) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;v.Object.LocalTransparencyModifier = v.Transparency
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(LocalObjects, i)
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MousePosition" then
+		return {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}
+	elseif mode == "DisableJump" then
+		DisableJump(value)
+	elseif mode == "SetCamera" then
+		pcall(function()
+			Camera[value.Property] = value.Value
+		end)
+	elseif mode == "GetCamera" then
+		local PropertyReturned = false
+		local PropertyValue = nil
+		pcall(function()
+			PropertyValue = Camera[value.Property]
+			PropertyReturned = true
+		end)
+		return ((PropertyReturned and PropertyValue) or nil)
+	elseif mode == "SetLocalTransparencyModifier" and value and ToolEquipped then
+		pcall(function()
+			local ObjectFound = false
+			for i, v in pairs(LocalObjects) do
+				if v == value then
+					ObjectFound = true
+				end
+			end
+			if not ObjectFound then
+				table.insert(LocalObjects, value)
+				if ObjectLocalTransparencyModifier then
+					ObjectLocalTransparencyModifier:disconnect()
+				end
+				ObjectLocalTransparencyModifier = RunService.RenderStepped:connect(function()
+					for i, v in pairs(LocalObjects) do
+						if v.Object and v.Object.Parent then
+							local CurrentTransparency = v.Object.LocalTransparencyModifier
+							if ((not v.AutoUpdate and (CurrentTransparency == 1 or  CurrentTransparency == 0)) or v.AutoUpdate) then
+								v.Object.LocalTransparencyModifier = v.Transparency
+							end
+						else
+							table.remove(LocalObjects, i)
+						end
+					end
+				end)
+			end
+		end)
+	end
 end
 
 ClientControl.OnClientInvoke = OnClientInvoke
 Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBXE81B8C0C10494FF1A94E350792E602E1">
+		<Item class="LocalScript" referent="RBX4EF5FA2C328F43BC984D1FB36614352F">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
-Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
-Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
 
 Tool = script.Parent
 
 Mouse = nil
 
 function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
-&#9;end
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
 end
 
 function OnEquipped(ToolMouse)
-&#9;Mouse = ToolMouse
-&#9;UpdateIcon()
+	Mouse = ToolMouse
+	UpdateIcon()
 end
 
 function OnChanged(Property)
-&#9;if Property == &quot;Enabled&quot; then
-&#9;&#9;UpdateIcon()
-&#9;end
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
 end
 
 Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)</ProtectedString>
+Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBXAE0CC85672D34F06972A06AEF94EF260">
+		<Item class="Script" referent="RBX05D979F92E074A099C43E09FE32D4CE5">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid">{66554725-0E38-4574-9BA6-AC093F993D4A}</string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatar by StarWars
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Handle = Tool:WaitForChild("Handle")
 
-Players = game:GetService(&quot;Players&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
 
-RbxUtility = LoadLibrary(&quot;RbxUtility&quot;)
+RbxUtility = LoadLibrary("RbxUtility")
 Create = RbxUtility.Create
 
-BalloonScript = script:WaitForChild(&quot;BalloonScript&quot;)
-Gui = script:WaitForChild(&quot;Gui&quot;)
+BalloonScript = script:WaitForChild("BalloonScript")
+Gui = script:WaitForChild("Gui")
 
 MaxSpeed = 20
 
-IdleDuration = 15 --If the owner of the balloon doesn&apos;t sit in a seat for this long, the balloon is removed.
+IdleDuration = 15 --If the owner of the balloon doesn't sit in a seat for this long, the balloon is removed.
 DeployTick = 0
 
 Connections = {}
@@ -367,549 +375,550 @@ Flying = false
 MouseDown = false
 ToolEquipped = false
 
-ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ServerControl.Name = &quot;ServerControl&quot;
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
 ServerControl.Parent = Tool
 
-ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ClientControl.Name = &quot;ClientControl&quot;
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
 ClientControl.Parent = Tool
 
-DisplayModel = Tool:FindFirstChild(&quot;DisplayModel&quot;)
+DisplayModel = Tool:FindFirstChild("DisplayModel")
 if DisplayModel then
-&#9;DisplayModel:Destroy()
+	DisplayModel:Destroy()
 end
 
 Handle.Transparency = 0
 Tool.Enabled = true
 
 function Slerp(t, v1, v2)
-&#9;local om = math.acos(math.min(1, v1:Dot(v2)))
-&#9;return ((om &lt; 0.01 and ((1 - t) * v1 + t * v2)) or ((math.sin((1 - t) * om) / math.sin(om)) * v1 + (math.sin(t * om) / math.sin(om)) * v2))
+	local om = math.acos(math.min(1, v1:Dot(v2)))
+	return ((om < 0.01 and ((1 - t) * v1 + t * v2)) or ((math.sin((1 - t) * om) / math.sin(om)) * v1 + (math.sin(t * om) / math.sin(om)) * v2))
 end
 
 function TransformModel(Objects, Center, NewCFrame, Recurse)
-&#9;local Objects = ((type(Objects) ~= &quot;table&quot; and {Objects}) or Objects)
-&#9;for i, v in pairs(Objects) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;v.CFrame = NewCFrame:toWorldSpace(Center:toObjectSpace(v.CFrame))
-&#9;&#9;end
-&#9;&#9;if Recurse then
-&#9;&#9;&#9;TransformModel(v:GetChildren(), Center, NewCFrame, true)
-&#9;&#9;end
-&#9;end
+	local Objects = ((type(Objects) ~= "table" and {Objects}) or Objects)
+	for i, v in pairs(Objects) do
+		if v:IsA("BasePart") then
+			v.CFrame = NewCFrame:toWorldSpace(Center:toObjectSpace(v.CFrame))
+		end
+		if Recurse then
+			TransformModel(v:GetChildren(), Center, NewCFrame, true)
+		end
+	end
 end
 
 function GetAllConnectedParts(Object)
-&#9;local Parts = {}
-&#9;local function GetConnectedParts(Object)
-&#9;&#9;for i, v in pairs(Object:GetConnectedParts()) do
-&#9;&#9;&#9;local Ignore = false
-&#9;&#9;&#9;for ii, vv in pairs(Parts) do
-&#9;&#9;&#9;&#9;if v == vv then
-&#9;&#9;&#9;&#9;&#9;Ignore = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not Ignore then
-&#9;&#9;&#9;&#9;table.insert(Parts, v)
-&#9;&#9;&#9;&#9;GetConnectedParts(v)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;GetConnectedParts(Object)
-&#9;return Parts
+	local Parts = {}
+	local function GetConnectedParts(Object)
+		for i, v in pairs(Object:GetConnectedParts()) do
+			local Ignore = false
+			for ii, vv in pairs(Parts) do
+				if v == vv then
+					Ignore = true
+				end
+			end
+			if not Ignore then
+				table.insert(Parts, v)
+				GetConnectedParts(v)
+			end
+		end
+	end
+	GetConnectedParts(Object)
+	return Parts
 end
 
 function CreateBalloon()
-&#9;local BaseSize = Vector3.new(10, 1, 8.5)
-&#9;local SeatSize = Vector3.new(2, 0.6, 2)
-&#9;local WallSize = Vector2.new(4, 1) --Y, Z
-&#9;local XWallSize = Vector3.new(BaseSize.X, WallSize.X, WallSize.Y)
-&#9;local ZWallSize = Vector3.new(WallSize.Y, WallSize.X, BaseSize.Z - (WallSize.Y * 2))
-&#9;local Model = Create(&quot;Model&quot;){
-&#9;&#9;Name = &quot;HeartAirBalloon&quot;,
-&#9;&#9;Create(&quot;ObjectValue&quot;){
-&#9;&#9;&#9;Name = &quot;Creator&quot;,
-&#9;&#9;&#9;Value = Player,
-&#9;&#9;},
-&#9;&#9;Create(&quot;NumberValue&quot;){
-&#9;&#9;&#9;Name = &quot;IdleDuration&quot;,
-&#9;&#9;&#9;Value = IdleDuration,
-&#9;&#9;},
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;MainPart&quot;,
-&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;Material = Enum.Material.Plastic, 
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth, 
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom, 
-&#9;&#9;&#9;Size = BaseSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;RightSeatWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;LeftSeatWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;BalloonWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;FireWeld1&quot;
-&#9;&#9;&#9;},
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;LeftWallWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;RightWallWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;FrontWallWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Weld&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;BackWallWeld&quot;,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;BodyGyro&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;FlyingGyro&quot;,
-&#9;&#9;&#9;&#9;maxTorque = Vector3.new(math.huge, math.huge, math.huge),
-&#9;&#9;&#9;&#9;P = 5000,
-&#9;&#9;&#9;&#9;D = 500,
-&#9;&#9;&#9;&#9;cframe = CFrame.new(),
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;BodyVelocity&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;FlyingForce&quot;, 
-&#9;&#9;&#9;&#9;velocity = Vector3.new(),
-&#9;&#9;&#9;&#9;P = 1000,
-&#9;&#9;&#9;}, 
-&#9;&#9;},
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;LeftWall&quot;,
-&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
-&#9;&#9;&#9;Size = ZWallSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;},
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;RightWall&quot;,
-&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom, 
-&#9;&#9;&#9;Size = ZWallSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;},
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;FrontWall&quot;,
-&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
-&#9;&#9;&#9;Size = XWallSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;},
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;BackWall&quot;,
-&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
-&#9;&#9;&#9;Size = XWallSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;},
-&#9;&#9;Create(&quot;Seat&quot;){
-&#9;&#9;&#9;Name = &quot;RightSeat&quot;,
-&#9;&#9;&#9;BrickColor = BrickColor.new(&quot;Really black&quot;),
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
-&#9;&#9;&#9;Size = SeatSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;}, 
-&#9;&#9;Create(&quot;Seat&quot;){
-&#9;&#9;&#9;Name = &quot;LeftSeat&quot;,
-&#9;&#9;&#9;BrickColor = BrickColor.new(&quot;Really black&quot;),
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
-&#9;&#9;&#9;Size = SeatSize,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;}, 
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;FirePart1&quot;,
-&#9;&#9;&#9;Transparency = 1,
-&#9;&#9;&#9;CanCollide = false,
-&#9;&#9;&#9;Create(&quot;Fire&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;Fire&quot;,
-&#9;&#9;&#9;&#9;Heat = 5,
-&#9;&#9;&#9;&#9;Size = 7.5,
-&#9;&#9;&#9;&#9;Color = Color3.new((236 / 255), (139 / 255), (70 / 255)),
-&#9;&#9;&#9;&#9;SecondaryColor = Color3.new((139 / 255), (80 / 255), (55 / 255)),
-&#9;&#9;&#9;&#9;Enabled = false,
-&#9;&#9;&#9;}, 
-&#9;&#9;&#9;Create(&quot;Sound&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;FireSound&quot;,
-&#9;&#9;&#9;&#9;SoundId = &quot;http://www.roblox.com/asset/?id=30624426&quot;,
-&#9;&#9;&#9;&#9;Looped = true,
-&#9;&#9;&#9;}, 
-&#9;&#9;},
-&#9;&#9;Create(&quot;Part&quot;){
-&#9;&#9;&#9;Name = &quot;Balloon&quot;,
-&#9;&#9;&#9;Material = Enum.Material.Plastic,
-&#9;&#9;&#9;Shape = Enum.PartType.Block, 
-&#9;&#9;&#9;TopSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;BottomSurface = Enum.SurfaceType.Smooth,
-&#9;&#9;&#9;FormFactor = Enum.FormFactor.Custom,
-&#9;&#9;&#9;Size = Vector3.new(1, 1, 1),
-&#9;&#9;&#9;CanCollide = false,
-&#9;&#9;&#9;Locked = true,
-&#9;&#9;&#9;Create(&quot;SpecialMesh&quot;){
-&#9;&#9;&#9;&#9;Name = &quot;Mesh&quot;,
-&#9;&#9;&#9;&#9;MeshType = &quot;FileMesh&quot;, 
-&#9;&#9;&#9;&#9;MeshId = &quot;http://www.roblox.com/asset/?id=213023361&quot;,
-&#9;&#9;&#9;&#9;TextureId = &quot;http://www.roblox.com/asset/?id=213023550&quot;,
-&#9;&#9;&#9;&#9;Scale = Vector3.new(2.1, 1.8, 2.1),
-&#9;&#9;&#9;}, 
-&#9;&#9;}, 
-&#9;}
-&#9;
-&#9;local RightSeatWeld = Model.MainPart.RightSeatWeld
-&#9;RightSeatWeld.Part0 = RightSeatWeld.Parent
-&#9;RightSeatWeld.Part1 = Model.RightSeat
-&#9;RightSeatWeld.C0 = CFrame.new(SeatSize.X, SeatSize.Y, 0)
+	local BaseSize = Vector3.new(10, 1, 8.5)
+	local SeatSize = Vector3.new(2, 0.6, 2)
+	local WallSize = Vector2.new(4, 1) --Y, Z
+	local XWallSize = Vector3.new(BaseSize.X, WallSize.X, WallSize.Y)
+	local ZWallSize = Vector3.new(WallSize.Y, WallSize.X, BaseSize.Z - (WallSize.Y * 2))
+	local Model = Create("Model"){
+		Name = "HeartAirBalloon",
+		Create("ObjectValue"){
+			Name = "Creator",
+			Value = Player,
+		},
+		Create("NumberValue"){
+			Name = "IdleDuration",
+			Value = IdleDuration,
+		},
+		Create("Part"){
+			Name = "MainPart",
+			Transparency = 1,
+			Material = Enum.Material.Plastic, 
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth, 
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom, 
+			Size = BaseSize,
+			Locked = true,
+			Create("Weld"){
+				Name = "RightSeatWeld",
+			}, 
+			Create("Weld"){
+				Name = "LeftSeatWeld",
+			}, 
+			Create("Weld"){
+				Name = "BalloonWeld",
+			}, 
+			Create("Weld"){
+				Name = "FireWeld1"
+			},
+			Create("Weld"){
+				Name = "LeftWallWeld",
+			}, 
+			Create("Weld"){
+				Name = "RightWallWeld",
+			}, 
+			Create("Weld"){
+				Name = "FrontWallWeld",
+			}, 
+			Create("Weld"){
+				Name = "BackWallWeld",
+			}, 
+			Create("BodyGyro"){
+				Name = "FlyingGyro",
+				maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+				P = 5000,
+				D = 500,
+				cframe = CFrame.new(),
+			}, 
+			Create("BodyVelocity"){
+				Name = "FlyingForce", 
+				velocity = Vector3.new(),
+				P = 1000,
+			}, 
+		},
+		Create("Part"){
+			Name = "LeftWall",
+			Transparency = 1,
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom,
+			Size = ZWallSize,
+			Locked = true,
+		},
+		Create("Part"){
+			Name = "RightWall",
+			Transparency = 1,
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom, 
+			Size = ZWallSize,
+			Locked = true,
+		},
+		Create("Part"){
+			Name = "FrontWall",
+			Transparency = 1,
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom,
+			Size = XWallSize,
+			Locked = true,
+		},
+		Create("Part"){
+			Name = "BackWall",
+			Transparency = 1,
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom,
+			Size = XWallSize,
+			Locked = true,
+		},
+		Create("Seat"){
+			Name = "RightSeat",
+			BrickColor = BrickColor.new("Really black"),
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom,
+			Size = SeatSize,
+			Locked = true,
+		}, 
+		Create("Seat"){
+			Name = "LeftSeat",
+			BrickColor = BrickColor.new("Really black"),
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom,
+			Size = SeatSize,
+			Locked = true,
+		}, 
+		Create("Part"){
+			Name = "FirePart1",
+			Transparency = 1,
+			CanCollide = false,
+			Create("Fire"){
+				Name = "Fire",
+				Heat = 5,
+				Size = 7.5,
+				Color = Color3.new((236 / 255), (139 / 255), (70 / 255)),
+				SecondaryColor = Color3.new((139 / 255), (80 / 255), (55 / 255)),
+				Enabled = false,
+			}, 
+			Create("Sound"){
+				Name = "FireSound",
+				SoundId = "http://www.roblox.com/asset/?id=30624426",
+				Looped = true,
+			}, 
+		},
+		Create("Part"){
+			Name = "Balloon",
+			Material = Enum.Material.Plastic,
+			Shape = Enum.PartType.Block, 
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			FormFactor = Enum.FormFactor.Custom,
+			Size = Vector3.new(1, 1, 1),
+			CanCollide = false,
+			Locked = true,
+			Create("SpecialMesh"){
+				Name = "Mesh",
+				MeshType = "FileMesh", 
+				MeshId = "http://www.roblox.com/asset/?id=213023361",
+				TextureId = "http://www.roblox.com/asset/?id=213023550",
+				Scale = Vector3.new(2.1, 1.8, 2.1),
+			}, 
+		}, 
+	}
+	
+	local RightSeatWeld = Model.MainPart.RightSeatWeld
+	RightSeatWeld.Part0 = RightSeatWeld.Parent
+	RightSeatWeld.Part1 = Model.RightSeat
+	RightSeatWeld.C0 = CFrame.new(SeatSize.X, SeatSize.Y, 0)
 
-&#9;local LeftSeatWeld = Model.MainPart.LeftSeatWeld
-&#9;LeftSeatWeld.Part0 = LeftSeatWeld.Parent
-&#9;LeftSeatWeld.Part1 = Model.LeftSeat
-&#9;LeftSeatWeld.C0 = CFrame.new(-SeatSize.X, SeatSize.Y, 0)
-&#9;
-&#9;local BalloonWeld = Model.MainPart.BalloonWeld
-&#9;BalloonWeld.Part0 = BalloonWeld.Parent
-&#9;BalloonWeld.Part1 = Model.Balloon
-&#9;BalloonWeld.C0 = CFrame.new(0, (19 - (BaseSize.Y / 2)), 0)
-&#9;
-&#9;local LeftWeld = Model.MainPart.LeftWallWeld
-&#9;LeftWeld.Part0 = LeftWeld.Parent
-&#9;LeftWeld.Part1 = Model.LeftWall
-&#9;LeftWeld.C0 = CFrame.new(((Model.LeftWall.Size.X / 2) + (Model.MainPart.Size.X / 2) - Model.FrontWall.Size.X), ((Model.LeftWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), 0)
+	local LeftSeatWeld = Model.MainPart.LeftSeatWeld
+	LeftSeatWeld.Part0 = LeftSeatWeld.Parent
+	LeftSeatWeld.Part1 = Model.LeftSeat
+	LeftSeatWeld.C0 = CFrame.new(-SeatSize.X, SeatSize.Y, 0)
+	
+	local BalloonWeld = Model.MainPart.BalloonWeld
+	BalloonWeld.Part0 = BalloonWeld.Parent
+	BalloonWeld.Part1 = Model.Balloon
+	BalloonWeld.C0 = CFrame.new(0, (19 - (BaseSize.Y / 2)), 0)
+	
+	local LeftWeld = Model.MainPart.LeftWallWeld
+	LeftWeld.Part0 = LeftWeld.Parent
+	LeftWeld.Part1 = Model.LeftWall
+	LeftWeld.C0 = CFrame.new(((Model.LeftWall.Size.X / 2) + (Model.MainPart.Size.X / 2) - Model.FrontWall.Size.X), ((Model.LeftWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), 0)
 
-&#9;local RightWeld = Model.MainPart.RightWallWeld
-&#9;RightWeld.Part0 = RightWeld.Parent
-&#9;RightWeld.Part1 = Model.RightWall
-&#9;RightWeld.C0 = CFrame.new(-((Model.RightWall.Size.X / 2) + (Model.MainPart.Size.X / 2) - Model.FrontWall.Size.X), ((Model.RightWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), 0)
-&#9;
-&#9;local FrontWeld = Model.MainPart.FrontWallWeld
-&#9;FrontWeld.Part0 = FrontWeld.Parent
-&#9;FrontWeld.Part1 = Model.FrontWall
-&#9;FrontWeld.C0 = CFrame.new(0, ((Model.FrontWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), ((Model.FrontWall.Size.Z / 2) + (Model.MainPart.Size.Z / 2) - Model.FrontWall.Size.Z))
+	local RightWeld = Model.MainPart.RightWallWeld
+	RightWeld.Part0 = RightWeld.Parent
+	RightWeld.Part1 = Model.RightWall
+	RightWeld.C0 = CFrame.new(-((Model.RightWall.Size.X / 2) + (Model.MainPart.Size.X / 2) - Model.FrontWall.Size.X), ((Model.RightWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), 0)
+	
+	local FrontWeld = Model.MainPart.FrontWallWeld
+	FrontWeld.Part0 = FrontWeld.Parent
+	FrontWeld.Part1 = Model.FrontWall
+	FrontWeld.C0 = CFrame.new(0, ((Model.FrontWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), ((Model.FrontWall.Size.Z / 2) + (Model.MainPart.Size.Z / 2) - Model.FrontWall.Size.Z))
 
-&#9;local BackWeld = Model.MainPart.BackWallWeld
-&#9;BackWeld.Part0 = BackWeld.Parent
-&#9;BackWeld.Part1 = Model.BackWall
-&#9;BackWeld.C0 = CFrame.new(0, ((Model.BackWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), -((Model.BackWall.Size.Z / 2) + (Model.MainPart.Size.Z / 2) - Model.BackWall.Size.Z))
-&#9;
-&#9;local FireWeld1 = Model.MainPart.FireWeld1
-&#9;FireWeld1.Part0 = FireWeld1.Parent
-&#9;FireWeld1.Part1 = Model.FirePart1
-&#9;FireWeld1.C0 = CFrame.new(0, 14, 0)
-&#9;
-&#9;local BalloonScriptClone = BalloonScript:Clone()
-&#9;BalloonScriptClone.Disabled = false
-&#9;BalloonScriptClone.Parent = Model
-&#9;&#9;
-&#9;return {
-&#9;&#9;Balloon = Model,
-&#9;&#9;Creator = Model.Creator,
-&#9;&#9;MainPart = Model.MainPart,
-&#9;&#9;BodyGyro = Model.MainPart.FlyingGyro,
-&#9;&#9;BodyVelocity = Model.MainPart.FlyingForce,
-&#9;&#9;FirePart1 = Model.FirePart1,
-&#9;&#9;Fire1 = Model.FirePart1.Fire,
-&#9;&#9;FireSound = Model.FirePart1.FireSound,
-&#9;}
-&#9;
+	local BackWeld = Model.MainPart.BackWallWeld
+	BackWeld.Part0 = BackWeld.Parent
+	BackWeld.Part1 = Model.BackWall
+	BackWeld.C0 = CFrame.new(0, ((Model.BackWall.Size.Y / 2) + (Model.MainPart.Size.Y / 2)), -((Model.BackWall.Size.Z / 2) + (Model.MainPart.Size.Z / 2) - Model.BackWall.Size.Z))
+	
+	local FireWeld1 = Model.MainPart.FireWeld1
+	FireWeld1.Part0 = FireWeld1.Parent
+	FireWeld1.Part1 = Model.FirePart1
+	FireWeld1.C0 = CFrame.new(0, 14, 0)
+	
+	local BalloonScriptClone = BalloonScript:Clone()
+	BalloonScriptClone.Disabled = false
+	BalloonScriptClone.Parent = Model
+		
+	return {
+		Balloon = Model,
+		Creator = Model.Creator,
+		MainPart = Model.MainPart,
+		BodyGyro = Model.MainPart.FlyingGyro,
+		BodyVelocity = Model.MainPart.FlyingForce,
+		FirePart1 = Model.FirePart1,
+		Fire1 = Model.FirePart1.Fire,
+		FireSound = Model.FirePart1.FireSound,
+	}
+	
 end
 
 function BeginFlight()
-&#9;
-&#9;if not CurrentBalloon or not CurrentBalloon.Balloon or not CurrentBalloon.Balloon.Parent then
-&#9;&#9;return
-&#9;end
-&#9;&#9;
-&#9;local MainPart = CurrentBalloon.Balloon:FindFirstChild(&quot;MainPart&quot;)
-&#9;if not MainPart then
-&#9;&#9;return
-&#9;end
-&#9;
-&#9;Flying = true
-&#9;
-&#9;pcall(function()
-&#9;&#9;GuiClone.Frame.Message.Text = &quot;Click and Hold to direct the Balloon in the&quot; .. &quot;\n&quot; .. &quot;direction you are looking. Holding with both&quot; .. &quot;\n&quot;.. &quot;mouse buttons gives easy free flight.&quot;
-&#9;end)
-&#9;
-&#9;ControlBalloon()
-&#9;
+	
+	if not CurrentBalloon or not CurrentBalloon.Balloon or not CurrentBalloon.Balloon.Parent then
+		return
+	end
+		
+	local MainPart = CurrentBalloon.Balloon:FindFirstChild("MainPart")
+	if not MainPart then
+		return
+	end
+	
+	Flying = true
+	
+	pcall(function()
+		GuiClone.Frame.Message.Text = "Click and Hold to direct the Balloon in the" .. "\n" .. "direction you are looking. Holding with both" .. "\n".. "mouse buttons gives easy free flight."
+	end)
+	
+	ControlBalloon()
+	
 end
 
 function EndFlight()
-&#9;
-&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
-&#9;&#9;for i, v in pairs({CurrentBalloon.Fire1}) do
-&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;v.Enabled = false
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;
-&#9;Flying = false
-&#9;
-&#9;pcall(function()
-&#9;&#9;GuiClone.Frame.Message.Text = &quot;Click to place a Balloon.&quot; .. &quot;\n&quot;.. &quot;Get into a Balloon to fly it.&quot;
-&#9;end)
-&#9;
+	
+	if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+		for i, v in pairs({CurrentBalloon.Fire1}) do
+			if v and v.Parent then
+				v.Enabled = false
+			end
+		end
+	end
+	
+	Flying = false
+	
+	pcall(function()
+		GuiClone.Frame.Message.Text = "Click to place a Balloon." .. "\n".. "Get into a Balloon to fly it."
+	end)
+	
 end
 
 function ControlBalloon()
-&#9;
-&#9;if not CurrentBalloon or not CurrentBalloon.Balloon.Parent or not CurrentBalloon.MainPart.Parent or not CurrentBalloon.BodyGyro.Parent or not CurrentBalloon.BodyVelocity.Parent then
-&#9;&#9;return
-&#9;end
-&#9;
-&#9;local MainPart = CurrentBalloon.MainPart
-&#9;local FlyingForce = CurrentBalloon.BodyVelocity
-&#9;local FlyingGyro = CurrentBalloon.BodyGyro
-&#9;local FirePart1 = CurrentBalloon.FirePart1
-&#9;local Fire1 = CurrentBalloon.Fire1
-&#9;
-&#9;local SoundPlaying = false&#9;
-&#9;
-&#9;local BalloonMass = 0
-&#9;for i, v in pairs(GetAllConnectedParts(MainPart)) do
-&#9;&#9;BalloonMass = (BalloonMass + v:GetMass())
-&#9;end
-&#9;BalloonMass = (BalloonMass * 2 * 196.20)
-&#9;FlyingForce.maxForce = Vector3.new(BalloonMass, BalloonMass, BalloonMass)
-&#9;
-&#9;local CurrentVelocity = math.min(MaxSpeed, FlyingForce.velocity.magnitude)&#9;
-&#9;
-&#9;local LastTime = tick()
-&#9;local DesiredFlightCFrame = MainPart.CFrame
-&#9;
-&#9;while ToolEquipped and Flying do
-&#9;&#9;local Now = tick()
-&#9;&#9;local Time = (Now - LastTime)
-&#9;&#9;LastTime = Now
-&#9;&#9;
-&#9;&#9;if Flying then
-&#9;&#9;&#9;
-&#9;&#9;&#9;local CoordinateFrame = InvokeClient(&quot;GetCamera&quot;, {Property = &quot;CoordinateFrame&quot;})
-&#9;&#9;&#9;local MoveDirection = (CoordinateFrame * CFrame.Angles(0.6, 0, 0))
-&#9;&#9;&#9;if MouseDown then
-&#9;&#9;&#9;&#9;local Theta = math.acos(DesiredFlightCFrame.lookVector:Dot(MoveDirection.lookVector))
-&#9;&#9;&#9;&#9;local Frac = math.min(0.7, (0.7 * Time / Theta))
-&#9;&#9;&#9;&#9;local Unit = Slerp(Frac, DesiredFlightCFrame.lookVector, MoveDirection.lookVector)
-&#9;&#9;&#9;&#9;DesiredFlightCFrame = CFrame.new(Vector3.new(0, 0, 0), Unit)
-&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;if CurrentVelocity &lt; MaxSpeed then
-&#9;&#9;&#9;&#9;&#9;CurrentVelocity = math.min((CurrentVelocity + 8 * Time), MaxSpeed)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;if CurrentVelocity &gt; 2 then
-&#9;&#9;&#9;&#9;&#9;CurrentVelocity = math.max(0, (CurrentVelocity - 3 * Time))
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;
-&#9;&#9;&#9;local Direction = DesiredFlightCFrame.lookVector
-&#9;&#9;&#9;local DirectionXZ = Vector3.new(Direction.X, 0, Direction.Z).unit
-&#9;&#9;&#9;
-&#9;&#9;&#9;FlyingGyro.cframe = CFrame.new(Vector3.new(), DirectionXZ) * CFrame.Angles(0, 0, 0) --CFrame.Angles(0, 0, (MainPart.RotVelocity.y / 3 * (1 - math.abs(Direction.Y) ^ 2)))
-&#9;&#9;&#9;
-&#9;&#9;&#9;if FirePart1 and FirePart1.Parent then
-&#9;&#9;&#9;&#9;local FireSound = FirePart1:FindFirstChild(&quot;FireSound&quot;)
-&#9;&#9;&#9;&#9;if FireSound then
-&#9;&#9;&#9;&#9;&#9;if Direction.y &gt; 0 then
-&#9;&#9;&#9;&#9;&#9;&#9;if not SoundPlaying then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;SoundPlaying = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;FireSound:Play()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;SoundPlaying = false
-&#9;&#9;&#9;&#9;&#9;&#9;FireSound:Stop()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;for i, v in pairs({Fire1}) do
-&#9;&#9;&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;&#9;&#9;v.Enabled = MouseDown --(Direction.y &gt; 0 and CurrentVelocity &gt; 2)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local SlowDownFactor = math.abs(MainPart.RotVelocity.Y / 3)
-&#9;&#9;&#9;FlyingForce.velocity = (Direction.unit * (CurrentVelocity - SlowDownFactor) * (1 - Direction.Y ^ 2))
-&#9;&#9;end
-&#9;&#9;wait()
-&#9;end
+	
+	if not CurrentBalloon or not CurrentBalloon.Balloon.Parent or not CurrentBalloon.MainPart.Parent or not CurrentBalloon.BodyGyro.Parent or not CurrentBalloon.BodyVelocity.Parent then
+		return
+	end
+	
+	local MainPart = CurrentBalloon.MainPart
+	local FlyingForce = CurrentBalloon.BodyVelocity
+	local FlyingGyro = CurrentBalloon.BodyGyro
+	local FirePart1 = CurrentBalloon.FirePart1
+	local Fire1 = CurrentBalloon.Fire1
+	
+	local SoundPlaying = false	
+	
+	local BalloonMass = 0
+	for i, v in pairs(GetAllConnectedParts(MainPart)) do
+		BalloonMass = (BalloonMass + v:GetMass())
+	end
+	BalloonMass = (BalloonMass * 2 * 196.20)
+	FlyingForce.maxForce = Vector3.new(BalloonMass, BalloonMass, BalloonMass)
+	
+	local CurrentVelocity = math.min(MaxSpeed, FlyingForce.velocity.magnitude)	
+	
+	local LastTime = tick()
+	local DesiredFlightCFrame = MainPart.CFrame
+	
+	while ToolEquipped and Flying do
+		local Now = tick()
+		local Time = (Now - LastTime)
+		LastTime = Now
+		
+		if Flying then
+			
+			local CoordinateFrame = InvokeClient("GetCamera", {Property = "CoordinateFrame"})
+			local MoveDirection = (CoordinateFrame * CFrame.Angles(0.6, 0, 0))
+			if MouseDown then
+				local Theta = math.acos(DesiredFlightCFrame.lookVector:Dot(MoveDirection.lookVector))
+				local Frac = math.min(0.7, (0.7 * Time / Theta))
+				local Unit = Slerp(Frac, DesiredFlightCFrame.lookVector, MoveDirection.lookVector)
+				DesiredFlightCFrame = CFrame.new(Vector3.new(0, 0, 0), Unit)
+				
+				if CurrentVelocity < MaxSpeed then
+					CurrentVelocity = math.min((CurrentVelocity + 8 * Time), MaxSpeed)
+				end
+			else
+				if CurrentVelocity > 2 then
+					CurrentVelocity = math.max(0, (CurrentVelocity - 3 * Time))
+				end
+			end
+			
+			local Direction = DesiredFlightCFrame.lookVector
+			local DirectionXZ = Vector3.new(Direction.X, 0, Direction.Z).unit
+			
+			FlyingGyro.cframe = CFrame.new(Vector3.new(), DirectionXZ) * CFrame.Angles(0, 0, 0) --CFrame.Angles(0, 0, (MainPart.RotVelocity.y / 3 * (1 - math.abs(Direction.Y) ^ 2)))
+			
+			if FirePart1 and FirePart1.Parent then
+				local FireSound = FirePart1:FindFirstChild("FireSound")
+				if FireSound then
+					if Direction.y > 0 then
+						if not SoundPlaying then
+							SoundPlaying = true
+							FireSound:Play()
+						end
+					else
+						SoundPlaying = false
+						FireSound:Stop()
+					end
+				end
+			end
+			for i, v in pairs({Fire1}) do
+				if v and v.Parent then
+					v.Enabled = MouseDown --(Direction.y > 0 and CurrentVelocity > 2)
+				end
+			end
+			local SlowDownFactor = math.abs(MainPart.RotVelocity.Y / 3)
+			FlyingForce.velocity = (Direction.unit * (CurrentVelocity - SlowDownFactor) * (1 - Direction.Y ^ 2))
+		end
+		wait()
+	end
 end
 
 function SetUpConnections()
-&#9;for i, v in pairs(Connections) do
-&#9;&#9;if v then
-&#9;&#9;&#9;v:disconnect()
-&#9;&#9;end
-&#9;end
-&#9;Connections = {}
-&#9;if CurrentBalloon and CurrentBalloon.Balloon then
-&#9;&#9;local Balloon = CurrentBalloon.Balloon
-&#9;&#9;local BalloonRemoved = Balloon.Changed:connect(function(Property)
-&#9;&#9;&#9;if Property == &quot;Parent&quot; and not Balloon.Parent then
-&#9;&#9;&#9;&#9;Handle.Transparency = 0
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;for i, v in pairs(Balloon:GetChildren()) do
-&#9;&#9;&#9;if v:IsA(&quot;Seat&quot;) then
-&#9;&#9;&#9;&#9;local SeatWeldAdded = v.ChildAdded:connect(function(Child)
-&#9;&#9;&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; and not Flying then
-&#9;&#9;&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Seated = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;BeginFlight()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;local SeatWeldRemoved = v.ChildRemoved:connect(function(Child)
-&#9;&#9;&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; and Flying then
-&#9;&#9;&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Seated = false
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;EndFlight()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;for i, v in pairs({BalloonRemoved, SeatWeldAdded, SeatWeldRemoved}) do
-&#9;&#9;&#9;&#9;&#9;if v then
-&#9;&#9;&#9;&#9;&#9;&#9;table.insert(Connections, v)
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	for i, v in pairs(Connections) do
+		if v then
+			v:disconnect()
+		end
+	end
+	Connections = {}
+	if CurrentBalloon and CurrentBalloon.Balloon then
+		local Balloon = CurrentBalloon.Balloon
+		local BalloonRemoved = Balloon.Changed:connect(function(Property)
+			if Property == "Parent" and not Balloon.Parent then
+				Handle.Transparency = 0
+			end
+		end)
+		for i, v in pairs(Balloon:GetChildren()) do
+			if v:IsA("Seat") then
+				local SeatWeldAdded = v.ChildAdded:connect(function(Child)
+					if Child:IsA("JointInstance") and Child.Name == "SeatWeld" and not Flying then
+						if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+							Seated = true
+							BeginFlight()
+						end
+					end
+				end)
+				local SeatWeldRemoved = v.ChildRemoved:connect(function(Child)
+					if Child:IsA("JointInstance") and Child.Name == "SeatWeld" and Flying then
+						if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+							Seated = false
+							EndFlight()
+						end
+					end
+				end)
+				for i, v in pairs({BalloonRemoved, SeatWeldAdded, SeatWeldRemoved}) do
+					if v then
+						table.insert(Connections, v)
+					end
+				end
+			end
+		end
+	end
 end
 
 function CheckIfAlive()
-&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
 end
 
 function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;Spawn(function()
-&#9;&#9;local PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
-&#9;&#9;if PlayerGui then
-&#9;&#9;&#9;GuiClone = Gui:Clone()
-&#9;&#9;&#9;GuiClone.Frame.Message.Text = &quot;Click to create a Balloon.&quot; .. &quot;\n&quot; .. &quot;Get into a Balloon to fly it.&quot;
-&#9;&#9;&#9;GuiClone.Parent = PlayerGui
-&#9;&#9;end
-&#9;end)
-&#9;Spawn(function()
-&#9;&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
-&#9;&#9;&#9;Handle.Transparency = 1
-&#9;&#9;&#9;if Seated then
-&#9;&#9;&#9;&#9;BeginFlight()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-&#9;ToolEquipped = true
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			GuiClone = Gui:Clone()
+			GuiClone.Frame.Message.Text = "Click to create a Balloon." .. "\n" .. "Get into a Balloon to fly it."
+			GuiClone.Parent = PlayerGui
+		end
+	end)
+	Spawn(function()
+		if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+			Handle.Transparency = 1
+			if Seated then
+				BeginFlight()
+			end
+		end
+	end)
+	ToolEquipped = true
 end
 
 function Unequipped()
-&#9;MouseDown = false
-&#9;EndFlight()
-&#9;if GuiClone and GuiClone.Parent then
-&#9;&#9;GuiClone:Destroy()
-&#9;end
-&#9;Handle.Transparency = 0
-&#9;ToolEquipped = false
+	MouseDown = false
+	EndFlight()
+	if GuiClone and GuiClone.Parent then
+		GuiClone:Destroy()
+	end
+	Handle.Transparency = 0
+	ToolEquipped = false
 end
 
 function OnServerInvoke(player, mode, value)
-&#9;if player == Player and ToolEquipped and value and CheckIfAlive() then
-&#9;&#9;if mode == &quot;MouseClick&quot; then
-&#9;&#9;&#9;local Down = value.Down
-&#9;&#9;&#9;if Down then
-&#9;&#9;&#9;&#9;MouseDown = true
-&#9;&#9;&#9;&#9;if (tick() - DeployTick) &gt; IdleDuration and (not CurrentBalloon or not CurrentBalloon.Balloon.Parent) then
-&#9;&#9;&#9;&#9;&#9;DeployTick = tick()
-&#9;&#9;&#9;&#9;&#9;Seated = false
-&#9;&#9;&#9;&#9;&#9;Flying = false
-&#9;&#9;&#9;&#9;&#9;Handle.Transparency = 1
-&#9;&#9;&#9;&#9;&#9;local MousePosition = InvokeClient(&quot;MousePosition&quot;)
-&#9;&#9;&#9;&#9;&#9;local Direction = CFrame.new(Torso.Position, MousePosition.Position)
-&#9;&#9;&#9;&#9;&#9;CurrentBalloon = CreateBalloon()
-&#9;&#9;&#9;&#9;&#9;local Balloon = CurrentBalloon.Balloon
-&#9;&#9;&#9;&#9;&#9;local MainPart = CurrentBalloon.MainPart
-&#9;&#9;&#9;&#9;&#9;TransformModel(Balloon, Balloon:GetModelCFrame(), ((Torso.CFrame + Direction.lookVector * 10) * CFrame.Angles(0, 0, 0)), true)
-&#9;&#9;&#9;&#9;&#9;MainPart.CFrame = CFrame.new(Vector3.new(MainPart.Position.X, Torso.Position.Y, MainPart.Position.Z), Torso.Position)
-&#9;&#9;&#9;&#9;&#9;CurrentBalloon.BodyGyro.cframe = MainPart.CFrame
-&#9;&#9;&#9;&#9;&#9;Balloon.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;&#9;&#9;&#9;&#9;SetUpConnections(CurrentBalloon)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;MouseDown = false
-&#9;&#9;&#9;end
-&#9;&#9;elseif mode == &quot;KeyPress&quot; then
-&#9;&#9;&#9;local Key = value.Key
-&#9;&#9;&#9;local ByteKey = string.byte(Key)
-&#9;&#9;&#9;local Down = value.Down
-&#9;&#9;&#9;if Key == &quot;x&quot; and Down then
-&#9;&#9;&#9;&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
-&#9;&#9;&#9;&#9;&#9;CurrentBalloon.Balloon:Destroy()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if player == Player and ToolEquipped and value and CheckIfAlive() then
+		if mode == "MouseClick" then
+			local Down = value.Down
+			if Down then
+				MouseDown = true
+				if (tick() - DeployTick) > IdleDuration and (not CurrentBalloon or not CurrentBalloon.Balloon.Parent) then
+					DeployTick = tick()
+					Seated = false
+					Flying = false
+					Handle.Transparency = 1
+					local MousePosition = InvokeClient("MousePosition")
+					local Direction = CFrame.new(Torso.Position, MousePosition.Position)
+					CurrentBalloon = CreateBalloon()
+					local Balloon = CurrentBalloon.Balloon
+					local MainPart = CurrentBalloon.MainPart
+					TransformModel(Balloon, Balloon:GetModelCFrame(), ((Torso.CFrame + Direction.lookVector * 10) * CFrame.Angles(0, 0, 0)), true)
+					MainPart.CFrame = CFrame.new(Vector3.new(MainPart.Position.X, Torso.Position.Y, MainPart.Position.Z), Torso.Position)
+					CurrentBalloon.BodyGyro.cframe = MainPart.CFrame
+					Balloon.Parent = game:GetService("Workspace")
+					SetUpConnections(CurrentBalloon)
+				end
+			else
+				MouseDown = false
+			end
+		elseif mode == "KeyPress" then
+			local Key = value.Key
+			local ByteKey = string.byte(Key)
+			local Down = value.Down
+			if Key == "x" and Down then
+				if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+					CurrentBalloon.Balloon:Destroy()
+				end
+			end
+		end
+	end
 end
 
 function InvokeClient(Mode, Value)
-&#9;local ClientReturn = nil
-&#9;pcall(function()
-&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-&#9;end)
-&#9;return ClientReturn
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
 end
 
 Tool.Changed:connect(function(Property)
-&#9;if Property == &quot;Parent&quot; and not Tool.Parent:IsA(&quot;Backpack&quot;) and not Players:GetPlayerFromCharacter(Tool.Parent) then
-&#9;&#9;if CurrentBalloon and CurrentBalloon.Balloon.Parent then
-&#9;&#9;&#9;CurrentBalloon.Balloon:Destroy()
-&#9;&#9;end
-&#9;end
+	if Property == "Parent" and not Tool.Parent:IsA("Backpack") and not Players:GetPlayerFromCharacter(Tool.Parent) then
+		if CurrentBalloon and CurrentBalloon.Balloon.Parent then
+			CurrentBalloon.Balloon:Destroy()
+		end
+	end
 end)
 
 ServerControl.OnServerInvoke = OnServerInvoke
 Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="ScreenGui" referent="RBX066113CCA5D0462A9D145FE26669395A">
+			<Item class="ScreenGui" referent="RBX51FBA3505956416E893C5004BBA7C094">
 				<Properties>
 					<string name="Name">Gui</string>
+					<bool name="ResetOnSpawn">true</bool>
 				</Properties>
-				<Item class="Frame" referent="RBXA05DE4A6C475436DBD1465D484E7D0DB">
+				<Item class="Frame" referent="RBX7BA582747ED943E88CAD2234735F784D">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Color3 name="BackgroundColor3">4288914085</Color3>
@@ -919,6 +928,10 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 						<bool name="ClipsDescendants">false</bool>
 						<bool name="Draggable">false</bool>
 						<string name="Name">Frame</string>
+						<Ref name="NextSelectionDown">null</Ref>
+						<Ref name="NextSelectionLeft">null</Ref>
+						<Ref name="NextSelectionRight">null</Ref>
+						<Ref name="NextSelectionUp">null</Ref>
 						<UDim2 name="Position">
 							<XS>0.5</XS>
 							<XO>-135</XO>
@@ -926,6 +939,8 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 							<YO>-180</YO>
 						</UDim2>
 						<float name="Rotation">0</float>
+						<bool name="Selectable">false</bool>
+						<Ref name="SelectionImageObject">null</Ref>
 						<UDim2 name="Size">
 							<XS>0</XS>
 							<XO>270</XO>
@@ -937,7 +952,7 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="TextLabel" referent="RBX0C5F8F511327476682821A44752FF641">
+					<Item class="TextLabel" referent="RBXF0C1EB16C8DC428BAE79D6EB261A78DF">
 						<Properties>
 							<bool name="Active">false</bool>
 							<Color3 name="BackgroundColor3">4288914085</Color3>
@@ -949,6 +964,10 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 							<token name="Font">1</token>
 							<token name="FontSize">5</token>
 							<string name="Name">Message</string>
+							<Ref name="NextSelectionDown">null</Ref>
+							<Ref name="NextSelectionLeft">null</Ref>
+							<Ref name="NextSelectionRight">null</Ref>
+							<Ref name="NextSelectionUp">null</Ref>
 							<UDim2 name="Position">
 								<XS>0</XS>
 								<XO>0</XO>
@@ -956,6 +975,8 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 								<YO>0</YO>
 							</UDim2>
 							<float name="Rotation">0</float>
+							<bool name="Selectable">false</bool>
+							<Ref name="SelectionImageObject">null</Ref>
 							<UDim2 name="Size">
 								<XS>1</XS>
 								<XO>0</XO>
@@ -963,10 +984,11 @@ Tool.Unequipped:connect(Unequipped)</ProtectedString>
 								<YO>0</YO>
 							</UDim2>
 							<token name="SizeConstraint">0</token>
-							<string name="Text">Click to place a Balloon.
-Get into a Balloon to fly it.</string>
+							<string name="Text"><![CDATA[Click to place a Balloon.
+Get into a Balloon to fly it.]]></string>
 							<Color3 name="TextColor3">4293322470</Color3>
 							<bool name="TextScaled">false</bool>
+							<float name="TextSize">14</float>
 							<Color3 name="TextStrokeColor3">4278190080</Color3>
 							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">0</float>
@@ -979,41 +1001,42 @@ Get into a Balloon to fly it.</string>
 					</Item>
 				</Item>
 			</Item>
-			<Item class="Script" referent="RBX3A66DBE2BEF049D18088844F89C62AF6">
+			<Item class="Script" referent="RBX5B57710F0AEA40689AED1A75B41B3EB6">
 				<Properties>
 					<bool name="Disabled">true</bool>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">BalloonScript</string>
-					<ProtectedString name="Source">--Made by Luckymaxer
+					<string name="ScriptGuid">{E959A234-9382-4944-9C90-847157BD7736}</string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Model = script.Parent
-Balloon = Model:FindFirstChild(&quot;Balloon&quot;)
-MainPart = Model:FindFirstChild(&quot;MainPart&quot;)
+Balloon = Model:FindFirstChild("Balloon")
+MainPart = Model:FindFirstChild("MainPart")
 
-Players = game:GetService(&quot;Players&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
 
-Seated = Instance.new(&quot;BoolValue&quot;)
+Seated = Instance.new("BoolValue")
 Seated.Value = false
 
 Seats = {}
 
 function DestroyModel()
-&#9;Debris:AddItem(Model, 0.5)
+	Debris:AddItem(Model, 0.5)
 end
 
-Creator = Model:FindFirstChild(&quot;Creator&quot;)
-IdleDuration = Model:FindFirstChild(&quot;IdleDuration&quot;)
+Creator = Model:FindFirstChild("Creator")
+IdleDuration = Model:FindFirstChild("IdleDuration")
 
-if not Balloon or not MainPart or not Creator or not Creator.Value or not Creator.Value:IsA(&quot;Player&quot;) or not Creator.Value.Parent or not IdleDuration then
-&#9;DestroyModel()
-&#9;return
+if not Balloon or not MainPart or not Creator or not Creator.Value or not Creator.Value:IsA("Player") or not Creator.Value.Parent or not IdleDuration then
+	DestroyModel()
+	return
 end
 
-BalloonWeld = MainPart:FindFirstChild(&quot;BalloonWeld&quot;)
+BalloonWeld = MainPart:FindFirstChild("BalloonWeld")
 if not BalloonWeld then
-&#9;DestroyModel()
-&#9;return
+	DestroyModel()
+	return
 end
 
 Player = Creator.Value
@@ -1022,108 +1045,108 @@ Character = Player.Character
 IdleDuration = IdleDuration.Value
 
 function GetAllConnectedParts(Object)
-&#9;local Parts = {}
-&#9;local function GetConnectedParts(Object)
-&#9;&#9;for i, v in pairs(Object:GetConnectedParts()) do
-&#9;&#9;&#9;local Ignore = false
-&#9;&#9;&#9;for ii, vv in pairs(Parts) do
-&#9;&#9;&#9;&#9;if v == vv then
-&#9;&#9;&#9;&#9;&#9;Ignore = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not Ignore then
-&#9;&#9;&#9;&#9;table.insert(Parts, v)
-&#9;&#9;&#9;&#9;GetConnectedParts(v)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;GetConnectedParts(Object)
-&#9;return Parts
+	local Parts = {}
+	local function GetConnectedParts(Object)
+		for i, v in pairs(Object:GetConnectedParts()) do
+			local Ignore = false
+			for ii, vv in pairs(Parts) do
+				if v == vv then
+					Ignore = true
+				end
+			end
+			if not Ignore then
+				table.insert(Parts, v)
+				GetConnectedParts(v)
+			end
+		end
+	end
+	GetConnectedParts(Object)
+	return Parts
 end
 
 function IdleRemove()
-&#9;local CanRemove = true
-&#9;local RemoveCheck = Seated.Changed:connect(function()
-&#9;&#9;if Seated.Value then
-&#9;&#9;&#9;CanRemove = false
-&#9;&#9;end
-&#9;end)
-&#9;wait(IdleDuration)
-&#9;if RemoveCheck then
-&#9;&#9;RemoveCheck:disconnect()
-&#9;end
-&#9;if CanRemove then
-&#9;&#9;DestroyModel()
-&#9;end
+	local CanRemove = true
+	local RemoveCheck = Seated.Changed:connect(function()
+		if Seated.Value then
+			CanRemove = false
+		end
+	end)
+	wait(IdleDuration)
+	if RemoveCheck then
+		RemoveCheck:disconnect()
+	end
+	if CanRemove then
+		DestroyModel()
+	end
 end
 
 Player.Changed:connect(function(Property)
-&#9;if Property == &quot;Parent&quot; and not Player.Parent then
-&#9;&#9;DestroyModel()
-&#9;elseif Property == &quot;Character&quot; and not Player.Character or not Player.Character.Parent then
-&#9;&#9;DestroyModel()
-&#9;end
+	if Property == "Parent" and not Player.Parent then
+		DestroyModel()
+	elseif Property == "Character" and not Player.Character or not Player.Character.Parent then
+		DestroyModel()
+	end
 end)
 
 for i, v in pairs(Model:GetChildren()) do
-&#9;if v:IsA(&quot;Seat&quot;) then
-&#9;&#9;table.insert(Seats, v)
-&#9;&#9;v.ChildAdded:connect(function(Child)
-&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; then
-&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
-&#9;&#9;&#9;&#9;&#9;Seated.Value = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;&#9;v.ChildRemoved:connect(function(Child)
-&#9;&#9;&#9;if Child:IsA(&quot;JointInstance&quot;) and Child.Name == &quot;SeatWeld&quot; then
-&#9;&#9;&#9;&#9;if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
-&#9;&#9;&#9;&#9;&#9;Seated.Value = false
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
+	if v:IsA("Seat") then
+		table.insert(Seats, v)
+		v.ChildAdded:connect(function(Child)
+			if Child:IsA("JointInstance") and Child.Name == "SeatWeld" then
+				if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+					Seated.Value = true
+				end
+			end
+		end)
+		v.ChildRemoved:connect(function(Child)
+			if Child:IsA("JointInstance") and Child.Name == "SeatWeld" then
+				if ((Child.Part0 and Child.Part0.Parent == Character) or (Child.Part1 and Child.Part1.Parent == Character)) then
+					Seated.Value = false
+				end
+			end
+		end)
+	end
 end
 
 Spawn(function()
-&#9;Seated.Changed:connect(function()
-&#9;&#9;if not Seated.Value then
-&#9;&#9;&#9;IdleRemove()
-&#9;&#9;end
-&#9;end)
-&#9;
-&#9;IdleRemove()
+	Seated.Changed:connect(function()
+		if not Seated.Value then
+			IdleRemove()
+		end
+	end)
+	
+	IdleRemove()
 end)
 
 Spawn(function() --Broken monitor; Will determine whether or not the balloon is intact or in pieces.
-&#9;while true do
-&#9;&#9;if not MainPart.Parent or not Balloon.Parent or (not BalloonWeld.Parent or not BalloonWeld.Part0 or not BalloonWeld.Part0.Parent or not BalloonWeld.Part1 or not BalloonWeld.Part1.Parent) then --The base or balloon of the model is missing, so the balloon is removed.
-&#9;&#9;&#9;DestroyModel()
-&#9;&#9;&#9;break
-&#9;&#9;end
-&#9;&#9;local ConnectedParts = GetAllConnectedParts(MainPart)
-&#9;&#9;for i, v in pairs(Seats) do
-&#9;&#9;&#9;local SeatWelded = false
-&#9;&#9;&#9;for ii, vv in pairs(ConnectedParts) do
-&#9;&#9;&#9;&#9;if v == vv then
-&#9;&#9;&#9;&#9;&#9;SeatWelded = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if not SeatWelded then --If neither seat is attached to the balloon, it is unusable, therefore it is removed.
-&#9;&#9;&#9;&#9;table.remove(Seats, i)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;if #Seats == 0 then
-&#9;&#9;&#9;&#9;DestroyModel()
-&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;wait(1)
-&#9;end
-end)</ProtectedString>
+	while true do
+		if not MainPart.Parent or not Balloon.Parent or (not BalloonWeld.Parent or not BalloonWeld.Part0 or not BalloonWeld.Part0.Parent or not BalloonWeld.Part1 or not BalloonWeld.Part1.Parent) then --The base or balloon of the model is missing, so the balloon is removed.
+			DestroyModel()
+			break
+		end
+		local ConnectedParts = GetAllConnectedParts(MainPart)
+		for i, v in pairs(Seats) do
+			local SeatWelded = false
+			for ii, vv in pairs(ConnectedParts) do
+				if v == vv then
+					SeatWelded = true
+				end
+			end
+			if not SeatWelded then --If neither seat is attached to the balloon, it is unusable, therefore it is removed.
+				table.remove(Seats, i)
+			end
+			if #Seats == 0 then
+				DestroyModel()
+				break
+			end
+		end
+		wait(1)
+	end
+end)]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Model" referent="RBX0F064CFC4CFC4AC98D057C5A80521158">
+		<Item class="Model" referent="RBX2BA06FF18A754959995811B509006FD1">
 			<Properties>
 				<CoordinateFrame name="ModelInPrimary">
 					<X>0</X>
@@ -1142,7 +1165,7 @@ end)</ProtectedString>
 				<string name="Name">DisplayModel</string>
 				<Ref name="PrimaryPart">null</Ref>
 			</Properties>
-			<Item class="Part" referent="RBXADEAD024F2DA4CD88131B6706980595A">
+			<Item class="Part" referent="RBX9FBDA4E2D6D545D18D9A41BE895A7FFA">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1169,6 +1192,9 @@ end)</ProtectedString>
 						<R22>0.557258368</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1210,7 +1236,7 @@ end)</ProtectedString>
 						<Z>0.200000003</Z>
 					</Vector3>
 				</Properties>
-				<Item class="SpecialMesh" referent="RBX7D34DC60B47741B68EB2138FDA107C56">
+				<Item class="SpecialMesh" referent="RBXD1372114FE0F4345ABD9B81AE0B22BC4">
 					<Properties>
 						<token name="LODX">2</token>
 						<token name="LODY">2</token>
@@ -1235,7 +1261,7 @@ end)</ProtectedString>
 						</Vector3>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX141D29023C834E438DE7647F0D8046CE">
+				<Item class="Weld" referent="RBXF0752573F66A41468740B94FBBB082DA">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.5859251</X>
@@ -1266,12 +1292,12 @@ end)</ProtectedString>
 							<R22>0.557262957</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXADEAD024F2DA4CD88131B6706980595A</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBX9FBDA4E2D6D545D18D9A41BE895A7FFA</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXA5F9BCF097AE42C28B8DFF51465AEDB7">
+			<Item class="Part" referent="RBXC39C9C930F864ADC81304B521599F85F">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1298,6 +1324,9 @@ end)</ProtectedString>
 						<R22>0.557258427</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1339,7 +1368,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX05C18DDA3B284503AC9A5E4C999DB87D">
+				<Item class="Weld" referent="RBX87D7BBC186E64EBE9132ABF04B6EA335">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.5859251</X>
@@ -1370,12 +1399,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXA5F9BCF097AE42C28B8DFF51465AEDB7</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBXC39C9C930F864ADC81304B521599F85F</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXCD2D085BA9624468946178CDFE477715">
+			<Item class="Part" referent="RBXC2ADC4BECA114D998B287F3C6452621F">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1402,6 +1431,9 @@ end)</ProtectedString>
 						<R22>0.557258189</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1443,7 +1475,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX036E5F91BE22489FBA61008CD90DAE1A">
+				<Item class="Weld" referent="RBX3B2938C912844EB4A108D7C8CFFFCCC7">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58594131</X>
@@ -1474,12 +1506,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXCD2D085BA9624468946178CDFE477715</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBXC2ADC4BECA114D998B287F3C6452621F</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXB63A66B0C6724690BFF2ABD30E129BA6">
+			<Item class="Part" referent="RBX5ABD96C4C74E4A7A9B027517085F5004">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1506,6 +1538,9 @@ end)</ProtectedString>
 						<R22>0.55725801</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1547,7 +1582,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBXC63680B8919D4AC6A233275E2FF1D4E3">
+				<Item class="Weld" referent="RBX2A217B2DAE974CFFB6DEC3BE09A8BA84">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58594131</X>
@@ -1578,12 +1613,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXB63A66B0C6724690BFF2ABD30E129BA6</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBX5ABD96C4C74E4A7A9B027517085F5004</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXECD28F68BA3E424F98A9FB7A20838E98">
+			<Item class="Part" referent="RBX42BB788DEA334094B8639D1751C16CE8">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1610,6 +1645,9 @@ end)</ProtectedString>
 						<R22>0.557257891</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1651,7 +1689,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX41972A71E48746C88D9D6D44584EE4DC">
+				<Item class="Weld" referent="RBX09C6FC6DDBFB467495A0B3AEBFB7682B">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58594513</X>
@@ -1682,12 +1720,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXECD28F68BA3E424F98A9FB7A20838E98</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBX42BB788DEA334094B8639D1751C16CE8</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXB0D8F60F42FD43759E308794AB50D128">
+			<Item class="Part" referent="RBXC34155EBBBFD4ECC8D892091CB72F964">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1714,6 +1752,9 @@ end)</ProtectedString>
 						<R22>0.557257831</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1755,7 +1796,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX44BEA3F3A6704427B43562DA8A3901E7">
+				<Item class="Weld" referent="RBXA4FF5D361C8E422695214D7EEB1F8A01">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58594418</X>
@@ -1786,12 +1827,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXB0D8F60F42FD43759E308794AB50D128</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBXC34155EBBBFD4ECC8D892091CB72F964</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXA87BB48FB0C34505B5D823AA9E973B58">
+			<Item class="Part" referent="RBX77191D1F27E240B59D735875CD66C4A2">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1818,6 +1859,9 @@ end)</ProtectedString>
 						<R22>0.557257652</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1859,7 +1903,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX47DF2DD8366D4326ABC1383D428D0820">
+				<Item class="Weld" referent="RBX3E48305EC04C4134AC3468887C106EA0">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58594513</X>
@@ -1890,12 +1934,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXA87BB48FB0C34505B5D823AA9E973B58</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBX77191D1F27E240B59D735875CD66C4A2</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX4695562C6B4347699857FFE1BE31BE1A">
+			<Item class="Part" referent="RBX5E5CD7A92C444F8497F7EA7675501B01">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -1911,17 +1955,20 @@ end)</ProtectedString>
 						<X>0.168397903</X>
 						<Y>37.5901756</Y>
 						<Z>39.096653</Z>
-						<R00>0.557250619</R00>
-						<R01>3.65078449e-007</R01>
-						<R02>-0.830327928</R02>
-						<R10>-8.30739737e-007</R10>
-						<R11>1.00000691</R11>
-						<R12>0</R12>
-						<R20>0.830331564</R20>
-						<R21>-2.23517418e-007</R21>
-						<R22>0.557257533</R22>
+						<R00>0.55725652</R00>
+						<R01>8.18070703e-007</R01>
+						<R02>-0.830340385</R02>
+						<R10>-8.30748547e-007</R10>
+						<R11>1</R11>
+						<R12>4.27692896e-007</R12>
+						<R20>0.830340385</R20>
+						<R21>4.51469361e-007</R21>
+						<R22>0.55725652</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -1963,7 +2010,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBXCEC96F4F66E347FAA22CA16B3DDE2535">
+				<Item class="Weld" referent="RBX9A23BF5BF4C04B7DB66B2F09A174BFF2">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58597755</X>
@@ -1994,12 +2041,12 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBX4695562C6B4347699857FFE1BE31BE1A</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBX5E5CD7A92C444F8497F7EA7675501B01</Ref>
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXDE48795824FB479190C851835765DCC6">
+			<Item class="Part" referent="RBX3A251AE6D93A46F38FE280A93ACAADE3">
 				<Properties>
 					<bool name="Anchored">false</bool>
 					<float name="BackParamA">-0.5</float>
@@ -2026,6 +2073,9 @@ end)</ProtectedString>
 						<R22>0.557259798</R22>
 					</CoordinateFrame>
 					<bool name="CanCollide">false</bool>
+					<PhysicalProperties name="CustomPhysicalProperties">
+						<CustomPhysics>false</CustomPhysics>
+					</PhysicalProperties>
 					<float name="Elasticity">0.5</float>
 					<float name="Friction">0.300000012</float>
 					<float name="FrontParamA">-0.5</float>
@@ -2067,7 +2117,7 @@ end)</ProtectedString>
 						<Z>1</Z>
 					</Vector3>
 				</Properties>
-				<Item class="Weld" referent="RBX7C6310E906864D22A423A9AC2A398B13">
+				<Item class="Weld" referent="RBXF72286B5DB6E4264B26265F9233A068B">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-8.58601093</X>
@@ -2098,47 +2148,11 @@ end)</ProtectedString>
 							<R22>0.557263017</R22>
 						</CoordinateFrame>
 						<string name="Name">Weld</string>
-						<Ref name="Part0">RBX01DE3ED0062C4E7FB4E348786A7BCE20</Ref>
-						<Ref name="Part1">RBXDE48795824FB479190C851835765DCC6</Ref>
+						<Ref name="Part0">RBX5C4AF714CC52402F82AB51E9183233C5</Ref>
+						<Ref name="Part1">RBX3A251AE6D93A46F38FE280A93ACAADE3</Ref>
 					</Properties>
 				</Item>
 			</Item>
-		</Item>
-		<Item class="Camera" referent="RBXEE4F9A9105F04A1299766479BDAC285B">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>26.6539898</X>
-					<Y>13.0732279</Y>
-					<Z>3.46404076</Z>
-					<R00>-0.564961553</R00>
-					<R01>0.124336459</R01>
-					<R02>0.815695345</R02>
-					<R10>-7.4505806e-009</R10>
-					<R11>0.988581181</R11>
-					<R12>-0.150689453</R12>
-					<R20>-0.82511723</R20>
-					<R21>-0.0851337537</R21>
-					<R22>-0.558510363</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>21.0420074</X>
-					<Y>14.109971</Y>
-					<Z>7.30659103</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
-			</Properties>
 		</Item>
 	</Item>
 </roblox>
