@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0436FDC63AFD4FB2B3F4D2F109D76169">
+	<Item class="Tool" referent="RBXC9035561ADD14207A4075094A3F6C661">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -21,15 +21,18 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">ChickThrowingStars</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=225559084 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBXC668C5AE7A374E76926D836E64D869EF">
+		<Item class="Script" referent="RBX2CB91843CF664943A829D584E1E10D27">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Server</string>
-				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
+				<string name="ScriptGuid">{2F338572-5492-45B3-B398-1C8421F021AC}</string>
+				<ProtectedString name="Source"><![CDATA[--Updated for R15 avatars by StarWars
+local Tool = script.Parent
 local Remote = Tool:WaitForChild("Remote")
 local Handle = Tool:WaitForChild("Handle")
 
@@ -40,6 +43,8 @@ local AttackDamage = 22.5
 local AtackRechargeTime = 1.5
 local AttackRecharge = 1/AtackRechargeTime
 local AttackSpeed = 256
+
+local Humanoid = nil
 
 local Equipped = false
 local Heartbeat = game:GetService("RunService").Heartbeat
@@ -169,9 +174,15 @@ function onLeftDown(mousePos)
 		knife.Transparency = 1
 		knife.Fire.Enabled = false
 	end)
-	
-	Remote:FireClient(getPlayer(), "PlayAnimation", "Throw")	
-	
+
+	if Humanoid then
+		if Humanoid.RigType == Enum.HumanoidRigType.R15 then
+			Remote:FireClient(getPlayer(), "PlayAnimation", "R15Throw")
+		elseif Humanoid.RigType == Enum.HumanoidRigType.R6 then
+			Remote:FireClient(getPlayer(), "PlayAnimation", "Throw")
+		end
+	end	
+		
 	Handle.Throw.Pitch = 0.8 + 0.4 * AttackPower
 	Handle.Throw:Play()
 	
@@ -189,6 +200,7 @@ function onRemote(player, func, ...)
 end
 
 function onEquip()
+	Humanoid = Tool.Parent:FindFirstChild("Humanoid")
 	Equipped = true
 	equippedLoop()
 end
@@ -205,11 +217,12 @@ changeMesh()
 ]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX4D28EAFD84654AB78E28D1AD954E2D3D">
+		<Item class="LocalScript" referent="RBX26A3C7CE845D467CAA1F8866CA1324BA">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Client</string>
+				<string name="ScriptGuid"></string>
 				<ProtectedString name="Source"><![CDATA[local Player = game:GetService("Players").LocalPlayer
 local UIS = game:GetService("UserInputService")
 local Mouse = Player:GetMouse()
@@ -280,18 +293,18 @@ Tool.Unequipped:connect(onUnequip)
 Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="RemoteEvent" referent="RBXF76C190FF6954B3C9AF88461ACE9A2C4">
+		<Item class="RemoteEvent" referent="RBX0F1AA0C90DF34CC79A0A4B89E80FE3E0">
 			<Properties>
 				<string name="Name">Remote</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBXFD69B5FC6FC44802944EB0EC25A7DCC9">
+		<Item class="Animation" referent="RBX56D4A2318C364EE98396A76C3A702BE4">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=207107855</url></Content>
 				<string name="Name">Throw</string>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXFE66F1EAFAA348DBADDC71D66F6C1009">
+		<Item class="Part" referent="RBXB01175AACA4A4363AE39AC29FA951073">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -318,6 +331,9 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<R22>0.707106709</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -359,7 +375,7 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<Z>2</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX3DBCF1BD6D414AA1866D82C2665C702F">
+			<Item class="SpecialMesh" referent="RBX16F1742531C44305B4E04AC575172682">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -384,27 +400,39 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXEDCEDEAA73564F0D9A7ECC9EC9650595">
+			<Item class="Sound" referent="RBXFC1C82C77FD2493DAE83C382F576CC86">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Throw</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://97095069</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX323DCC9475F547D990E9692BFE63D613">
+			<Item class="Sound" referent="RBXA34BBA02E3EC465498CB18A2DD71267D">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Hit</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://93005921</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Fire" referent="RBX1742C048CE0747A69A037B50EEBC87A9">
+			<Item class="Fire" referent="RBX2CD18D8C138944DABEAC58308310F10C">
 				<Properties>
 					<Color3 name="Color">4294967040</Color3>
 					<bool name="Enabled">false</bool>
@@ -415,11 +443,12 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX7F17722821834AAB80A73117D25B0077">
+		<Item class="Script" referent="RBXFAA0C93FECCB44DFA0DDE507BB666678">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Projectile</string>
+				<string name="ScriptGuid"></string>
 				<ProtectedString name="Source"><![CDATA[local Projectile = script.Parent
 local Heartbeat = game:GetService("RunService").Heartbeat
 
@@ -429,40 +458,10 @@ end
 ]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX181C51567FC74E649170CDD8ADD6BD1E">
+		<Item class="Animation" referent="RBX1EE0230C65284EBF9EB182E236D22A50">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>8.91701603</X>
-					<Y>27.4294052</Y>
-					<Z>30.8748665</Z>
-					<R00>0.893015027</R00>
-					<R01>-0.152031094</R01>
-					<R02>-0.423568875</R02>
-					<R10>1.49011594e-008</R10>
-					<R11>0.941208243</R11>
-					<R12>-0.337826788</R12>
-					<R20>0.450026691</R20>
-					<R21>0.301684409</R21>
-					<R22>0.840513229</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>9.59472466</X>
-					<Y>27.9699268</Y>
-					<Z>29.5300484</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<Content name="AnimationId"><url>rbxassetid://536516422</url></Content>
+				<string name="Name">R15Throw</string>
 			</Properties>
 		</Item>
 	</Item>
