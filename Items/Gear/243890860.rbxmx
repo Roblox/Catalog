@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX22ECA4CBE6794934ABB363861767AC8D">
+	<Item class="Tool" referent="RBXC988FE38D330432A9AB8702A155A2992">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -21,10 +21,11 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">CyborgFlintlock</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=243749133</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Part" referent="RBX1C7E78D0958045359E4D2D552C300953">
+		<Item class="Part" referent="RBX6A49793A543F48789494731130166D6F">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -51,6 +52,9 @@
 					<R22>0.999999881</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -92,7 +96,7 @@
 					<Z>2.75</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX1E71AFFEAEA3442397E61801AA241572">
+			<Item class="SpecialMesh" referent="RBX43393AF95FB04F24BC9FDFA8DC36A67D">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -117,23 +121,31 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX466A10B0AF3E46ABABE1B4134EB8658B">
+			<Item class="Sound" referent="RBX87C759B76BAA4DB7A284C8A9B3329FDD">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
-					<float name="Pitch">4</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">4</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=114488148</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX79CB88881D0E488D83CDC41CE1BF9F0F">
+		<Item class="Script" referent="RBX52F1981298D749C1BC69548AF8DEF59F">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Script</string>
+				<string name="ScriptGuid">{4F5A8D7C-48F3-400C-A16A-F2C402E1CF70}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatar by StarWars
 
 Tool = script.Parent
 Handle = Tool:WaitForChild("Handle")
@@ -179,11 +191,14 @@ BaseLaserMesh.Parent = BaseLaser
 
 Animations = {
 	Hold = {Animation = Tool:WaitForChild("Hold"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+	R15Hold = {Animation = Tool:WaitForChild("R15Hold"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
 }
 
 Sounds = {
 	Fire = Handle:WaitForChild("Fire"),
 }
+
+R15GripRight = Vector3.new(0.615, 0, -0.788)
 
 Rate = (1 / 60)
 
@@ -333,13 +348,30 @@ function Equipped()
 	Player = Players:GetPlayerFromCharacter(Character)
 	Humanoid = Character:FindFirstChild("Humanoid")
 	Head = Character:FindFirstChild("Head")
+	if Humanoid then
+		if Humanoid.RigType == Enum.HumanoidRigType.R15 then
+			Tool.GripRight = R15GripRight
+		elseif Humanoid.RigType == Enum.HumanoidRigType.R6 then
+			Tool.GripRight = Vector3.new(1, 0, 0)
+		end
+	end
 	if not CheckIfAlive() then
 		return
 	end
 	Spawn(function()
-		InvokeClient("PlayAnimation", Animations.Hold)
+		if Humanoid then
+			if Humanoid.RigType == Enum.HumanoidRigType.R6 then
+				InvokeClient("PlayAnimation", Animations.Hold)
+			elseif Humanoid.RigType == Enum.HumanoidRigType.R15 then
+				InvokeClient("PlayAnimation", Animations.R15Hold)				
+			end
+		end
 	end)
-	for i, v in pairs({"Left Arm", "Right Arm"}) do
+	local limbs = {"Left Arm", "Right Arm"}
+	if Humanoid and Humanoid.RigType == Enum.HumanoidRigType.R15 then
+		limbs = {"RightUpperArm", "RightLowerArm", "RightHand", "LeftHand", "LeftLowerArm", "LeftUpperArm"}
+	end
+	for i, v in pairs(limbs) do
 		local Arm = Character:FindFirstChild(v)
 		if Arm then
 			Spawn(function()
@@ -376,10 +408,11 @@ Tool.Activated:connect(Activated)
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
-			<Item class="ModuleScript" referent="RBX8CF31CA7E69347899A07B9D178229593">
+			<Item class="ModuleScript" referent="RBX6BFA401CA3D549F9A9FC25C5A7E3CD21">
 				<Properties>
 					<Content name="LinkedSource"><null></null></Content>
 					<string name="Name">Functions</string>
+					<string name="ScriptGuid"></string>
 					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Debris = game:GetService("Debris")
@@ -506,11 +539,12 @@ return Functions]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBXC14B762873894A1CB8D1CE884B18A4C6">
+		<Item class="LocalScript" referent="RBXF81D2ADAEE6B49B5A86428F7C9B5C7A2">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid"></string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Tool = script.Parent
@@ -646,11 +680,12 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBXB1ED8399B44C44A1BE1089076723799D">
+		<Item class="LocalScript" referent="RBX8E38B61BA2694FC9BB2E34E14EE0F18A">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
+				<string name="ScriptGuid"></string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Mouse_Icon = "rbxasset://textures/GunCursor.png"
@@ -682,18 +717,20 @@ Tool.Changed:connect(OnChanged)
 ]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX78585D2043A34973ACD3719DE46D3535">
+		<Item class="Animation" referent="RBXACDD0F8E6C7440518ADDA36F5DFC3CFD">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=243881876</url></Content>
 				<string name="Name">Hold</string>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBXF78D240607254E0FBBA9487A09B49B50">
+		<Item class="Script" referent="RBX783B7661BC2848EFB2A6973E04799DE6">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MotorizeGrip</string>
+				<string name="ScriptGuid">{E2618D25-2527-4F75-B56C-ACCCB25D520A}</string>
 				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+--Updated for R15 avatar by StarWars
 
 Tool = script.Parent
 Handle = Tool:WaitForChild("Handle")
@@ -721,7 +758,7 @@ function Equipped()
 			ToolUnequipped:disconnect()
 		end
 	end)
-	local RightArm = Character:FindFirstChild("Right Arm")
+	local RightArm = Character:FindFirstChild("Right Arm") or Character:FindFirstChild("RightHand")
 	if RightArm then
 		local RightGrip = RightArm:WaitForChild("RightGrip")
 		if RightGrip and CurrentlyEquipped and CurrentlyEquipped then
@@ -754,40 +791,10 @@ Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBXC5E89D9A1E794445A7694CEA0A605EC8">
+		<Item class="Animation" referent="RBX2FD0045390A74D7282248A19252B74C5">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>2.10555196</X>
-					<Y>0.327912003</Y>
-					<Z>-0.206824541</Z>
-					<R00>-0.0544232428</R00>
-					<R01>-0.0895036831</R01>
-					<R02>0.994498491</R02>
-					<R10>4.65661343e-010</R10>
-					<R11>0.99597466</R11>
-					<R12>0.0896365196</R12>
-					<R20>-0.99851805</R20>
-					<R21>0.00487831049</R21>
-					<R22>-0.0542041622</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-0.122123241</X>
-					<Y>0.127126336</Y>
-					<Z>-0.0854073018</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<Content name="AnimationId"><url>rbxassetid://529705604</url></Content>
+				<string name="Name">R15Hold</string>
 			</Properties>
 		</Item>
 	</Item>
