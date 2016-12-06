@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX13C174D1D6784C0E8C2864A23F95BDBF">
+	<Item class="Tool" referent="RBXF6A8EB5733CD41D39B38A29BD1C38C46">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -21,15 +21,19 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">BunnyEaredSai</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>rbxassetid://230849491</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBXAF5539AB5A9543CCADB9B4A0059F7F6A">
+		<Item class="Script" referent="RBXDE1E61D609D9432BA194CA1F855F87E2">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Server</string>
-				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent
+				<string name="ScriptGuid">{8FAFDFFE-E0AF-49D3-9CFC-DD3DB7016B8E}</string>
+				<ProtectedString name="Source"><![CDATA[--Updated for R15 avatar by StarWars
+
+local Tool = script.Parent
 local Remote = Tool:WaitForChild("Remote")
 local Handle = Tool:WaitForChild("Handle")
 
@@ -137,6 +141,7 @@ end
 
 function airAttack()
 	local root = Tool.Parent:FindFirstChild("HumanoidRootPart")
+	local humanoid = Tool.Parent:FindFirstChild("Humanoid")
 	if root then
 		if canDropAttack() then
 			root.Velocity = Vector3.new(0, -160, 0)
@@ -166,14 +171,26 @@ function airAttack()
 				end)
 				e.Parent = workspace
 				
-				Remote:FireClient(getPlayer(), "StopAnimation", "Fall")
+				if humanoid then
+					if humanoid.RigType == Enum.HumanoidRigType.R6 then
+						Remote:FireClient(getPlayer(), "StopAnimation", "Fall")
+					elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+						Remote:FireClient(getPlayer(), "StopAnimation", "R15Fall")
+					end
+				end
 				playSound("Hit")
 			end)
 			
 			DropAttackTimer = 0
 			AttackRestTimer = AttackRestTimer + 1
 			
-			Remote:FireClient(getPlayer(), "PlayAnimation", "Fall")
+			if humanoid then
+				if humanoid.RigType == Enum.HumanoidRigType.R6 then
+					Remote:FireClient(getPlayer(), "PlayAnimation", "Fall")
+				elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+					Remote:FireClient(getPlayer(), "PlayAnimation", "R15Fall")
+				end
+			end
 			playSound("Whoosh")
 		else
 			root.Velocity = Vector3.new(0, 96, 0)
@@ -181,14 +198,27 @@ function airAttack()
 			DropAttackTimer = 2.5
 			AttackRestTimer = AttackRestTimer + 0.5
 			
-			Remote:FireClient(getPlayer(), "PlayAnimation", "Jump", nil, nil, 2)
+			if humanoid then
+				if humanoid.RigType == Enum.HumanoidRigType.R6 then
+					Remote:FireClient(getPlayer(), "PlayAnimation", "Jump", nil, nil, 2)
+				elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+					Remote:FireClient(getPlayer(), "PlayAnimation", "R15Jump", nil, nil, 2)
+				end
+			end
 			playSound("Jump")
 		end
 	end
 end
 
 function groundAttack()
-	Remote:FireClient(getPlayer(), "PlayAnimation", "Swing", nil, nil, math.random(90, 110) / 100)
+	local humanoid = Tool.Parent:FindFirstChild("Humanoid")
+	if humanoid then
+		if humanoid.RigType == Enum.HumanoidRigType.R6 then
+			Remote:FireClient(getPlayer(), "PlayAnimation", "Swing", nil, nil, math.random(90, 110) / 100)
+		elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+			Remote:FireClient(getPlayer(), "PlayAnimation", "R15Swing", nil, nil, math.random(90, 110) / 100)
+		end
+	end
 	playSound("Swing")
 	
 	AttackRestTimer = AttackRestTimer + 0.25
@@ -240,14 +270,14 @@ end
 function onEquip()
 	HeartbeatConnection = Heartbeat:connect(onHeartbeat)
 	Spawn(function()
-	local LeftArm = Tool.Parent:FindFirstChild("Left Arm") --Fix implemented by Luckymaxer
+	local LeftArm = Tool.Parent:FindFirstChild("Left Arm") or Tool.Parent:FindFirstChild("LeftHand") --Fix implemented by Luckymaxer
 		if LeftArm then
 			FakeHandle = Handle:Clone()
 			FakeHandle.Name = "FakeHandle"
 			local LeftGrip = Instance.new("Weld")
 			LeftGrip.Part0 = LeftArm
 			LeftGrip.Part1 = FakeHandle
-			LeftGrip.C0 = CFrame.new(0, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
+			LeftGrip.C0 = CFrame.new(0, (LeftArm.Name == "LeftHand" and -0.15) or -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, -0)
 			LeftGrip.C1 = Tool.Grip
 			LeftGrip.Parent = FakeHandle
 			FakeHandle.Touched:connect(onHandleTouched)
@@ -273,11 +303,12 @@ Handle.Touched:connect(onHandleTouched)
 ]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX5A31036E011D47099318BED3FC15682B">
+		<Item class="LocalScript" referent="RBX85F82DEAEE654F64B27EAF2505D31FFC">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Client</string>
+				<string name="ScriptGuid">{31607664-21BA-41C7-99E4-9C33A0FFCE6F}</string>
 				<ProtectedString name="Source"><![CDATA[local Player = game:GetService("Players").LocalPlayer
 local UIS = game:GetService("UserInputService")
 local Mouse = Player:GetMouse()
@@ -348,12 +379,12 @@ Tool.Unequipped:connect(onUnequip)
 Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="RemoteEvent" referent="RBX6EA43D47F2354212B7212425003A82C1">
+		<Item class="RemoteEvent" referent="RBX1F7C39E5B3644430BB793BEB4566ECA5">
 			<Properties>
 				<string name="Name">Remote</string>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX39B5BB187234418C9692488D1D62C30B">
+		<Item class="Part" referent="RBX818284CA20AC4408959E9BC4425BA829">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -380,6 +411,9 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<R22>0.707719564</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -421,7 +455,7 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX57D4F3F8A10344EF96EB1FE1A2044A12">
+			<Item class="SpecialMesh" referent="RBX778CB74279074A288E1BB26808887D55">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -446,76 +480,106 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX477F2223AFDF41D08A6B49B38D8AFA61">
+			<Item class="Sound" referent="RBX571A989B32E044C89F7EA7353DF85AE4">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Jump</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://107433821</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX76F4AAFD11BA48CCA8006C20004EE00E">
+			<Item class="Sound" referent="RBX3C6EE6BBC1AC447DA3B897D8206E69E6">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Whoosh</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://25874790</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX35C75BAFDFA543C186C4F02F761456E3">
+			<Item class="Sound" referent="RBX4CA3D2CB1F4A4211B1E06C6CB86907BD">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Hit</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://124254994</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXDBAA451813A441A099BDEA8C550AF0D1">
+			<Item class="Sound" referent="RBXB9B12977ECA647648EC66C3772E178BC">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Swing</string>
-					<float name="Pitch">0.930000007</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">0.930000007</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://92597369</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXBB53896AD2634A2492DA16873CC30BC9">
+			<Item class="Sound" referent="RBX01BBFB866A34456ABF8E1E52F9BBC2D1">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">FleshHit</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://93005921</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX11A99BB3E9D34DDEBED09EB425CF3D9C">
+		<Item class="Animation" referent="RBXFB02155D007644D28102009FC32F9F5E">
 			<Properties>
 				<Content name="AnimationId"><url>rbxassetid://233064613</url></Content>
 				<string name="Name">Jump</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX6D5EEBAC41184EDDB7EEC5CD419F1142">
+		<Item class="Animation" referent="RBXEE10A05DED24479F87999471E182D0B3">
 			<Properties>
 				<Content name="AnimationId"><url>rbxassetid://233322916</url></Content>
 				<string name="Name">Fall</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBXF97E5AA07BAC4E9A881FF2CEBEEE8363">
+		<Item class="Animation" referent="RBX35D9F8428567411694C518FF1BF4560F">
 			<Properties>
 				<Content name="AnimationId"><url>rbxassetid://233329237</url></Content>
 				<string name="Name">Swing</string>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX27D5D678308447B9A193E170477A0A36">
+		<Item class="Part" referent="RBX257ED0031AEB4E1FA2D638405B89D6F7">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -542,6 +606,9 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<R22>0.707106709</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -583,7 +650,7 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX6552427057684C878A60A59D6C450EB7">
+			<Item class="SpecialMesh" referent="RBX30C49D9F391F400BA74951FA2AFA8CD6">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -608,57 +675,87 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXEA79B127E0CA47138A8F2CA5DB187898">
+			<Item class="Sound" referent="RBXE6CF96AE692745D09574A12C043BA572">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Jump</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://107433821</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX58D8F6CF009A4B6582313E815520F31A">
+			<Item class="Sound" referent="RBX00F1D4CA5E534CFAA110ECDC068963C1">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Whoosh</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://25874790</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXC38E6B576B5A42E5A2698A8A5A869C1A">
+			<Item class="Sound" referent="RBX7A4A0CA8DE0745359DA43F9CBB9A8577">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Hit</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://124254994</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXAC9252B885C949BEA76FD0696A56F5A8">
+			<Item class="Sound" referent="RBXE027B238FF014316B496B80CB50F2C9C">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Swing</string>
-					<float name="Pitch">0.930000007</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">0.930000007</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://92597369</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX438046ACFF564FD7AF402E077D11698D">
+			<Item class="Sound" referent="RBXF1E88150942B468F96B5F40CDF414890">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">FleshHit</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxassetid://93005921</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Weld" referent="RBX13C0DC6F82BD4D749147AA42D29D3C3A">
+			<Item class="Weld" referent="RBX8B6A336B3CFE4958BA098550D1238F92">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>14.5452633</X>
@@ -689,45 +786,27 @@ Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
 						<R22>0.793475747</R22>
 					</CoordinateFrame>
 					<string name="Name">Weld</string>
-					<Ref name="Part0">RBX39B5BB187234418C9692488D1D62C30B</Ref>
-					<Ref name="Part1">RBX27D5D678308447B9A193E170477A0A36</Ref>
+					<Ref name="Part0">RBX818284CA20AC4408959E9BC4425BA829</Ref>
+					<Ref name="Part1">RBX257ED0031AEB4E1FA2D638405B89D6F7</Ref>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX93EAFFF82262408F8B4F39FCCDC8A674">
+		<Item class="Animation" referent="RBX8591A4F2E6DE453496C13388F937E86D">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-3.0151701</X>
-					<Y>15.8171749</Y>
-					<Z>22.53479</Z>
-					<R00>-0.136658639</R00>
-					<R01>-0.264238</R01>
-					<R02>-0.954726517</R02>
-					<R10>-0</R10>
-					<R11>0.963768423</R11>
-					<R12>-0.266740501</R12>
-					<R20>0.990618229</R20>
-					<R21>-0.036452394</R21>
-					<R22>-0.131707266</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-1.02937043</X>
-					<Y>16.3719864</Y>
-					<Z>22.8087368</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+				<Content name="AnimationId"><url>rbxassetid://530913441</url></Content>
+				<string name="Name">R15Fall</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX4720CCAA23A048FC90D87814D2B024CA">
+			<Properties>
+				<Content name="AnimationId"><url>rbxassetid://530910568</url></Content>
+				<string name="Name">R15Jump</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBX1FB054C9A2DC45B78ACFE20295E767CC">
+			<Properties>
+				<Content name="AnimationId"><url>rbxassetid://530872879</url></Content>
+				<string name="Name">R15Swing</string>
 			</Properties>
 		</Item>
 	</Item>
