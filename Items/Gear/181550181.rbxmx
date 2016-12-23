@@ -1,481 +1,31 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXcdb37d963e43489f997c99e385dd86a1">
+	<Item class="Tool" referent="RBX938D53D90EB54021B6C9371817770A11">
 		<Properties>
-			<bool name="CanBeDropped">false</bool>
+			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
 			<CoordinateFrame name="Grip">
 				<X>0</X>
-				<Y>-0.400000006</Y>
-				<Z>0.899999976</Z>
-				<R00>0.866025388</R00>
+				<Y>-1.25</Y>
+				<Z>0</Z>
+				<R00>1</R00>
 				<R01>0</R01>
-				<R02>0.5</R02>
+				<R02>0</R02>
 				<R10>0</R10>
 				<R11>1</R11>
 				<R12>0</R12>
-				<R20>-0.5</R20>
+				<R20>0</R20>
 				<R21>0</R21>
-				<R22>0.866025388</R22>
+				<R22>1</R22>
 			</CoordinateFrame>
-			<string name="Name">RapidCandyLauncher</string>
-			<Content name="TextureId"><url>http://www.roblox.com/asset?id=180622107</url></Content>
-			<string name="ToolTip">Rapid Fire Candy Launcher</string>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">FireAxe</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=582117571</url></Content>
+			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="Script" referent="RBX2bdc65fa3c8a44c4a754aae4a124c1c1">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">RapidCandyLauncherServerScript</string>
-				<ProtectedString name="Source">-- Made by SolarCrane
-
-local Tool = script.Parent
-local Handle = nil
-
-local RS = game:GetService(&apos;ReplicatedStorage&apos;)
-local Debris = game:GetService(&apos;Debris&apos;)
-local Utility = require(RS:WaitForChild(&apos;Utility&apos;))
-local PlayersService = game:GetService(&quot;Players&quot;)
-local MyPlayer = nil
-
-local Character = nil
-
-local SHOOT_VELOCITY = 150
-local DEBRIS_TIME = 1.2
-local COOLDOWN = 0.3
-local TIME_BEFORE_RELEASE = 0.08
-
-local NextCandyIndex = 1
-
-local LastShot = tick()
-
-local CANDY_MESHES =
-{
-&#9;--179536104; --BloxyDrops
-&#9;--179536148; -- Bloxroll
-&#9;179536189; --BlueDark
-&#9;179536223; --BlueLight
-&#9;179536243; --Green
-&#9;179536282; --Orange
-&#9;179536309; --Pink
-&#9;179536326; -- Purple
-&#9;179536343; --Red
-&#9;179536364; --Yellow
-&#9;--179536390; --Chocoblox
-&#9;--179536422; --MrBloxBar
-}
-local CANDY_TX = &quot;http://www.roblox.com/asset/?id=179535876&quot;
-
-local BP_MESH = &quot;http://www.roblox.com/asset/?id=179522694&quot;
-local BP_TX = &quot;http://www.roblox.com/asset/?id=179522826&quot;
-
-local RequestShootServer = Tool:WaitForChild(&apos;RequestShootServer&apos;)
-local CandyPrefabScript = script:WaitForChild(&apos;CandyProjectileScript&apos;)
-
-local Backpack = nil
-
-local Equipped = false
-
-local function CreateProjectile()
-&#9;local projectile = Utility.Create&apos;Part&apos;
-&#9;{
-&#9;&#9;Name = &apos;Projectile&apos;;
-&#9;&#9;TopSurface = &apos;Smooth&apos;;
-&#9;&#9;BottomSurface = &apos;Smooth&apos;;
-&#9;&#9;RotVelocity = Vector3.new(Utility.Random(-math.pi,math.pi),Utility.Random(-math.pi,math.pi),Utility.Random(-math.pi,math.pi)) * 8;
-&#9;&#9;Utility.Create&apos;SpecialMesh&apos;{
-&#9;&#9;&#9;MeshId = &quot;http://www.roblox.com/asset/?id=&quot; .. tostring(CANDY_MESHES[NextCandyIndex]);
-&#9;&#9;&#9;TextureId = CANDY_TX;
-&#9;&#9;&#9;Scale = Vector3.new(7,7,7);
-&#9;&#9;}
-&#9;}
-&#9;projectile.FormFactor = &apos;Custom&apos;
-&#9;projectile.Size = Vector3.new(2,2,2)
-&#9;Utility.Create&apos;BodyForce&apos;
-&#9;{
-&#9;&#9;Name = &quot;FloatForce&quot;;
-&#9;&#9;force = Vector3.new(0,projectile:GetMass() * 196.2 * 0.85,0);
-&#9;&#9;Parent = projectile;
-&#9;}
-&#9;
-&#9;local newCandyScript = CandyPrefabScript:Clone()
-&#9;local ownerTag = newCandyScript:WaitForChild(&apos;Owner&apos;)
-&#9;ownerTag.Value = MyPlayer
-&#9;newCandyScript.Parent = projectile
-&#9;newCandyScript.Disabled = false
-&#9;
-&#9;return projectile
-end
-
-local function GetShootOrigin()
-&#9;if Handle then
-&#9;&#9;return Handle.CFrame.p + Handle.CFrame.lookVector
-&#9;end
-end
-
-local debounce = false
-local function OnShoot(player, desiredShootRay, localTime, desiredTarget, desiredTargetPosition)
-&#9;-- Someone else is trying to call shoot on my weapon; GET DENIED
-&#9;if player ~= MyPlayer then return end
-&#9;
-&#9;local now = tick()
-&#9;if now - LastShot &lt; COOLDOWN then
-&#9;&#9;return
-&#9;end
-&#9;if debounce then return end
-&#9;debounce = true
-&#9;local timeDiff = (tick() - localTime)
-&#9;local timeToWait = Utility.Clamp(0, TIME_BEFORE_RELEASE, TIME_BEFORE_RELEASE - timeDiff)
-&#9;--spawn(function() error(&quot;Time diff: &quot; .. tick() .. &quot; &quot; .. localTime .. &quot; diff:&quot; .. (tick() - localTime) .. &quot; time to wait &quot; .. timeToWait) end)
-&#9;wait(timeToWait) -- wait for before candy release
-&#9;if Equipped and Handle and Utility.CanFire(MyPlayer) then
-&#9;&#9;local adjustedShootVector = desiredShootRay.Direction
-&#9;&#9;local shootOrigin = GetShootOrigin()
-&#9;&#9;if desiredTarget and desiredTargetPosition then
-&#9;&#9;&#9;local deltaOffset = desiredTarget:GetModelCFrame().p - desiredTargetPosition
-&#9;&#9;&#9;adjustedShootVector = adjustedShootVector.unit * (desiredTargetPosition - shootOrigin).magnitude
-&#9;&#9;&#9;adjustedShootVector = adjustedShootVector + deltaOffset
-&#9;&#9;&#9;--print(&quot;Adjusting shootvector by:&quot; , deltaOffset)
-&#9;&#9;end
-&#9;&#9;local projectile = CreateProjectile()
-&#9;&#9;projectile.CFrame = CFrame.new(shootOrigin)
-&#9;&#9;projectile.Velocity = adjustedShootVector.unit * SHOOT_VELOCITY
-&#9;&#9;
-
-&#9;&#9;local touchConn = projectile.Touched:connect(function(other)
-&#9;&#9;&#9;if Character and other then
-&#9;&#9;&#9;&#9;if other.CanCollide == true and not other:IsDescendantOf(Character) then
-&#9;&#9;&#9;&#9;&#9;projectile.CanCollide = true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)&#9;
-&#9;&#9;
-&#9;&#9;-- this way the projectile doesn&apos;t hit our character; unfortunately it means it doesn&apos;t hit a lot of things.
-&#9;&#9;projectile.CanCollide = false
-&#9;&#9;delay(0.1, function() projectile.CanCollide = true touchConn:disconnect() end)
-&#9;&#9;
-&#9;&#9;Debris:AddItem(projectile, DEBRIS_TIME)
-&#9;&#9;projectile.Parent = workspace
-&#9;&#9;
-&#9;&#9;NextCandyIndex = math.random(1,#CANDY_MESHES)
-&#9;&#9;LastShot = now
-&#9;&#9;debounce = false
-&#9;&#9;return projectile
-&#9;end
-&#9;debounce = false
-end
-
-
-local function OnEquip()
-&#9;Equipped = true
-&#9;Handle = Tool:FindFirstChild(&apos;Handle&apos;)
-&#9;Character = Tool.Parent
-&#9;MyPlayer = PlayersService:GetPlayerFromCharacter(Character)
-end
-
-local function OnUnequip()
-&#9;Equipped = false
-&#9;Character = nil
-&#9;MyPlayer = nil
-end
-
-RequestShootServer.OnServerInvoke = OnShoot
-
-Tool.Equipped:connect(OnEquip)
-Tool.Unequipped:connect(OnUnequip)
-</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX2c6864d2f2ca47b4881754cd6d4da892">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">CandyProjectileScript</string>
-					<ProtectedString name="Source">local LOW_DAMAGE = 15
-local HIGH_DAMAGE = 25
-
-
-local Candy = script.Parent
-
-local PlayersService = game:GetService(&quot;Players&quot;)
-local RS = game:GetService(&apos;ReplicatedStorage&apos;)
-local ServerStorage = game:GetService(&apos;ServerStorage&apos;)
-local ServerScriptService = game:GetService(&apos;ServerScriptService&apos;)
-
-local MonsterData = require(RS:WaitForChild(&apos;MonsterData&apos;))
-local Utility = require(RS:WaitForChild(&apos;Utility&apos;))
-
-local MonsterManager = require(ServerScriptService.MonsterManager)
-
-local MonsterContainer = workspace:WaitForChild(&quot;MonsterContainer&quot;)
-
-
-local OwnerTag = script:WaitForChild(&apos;Owner&apos;)
-
-local MyPlayer = OwnerTag.Value
-local MyCharacter = MyPlayer and MyPlayer.Character
-
-
-local HitHumanoidsList = {}
-
-local function OnTouch(hitObj)
-&#9;
-&#9;local candyDamage = math.random(LOW_DAMAGE, HIGH_DAMAGE)
-&#9;-- Quick check to see if we hit a monster 
-&#9;if hitObj:IsDescendantOf(MonsterContainer) then
-&#9;&#9;local hitMonster, monsterHumanoid = Utility.FindCharacterAncestor(hitObj)
-&#9;&#9;if hitMonster and hitMonster:IsDescendantOf(MonsterContainer) and not HitHumanoidsList[monsterHumanoid] then
-&#9;&#9;&#9;--if MonsterData.Dawnzilla and MonsterData.Dawnzilla.DisplayName and hitMonster.Name == MonsterData.Dawnzilla then
-&#9;&#9;&#9;--&#9;return
-&#9;&#9;&#9;--end
-&#9;&#9;&#9;monsterHumanoid:TakeDamage(candyDamage)
-&#9;&#9;&#9;HitHumanoidsList[monsterHumanoid] = true
-&#9;&#9;&#9;MonsterManager:TagPlayerCollection(OwnerTag.Value, monsterHumanoid)
-&#9;&#9;end
-&#9;end
-end
-
-Candy.Touched:connect(OnTouch)
-</ProtectedString>
-				</Properties>
-				<Item class="ObjectValue" referent="RBXcc89a616f82a4402bfd46dcb3fa7d307">
-					<Properties>
-						<string name="Name">Owner</string>
-						<Ref name="Value">null</Ref>
-					</Properties>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="LocalScript" referent="RBX1c9458eb8841436283d624da83a2e3b0">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">RapidCandyLauncherLocalScript</string>
-				<ProtectedString name="Source">-- Made by SolarCrane
-
--- GRIP: _G.S.Grip = CFrame.Angles(0,math.pi/6,0) + Vector3.new(0,-0.4,0.9)
-
-local RS = game:GetService(&apos;ReplicatedStorage&apos;)
-local PlayersService = game:GetService(&quot;Players&quot;)
-local Debris = game:GetService(&apos;Debris&apos;)
-
-local Utility = require(RS:WaitForChild(&apos;Utility&apos;))
-local Signal = require(RS:WaitForChild(&apos;Signal&apos;))
-local CreateLocalWelder = require(RS:WaitForChild(&apos;LocalEquipWeld&apos;))
-
-local CANDY_MESH = &quot;http://www.roblox.com/asset/?id=130899509&quot;
-local CANDY_TX = &quot;http://www.roblox.com/asset/?id=130899523&quot;
-
-local COOLDOWN = 0.3
-local TIME_BEFORE_RELEASE = 0.08
-local LastShot = tick()
-
-local LocalPlayer = PlayersService.LocalPlayer
-local Tool = script.Parent
-local Handle = Tool:WaitForChild(&apos;Handle&apos;)
-local FireSound = Handle:WaitForChild(&apos;Fire&apos;)
-
-local FireAnimTrack = nil
-local ReloadAnimTrack = nil
-local IdleAnimTrack = nil
-
-local RequestShootServer = Tool:WaitForChild(&apos;RequestShootServer&apos;)
-
-
--- Code from http://www.miguelcasillas.com/?p=53
-local function RayDistanceFromSphereSurface(tRay, sphereCenter, radius)
-    -- Create a vector from the ray&apos;s start to the sphere&apos;s center
-    local vecV1 = sphereCenter - tRay.Origin
-
-    -- Project this vector onto the ray&apos;s direction vector
-    local fD = vecV1:Dot(tRay.Direction.unit)
-
-    -- If the ray is pointing away
-    if fD &lt; 0 then
-        return math.huge, math.rad(360)
-&#9;end
-
-    -- Calculate the closest point to the sphere on the ray
-    local vecClosestPoint = tRay.Origin + (tRay.Direction.unit * fD)
-
-&#9;local distanceToSphereSurface = math.max(0, ((sphereCenter - vecClosestPoint).magnitude - radius))
-
-&#9;local angle = math.acos((vecClosestPoint - tRay.Origin).unit:Dot(tRay.Direction.unit))
-&#9;if angle == nil then
-&#9;&#9;angle = math.rad(360) 
-&#9;end
-&#9;--print(&quot;fD&quot; , fD , &quot;vecV1&quot; , vecV1, &quot;vecClosestPoint&quot; , vecClosestPoint,  &quot;distanceToSphereSurface&quot;, distanceToSphereSurface, &quot;angle&quot;, angle)
-    return distanceToSphereSurface, angle
-end
-
-
-local function FindMonsterAlongRay(ray)
-&#9;local monstersByDistance = {}
-&#9;local monsterContainer = workspace:FindFirstChild(&quot;MonsterContainer&quot;)
-&#9;--local monsterContainer = workspace:FindFirstChild(&quot;TestDummies&quot;)
-&#9;if monsterContainer then
-&#9;&#9;for _, monster in pairs(monsterContainer:GetChildren()) do
-&#9;&#9;&#9;if monster:IsA(&apos;Model&apos;) then
-&#9;&#9;&#9;&#9;local monsterCFrame = monster:GetModelCFrame()
-&#9;&#9;&#9;&#9;local monsterSize = monster:GetExtentsSize()
-&#9;&#9;&#9;&#9;local distance, theta = RayDistanceFromSphereSurface(ray, monsterCFrame.p, math.min(math.min(monsterSize.X, monsterSize.Y), monsterSize.Z)) --monsterSize.magnitude)
-&#9;&#9;&#9;&#9;table.insert(monstersByDistance, {Monster = monster; Distance = distance; Theta = theta})
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;-- TODO: also sort by distance from player in this heuristic
-&#9;table.sort(monstersByDistance, function(a,b) return a[&apos;Distance&apos;] &lt; b[&apos;Distance&apos;] end)
-&#9;return monstersByDistance
-end
-
-local function GetShootOrigin()
-&#9;if Handle then
-&#9;&#9;return Handle.CFrame.p + Handle.CFrame.lookVector
-&#9;end
-end
-
-
-local debounce = false
-local function OnShoot()
-&#9;local now = tick()
-&#9;if now - LastShot &lt; COOLDOWN then
-&#9;&#9;return
-&#9;end
-&#9;if debounce then return end
-&#9;debounce = true
-&#9;local humanoid = Utility.GetHumanoid(LocalPlayer)
-&#9;if humanoid and Utility.CanFire(LocalPlayer) then
-&#9;&#9;local targetPos = humanoid.TargetPoint&#9;&#9;
-&#9;&#9;local shootOrigin = GetShootOrigin(targetPos)
-&#9;&#9;local shootDirection = targetPos - shootOrigin
-&#9;&#9;if targetPos and shootOrigin and shootDirection then
-&#9;&#9;&#9;local shootRay = Ray.new(shootOrigin, shootDirection)
-&#9;
-&#9;&#9;&#9;local monsters = FindMonsterAlongRay(shootRay)
-&#9;&#9;&#9;local desiredShootTarget = monsters and monsters[1] and monsters[1][&apos;Monster&apos;]
-&#9;&#9;&#9;local desiredShootTargetPos = desiredShootTarget and desiredShootTarget:GetModelCFrame().p
-&#9;&#9;&#9;
-&#9;&#9;&#9;spawn(function()
-&#9;&#9;&#9;&#9;FireAnimTrack:Play(.1,1,4)
-&#9;&#9;&#9;&#9;FireSound.Pitch = 0.5 + math.random()/5
-&#9;&#9;&#9;&#9;FireSound:Play()
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;-- Send shoot data
-&#9;&#9;&#9;spawn(function()
-&#9;&#9;&#9;&#9;local projectile = RequestShootServer:InvokeServer(shootRay, tick() + (_G.ClientTimeDiff or 0), desiredShootTarget, desiredShootTargetPos)
-&#9;&#9;&#9;&#9;-- Server will only return a projectile if the shot was successfully completed.
-&#9;&#9;&#9;&#9;if projectile then
-&#9;&#9;&#9;&#9;&#9;local character = LocalPlayer.Character
-&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;local touchConn = projectile.Touched:connect(function(other)
-&#9;&#9;&#9;&#9;&#9;&#9;if character and other then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if other.CanCollide == true and not other:IsDescendantOf(character) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;projectile.CanCollide = true
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end)
-&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;-- this way the projectile doesn&apos;t hit our character; unfortunately it means it doesn&apos;t hit a lot of things.
-&#9;&#9;&#9;&#9;&#9;delay(0.1, function() touchConn:disconnect() end)&#9;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;LastShot = now
-&#9;&#9;end
-&#9;end
-&#9;debounce = false
-end
-
-local MouseDown = false
-local CurrentLoop = nil
-local function OnMouseDown()
-&#9;MouseDown = true
-&#9;local thisLoop = nil
-&#9;thisLoop = coroutine.create(function()
-&#9;&#9;-- Stop two loops from happening at the same time
-&#9;&#9;while MouseDown and thisLoop == CurrentLoop do
-&#9;&#9;&#9;OnShoot()
-&#9;&#9;&#9;wait(COOLDOWN)
-&#9;&#9;end
-&#9;end)
-&#9;CurrentLoop = thisLoop
-&#9;coroutine.resume(CurrentLoop)
-end
-
-local function OnMouseUp()
-&#9;MouseDown = false
-end
-
-local MouseDownConn = nil
-local MouseUpConn = nil
-local function DisconnectMouseEvents()
-&#9;if MouseDownConn then
-&#9;&#9;MouseDownConn:disconnect()
-&#9;&#9;MouseDownConn = nil
-&#9;end
-&#9;if MouseUpConn then
-&#9;&#9;MouseUpConn:disconnect()
-&#9;&#9;MouseUpConn = nil
-&#9;end
-end
-
-
-local Equipped = false
-local function OnEquip(mouse)
-&#9;Equipped = true
-&#9;
-&#9;DisconnectMouseEvents()
-&#9;MouseDownConn = mouse.Button1Down:connect(OnMouseDown)
-&#9;MouseUpConn = mouse.Button1Up:connect(OnMouseUp)
-&#9;
-&#9;local humanoid = Utility.GetHumanoid(LocalPlayer)
-&#9;if humanoid then
-&#9;&#9;local FireAnim = Tool:FindFirstChild(&apos;Fire&apos;)
-&#9;&#9;local ReloadAnim = Tool:FindFirstChild(&apos;Reload&apos;)&#9;&#9;
-&#9;&#9;local IdleAnim = Tool:FindFirstChild(&apos;Idle&apos;)
-&#9;&#9;&#9;&#9;
-&#9;&#9;FireAnimTrack = FireAnim and humanoid:LoadAnimation(FireAnim)
-&#9;&#9;ReloadAnimTrack = ReloadAnim and humanoid:LoadAnimation(ReloadAnim)
-&#9;&#9;IdleAnimTrack = IdleAnim and humanoid:LoadAnimation(IdleAnim)
-&#9;end
-&#9;if IdleAnimTrack then
-&#9;&#9;IdleAnimTrack:Play()
-&#9;end
-end
-
-local function OnUnequip()
-&#9;Equipped = false
-&#9;if FireAnimTrack then
-&#9;&#9;FireAnimTrack:Stop()
-&#9;end
-&#9;if ReloadAnimTrack then
-&#9;&#9;ReloadAnimTrack:Stop()
-&#9;end
-&#9;if IdleAnimTrack then
-&#9;&#9;IdleAnimTrack:Stop()
-&#9;end
-&#9;DisconnectMouseEvents()
-end
-
-local function OnActivated()
-&#9;if Equipped then
-&#9;&#9;OnShoot()
-&#9;end
-end
-
-CreateLocalWelder(Tool)
-
-Tool.Equipped:connect(OnEquip)
-Tool.Unequipped:connect(OnUnequip)
-Tool.Activated:connect(OnActivated)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="RemoteFunction" referent="RBXb986dfd652d842d98cbd4affd3cc6939">
-			<Properties>
-				<string name="Name">RequestShootServer</string>
-			</Properties>
-		</Item>
-		<Item class="Part" referent="RBXe4aba96b16014115b1f64c995ff4ccd8">
+		<Item class="Part" referent="RBX0318F5E922824BE5A49A9D3462DDD163">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -488,20 +38,23 @@ Tool.Activated:connect(OnActivated)
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>6.68999767</X>
-					<Y>3.12000012</Y>
-					<Z>-0.519999862</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
+					<X>-0.00115999999</X>
+					<Y>17.3250523</Y>
+					<Z>22.0157585</Z>
+					<R00>0.988005102</R00>
+					<R01>-0.140495583</R01>
+					<R02>0.0640853718</R02>
+					<R10>0.143772021</R10>
+					<R11>0.685471117</R11>
+					<R12>-0.713764012</R12>
+					<R20>0.0563520081</R20>
+					<R21>0.714416087</R21>
+					<R22>0.697448373</R22>
 				</CoordinateFrame>
-				<bool name="CanCollide">true</bool>
+				<bool name="CanCollide">false</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -531,23 +84,23 @@ Tool.Activated:connect(OnActivated)
 				<token name="TopSurfaceInput">0</token>
 				<float name="Transparency">0</float>
 				<Vector3 name="Velocity">
-					<X>0</X>
+					<X>-1.40129846e-045</X>
 					<Y>0</Y>
-					<Z>0</Z>
+					<Z>-1.40129846e-045</Z>
 				</Vector3>
-				<token name="formFactorRaw">3</token>
+				<token name="formFactorRaw">1</token>
 				<token name="shape">1</token>
 				<Vector3 name="size">
-					<X>0.420000076</X>
-					<Y>1.23999989</Y>
-					<Z>2.30000043</Z>
+					<X>0.25</X>
+					<Y>6</Y>
+					<Z>1.75</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXe4cf8b3bbb4c451caba1480974e7d01b">
+			<Item class="SpecialMesh" referent="RBXE2A3DF4DE2E24548B68F4E70890E6298">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
-					<Content name="MeshId"><url>http://www.roblox.com/asset?id=180622214</url></Content>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=582117241</url></Content>
 					<token name="MeshType">5</token>
 					<string name="Name">Mesh</string>
 					<Vector3 name="Offset">
@@ -560,7 +113,7 @@ Tool.Activated:connect(OnActivated)
 						<Y>1</Y>
 						<Z>1</Z>
 					</Vector3>
-					<Content name="TextureId"><url>http://www.roblox.com/asset?id=180619924</url></Content>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=582117428</url></Content>
 					<Vector3 name="VertexColor">
 						<X>1</X>
 						<Y>1</Y>
@@ -568,65 +121,1121 @@ Tool.Activated:connect(OnActivated)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX8ba23390d2364e7cb6b9ff7ca52d72fa">
+			<Item class="Sound" referent="RBXC451CBFB8957405E859664B318B64996">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
-					<string name="Name">Fire</string>
-					<float name="Pitch">0.821169138</float>
+					<string name="Name">Hit</string>
 					<bool name="PlayOnRemove">false</bool>
-					<Content name="SoundId"><null></null></Content>
+					<float name="PlaybackSpeed">0.736000001</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
+					<Content name="SoundId"><url>rbxassetid://201972796</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX3A85611F69BB4FBB873290430C38A49E">
+				<Properties>
+					<float name="EmitterSize">10</float>
+					<bool name="Looped">false</bool>
+					<string name="Name">Unsheath</string>
+					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">0.800000012</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=12222225</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX47A189AFE1134B768D4822E1328D52E1">
+				<Properties>
+					<float name="EmitterSize">10</float>
+					<bool name="Looped">false</bool>
+					<string name="Name">Whack</string>
+					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=186936370</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX87F97496FD2E4E4CB8F6BE7021476579">
+				<Properties>
+					<float name="EmitterSize">10</float>
+					<bool name="Looped">false</bool>
+					<string name="Name">Woosh</string>
+					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=184474135</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBXa4c3d9c952074afcb8c849cc64370b1f">
+		<Item class="LocalScript" referent="RBXD773E03D74D44387B494C7ECBC35F806">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">local MOUSE_ICON = &apos;rbxasset://textures/GunCursor.png&apos;
-local RELOADING_ICON = &apos;rbxasset://textures/GunWaitCursor.png&apos;
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
-local Tool = script.Parent
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
 
-local Mouse = nil
+Tool = script.Parent
 
-local function UpdateIcon()
-&#9;Mouse.Icon = Tool.Enabled and MOUSE_ICON or RELOADING_ICON
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
 end
 
-local function OnEquipped(mouse)
-&#9;Mouse = mouse
-&#9;UpdateIcon()
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
 end
 
-local function OnChanged(property)
-&#9;if property == &apos;Enabled&apos; then
-&#9;&#9;UpdateIcon()
-&#9;end
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
 end
 
 Tool.Equipped:connect(OnEquipped)
 Tool.Changed:connect(OnChanged)
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX1f9230cd3ef4415582df05eebcff70dc">
+		<Item class="LocalScript" referent="RBX730C269CFA2546A4B2B72CBCE5A89BD2">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=95383980</url></Content>
-				<string name="Name">Fire</string>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+
+Animations = {}
+
+Remotes = Tool:WaitForChild("Remotes")
+ServerControl = Remotes:WaitForChild("ServerControl")
+ClientControl = Remotes:WaitForChild("ClientControl")
+
+Rate = (1 / 60)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+	elseif mode == "StopAnimation" and value then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				v.AnimationTrack:Stop(value.FadeTime)
+				table.remove(Animations, i)
+			end
+		end
+	end
+end
+
+function KeyPressed(Key, Down)
+	InvokeServer("KeyPressed", {Key = Key, Down = Down})
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Mouse
+	PlayerMouse.KeyDown:connect(function(Key)
+		KeyPressed(Key, true)
+	end)
+	PlayerMouse.KeyUp:connect(function(Key)
+		KeyPressed(Key, false)
+	end)
+end
+
+function Unequipped()
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	local ServerReturn
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(mode, value)
+	end)
+	return ServerReturn
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MouseData" then
+		return ((PlayerMouse and {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}) or nil)
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX5de9b2b6d15949d7b75da2a4369cf12a">
+		<Item class="Script" referent="RBXC7D5382770374D8E9972A48F8C54F3DD">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=95384819</url></Content>
-				<string name="Name">Reload</string>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+RunService = game:GetService("RunService")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Fire = script:WaitForChild("Fire")
+DeathEffect = script:WaitForChild("DeathEffect")
+
+Sounds = {
+	Unsheath = Handle:WaitForChild("Unsheath"),
+	Woosh = Handle:WaitForChild("Woosh"),
+	Whack = Handle:WaitForChild("Whack"),
+	Hit = Handle:WaitForChild("Hit"),
+}
+
+AnimationsBin = Tool:WaitForChild("Animations")
+R6Anims = AnimationsBin:WaitForChild("R6")
+R15Anims = AnimationsBin:WaitForChild("R15")
+
+Animations = {
+	LeftSlash = {Animation = R6Anims:WaitForChild("LeftSlash"), FadeTime = nil, Weight = nil, Speed = 1.5, Duration = 0.5},
+	RightSlash = {Animation = R6Anims:WaitForChild("RightSlash"), FadeTime = nil, Weight = nil, Speed = 1.5, Duration = 0.5},
+	LeftSwingFast = {Animation = R6Anims:WaitForChild("LeftSwingFast"), FadeTime = nil, Weight = nil, Speed = 1, Duration = 0.5},
+	RightSwingFast = {Animation = R6Anims:WaitForChild("RightSwingFast"), FadeTime = nil, Weight = nil, Speed = 1, Duration = 0.5},
+	OverheadSwing = {Animation = R6Anims:WaitForChild("OverheadSwing"), FadeTime = nil, Weight = nil, Speed = 2, Duration = 0.5},
+	R15LeftSlash = {Animation = R15Anims:WaitForChild("LeftSlash"), FadeTime = nil, Weight = nil, Speed = 1.5, Duration = 0.5},
+	R15RightSlash = {Animation = R15Anims:WaitForChild("RightSlash"), FadeTime = nil, Weight = nil, Speed = 1.5, Duration = 0.5},
+	R15LeftSwingFast = {Animation = R15Anims:WaitForChild("LeftSwingFast"), FadeTime = nil, Weight = nil, Speed = 1, Duration = 0.5},
+	R15RightSwingFast = {Animation = R15Anims:WaitForChild("RightSwingFast"), FadeTime = nil, Weight = nil, Speed = 1, Duration = 0.5},
+	R15OverheadSwing = {Animation = R15Anims:WaitForChild("OverheadSwing"), FadeTime = nil, Weight = nil, Speed = 2, Duration = 0.5},
+
+}
+
+Rate = (1 / 60)
+
+SwingDamage = 15
+
+LastAttack = 0
+LastSlam = 0
+LastSoundPlay = 0
+Swinging = false
+Bashing = false
+HitDelay = false
+ToolEquipped = false
+
+Remotes = Tool:WaitForChild("Remotes")
+ServerControl = (Remotes:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Remotes,
+})
+
+ClientControl = (Remotes:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Remotes,
+})
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+BasePart = Instance.new("Part")
+BasePart.Shape = Enum.PartType.Block
+BasePart.Material = Enum.Material.Plastic
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.CanCollide = true
+BasePart.Locked = true
+BasePart.Anchored = false
+
+function TagHumanoid(humanoid, player)
+	local Creator_Tag = Create("ObjectValue"){
+		Name = "creator",
+		Value = player,
+	}
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function CreateAxePart(MakeNew)
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+	if not MakeNew then
+		return
+	end
+	AxePart = BasePart:Clone()
+	AxePart.Name = "Blade"
+	AxePart.Transparency = 1
+	AxePart.Size = Vector3.new(0.25, 2, 1.75)
+	AxePart.CanCollide = false
+	local FireEffect = Fire:Clone()
+	FireEffect.Enabled = true
+	FireEffect.Parent = AxePart
+	Create("Weld"){
+		Name = "Weld",
+		Part0 = Handle,
+		Part1 = AxePart,
+		C0 = CFrame.new(0, 2, 0),
+		C1 = CFrame.new(0, 0, 0),
+		Parent = AxePart,
+	}
+	AxePart.Parent = Tool
+	return AxePart, FireEffect
+end
+
+function Attack(PossibleAnims)
+	if not CheckIfAlive() or not ToolEquipped then
+		return
+	end
+	if PossibleAnims and #PossibleAnims > 0 then
+		local Animation = PossibleAnims[math.random(1, #PossibleAnims)]
+		CurrentAnimation = Animation
+		local AttackAnimation = CurrentAnimation
+		Spawn(function()
+			InvokeClient("PlayAnimation", CurrentAnimation)
+		end)
+		local Blade, Flame = CreateAxePart(true)
+		Delay(0.5, (function()
+			Flame.Enabled = false
+		end))
+		Debris:AddItem(Blade, 1.25)
+		wait(Animation.Duration)
+		CurrentAnimation = nil
+	end
+end
+
+function PlaySound(Sound)
+	local Now = tick()
+	if (Now - LastSoundPlay) < 0.5 then
+		return
+	end
+	LastSoundPlay = Now
+	Sound:Play()
+end
+
+function ApplyDeathEffect(character, Direction, Force)
+	local Direction = (Direction or Vector3.new(0, 0, 0))
+	local Force = (Force or Vector3.new(0, 0, 0))
+	local humanoid = character:FindFirstChild("Humanoid")
+	if not humanoid then
+		return
+	end
+	local DeathEffectCopy = character:FindFirstChild(DeathEffect.Name)
+	if DeathEffectCopy then
+		return
+	end
+	DeathEffectCopy = DeathEffect:Clone()
+	DeathEffectCopy.WindDirection.Value = Direction
+	DeathEffectCopy.Force.Value = Force
+	DeathEffectCopy.Disabled = false
+	DeathEffectCopy.Parent = character
+end
+
+function Blow(Part)
+	Part.Touched:connect(function(Hit)
+		if not Hit or not Hit.Parent or not CheckIfAlive() or not ToolEquipped or not Swinging or HitDelay then
+			return
+		end
+		local SoundPlayed = false
+		local RightArm = Character:FindFirstChild("Right Arm") or Character:FindFirstChild("RightHand")
+		if RightArm then
+			local RightGrip = RightArm:FindFirstChild("RightGrip")
+			if RightGrip and (RightGrip.Part0 == Handle or RightGrip.Part1 == Handle) then
+				local character = Hit.Parent
+				if character == Character then
+					return
+				end
+				local player = Players:GetPlayerFromCharacter(character)
+				if player and IsTeamMate(Player, player) then
+					return
+				end
+				local humanoid = character:FindFirstChild("Humanoid")
+				local rootpart = character:FindFirstChild("HumanoidRootPart")
+				if humanoid and humanoid.Health >= 0 then
+					if CurrentAnimation == Animations.LeftSlash or CurrentAnimation == Animations.RightSlash and math.random() <= 0.1 then
+						if rootpart then
+							rootpart.Velocity = (CFrame.new(RootPart.Position, rootpart.Position).lookVector * (math.random(500, 850) * 0.1))
+						end
+					end
+					HitDelay = true
+					UntagHumanoid(humanoid)
+					TagHumanoid(humanoid, Player)
+					humanoid:TakeDamage(SwingDamage * ((Bashing and 2) or 1))
+					if humanoid.Health <= 0 and rootpart then
+						local WindDir = (CFrame.new(RootPart.Position, Vector3.new(rootpart.Position.X, RootPart.Position.Y, rootpart.Position.Z)) * CFrame.Angles(0, math.pi, 0)).lookVector
+						ApplyDeathEffect(character, Vector3.new(WindDir.X, 1, WindDir.Z), ((WindDir * 6.5) + Vector3.new(0, 15, 0)))
+					end
+					if Bashing then
+						humanoid.Sit = true
+					end
+					PlaySound(Sounds.Whack)
+					SoundPlayed = true
+				end
+			end
+		end
+		if not SoundPlayed then
+			Sounds.Hit.Pitch = (math.random(500, 800) * 0.001)
+			PlaySound(Sounds.Hit)
+		end
+		wait(0.1)
+		HitDelay = false
+	end)
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and RootPart and RootPart.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Explode()
+	if not ToolEquipped or not CheckIfAlive() or Bashing then
+		return
+	end
+	Bashing = true
+	local CurrentlyEquipped = true
+	if ToolUnequipped then
+		ToolUnequipped:disconnect()
+	end
+	ToolUnequipped = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+	end)
+	local Animation = Animations.OverheadSwing
+	if Humanoid.RigType == Enum.HumanoidRigType.R15 then
+		Animation = Animations.R15OverheadSwing
+	end
+	Spawn(function()
+		InvokeClient("PlayAnimation", Animation)
+	end)
+	wait(Animation.Duration / 2)
+	if ToolUnequipped then
+		ToolUnequipped:disconnect()
+	end
+	if not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
+		return
+	end
+	Bashing = false
+end
+
+function Swing()
+	if not ToolEquipped or not CheckIfAlive() or Swinging then
+		return
+	end
+	Swinging = true
+	Sounds.Woosh:Play()
+	local AttackAnims = {Animations.LeftSlash, Animations.RightSlash, Animations.LeftSwingFast, Animations.RightSwingFast}
+	if Humanoid.RigType == Enum.HumanoidRigType.R15 then
+		AttackAnims = {Animations.R15LeftSlash, Animations.R15RightSlash, Animations.R15LeftSwingFast, Animations.R15RightSwingFast}
+	end
+	Attack(AttackAnims)
+	Swinging = false
+end
+
+function Activated()
+	if not Tool.Enabled or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	Tool.Enabled = false
+	local Tick = RunService.Stepped:wait()
+	if (Tick - LastAttack) < 0.2 and (Tick - LastSlam) >= 2 then
+		LastSlam = Tick
+		Explode()
+	else
+		Spawn(function()
+			Swing()
+		end)
+	end
+	LastAttack = Tick
+
+	--wait(0.5)
+
+	Tool.Enabled = true
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	RootPart = Character:FindFirstChild("HumanoidRootPart")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	Sounds.Unsheath:Play()
+	ToolEquipped = true
+end
+
+function Unequipped()
+	ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+	if player ~= Player or not ToolEquipped or not value or not CheckIfAlive() then
+		return
+	end
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+Delay(0, (function()
+	CreateAxePart(false)
+end))
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Blow(Handle)
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
+			<Item class="ParticleEmitter" referent="RBXF162291DF9C9407AA6DBC4C9203D6A04">
+				<Properties>
+					<Vector3 name="Acceleration">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<ColorSequence name="Color">0 1 0.333333 0 0 1 1 0 0 0 </ColorSequence>
+					<float name="Drag">0</float>
+					<token name="EmissionDirection">5</token>
+					<bool name="Enabled">false</bool>
+					<NumberRange name="Lifetime">0.3 0.5 </NumberRange>
+					<float name="LightEmission">1</float>
+					<bool name="LockedToPart">false</bool>
+					<string name="Name">Fire</string>
+					<float name="Rate">500</float>
+					<NumberRange name="RotSpeed">-500 -500 </NumberRange>
+					<NumberRange name="Rotation">-15 15 </NumberRange>
+					<NumberSequence name="Size">0 0.39548 0 0.749577 1.07345 0 1 0.564972 0 </NumberSequence>
+					<NumberRange name="Speed">-5 -5 </NumberRange>
+					<Content name="Texture"><url>rbxasset://textures/particles/fire_main.dds</url></Content>
+					<NumberSequence name="Transparency">0 0 0 0.650794 0.408602 0 1 0 0 </NumberSequence>
+					<float name="VelocityInheritance">0</float>
+					<float name="VelocitySpread">0</float>
+					<float name="ZOffset">0.200000003</float>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBXB557D70F57DB4A64AC61D70E83971759">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">DeathEffect</string>
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+Character = script.Parent
+Humanoid = Character:FindFirstChild("Humanoid")
+
+Debris = game:GetService("Debris")
+
+WindDirection = script:FindFirstChild("WindDirection")
+Force = script:FindFirstChild("Force")
+
+Parts = {}
+
+BaseColor = BrickColor.new("Really red")
+Color = BaseColor.Color
+
+Gravity = 196.20
+
+Duration = 3
+
+Classes = {
+	BasePart = {
+		BrickColor = BaseColor,
+		Material = Enum.Material.Plastic,
+		Reflectance = 0,
+		Transparency = 0.75,
+	},
+	FileMesh = {
+		TextureId = "",
+	},
+	DataModelMesh = {
+		VertexColor = Vector3.new(Color.r, Color.g, Color.b),
+	},
+	CharacterMesh = {
+		BaseTextureId = 0,
+		OverlayTextureId = 0,
+	},
+	Shirt = {
+		ShirtTemplate = "",
+	},
+	Pants = {
+		PantsTemplate = "",
+	},
+	FaceInstance = {
+		Texture = "",
+	},
+	Sparkles = {
+		SparkleColor = Color,
+		Enabled = false,
+	},
+	Fire = {
+		Color = Color,
+		SecondaryColor = Color,
+		Enabled = false,
+	},
+	Smoke = {
+		Color = Color,
+		Enabled = false,
+	},
+	Light = {
+		Color = Color,
+		Enabled = false,
+	},
+	ParticleEmitter = {
+		Color = ColorSequence.new(Color, Color),
+		Enabled = false,
+	}
+}
+
+Fire = script:FindFirstChild("Fire")
+
+Objects = {}
+RemovedObjects = {}
+FakeParts = {}
+Hats = {}
+Tools = {}
+Particles = {}
+
+function DestroyScript()
+	Debris:AddItem(script, 0.5)
+end
+
+function TweenNumber(Start, Goal, Time)
+	return ((Goal - Start) / Time)
+end
+
+function Decorate(Object)
+	local ObjectData = {
+		Object = nil,
+		Properties = {},
+	}
+	for i, v in pairs(Classes) do
+		if Object:IsA(i) then
+			if Object:IsA("CharacterMesh") then
+				local Mesh = Instance.new("SpecialMesh")
+				Mesh.MeshType = Enum.MeshType.FileMesh
+				Mesh.MeshId = ("http://www.roblox.com/asset/?id=" .. Object.MeshId)
+				for ii, vv in pairs(Character:GetChildren()) do
+					if vv:IsA("BasePart") and Object.BodyPart.Name == string.gsub(vv.Name, " ", "") then
+						Mesh.Parent = vv
+						table.insert(RemovedObjects, {Object = Object, NewObject = Mesh, Parent = Object.Parent})
+						Object.Parent = nil
+					end
+				end
+			elseif Object:IsA("BasePart") and Object.Transparency >= 1 then
+			else
+				ObjectData.Object = Object
+				for ii, vv in pairs(v) do
+					local PropertyValue = nil
+					local PropertyValueSet = false
+					pcall(function()
+						PropertyValue = Object[ii]
+						PropertyValueSet = true
+						Object[ii] = vv
+					end)
+					if PropertyValueSet then
+						ObjectData.Properties[ii] = PropertyValue
+					end
+				end
+			end
+		end
+	end
+	table.insert(Objects, ObjectData)
+end
+
+function Redesign(Parent)
+	for i, v in pairs(Parent:GetChildren()) do
+		if v ~= script then
+			Decorate(v)
+			Redesign(v)
+		end
+	end
+end
+
+if not Humanoid or not WindDirection then
+	DestroyScript()
+	return
+end
+
+for i, v in pairs(Character:GetChildren()) do
+	if v:IsA("Hat") or v:IsA("Tool") then
+		local FakeObject = v:Clone()
+		Decorate(FakeObject)
+		table.insert(((v:IsA("Hat") and Hats) or Tools), v)
+		for ii, vv in pairs(FakeObject:GetChildren()) do
+			if vv:IsA("BasePart") then
+				local FakePart = vv:Clone()
+				FakePart.Name = v.Name
+				table.insert(FakeParts, FakePart)
+				FakePart.Parent = Character
+				FakePart.CFrame = vv.CFrame
+			end
+		end
+	end
+end
+
+Humanoid:UnequipTools()
+
+for i, v in pairs({Hats, Tools}) do
+	for ii, vv in pairs(v) do
+		vv.Parent = nil
+	end
+end
+
+Redesign(Character)
+
+local GhostModel = Instance.new("Model")
+GhostModel.Name = "GhostModel"
+
+for i, v in pairs(Character:GetChildren()) do
+	if v:IsA("BasePart") then
+		if v.Name ~= "HumanoidRootPart" then
+			local FakePart = v:Clone()
+			FakePart.Name = "Part"
+			FakePart.CanCollide = false
+			for ii, vv in pairs(FakePart:GetChildren()) do
+				if not vv:IsA("DataModelMesh") then
+					vv:Destroy()
+				end
+			end
+			table.insert(FakeParts, FakePart)
+			local Mass = (v:GetMass() * Gravity ^ 2)
+			local BodyVelocity = Instance.new("BodyVelocity")
+			BodyVelocity.maxForce = Vector3.new(Mass, Mass, Mass)
+			BodyVelocity.velocity = (WindDirection.Value * Force.Value)
+			BodyVelocity.Parent = FakePart
+			FakePart.Parent = GhostModel
+			local FireParticle = Fire:Clone()
+			FireParticle.Enabled = true
+			table.insert(Particles, FireParticle)
+			FireParticle.Parent = FakePart
+		end
+		v:Destroy()
+	end
+end
+
+Spawn(function()
+	local Start = Classes.BasePart.Transparency
+	local End = 1
+	local Time = 0.75
+	local Rate = (1 / 30)
+	local Frames = (Time / Rate)
+	for i = 1, Frames do
+		local Transparency = (Start + TweenNumber(Start, End, (Frames / (i + 1))))
+		for ii, vv in pairs(FakeParts) do
+			if vv and vv.Parent then
+				vv.Transparency = Transparency
+			end
+		end
+		wait(Rate)
+	end
+	for i, v in pairs(Particles) do
+		v.Enabled = false
+	end
+end)
+
+Debris:AddItem(GhostModel, 5)
+GhostModel.Parent = game:GetService("Workspace")]]></ProtectedString>
+				</Properties>
+				<Item class="Vector3Value" referent="RBX686826256DB247949CE2E63FEC4A4E62">
+					<Properties>
+						<string name="Name">WindDirection</string>
+						<Vector3 name="Value">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="Vector3Value" referent="RBX23746B4217A545619BBF446923762F96">
+					<Properties>
+						<string name="Name">Force</string>
+						<Vector3 name="Value">
+							<X>0</X>
+							<Y>0</Y>
+							<Z>0</Z>
+						</Vector3>
+					</Properties>
+				</Item>
+				<Item class="ParticleEmitter" referent="RBX987A4DBB31CD40FFADDBC1C4E5520985">
+					<Properties>
+						<Vector3 name="Acceleration">
+							<X>0</X>
+							<Y>10</Y>
+							<Z>0</Z>
+						</Vector3>
+						<ColorSequence name="Color">0 1 0 0 0 1 0.666667 0 0 0 </ColorSequence>
+						<float name="Drag">0</float>
+						<token name="EmissionDirection">1</token>
+						<bool name="Enabled">false</bool>
+						<NumberRange name="Lifetime">0.2 0.3 </NumberRange>
+						<float name="LightEmission">1</float>
+						<bool name="LockedToPart">false</bool>
+						<string name="Name">Fire</string>
+						<float name="Rate">1000</float>
+						<NumberRange name="RotSpeed">15 25 </NumberRange>
+						<NumberRange name="Rotation">0 5 </NumberRange>
+						<NumberSequence name="Size">0 0.32 0 0.79 1.18 0 1 1.25 0 </NumberSequence>
+						<NumberRange name="Speed">-0.25 -0.25 </NumberRange>
+						<Content name="Texture"><url>rbxasset://textures/particles/fire_main.dds</url></Content>
+						<NumberSequence name="Transparency">0 0.6 0 1 0.6 0 </NumberSequence>
+						<float name="VelocityInheritance">0</float>
+						<float name="VelocitySpread">0</float>
+						<float name="ZOffset">0</float>
+					</Properties>
+				</Item>
+			</Item>
 		</Item>
-		<Item class="Animation" referent="RBXe93c7f6dc7ff4e82a321d6d319ad3d01">
+		<Item class="Folder" referent="RBXA04407C668CA410BAFA34BA04BE8F855">
 			<Properties>
-				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=95383474</url></Content>
-				<string name="Name">Idle</string>
+				<string name="Name">Remotes</string>
+			</Properties>
+			<Item class="RemoteFunction" referent="RBXFEBF0017F7194FAFB6EA4D58D5DDCD51">
+				<Properties>
+					<string name="Name">ServerControl</string>
+				</Properties>
+			</Item>
+			<Item class="RemoteFunction" referent="RBX92795C44B4B04CAB900B2D1A7E68B834">
+				<Properties>
+					<string name="Name">ClientControl</string>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Folder" referent="RBXD4E5808A0CEE4C63954788E9D1BFC493">
+			<Properties>
+				<string name="Name">Animations</string>
+			</Properties>
+			<Item class="Folder" referent="RBXE03010B056B54E8B8940FE912C15ADB1">
+				<Properties>
+					<string name="Name">R6</string>
+				</Properties>
+				<Item class="Animation" referent="RBXB5BC397A2073402392844D99E0E78799">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=74894663</url></Content>
+						<string name="Name">LeftSlash</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBXFB30189A5B6D4C7EB4F6D7EABF7DAA96">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=86313418</url></Content>
+						<string name="Name">LeftSwingFast</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBX2221BD8F249E4CA8ACAE3DA326269653">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=74897796</url></Content>
+						<string name="Name">OverheadSwing</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBXCEB4ABF233664494A80E9523E94715A5">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=74813494</url></Content>
+						<string name="Name">RightSlash</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBX499EFE8972434C5E8B6AFD8BA70208CA">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=86313260</url></Content>
+						<string name="Name">RightSwingFast</string>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Folder" referent="RBXDF0A207C63E24E22BDD17E6B06B11107">
+				<Properties>
+					<string name="Name">R15</string>
+				</Properties>
+				<Item class="Animation" referent="RBX19D19F99C6264B4F9515D8C09AFF4EF3">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=582795728</url></Content>
+						<string name="Name">LeftSlash</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBX8CE37B4C815841E9B88DDA2814443078">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=582796162</url></Content>
+						<string name="Name">LeftSwingFast</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBX8AF66A215C514734B5453E4F88B0DE0D">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=582796800</url></Content>
+						<string name="Name">OverheadSwing</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBX72C06BC9A4E040558DE26B3A1D3A08B6">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=582797263</url></Content>
+						<string name="Name">RightSlash</string>
+					</Properties>
+				</Item>
+				<Item class="Animation" referent="RBX8D32BBA04F784ABF949C700B167A323D">
+					<Properties>
+						<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=582797808</url></Content>
+						<string name="Name">RightSwingFast</string>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBXA3C000F805704D5EB798792D0166FACD">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-0.282151163</X>
+					<Y>18.6959953</Y>
+					<Z>23.4445915</Z>
+					<R00>0.988005102</R00>
+					<R01>-0.140495583</R01>
+					<R02>0.0640853718</R02>
+					<R10>0.143772021</R10>
+					<R11>0.685471117</R11>
+					<R12>-0.713764012</R12>
+					<R20>0.0563520081</R20>
+					<R21>0.714416087</R21>
+					<R22>0.697448373</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Blade</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">1</float>
+				<Vector3 name="Velocity">
+					<X>-1.40129846e-045</X>
+					<Y>0</Y>
+					<Z>-1.40129846e-045</Z>
+				</Vector3>
+				<token name="formFactorRaw">1</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.25</X>
+					<Y>2</Y>
+					<Z>1.75</Z>
+				</Vector3>
+			</Properties>
+			<Item class="ParticleEmitter" referent="RBX7665C61CCE064383858916C7674658BB">
+				<Properties>
+					<Vector3 name="Acceleration">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<ColorSequence name="Color">0 1 0.333333 0 0 1 1 0 0 0 </ColorSequence>
+					<float name="Drag">0</float>
+					<token name="EmissionDirection">1</token>
+					<bool name="Enabled">true</bool>
+					<NumberRange name="Lifetime">0.3 0.5 </NumberRange>
+					<float name="LightEmission">1</float>
+					<bool name="LockedToPart">true</bool>
+					<string name="Name">Fire</string>
+					<float name="Rate">500</float>
+					<NumberRange name="RotSpeed">-500 -500 </NumberRange>
+					<NumberRange name="Rotation">-15 15 </NumberRange>
+					<NumberSequence name="Size">0 0.39548 0 0.749577 1.07345 0 1 0.564972 0 </NumberSequence>
+					<NumberRange name="Speed">0 0 </NumberRange>
+					<Content name="Texture"><url>rbxasset://textures/particles/fire_main.dds</url></Content>
+					<NumberSequence name="Transparency">0 0 0 0.650794 0.408602 0 1 0 0 </NumberSequence>
+					<float name="VelocityInheritance">0</float>
+					<float name="VelocitySpread">0</float>
+					<float name="ZOffset">0.200000003</float>
+				</Properties>
+			</Item>
+			<Item class="Weld" referent="RBXB623FA340F77434F8EB1523FA9650A05">
+				<Properties>
+					<CoordinateFrame name="C0">
+						<X>0</X>
+						<Y>2</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<CoordinateFrame name="C1">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+						<R00>1</R00>
+						<R01>0</R01>
+						<R02>0</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>0</R20>
+						<R21>0</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<string name="Name">Weld</string>
+					<Ref name="Part0">RBX0318F5E922824BE5A49A9D3462DDD163</Ref>
+					<Ref name="Part1">RBXA3C000F805704D5EB798792D0166FACD</Ref>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBXBC97E8AE01D0481FB3830B1E2F0A9721">
+			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>-3.85615301</X>
+					<Y>17.5417747</Y>
+					<Z>22.7803917</Z>
+					<R00>0.0418968014</R00>
+					<R01>-0.0888216123</R01>
+					<R02>-0.995166063</R02>
+					<R10>-0</R10>
+					<R11>0.996040642</R11>
+					<R12>-0.088899672</R12>
+					<R20>0.999121964</R20>
+					<R21>0.00372461183</R21>
+					<R22>0.041730918</R22>
+				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-1.3781786</X>
+					<Y>17.7631359</Y>
+					<Z>22.6764812</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
+				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
