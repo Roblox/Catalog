@@ -21,6 +21,7 @@
 			</CoordinateFrame>
 			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">QuantumEntangler </string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=72618529 </url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
@@ -51,6 +52,9 @@
 					<R22>-1.1920929e-006</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -118,461 +122,6 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBXF03367E14F39470681D302211238686D">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">EntanglerScript</string>
-				<ProtectedString name="Source">--Rescripted by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
-
-Players = game:GetService(&quot;Players&quot;)
-Debris = game:GetService(&quot;Debris&quot;)
-InsertService = game:GetService(&quot;InsertService&quot;)
-
-InfoGui = script:WaitForChild(&quot;InfoGui&quot;)
-AIScript = script:WaitForChild(&quot;AIScript&quot;)
-
-CloneId = 68452456
-CloneModel = InsertService:LoadAsset(CloneId)
-Clone = CloneModel:GetChildren()[1]:Clone()
-if CloneModel and CloneModel.Parent then
-&#9;CloneModel:Destroy()
-end
-
-CloneValue = Instance.new(&quot;ObjectValue&quot;)
-CloneValue.Changed:connect(function()
-&#9;if not InfoGuiClone or not InfoGuiClone.Parent then
-&#9;&#9;return
-&#9;end
-&#9;local Frame = InfoGuiClone:FindFirstChild(&quot;Frame&quot;)
-&#9;if not Frame then
-&#9;&#9;return
-&#9;end
-&#9;local TextLabel = Frame:FindFirstChild(&quot;TextLabel&quot;)
-&#9;if not TextLabel then
-&#9;&#9;return
-&#9;end
-&#9;TextLabel.Text = ((CloneValue.Value and &quot;Press Q/E to swap with your double!&quot;) or &quot;Summon your double!&quot;)
-end)
-
-BasePart = Instance.new(&quot;Part&quot;)
-BasePart.Shape = Enum.PartType.Block
-BasePart.Material = Enum.Material.Plastic
-BasePart.FormFactor = Enum.FormFactor.Custom
-BasePart.TopSurface = Enum.SurfaceType.Smooth
-BasePart.BottomSurface = Enum.SurfaceType.Smooth
-BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
-BasePart.Locked = true
-BasePart.CanCollide = true
-BasePart.Anchored = false
-
-ShockWave = BasePart:Clone()
-ShockWave.Size = Vector3.new(1, 0.2, 1)
-ShockWave.Transparency = 1
-ShockWave.Anchored = true
-ShockWave.CanCollide = false
-TopDecal = Instance.new(&quot;Decal&quot;)
-TopDecal.Specular = 20
-TopDecal.Face = Enum.NormalId.Top
-TopDecal.Texture = &quot;http://www.roblox.com/asset/?version=1&amp;id=72634953&quot;
-TopDecal.Parent = ShockWave
-BottomDecal = TopDecal:Clone()
-BottomDecal.Face = Enum.NormalId.Bottom
-BottomDecal.Parent = ShockWave
-Mesh = Instance.new(&quot;BlockMesh&quot;)
-Mesh.Parent = ShockWave
-
-Animations = {
-&#9;Stab = {Animation = Tool:WaitForChild(&quot;Stab&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
-&#9;Rage = {Animation = Tool:WaitForChild(&quot;Rage&quot;), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
-}
-
-ShockDamage = 14
-
-CanSwap = true
-CanExplode = true
-ToolEquipped = false
-
-ServerControl = (Tool:FindFirstChild(&quot;ServerControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ServerControl.Name = &quot;ServerControl&quot;
-ServerControl.Parent = Tool
-
-ClientControl = (Tool:FindFirstChild(&quot;ClientControl&quot;) or Instance.new(&quot;RemoteFunction&quot;))
-ClientControl.Name = &quot;ClientControl&quot;
-ClientControl.Parent = Tool
-
-Tool.Enabled = true
-
-function TagHumanoid(humanoid, player)
-&#9;local Creator_Tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;Creator_Tag.Name = &quot;creator&quot;
-&#9;Creator_Tag.Value = player
-&#9;Debris:AddItem(Creator_Tag, 2)
-&#9;Creator_Tag.Parent = humanoid
-end
-
-function UntagHumanoid(humanoid)
-&#9;for i, v in pairs(humanoid:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;ObjectValue&quot;) and v.Name == &quot;creator&quot; then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-end
-
-function IsTeamMate(Player1, Player2)
-&#9;return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
-end
-
-function SpawnClone(character, torso)
-&#9;
-&#9;if not character then
-&#9;&#9;return
-&#9;end
-&#9;
-&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if not humanoid or humanoid.Health == 0 then
-&#9;&#9;return
-&#9;end
-
-&#9;PlayerClone = Clone:Clone()
-&#9;PlayerClone.Name = character.Name
-&#9;
-&#9;CloneValue.Value = PlayerClone
-&#9;
-&#9;local ThisClone = PlayerClone
-&#9;
-&#9;local CloneHumanoid = PlayerClone:FindFirstChild(&quot;Humanoid&quot;)
-&#9;if CloneHumanoid then
-&#9;&#9;CloneHumanoid.Died:connect(function()
-&#9;&#9;&#9;Debris:AddItem(PlayerClone, 2)
-&#9;&#9;end)
-&#9;&#9;PlayerClone.Changed:connect(function(Property)
-&#9;&#9;&#9;if Property == &quot;Parent&quot; and not PlayerClone.Parent then
-&#9;&#9;&#9;&#9;if CloneValue.Value == ThisClone then
-&#9;&#9;&#9;&#9;&#9;CloneValue.Value = nil
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-&#9;
-&#9;local Target = Instance.new(&quot;ObjectValue&quot;)
-&#9;Target.Name = &quot;Target&quot;
-&#9;Target.Value = humanoid
-&#9;Target.Parent = PlayerClone
-&#9;
-&#9;local AIScriptClone = AIScript:Clone()
-&#9;AIScriptClone.Disabled = false
-&#9;AIScriptClone.Parent = PlayerClone
-&#9;
-&#9;for i, v in pairs(character:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;for ii, vv in pairs(PlayerClone:GetChildren()) do
-&#9;&#9;&#9;&#9;if v:IsA(&quot;BasePart&quot;) and v.Name == vv.Name then
-&#9;&#9;&#9;&#9;&#9;vv.BrickColor = v.BrickColor
-&#9;&#9;&#9;&#9;&#9;for iii, vvv in pairs(vv:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;if not vvv:IsA(&quot;JointInstance&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;vvv:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;for iii, vvv in pairs(v:GetChildren()) do
-&#9;&#9;&#9;&#9;&#9;&#9;if vvv:IsA(&quot;FaceInstance&quot;) or vvv:IsA(&quot;DataModelMesh&quot;) then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local Object = vvv:Clone()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;Object.Parent = vv
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;elseif v:IsA(&quot;Clothing&quot;) or v:IsA(&quot;Hat&quot;) or v:IsA(&quot;CharacterMesh&quot;) then
-&#9;&#9;&#9;local Object = v:Clone()
-&#9;&#9;&#9;Object.Parent = PlayerClone
-&#9;&#9;end
-&#9;end&#9;
-&#9;
-&#9;Debris:AddItem(PlayerClone, 60)
-&#9;PlayerClone.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;PlayerClone:MoveTo(Torso.Position + Vector3.new(5, 0, 5))
-&#9;
-end
-
-function Swap()
-&#9;if not PlayerClone or not PlayerClone.Parent or not CheckIfAlive() or not CanSwap then
-&#9;&#9;return
-&#9;end
-&#9;local humanoid = PlayerClone:FindFirstChild(&quot;Humanoid&quot;)
-&#9;local torso = PlayerClone:FindFirstChild(&quot;Torso&quot;)
-&#9;if not humanoid or humanoid.Health == 0 or not torso then
-&#9;&#9;return
-&#9;end
-&#9;CanSwap = false
-&#9;local myCFrame = Torso.CFrame
-&#9;local cloneCFrame = torso.CFrame
-&#9;Torso.CFrame = CFrame.new(cloneCFrame.p, cloneCFrame.p + cloneCFrame.lookVector)
-&#9;torso.CFrame = CFrame.new(myCFrame.p, myCFrame.p + myCFrame.lookVector)
-&#9;wait(0.75)
-&#9;CanSwap = true
-end
-
-function BlastHumanoids(torso)
-&#9;if not torso then
-&#9;&#9;return
-&#9;end
-&#9;local AOE = Vector3.new(10, 10, 10)&#9;
-&#9;local Parts = game:GetService(&quot;Workspace&quot;):FindPartsInRegion3WithIgnoreList(Region3.new((torso.Position - AOE), (torso.Position + AOE)), {Character, PlayerClone}, 100)
-&#9;for i, v in pairs(Parts) do
-&#9;&#9;local character = v.Parent
-&#9;&#9;local player = Players:GetPlayerFromCharacter(character)
-&#9;&#9;local IgnorePlayer = false
-&#9;&#9;if player and IsTeamMate(Player, player) then
-&#9;&#9;&#9;IgnorePlayer = true
-&#9;&#9;end
-&#9;&#9;if character and not IgnorePlayer then
-&#9;&#9;&#9;local humanoid = character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;local torso = character:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;if humanoid and humanoid.Health &gt; 0 and torso then
-&#9;&#9;&#9;&#9;UntagHumanoid(humanoid)
-&#9;&#9;&#9;&#9;TagHumanoid(humanoid, Player)
-&#9;&#9;&#9;&#9;humanoid:TakeDamage(ShockDamage)
-&#9;&#9;&#9;&#9;humanoid.Sit = true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function Explode()
-&#9;if not PlayerClone or not PlayerClone.Parent or not CheckIfAlive() or not CanExplode then
-&#9;&#9;return
-&#9;end
-&#9;local humanoid = PlayerClone:FindFirstChild(&quot;Humanoid&quot;)
-&#9;local torso = PlayerClone:FindFirstChild(&quot;Torso&quot;)
-&#9;if not humanoid or humanoid.Health == 0 or not torso then
-&#9;&#9;return
-&#9;end
-&#9;CanExplode = false
-&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Rage)
-&#9;wait(0.35)
-&#9;local Blasted = false
-&#9;Humanoid.WalkSpeed = 0
-&#9;humanoid.WalkSpeed = 0
-&#9;local ShockWaveDuration = 1
-&#9;local ShockWaveTick = tick()
-&#9;local ShockWaveClone = ShockWave:Clone()
-&#9;local ShockWaveMesh = ShockWaveClone.Mesh
-&#9;local ShockWaveClone2 = ShockWave:Clone()
-&#9;local ShockWaveMesh2 = ShockWaveClone2.Mesh
-&#9;Debris:AddItem(ShockWaveClone, ShockWaveDuration)
-&#9;Debris:AddItem(ShockWaveClone2, ShockWaveDuration)
-&#9;ShockWaveClone.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;ShockWaveClone2.Parent = game:GetService(&quot;Workspace&quot;)
-&#9;ShockWaveClone.CFrame = Torso.CFrame
-&#9;ShockWaveClone2.CFrame = torso.CFrame
-&#9;while (tick() - ShockWaveTick) &lt; ShockWaveDuration and ShockWaveClone and ShockWaveClone.Parent do
-&#9;&#9;ShockWaveMesh.Scale = Vector3.new((ShockWaveMesh.Scale.X + 1.1), 0.2, (ShockWaveMesh.Scale.Z + 1.1))
-&#9;&#9;ShockWaveMesh2.Scale = Vector3.new((ShockWaveMesh2.Scale.X + 1.1), 0.2, (ShockWaveMesh2.Scale.Z + 1.1))
-&#9;&#9;ShockWaveClone.CFrame = Torso.CFrame
-&#9;&#9;ShockWaveClone2.CFrame = torso.CFrame
-&#9;&#9;if (tick() - ShockWaveTick) &lt; 0.85 and not Blasted then
-&#9;&#9;&#9;Blasted = true 
-&#9;&#9;&#9;BlastHumanoids(torso)
-&#9;&#9;&#9;BlastHumanoids(Torso)
-&#9;&#9;end
-&#9;&#9;wait()
-&#9;end
-&#9;for i, v in pairs({ShockWaveClone, ShockWaveClone2}) do
-&#9;&#9;if v and v.Parent then
-&#9;&#9;&#9;v:Destroy()
-&#9;&#9;end
-&#9;end
-&#9;Humanoid.WalkSpeed = 16
-&#9;humanoid.WalkSpeed = 16
-&#9;wait(7.5)
-&#9;CanExplode = true
-end
-function CheckIfAlive()
-&#9;return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
-end
-
-function Activated()
-&#9;if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped then 
-&#9;&#9;return 
-&#9;end
-&#9;if PlayerClone and PlayerClone.Parent then
-&#9;&#9;return
-&#9;end
-&#9;Tool.Enabled = false
-&#9;InvokeClient(&quot;PlayAnimation&quot;, Animations.Stab)
-&#9;wait(0.5)
-&#9;SpawnClone(Character, Torso)
-&#9;wait(0.5)
-&#9;Tool.Enabled = true
-end
-
-function Equipped()
-&#9;Character = Tool.Parent
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;Torso = Character:FindFirstChild(&quot;Torso&quot;)
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;PlayerGui = Player:FindFirstChild(&quot;PlayerGui&quot;)
-&#9;if PlayerGui then
-&#9;&#9;InfoGuiClone = InfoGui:Clone()
-&#9;&#9;InfoGuiClone.Frame.TextLabel.Text = &quot;Summon your double!&quot;
-&#9;&#9;InfoGuiClone.Parent = PlayerGui
-&#9;end
-&#9;ToolEquipped = true
-end
-
-function Unequipped()
-&#9;if InfoGuiClone and InfoGuiClone.Parent then
-&#9;&#9;InfoGuiClone:Destroy()
-&#9;end
-&#9;ToolEquipped = false
-end
-
-function OnServerInvoke(player, mode, value)
-&#9;if player == Player and ToolEquipped and value and CheckIfAlive() then
-&#9;&#9;if mode == &quot;KeyPress&quot; then
-&#9;&#9;&#9;local Down = value.Down
-&#9;&#9;&#9;local Key = value.Key
-&#9;&#9;&#9;local ByteKey = string.byte(Key)
-&#9;&#9;&#9;if (Key == &quot;q&quot; or Key == &quot;e&quot;) and Down then
-&#9;&#9;&#9;&#9;Swap()
-&#9;&#9;&#9;elseif Key == &quot;x&quot; and Down then
-&#9;&#9;&#9;&#9;Explode()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-end
-
-function InvokeClient(Mode, Value)
-&#9;local ClientReturn = nil
-&#9;pcall(function()
-&#9;&#9;ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-&#9;end)
-&#9;return ClientReturn
-end
-
-ServerControl.OnServerInvoke = OnServerInvoke
-Tool.Activated:connect(Activated)
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX4E75FA0E1B9E473BB0152AF3F150642F">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">AIScript</string>
-					<ProtectedString name="Source">--Fixed by Luckymaxer
-
-Figure = script.Parent
-
-Humanoid = Figure:WaitForChild(&quot;Humanoid&quot;)
-Torso = Figure:WaitForChild(&quot;Torso&quot;)
-
-Humanoid.MaxHealth = 350
-Humanoid.Health = Humanoid.MaxHealth
-
-local wanderTarget 
-local wanderAngle 
-local wanderConeSize = 6
-local maxWanderAngle = 0.75 
-
-function getWanderTarget()
-&#9;math.random(tick())
-&#9;wanderAngle = (math.random() - 0.5) * maxWanderAngle
-&#9;local rotatedLookVector = CFrame.Angles(0, wanderAngle, 0) * Torso.CFrame.lookVector
-&#9;return (Torso.Position + wanderConeSize * rotatedLookVector)
-end
-
-while true do  &#9;
-&#9;local ray = game.Workspace:FindPartOnRay(Ray.new(Torso.Position, Torso.CFrame.lookVector * 5.0), nil)
-&#9;if ray and Humanoid and ray.Parent ~= Figure then
-&#9;&#9;Humanoid.Jump = true
-&#9;end     
-&#9;wanderTarget = getWanderTarget()&#9;
-&#9;Humanoid:MoveTo(wanderTarget, Torso)
-&#9;wait(0.125)
-end</ProtectedString>
-				</Properties>
-			</Item>
-			<Item class="ScreenGui" referent="RBX5CFDC6CC748447549EBD6E9F9402A766">
-				<Properties>
-					<string name="Name">InfoGui</string>
-				</Properties>
-				<Item class="Frame" referent="RBX804F555406B74332A5BCBEE6983387C0">
-					<Properties>
-						<bool name="Active">false</bool>
-						<Color3 name="BackgroundColor3">4288914085</Color3>
-						<float name="BackgroundTransparency">0</float>
-						<Color3 name="BorderColor3">4279970357</Color3>
-						<int name="BorderSizePixel">1</int>
-						<bool name="ClipsDescendants">false</bool>
-						<bool name="Draggable">false</bool>
-						<string name="Name">Frame</string>
-						<UDim2 name="Position">
-							<XS>0.5</XS>
-							<XO>-110</XO>
-							<YS>1</YS>
-							<YO>-130</YO>
-						</UDim2>
-						<float name="Rotation">0</float>
-						<UDim2 name="Size">
-							<XS>0</XS>
-							<XO>220</XO>
-							<YS>0</YS>
-							<YO>30</YO>
-						</UDim2>
-						<token name="SizeConstraint">0</token>
-						<token name="Style">3</token>
-						<bool name="Visible">true</bool>
-						<int name="ZIndex">1</int>
-					</Properties>
-					<Item class="TextLabel" referent="RBX4558180AE21C41898435B019E5066CC3">
-						<Properties>
-							<bool name="Active">false</bool>
-							<Color3 name="BackgroundColor3">4288914085</Color3>
-							<float name="BackgroundTransparency">1</float>
-							<Color3 name="BorderColor3">4279970357</Color3>
-							<int name="BorderSizePixel">1</int>
-							<bool name="ClipsDescendants">false</bool>
-							<bool name="Draggable">false</bool>
-							<token name="Font">0</token>
-							<token name="FontSize">2</token>
-							<string name="Name">TextLabel</string>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
-							<float name="Rotation">0</float>
-							<UDim2 name="Size">
-								<XS>1</XS>
-								<XO>0</XO>
-								<YS>1</YS>
-								<YO>0</YO>
-							</UDim2>
-							<token name="SizeConstraint">0</token>
-							<string name="Text">Summon your double!</string>
-							<Color3 name="TextColor3">4294934272</Color3>
-							<bool name="TextScaled">false</bool>
-							<Color3 name="TextStrokeColor3">4278190080</Color3>
-							<float name="TextStrokeTransparency">1</float>
-							<float name="TextTransparency">0</float>
-							<bool name="TextWrapped">false</bool>
-							<token name="TextXAlignment">2</token>
-							<token name="TextYAlignment">0</token>
-							<bool name="Visible">true</bool>
-							<int name="ZIndex">10</int>
-						</Properties>
-					</Item>
-				</Item>
-			</Item>
-		</Item>
 		<Item class="Animation" referent="RBXBD38EE1A4DAD414C9942E1B9DAEA9AC4">
 			<Properties>
 				<Content name="AnimationId"><url>http://www.roblox.com/Asset?ID=72635723</url></Content>
@@ -584,125 +133,126 @@ end</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
 Tool = script.Parent
-Handle = Tool:WaitForChild(&quot;Handle&quot;)
+Handle = Tool:WaitForChild("Handle")
 
-Players = game:GetService(&quot;Players&quot;)
-RunService = game:GetService(&quot;RunService&quot;)
-ContextActionService = game:GetService(&quot;ContextActionService&quot;)
-UserInputService = game:GetService(&quot;UserInputService&quot;)
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+ContextActionService = game:GetService("ContextActionService")
+UserInputService = game:GetService("UserInputService")
 
-Camera = game:GetService(&quot;Workspace&quot;).CurrentCamera
+Camera = game:GetService("Workspace").CurrentCamera
 
 Animations = {}
 LocalObjects = {}
 
-ServerControl = Tool:WaitForChild(&quot;ServerControl&quot;)
-ClientControl = Tool:WaitForChild(&quot;ClientControl&quot;)
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
 
 ReloadCounter = 0
 
 ToolEquipped = false
 
 function SetAnimation(Mode, Value)
-&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == Value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
-&#9;&#9;table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
-&#9;&#9;AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
-&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
-&#9;&#9;for i, v in pairs(Animations) do
-&#9;&#9;&#9;if v.Animation == Value.Animation then
-&#9;&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;&#9;&#9;table.remove(Animations, i)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if Mode == "PlayAnimation" and Value and ToolEquipped and Humanoid then
+		for i, v in pairs(Animations) do
+			if v.Animation == Value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+		local AnimationTrack = Humanoid:LoadAnimation(Value.Animation)
+		table.insert(Animations, {Animation = Value.Animation, AnimationTrack = AnimationTrack})
+		AnimationTrack:Play(Value.FadeTime, Value.Weight, Value.Speed)
+	elseif Mode == "StopAnimation" and Value then
+		for i, v in pairs(Animations) do
+			if v.Animation == Value.Animation then
+				v.AnimationTrack:Stop()
+				table.remove(Animations, i)
+			end
+		end
+	end
 end
 
 function CheckIfAlive()
-&#9;return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0) and true) or false)
+	return (((Player and Player.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0) and true) or false)
 end
 
 function Equipped(Mouse)
-&#9;Character = Tool.Parent
-&#9;Player = Players:GetPlayerFromCharacter(Character)
-&#9;Humanoid = Character:FindFirstChild(&quot;Humanoid&quot;)
-&#9;ToolEquipped = true
-&#9;if not CheckIfAlive() then
-&#9;&#9;return
-&#9;end
-&#9;PlayerMouse = Player:GetMouse()
-&#9;Mouse.Button1Down:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = true})
-&#9;end)
-&#9;Mouse.Button1Up:connect(function()
-&#9;&#9;InvokeServer(&quot;MouseClick&quot;, {Down = false})
-&#9;end)
-&#9;Mouse.KeyDown:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = true})
-&#9;end)
-&#9;Mouse.KeyUp:connect(function(Key)
-&#9;&#9;InvokeServer(&quot;KeyPress&quot;, {Key = Key, Down = false})
-&#9;end)
-&#9;if UserInputService.TouchEnabled then
-&#9;&#9;ContextActionService:BindActionToInputTypes(&quot;Swap&quot;, function()
-&#9;&#9;&#9;spawn(function() InvokeServer(&quot;KeyPress&quot;, {Key = &quot;q&quot;, Down = true}) end)
-&#9;&#9;end, true, &quot;&quot;)
-&#9;&#9;ContextActionService:SetTitle(&quot;Swap&quot;, &quot;Swap&quot;)
-&#9;&#9;ContextActionService:BindActionToInputTypes(&quot;Explode&quot;, function()
-&#9;&#9;&#9;spawn(function() InvokeServer(&quot;KeyPress&quot;, {Key = &quot;x&quot;, Down = true}) end)
-&#9;&#9;end, true, &quot;&quot;)
-&#9;&#9;ContextActionService:SetTitle(&quot;Explode&quot;, &quot;Explode&quot;)
-&#9;end
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerMouse = Player:GetMouse()
+	Mouse.Button1Down:connect(function()
+		InvokeServer("MouseClick", {Down = true})
+	end)
+	Mouse.Button1Up:connect(function()
+		InvokeServer("MouseClick", {Down = false})
+	end)
+	Mouse.KeyDown:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = true})
+	end)
+	Mouse.KeyUp:connect(function(Key)
+		InvokeServer("KeyPress", {Key = Key, Down = false})
+	end)
+	if UserInputService.TouchEnabled then
+		ContextActionService:BindActionToInputTypes("Swap", function()
+			spawn(function() InvokeServer("KeyPress", {Key = "q", Down = true}) end)
+		end, true, "")
+		ContextActionService:SetTitle("Swap", "Swap")
+		ContextActionService:BindActionToInputTypes("Explode", function()
+			spawn(function() InvokeServer("KeyPress", {Key = "x", Down = true}) end)
+		end, true, "")
+		ContextActionService:SetTitle("Explode", "Explode")
+	end
 end
 
 function Unequipped()
-&#9;ToolEquipped = false
-&#9;LocalObjects = {}
-&#9;for i, v in pairs(Animations) do
-&#9;&#9;if v and v.AnimationTrack then
-&#9;&#9;&#9;v.AnimationTrack:Stop()
-&#9;&#9;end
-&#9;end
-&#9;if UserInputService.TouchEnabled then
-&#9;&#9;ContextActionService:UnbindAction(&quot;Swap&quot;)
-&#9;&#9;ContextActionService:UnbindAction(&quot;Explode&quot;)
-&#9;end
-&#9;Animations = {}
+	ToolEquipped = false
+	LocalObjects = {}
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	if UserInputService.TouchEnabled then
+		ContextActionService:UnbindAction("Swap")
+		ContextActionService:UnbindAction("Explode")
+	end
+	Animations = {}
 end
 
 function InvokeServer(Mode, Value)
-&#9;pcall(function()
-&#9;&#9;local ServerReturn = ServerControl:InvokeServer(Mode, Value)
-&#9;&#9;return ServerReturn
-&#9;end)
+	pcall(function()
+		local ServerReturn = ServerControl:InvokeServer(Mode, Value)
+		return ServerReturn
+	end)
 end
 
 function OnClientInvoke(Mode, Value)
-&#9;if Mode == &quot;PlayAnimation&quot; and Value and ToolEquipped and Humanoid then
-&#9;&#9;SetAnimation(&quot;PlayAnimation&quot;, Value)
-&#9;elseif Mode == &quot;StopAnimation&quot; and Value then
-&#9;&#9;SetAnimation(&quot;StopAnimation&quot;, Value)
-&#9;elseif Mode == &quot;PlaySound&quot; and Value then
-&#9;&#9;Value:Play()
-&#9;elseif Mode == &quot;StopSound&quot; and Value then
-&#9;&#9;Value:Stop()
-&#9;elseif Mode == &quot;MousePosition&quot; then
-&#9;&#9;return PlayerMouse.Hit.p
-&#9;end
+	if Mode == "PlayAnimation" and Value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", Value)
+	elseif Mode == "StopAnimation" and Value then
+		SetAnimation("StopAnimation", Value)
+	elseif Mode == "PlaySound" and Value then
+		Value:Play()
+	elseif Mode == "StopSound" and Value then
+		Value:Stop()
+	elseif Mode == "MousePosition" then
+		return PlayerMouse.Hit.p
+	end
 end
 
 Tool.Equipped:connect(Equipped)
 Tool.Unequipped:connect(Unequipped)
-ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
+ClientControl.OnClientInvoke = OnClientInvoke]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBXB78F3C563B604396982EE9CB50C38421">
@@ -710,34 +260,35 @@ ClientControl.OnClientInvoke = OnClientInvoke</ProtectedString>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">MouseIcon</string>
-				<ProtectedString name="Source">--Made by Luckymaxer
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
 
-Mouse_Icon = &quot;rbxasset://textures/GunCursor.png&quot;
-Reloading_Icon = &quot;rbxasset://textures/GunWaitCursor.png&quot;
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
 
 Tool = script.Parent
 
 Mouse = nil
 
 function UpdateIcon()
-&#9;if Mouse then
-&#9;&#9;Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
-&#9;end
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
 end
 
 function OnEquipped(ToolMouse)
-&#9;Mouse = ToolMouse
-&#9;UpdateIcon()
+	Mouse = ToolMouse
+	UpdateIcon()
 end
 
 function OnChanged(Property)
-&#9;if Property == &quot;Enabled&quot; then
-&#9;&#9;UpdateIcon()
-&#9;end
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
 end
 
 Tool.Equipped:connect(OnEquipped)
-Tool.Changed:connect(OnChanged)</ProtectedString>
+Tool.Changed:connect(OnChanged)]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Animation" referent="RBXF5776286F9194958B57D7F8B31C92A74">
@@ -748,9 +299,7 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 		</Item>
 		<Item class="Camera" referent="RBXF3E1F4B580B54DA08FC39A18C037AC4E">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
+				<CoordinateFrame name="CFrame">
 					<X>16.6671314</X>
 					<Y>2.44971085</Y>
 					<Z>-21.8957901</Z>
@@ -764,6 +313,8 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					<R21>0.000831769546</R21>
 					<R22>0.0125293816</R22>
 				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
 					<X>16.5075016</X>
@@ -779,8 +330,491 @@ Tool.Changed:connect(OnChanged)</ProtectedString>
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXE93CBD45248B498A82B7FF9C12161EC5">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">EntanglerScript</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+InsertService = game:GetService("InsertService")
+
+InfoGui = script:WaitForChild("InfoGui")
+AIScript = script:WaitForChild("AIScript")
+
+CloneId = 68452456
+CloneModel = InsertService:LoadAsset(CloneId)
+Clone = CloneModel:GetChildren()[1]:Clone()
+if CloneModel and CloneModel.Parent then
+	CloneModel:Destroy()
+end
+
+CloneValue = Instance.new("ObjectValue")
+CloneValue.Changed:connect(function()
+	if not InfoGuiClone or not InfoGuiClone.Parent then
+		return
+	end
+	local Frame = InfoGuiClone:FindFirstChild("Frame")
+	if not Frame then
+		return
+	end
+	local TextLabel = Frame:FindFirstChild("TextLabel")
+	if not TextLabel then
+		return
+	end
+	TextLabel.Text = ((CloneValue.Value and "Press Q/E to swap with your double!") or "Summon your double!")
+end)
+
+BasePart = Instance.new("Part")
+BasePart.Shape = Enum.PartType.Block
+BasePart.Material = Enum.Material.Plastic
+BasePart.FormFactor = Enum.FormFactor.Custom
+BasePart.TopSurface = Enum.SurfaceType.Smooth
+BasePart.BottomSurface = Enum.SurfaceType.Smooth
+BasePart.Size = Vector3.new(0.2, 0.2, 0.2)
+BasePart.Locked = true
+BasePart.CanCollide = true
+BasePart.Anchored = false
+
+ShockWave = BasePart:Clone()
+ShockWave.Size = Vector3.new(1, 0.2, 1)
+ShockWave.Transparency = 1
+ShockWave.Anchored = true
+ShockWave.CanCollide = false
+TopDecal = Instance.new("Decal")
+TopDecal.Specular = 20
+TopDecal.Face = Enum.NormalId.Top
+TopDecal.Texture = "http://www.roblox.com/asset/?version=1&id=72634953"
+TopDecal.Parent = ShockWave
+BottomDecal = TopDecal:Clone()
+BottomDecal.Face = Enum.NormalId.Bottom
+BottomDecal.Parent = ShockWave
+Mesh = Instance.new("BlockMesh")
+Mesh.Parent = ShockWave
+
+Animations = {
+	Stab = {Animation = Tool:WaitForChild("Stab"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil},
+	Rage = {Animation = Tool:WaitForChild("Rage"), FadeTime = nil, Weight = nil, Speed = nil, Duration = nil}
+}
+
+ShockDamage = 14
+
+CanSwap = true
+CanExplode = true
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Instance.new("RemoteFunction"))
+ServerControl.Name = "ServerControl"
+ServerControl.Parent = Tool
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Instance.new("RemoteFunction"))
+ClientControl.Name = "ClientControl"
+ClientControl.Parent = Tool
+
+Tool.Enabled = true
+
+function TagHumanoid(humanoid, player)
+	local Creator_Tag = Instance.new("ObjectValue")
+	Creator_Tag.Name = "creator"
+	Creator_Tag.Value = player
+	Debris:AddItem(Creator_Tag, 2)
+	Creator_Tag.Parent = humanoid
+end
+
+function UntagHumanoid(humanoid)
+	for i, v in pairs(humanoid:GetChildren()) do
+		if v:IsA("ObjectValue") and v.Name == "creator" then
+			v:Destroy()
+		end
+	end
+end
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function SpawnClone(character, torso)
+	
+	if not character then
+		return
+	end
+	
+	local humanoid = character:FindFirstChild("Humanoid")
+	if not humanoid or humanoid.Health == 0 then
+		return
+	end
+
+	PlayerClone = Clone:Clone()
+	PlayerClone.Name = character.Name
+	
+	CloneValue.Value = PlayerClone
+	
+	local ThisClone = PlayerClone
+	
+	local CloneHumanoid = PlayerClone:FindFirstChild("Humanoid")
+	if CloneHumanoid then
+		CloneHumanoid.Died:connect(function()
+			Debris:AddItem(PlayerClone, 2)
+		end)
+		PlayerClone.Changed:connect(function(Property)
+			if Property == "Parent" and not PlayerClone.Parent then
+				if CloneValue.Value == ThisClone then
+					CloneValue.Value = nil
+				end
+			end
+		end)
+	end
+	
+	local Target = Instance.new("ObjectValue")
+	Target.Name = "Target"
+	Target.Value = humanoid
+	Target.Parent = PlayerClone
+	
+	local AIScriptClone = AIScript:Clone()
+	AIScriptClone.Disabled = false
+	AIScriptClone.Parent = PlayerClone
+	
+	for i, v in pairs(character:GetChildren()) do
+		if v:IsA("BasePart") then
+			for ii, vv in pairs(PlayerClone:GetChildren()) do
+				if v:IsA("BasePart") and v.Name == vv.Name then
+					vv.BrickColor = v.BrickColor
+					for iii, vvv in pairs(vv:GetChildren()) do
+						if not vvv:IsA("JointInstance") then
+							vvv:Destroy()
+						end
+					end
+					for iii, vvv in pairs(v:GetChildren()) do
+						if vvv:IsA("FaceInstance") or vvv:IsA("DataModelMesh") then
+							local Object = vvv:Clone()
+							Object.Parent = vv
+						end
+					end
+				end
+			end
+		elseif v:IsA("Clothing") or v:IsA("Accoutrement") or v:IsA("CharacterMesh") then
+			local Object = v:Clone()
+			Object.Parent = PlayerClone
+		end
+	end	
+	
+	Debris:AddItem(PlayerClone, 60)
+	PlayerClone.Parent = game:GetService("Workspace")
+	PlayerClone:MoveTo(Torso.Position + Vector3.new(5, 0, 5))
+	
+end
+
+function Swap()
+	if not PlayerClone or not PlayerClone.Parent or not CheckIfAlive() or not CanSwap then
+		return
+	end
+	local humanoid = PlayerClone:FindFirstChild("Humanoid")
+	local torso = PlayerClone:FindFirstChild("Torso")
+	if not humanoid or humanoid.Health == 0 or not torso then
+		return
+	end
+	CanSwap = false
+	local myCFrame = Torso.CFrame
+	local cloneCFrame = torso.CFrame
+	Torso.CFrame = CFrame.new(cloneCFrame.p, cloneCFrame.p + cloneCFrame.lookVector)
+	torso.CFrame = CFrame.new(myCFrame.p, myCFrame.p + myCFrame.lookVector)
+	wait(0.75)
+	CanSwap = true
+end
+
+function BlastHumanoids(torso)
+	if not torso then
+		return
+	end
+	local AOE = Vector3.new(10, 10, 10)	
+	local Parts = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region3.new((torso.Position - AOE), (torso.Position + AOE)), {Character, PlayerClone}, 100)
+	for i, v in pairs(Parts) do
+		local character = v.Parent
+		local player = Players:GetPlayerFromCharacter(character)
+		local IgnorePlayer = false
+		if player and IsTeamMate(Player, player) then
+			IgnorePlayer = true
+		end
+		if character and not IgnorePlayer then
+			local humanoid = character:FindFirstChild("Humanoid")
+			local torso = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso")
+			if humanoid and humanoid.Health > 0 and torso then
+				UntagHumanoid(humanoid)
+				TagHumanoid(humanoid, Player)
+				humanoid:TakeDamage(ShockDamage)
+				humanoid.Sit = true
+			end
+		end
+	end
+end
+
+function Explode()
+	if not PlayerClone or not PlayerClone.Parent or not CheckIfAlive() or not CanExplode then
+		return
+	end
+	local humanoid = PlayerClone:FindFirstChild("Humanoid")
+	local torso = PlayerClone:FindFirstChild("Torso")
+	if not humanoid or humanoid.Health == 0 or not torso then
+		return
+	end
+	CanExplode = false
+	InvokeClient("PlayAnimation", Animations.Rage)
+	wait(0.35)
+	local Blasted = false
+	Humanoid.WalkSpeed = 0
+	humanoid.WalkSpeed = 0
+	local ShockWaveDuration = 1
+	local ShockWaveTick = tick()
+	local ShockWaveClone = ShockWave:Clone()
+	local ShockWaveMesh = ShockWaveClone.Mesh
+	local ShockWaveClone2 = ShockWave:Clone()
+	local ShockWaveMesh2 = ShockWaveClone2.Mesh
+	Debris:AddItem(ShockWaveClone, ShockWaveDuration)
+	Debris:AddItem(ShockWaveClone2, ShockWaveDuration)
+	ShockWaveClone.Parent = game:GetService("Workspace")
+	ShockWaveClone2.Parent = game:GetService("Workspace")
+	ShockWaveClone.CFrame = Torso.CFrame
+	ShockWaveClone2.CFrame = torso.CFrame
+	while (tick() - ShockWaveTick) < ShockWaveDuration and ShockWaveClone and ShockWaveClone.Parent do
+		ShockWaveMesh.Scale = Vector3.new((ShockWaveMesh.Scale.X + 1.1), 0.2, (ShockWaveMesh.Scale.Z + 1.1))
+		ShockWaveMesh2.Scale = Vector3.new((ShockWaveMesh2.Scale.X + 1.1), 0.2, (ShockWaveMesh2.Scale.Z + 1.1))
+		ShockWaveClone.CFrame = Torso.CFrame
+		ShockWaveClone2.CFrame = torso.CFrame
+		if (tick() - ShockWaveTick) < 0.85 and not Blasted then
+			Blasted = true 
+			BlastHumanoids(torso)
+			BlastHumanoids(Torso)
+		end
+		wait()
+	end
+	for i, v in pairs({ShockWaveClone, ShockWaveClone2}) do
+		if v and v.Parent then
+			v:Destroy()
+		end
+	end
+	Humanoid.WalkSpeed = 16
+	humanoid.WalkSpeed = 16
+	wait(7.5)
+	CanExplode = true
+end
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Activated()
+	if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped then 
+		return 
+	end
+	if PlayerClone and PlayerClone.Parent then
+		return
+	end
+	Tool.Enabled = false
+	InvokeClient("PlayAnimation", Animations.Stab)
+	wait(0.5)
+	SpawnClone(Character, Torso)
+	wait(0.5)
+	Tool.Enabled = true
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	Torso = Character:FindFirstChild("HumanoidRootPart")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	PlayerGui = Player:FindFirstChild("PlayerGui")
+	if PlayerGui then
+		InfoGuiClone = InfoGui:Clone()
+		InfoGuiClone.Frame.TextLabel.Text = "Summon your double!"
+		InfoGuiClone.Parent = PlayerGui
+	end
+	ToolEquipped = true
+end
+
+function Unequipped()
+	if InfoGuiClone and InfoGuiClone.Parent then
+		InfoGuiClone:Destroy()
+	end
+	ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+	if player == Player and ToolEquipped and value and CheckIfAlive() then
+		if mode == "KeyPress" then
+			local Down = value.Down
+			local Key = value.Key
+			local ByteKey = string.byte(Key)
+			if (Key == "q" or Key == "e") and Down then
+				Swap()
+			elseif Key == "x" and Down then
+				Explode()
+			end
+		end
+	end
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBXF9CC60B9E4ED4F75B4102692009FD417">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">AIScript</string>
+					<string name="ScriptGuid"></string>
+					<ProtectedString name="Source"><![CDATA[--Fixed by Luckymaxer
+
+Figure = script.Parent
+
+Humanoid = Figure:WaitForChild("Humanoid")
+Torso = Figure:WaitForChild("Torso")
+
+Humanoid.MaxHealth = 350
+Humanoid.Health = Humanoid.MaxHealth
+
+local wanderTarget 
+local wanderAngle 
+local wanderConeSize = 6
+local maxWanderAngle = 0.75 
+
+function getWanderTarget()
+	math.random(tick())
+	wanderAngle = (math.random() - 0.5) * maxWanderAngle
+	local rotatedLookVector = CFrame.Angles(0, wanderAngle, 0) * Torso.CFrame.lookVector
+	return (Torso.Position + wanderConeSize * rotatedLookVector)
+end
+
+while true do  	
+	local ray = game.Workspace:FindPartOnRay(Ray.new(Torso.Position, Torso.CFrame.lookVector * 5.0), nil)
+	if ray and Humanoid and ray.Parent ~= Figure then
+		Humanoid.Jump = true
+	end     
+	wanderTarget = getWanderTarget()	
+	Humanoid:MoveTo(wanderTarget, Torso)
+	wait(0.125)
+end]]></ProtectedString>
+				</Properties>
+			</Item>
+			<Item class="ScreenGui" referent="RBXF6D23FAD79384945B4928C2DEF232C64">
+				<Properties>
+					<int name="DisplayOrder">0</int>
+					<bool name="Enabled">true</bool>
+					<string name="Name">InfoGui</string>
+					<bool name="ResetOnSpawn">true</bool>
+				</Properties>
+				<Item class="Frame" referent="RBXA7DE68009821403197046B1F00BF1220">
+					<Properties>
+						<bool name="Active">false</bool>
+						<Vector2 name="AnchorPoint">
+							<X>0</X>
+							<Y>0</Y>
+						</Vector2>
+						<Color3 name="BackgroundColor3">4288914085</Color3>
+						<float name="BackgroundTransparency">0</float>
+						<Color3 name="BorderColor3">4279970357</Color3>
+						<int name="BorderSizePixel">1</int>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="Draggable">false</bool>
+						<string name="Name">Frame</string>
+						<Ref name="NextSelectionDown">null</Ref>
+						<Ref name="NextSelectionLeft">null</Ref>
+						<Ref name="NextSelectionRight">null</Ref>
+						<Ref name="NextSelectionUp">null</Ref>
+						<UDim2 name="Position">
+							<XS>0.5</XS>
+							<XO>-110</XO>
+							<YS>1</YS>
+							<YO>-130</YO>
+						</UDim2>
+						<float name="Rotation">0</float>
+						<bool name="Selectable">false</bool>
+						<Ref name="SelectionImageObject">null</Ref>
+						<UDim2 name="Size">
+							<XS>0</XS>
+							<XO>220</XO>
+							<YS>0</YS>
+							<YO>30</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<token name="Style">3</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+					<Item class="TextLabel" referent="RBX9D3BA672CA284F99BD607A94E24BC073">
+						<Properties>
+							<bool name="Active">false</bool>
+							<Vector2 name="AnchorPoint">
+								<X>0</X>
+								<Y>0</Y>
+							</Vector2>
+							<Color3 name="BackgroundColor3">4288914085</Color3>
+							<float name="BackgroundTransparency">1</float>
+							<Color3 name="BorderColor3">4279970357</Color3>
+							<int name="BorderSizePixel">1</int>
+							<bool name="ClipsDescendants">false</bool>
+							<bool name="Draggable">false</bool>
+							<token name="Font">0</token>
+							<token name="FontSize">2</token>
+							<string name="Name">TextLabel</string>
+							<Ref name="NextSelectionDown">null</Ref>
+							<Ref name="NextSelectionLeft">null</Ref>
+							<Ref name="NextSelectionRight">null</Ref>
+							<Ref name="NextSelectionUp">null</Ref>
+							<UDim2 name="Position">
+								<XS>0</XS>
+								<XO>0</XO>
+								<YS>0</YS>
+								<YO>0</YO>
+							</UDim2>
+							<float name="Rotation">0</float>
+							<bool name="Selectable">false</bool>
+							<Ref name="SelectionImageObject">null</Ref>
+							<UDim2 name="Size">
+								<XS>1</XS>
+								<XO>0</XO>
+								<YS>1</YS>
+								<YO>0</YO>
+							</UDim2>
+							<token name="SizeConstraint">0</token>
+							<string name="Text">Summon your double!</string>
+							<Color3 name="TextColor3">4294934272</Color3>
+							<bool name="TextScaled">false</bool>
+							<float name="TextSize">10</float>
+							<Color3 name="TextStrokeColor3">4278190080</Color3>
+							<float name="TextStrokeTransparency">1</float>
+							<float name="TextTransparency">0</float>
+							<bool name="TextWrapped">false</bool>
+							<token name="TextXAlignment">2</token>
+							<token name="TextYAlignment">0</token>
+							<bool name="Visible">true</bool>
+							<int name="ZIndex">10</int>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
 		</Item>
 	</Item>
 </roblox>
