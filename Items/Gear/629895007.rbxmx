@@ -1,0 +1,477 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Tool" referent="RBX6664B97C68B64DE0A44AAFD47F63A6C2">
+		<Properties>
+			<bool name="CanBeDropped">true</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>-0.300000012</Y>
+				<Z>0.699999988</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>-0</R10>
+				<R11>0.707106769</R11>
+				<R12>0.707106769</R12>
+				<R20>0</R20>
+				<R21>-0.707106769</R21>
+				<R22>0.707106769</R22>
+			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
+			<string name="Name">ViridianThrowingKnives</string>
+			<bool name="RequiresHandle">true</bool>
+			<Content name="TextureId"><url>rbxassetid://628629112</url></Content>
+			<string name="ToolTip"></string>
+		</Properties>
+		<Item class="Script" referent="RBXC31329AE77FA44E1B20AA873B924771B">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Server</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Handle = Tool:WaitForChild("Handle")
+
+local FriendlyFire = false
+
+local AttackPower = 1
+local AttackDamage = 22.5
+local AtackRechargeTime = 3
+local AttackRecharge = 1/AtackRechargeTime
+local AttackSpeed = 256
+
+local Equipped = false
+local Heartbeat = game:GetService("RunService").Heartbeat
+
+local Knives = {}
+
+--returns the wielding player of this tool
+function getPlayer()
+	local char = Tool.Parent
+	return game:GetService("Players"):GetPlayerFromCharacter(char)
+end
+
+--helpfully checks a table for a specific value
+function contains(t, v)
+	for _, val in pairs(t) do
+		if val == v then
+			return true
+		end
+	end
+	return false
+end
+
+--tags a human for the ROBLOX KO system
+function tagHuman(human)
+	local tag = Instance.new("ObjectValue")
+	tag.Value = getPlayer()
+	tag.Name = "creator"
+	tag.Parent = human
+	game:GetService("Debris"):AddItem(tag)
+end
+
+--used by checkTeams
+function sameTeam(otherHuman)
+	local player = getPlayer()
+	local otherPlayer = game:GetService("Players"):GetPlayerFromCharacter(otherHuman.Parent)
+	if player and otherPlayer then
+		return player.TeamColor == otherPlayer.TeamColor
+	end
+	return false
+end
+
+--use this to determine if you want this human to be harmed or not, returns boolean
+function checkTeams(otherHuman)
+	return not (sameTeam(otherHuman) and not FriendlyFire)
+end
+
+function getKnife()
+	local knife = Handle:clone()
+	knife.Transparency = 0
+	knife.Hit.Pitch = math.random(90, 110)/100
+	
+	local lift = Instance.new("BodyForce")
+	lift.force = Vector3.new(0, 196.2, 0) * knife:GetMass() * 0.8
+	lift.Parent = knife
+	
+	local proj = Tool.Projectile:Clone()
+	proj.Disabled = false
+	proj.Parent = knife
+	
+	return knife
+end
+
+function equippedLoop()
+	while Equipped do
+		local dt = Heartbeat:wait()
+		
+		if AttackPower < 1 then
+			AttackPower = AttackPower + dt * AttackRecharge
+			if AttackPower > 1 then
+				AttackPower = 1
+			end
+		end
+		
+		Handle.Fire.Enabled = AttackPower >= 1
+		Handle.Transparency = 1 - AttackPower
+	end
+end
+
+function onLeftDown(mousePos)
+	local knife = getKnife()
+	knife.CFrame = CFrame.new(Handle.Position, mousePos)
+	knife.Velocity = knife.CFrame.lookVector * AttackSpeed * AttackPower
+	local damage = AttackDamage * AttackPower
+	local touched
+	touched = knife.Touched:connect(function(part)
+		if part:IsDescendantOf(Tool.Parent) then return end
+		if contains(Knives, part) then return end
+		
+		if part.Parent and part.Parent:FindFirstChild("Humanoid") then
+			local human = part.Parent.Humanoid
+			if checkTeams(human) then
+				tagHuman(human)
+				human:TakeDamage(damage)
+				knife.Hit:Play()
+			end
+		end
+		
+		knife.Projectile:Destroy()
+		
+		local w = Instance.new("Weld")
+		w.Part0 = part
+		w.Part1 = knife
+		w.C0 = part.CFrame:toObjectSpace(knife.CFrame)
+		w.Parent = w.Part0
+		
+		touched:disconnect()
+	end)
+	table.insert(Knives, knife)
+	knife.Parent = workspace
+	
+	game:GetService("Debris"):AddItem(knife, 3.5)
+	delay(2, function()
+		knife.Transparency = 1
+		knife.Fire.Enabled = false
+	end)
+	
+	Remote:FireClient(getPlayer(), "PlayAnimation", "Throw")	
+	
+	Handle.Throw.Pitch = 0.8 + 0.4 * AttackPower
+	Handle.Throw:Play()
+	
+	AttackPower = 0
+end
+
+function onRemote(player, func, ...)
+	if player ~= getPlayer() then return end
+	
+	if func == "LeftDown" then
+		onLeftDown(...)
+	end
+end
+
+function onEquip()
+	Equipped = true
+	equippedLoop()
+end
+
+function onUnequip()
+	Equipped = false
+end
+
+Remote.OnServerEvent:connect(onRemote)
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="LocalScript" referent="RBX3528C894CAD24AB2BC47D5B313A7E926">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Client</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+local Player = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+local BeganConnection, EndedConnection
+
+function playAnimation(animName, ...)
+	if Tracks[animName] then
+		Tracks[animName]:Play()
+	else
+		local anim = Tool:FindFirstChild(animName)
+		if anim and Tool.Parent and Tool.Parent:FindFirstChild("Humanoid") then
+			Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+			playAnimation(animName, ...)
+		end
+	end
+end
+
+function stopAnimation(animName)
+	if Tracks[animName] then
+		Tracks[animName]:Stop()
+	end
+end
+
+function inputBegan(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftDown", Mouse.Hit.p)
+	end
+end
+
+function inputEnded(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftUp")
+	end
+end
+
+function onRemote(func, ...)
+	if func == "PlayAnimation" then
+		playAnimation(...)
+	elseif func == "StopAnimation" then
+		stopAnimation(...)
+	end
+end
+
+function onEquip()
+	BeganConnection = UIS.InputBegan:connect(inputBegan)
+	EndedConnection = UIS.InputEnded:connect(inputEnded)
+end
+
+function onUnequip()
+	if BeganConnection then
+		BeganConnection:disconnect()
+		BeganConnection = nil
+	end
+	
+	if EndedConnection then
+		EndedConnection:disconnect()
+		EndedConnection = nil
+	end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Remote.OnClientEvent:connect(onRemote)]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="RemoteEvent" referent="RBX6E02AE2A7B0B468990FC67ABF1092290">
+			<Properties>
+				<string name="Name">Remote</string>
+			</Properties>
+		</Item>
+		<Item class="Animation" referent="RBXCC257F67F7904233A52A6164D351A41D">
+			<Properties>
+				<Content name="AnimationId"><url>http://www.roblox.com/asset/?id=207107855</url></Content>
+				<string name="Name">Throw</string>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX867DC997F92E4447A56A4B26E96496AE">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-6.5999999</X>
+					<Y>69</Y>
+					<Z>-52.7000008</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>0.707106709</R11>
+					<R12>-0.707106769</R12>
+					<R20>0</R20>
+					<R21>0.707106769</R21>
+					<R22>0.707106709</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.200000003</X>
+					<Y>0.399999976</Y>
+					<Z>2</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX8F08544150924284B3A120466ACBEA2F">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>rbxassetid://202083123</url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+					<Content name="TextureId"><url>rbxassetid://628629338</url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX18B8139D8DEE48CBB50B755CDB3E61C0">
+				<Properties>
+					<float name="EmitterSize">10</float>
+					<bool name="Looped">false</bool>
+					<string name="Name">Throw</string>
+					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=97095069</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Sound" referent="RBX121DEF2C2C0D418FB436B0034A684B3C">
+				<Properties>
+					<float name="EmitterSize">10</float>
+					<bool name="Looped">false</bool>
+					<string name="Name">Hit</string>
+					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
+					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=93706376</url></Content>
+					<double name="TimePosition">0</double>
+					<float name="Volume">0.5</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Fire" referent="RBXB02A195E2FEA49F2B9EF348DD424D86D">
+				<Properties>
+					<Color3 name="Color">4278233600</Color3>
+					<bool name="Enabled">false</bool>
+					<string name="Name">Fire</string>
+					<Color3 name="SecondaryColor">4283804287</Color3>
+					<float name="heat_xml">0</float>
+					<float name="size_xml">2</float>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBX244B957C710A477BACB3727711744A6C">
+			<Properties>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Projectile</string>
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
+
+local Projectile = script.Parent
+local Heartbeat = game:GetService("RunService").Heartbeat
+
+while Heartbeat:wait() do
+	Projectile.CFrame = CFrame.new(Projectile.Position, Projectile.Position + Projectile.Velocity)
+end
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBXDA828BB8786C4EDFB05AAC9CC461B778">
+			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>-4.6322732</X>
+					<Y>69.1872635</Y>
+					<Z>-53.0184517</Z>
+					<R00>-0.139921457</R00>
+					<R01>-0.0828333497</R01>
+					<R02>0.986691833</R02>
+					<R10>-0</R10>
+					<R11>0.99649477</R11>
+					<R12>0.0836563036</R12>
+					<R20>-0.990162671</R20>
+					<R21>0.0117053119</R21>
+					<R22>-0.139430985</R22>
+				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<float name="FieldOfView">40</float>
+				<CoordinateFrame name="Focus">
+					<X>-6.6056571</X>
+					<Y>69.0199509</Y>
+					<Z>-52.7395897</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
