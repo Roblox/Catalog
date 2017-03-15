@@ -19,7 +19,9 @@
 				<R21>-0.980066597</R21>
 				<R22>-0.0952471271</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">ChalkSword</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=119685174</url></Content>
 			<string name="ToolTip">A sword or a picture, draw your choice!</string>
 		</Properties>
@@ -28,7 +30,8 @@
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SwordScript</string>
-				<ProtectedString name="Source">r = game:service(&quot;RunService&quot;)
+				<string name="ScriptGuid">{1531325D-4AF7-4082-8585-1FC0B292FCD9}</string>
+				<ProtectedString name="Source"><![CDATA[r = game:service("RunService")
 
 
 local damage = 5
@@ -41,108 +44,108 @@ sword = script.Parent.Handle
 Tool = script.Parent
 
 
-local SlashSound = Instance.new(&quot;Sound&quot;)
-SlashSound.SoundId = &quot;rbxasset://sounds\\swordslash.wav&quot;
+local SlashSound = Instance.new("Sound")
+SlashSound.SoundId = "rbxasset://sounds\\swordslash.wav"
 SlashSound.Parent = sword
 SlashSound.Volume = .7
 
-local LungeSound = Instance.new(&quot;Sound&quot;)
-LungeSound.SoundId = &quot;rbxasset://sounds\\swordlunge.wav&quot;
+local LungeSound = Instance.new("Sound")
+LungeSound.SoundId = "rbxasset://sounds\\swordlunge.wav"
 LungeSound.Parent = sword
 LungeSound.Volume = .6
 
-local UnsheathSound = Instance.new(&quot;Sound&quot;)
-UnsheathSound.SoundId = &quot;rbxasset://sounds\\unsheath.wav&quot;
+local UnsheathSound = Instance.new("Sound")
+UnsheathSound.SoundId = "rbxasset://sounds\\unsheath.wav"
 UnsheathSound.Parent = sword
 UnsheathSound.Volume = 1
 
 
 function blow(hit)
-&#9;if (hit.Parent == nil) then return end -- happens when bullet hits sword
+	if (hit.Parent == nil) then return end -- happens when bullet hits sword
 
-&#9;local humanoid = hit.Parent:findFirstChild(&quot;Humanoid&quot;)
-&#9;local vCharacter = Tool.Parent
-&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
-&#9;local hum = vCharacter:findFirstChild(&quot;Humanoid&quot;) -- non-nil if tool held by a character
-&#9;if humanoid~=nil and humanoid ~= hum and hum ~= nil then
-&#9;&#9;-- final check, make sure sword is in-hand
+	local humanoid = hit.Parent:findFirstChild("Humanoid")
+	local vCharacter = Tool.Parent
+	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+	local hum = vCharacter:findFirstChild("Humanoid") -- non-nil if tool held by a character
+	if humanoid~=nil and humanoid ~= hum and hum ~= nil then
+		-- final check, make sure sword is in-hand
 
-&#9;&#9;local right_arm = vCharacter:FindFirstChild(&quot;Right Arm&quot;)
-&#9;&#9;if (right_arm ~= nil) then
-&#9;&#9;&#9;local joint = right_arm:FindFirstChild(&quot;RightGrip&quot;)
-&#9;&#9;&#9;if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
-&#9;&#9;&#9;&#9;tagHumanoid(humanoid, vPlayer)
-&#9;&#9;&#9;&#9;humanoid:TakeDamage(damage)
-&#9;&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;&#9;untagHumanoid(humanoid)
-&#9;&#9;&#9;end
-&#9;&#9;end
+		local right_arm = vCharacter:FindFirstChild("Right Arm")
+		if (right_arm ~= nil) then
+			local joint = right_arm:FindFirstChild("RightGrip")
+			if (joint ~= nil and (joint.Part0 == sword or joint.Part1 == sword)) then
+				tagHumanoid(humanoid, vPlayer)
+				humanoid:TakeDamage(damage)
+				wait(1)
+				untagHumanoid(humanoid)
+			end
+		end
 
 
-&#9;end
+	end
 end
 
 
 function tagHumanoid(humanoid, player)
-&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value = player
-&#9;creator_tag.Name = &quot;creator&quot;
-&#9;creator_tag.Parent = humanoid
+	local creator_tag = Instance.new("ObjectValue")
+	creator_tag.Value = player
+	creator_tag.Name = "creator"
+	creator_tag.Parent = humanoid
 end
 
 function untagHumanoid(humanoid)
-&#9;if humanoid ~= nil then
-&#9;&#9;local tag = humanoid:findFirstChild(&quot;creator&quot;)
-&#9;&#9;if tag ~= nil then
-&#9;&#9;&#9;tag.Parent = nil
-&#9;&#9;end
-&#9;end
+	if humanoid ~= nil then
+		local tag = humanoid:findFirstChild("creator")
+		if tag ~= nil then
+			tag.Parent = nil
+		end
+	end
 end
 
 
 function attack()
-&#9;damage = slash_damage
-&#9;SlashSound:play()
-&#9;local anim = Instance.new(&quot;StringValue&quot;)
-&#9;anim.Name = &quot;toolanim&quot;
-&#9;anim.Value = &quot;Slash&quot;
-&#9;anim.Parent = Tool
+	damage = slash_damage
+	SlashSound:play()
+	local anim = Instance.new("StringValue")
+	anim.Name = "toolanim"
+	anim.Value = "Slash"
+	anim.Parent = Tool
 end
 
 function lunge()
-&#9;damage = lunge_damage
+	damage = lunge_damage
 
-&#9;LungeSound:play()
+	LungeSound:play()
 
-&#9;local anim = Instance.new(&quot;StringValue&quot;)
-&#9;anim.Name = &quot;toolanim&quot;
-&#9;anim.Value = &quot;Lunge&quot;
-&#9;anim.Parent = Tool
-&#9;
-&#9;
-&#9;force = Instance.new(&quot;BodyVelocity&quot;)
-&#9;force.velocity = Vector3.new(0,10,0) --Tool.Parent.Torso.CFrame.lookVector * 80
-&#9;force.Parent = Tool.Parent.Torso
-&#9;wait(.25)
-&#9;swordOut()
-&#9;wait(.25)
-&#9;force.Parent = nil
-&#9;wait(.5)
-&#9;swordUp()
+	local anim = Instance.new("StringValue")
+	anim.Name = "toolanim"
+	anim.Value = "Lunge"
+	anim.Parent = Tool
+	
+	
+	force = Instance.new("BodyVelocity")
+	force.velocity = Vector3.new(0,10,0) --Tool.Parent.HumanoidRootPart.CFrame.lookVector * 80
+	force.Parent = Tool.Parent.HumanoidRootPart
+	wait(.25)
+	swordOut()
+	wait(.25)
+	force.Parent = nil
+	wait(.5)
+	swordUp()
 
-&#9;damage = slash_damage
+	damage = slash_damage
 end
 
 function swordUp()
-&#9;Tool.Grip = CFrame.Angles(0,math.pi/2-0.2,-math.pi/2-0.1)*CFrame.Angles(0,-0.2,0)*CFrame.new(0.3,-1.3,0.3)
+	Tool.Grip = CFrame.Angles(0,math.pi/2-0.2,-math.pi/2-0.1)*CFrame.Angles(0,-0.2,0)*CFrame.new(0.3,-1.3,0.3)
 end
 
 function swordOut()
-&#9;Tool.Grip = CFrame.Angles(0.2,0,math.pi/2-0.2)*CFrame.new(0.3,0,1.3)
+	Tool.Grip = CFrame.Angles(0.2,0,math.pi/2-0.2)*CFrame.new(0.3,0,1.3)
 end
 
 function swordAcross()
-&#9;-- parry
+	-- parry
 end
 
 
@@ -150,42 +153,42 @@ Tool.Enabled = true
 local last_attack = 0
 function onActivated()
 
-&#9;if not Tool.Enabled or Tool.DrawMode.Value then
-&#9;&#9;return
-&#9;end
+	if not Tool.Enabled or Tool.DrawMode.Value then
+		return
+	end
 
-&#9;Tool.Enabled = false
+	Tool.Enabled = false
 
-&#9;local character = Tool.Parent;
-&#9;local humanoid = character.Humanoid
-&#9;if humanoid == nil then
-&#9;&#9;print(&quot;Humanoid not found&quot;)
-&#9;&#9;return 
-&#9;end
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print("Humanoid not found")
+		return 
+	end
 
-&#9;t = r.Stepped:wait()
+	t = r.Stepped:wait()
 
-&#9;if (t - last_attack &lt; .2) then
-&#9;&#9;lunge()
-&#9;else
-&#9;&#9;attack()
-&#9;end
+	if (t - last_attack < .2) then
+		lunge()
+	else
+		attack()
+	end
 
-&#9;last_attack = t
+	last_attack = t
 
-&#9;--wait(.5)
+	--wait(.5)
 
-&#9;Tool.Enabled = true
+	Tool.Enabled = true
 end
 
 
 function onEquipped()
-&#9;Tool.DrawMode.Value = false
-&#9;UnsheathSound:play()
+	Tool.DrawMode.Value = false
+	UnsheathSound:play()
 end
 
 function onUnequipped()
-&#9;Tool.DrawMode.Value = false
+	Tool.DrawMode.Value = false
 end
 
 script.Parent.Activated:connect(onActivated)
@@ -196,7 +199,7 @@ script.Parent.Unequipped:connect(onUnequipped)
 connection = sword.Touched:connect(blow)
 
 
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Part" referent="RBX2">
@@ -218,14 +221,17 @@ connection = sword.Touched:connect(blow)
 					<R00>0</R00>
 					<R01>-1</R01>
 					<R02>0</R02>
-					<R10>0</R10>
+					<R10>0.60181433</R10>
 					<R11>0</R11>
-					<R12>-1</R12>
-					<R20>1</R20>
+					<R12>-0.798638463</R12>
+					<R20>0.798639178</R20>
 					<R21>0</R21>
-					<R22>0</R22>
+					<R22>0.60181272</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -298,61 +304,62 @@ connection = sword.Touched:connect(blow)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">CursorScript</string>
-				<ProtectedString name="Source">local enabled = true
+				<string name="ScriptGuid">{208445A6-579B-4080-AA36-48816E1F589A}</string>
+				<ProtectedString name="Source"><![CDATA[local enabled = true
 local Mouse;
 local Tool = script.Parent
-local Create = LoadLibrary(&apos;RbxUtility&apos;).Create
+local Create = LoadLibrary('RbxUtility').Create
 function onButton1Down(mouse)
-&#9;Mouse = mouse
-&#9;if not enabled or Tool.DrawMode.Value then
-&#9;&#9;return
-&#9;end
-&#9;enabled = false
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;wait(.5)
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;enabled = true
+	Mouse = mouse
+	if not enabled or Tool.DrawMode.Value then
+		return
+	end
+	enabled = false
+	mouse.Icon = "rbxasset://textures\\GunWaitCursor.png"
+	wait(.5)
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	enabled = true
 end
 
 function onEquippedLocal(mouse)
-&#9;Mouse = mouse
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;mouse.Button1Down:connect(function() onButton1Down(mouse) end)
-&#9;local player = game.Players:GetPlayerFromCharacter(Tool.Parent)
-&#9;if player then
-&#9;&#9;local gui = Create&apos;ScreenGui&apos;{
-&#9;&#9;&#9;Name = &apos;ChalkSwordUsageNotification&apos;;
-&#9;&#9;&#9;Parent = player:WaitForChild(&apos;PlayerGui&apos;);
-&#9;&#9;&#9;--
-&#9;&#9;&#9;Create&apos;Frame&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;MainFrame&apos;;
-&#9;&#9;&#9;&#9;Size = UDim2.new(0, 256, 0, 128);
-&#9;&#9;&#9;&#9;Position = UDim2.new(0, -150, 1, 20);
-&#9;&#9;&#9;&#9;Style = &apos;RobloxRound&apos;;
-&#9;&#9;&#9;&#9;Create&apos;ImageButton&apos;{
-&#9;&#9;&#9;&#9;&#9;Size = UDim2.new(1,0,1,0);
-&#9;&#9;&#9;&#9;&#9;BackgroundTransparency = 1;
-&#9;&#9;&#9;&#9;&#9;Image = &apos;http://www.roblox.com/asset/?id=119888502&apos;;
-&#9;&#9;&#9;&#9;};
-&#9;&#9;&#9;};
-&#9;&#9;}
-&#9;&#9;local sc = Tool.Tweener:Clone()
-&#9;&#9;sc.Parent = gui.MainFrame
-&#9;&#9;sc.Disabled = false
-&#9;end
+	Mouse = mouse
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+	local player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+	if player then
+		local gui = Create'ScreenGui'{
+			Name = 'ChalkSwordUsageNotification';
+			Parent = player:WaitForChild('PlayerGui');
+			--
+			Create'Frame'{
+				Name = 'MainFrame';
+				Size = UDim2.new(0, 256, 0, 128);
+				Position = UDim2.new(0, -150, 1, 20);
+				Style = 'RobloxRound';
+				Create'ImageButton'{
+					Size = UDim2.new(1,0,1,0);
+					BackgroundTransparency = 1;
+					Image = 'http://www.roblox.com/asset/?id=119888502';
+				};
+			};
+		}
+		local sc = Tool.Tweener:Clone()
+		sc.Parent = gui.MainFrame
+		sc.Disabled = false
+	end
 end
 
 Tool.Equipped:connect(onEquippedLocal)
 
-Tool:WaitForChild(&apos;DrawMode&apos;).Changed:connect(function()
-&#9;if Mouse then
-&#9;&#9;if Tool.DrawMode.Value then
-&#9;&#9;&#9;Mouse.Icon = &apos;http://www.roblox.com/asset/?id=119885531&apos;
-&#9;&#9;else
-&#9;&#9;&#9;Mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;end
-&#9;end
-end)</ProtectedString>
+Tool:WaitForChild('DrawMode').Changed:connect(function()
+	if Mouse then
+		if Tool.DrawMode.Value then
+			Mouse.Icon = 'http://www.roblox.com/asset/?id=119885531'
+		else
+			Mouse.Icon = "rbxasset://textures\\GunCursor.png"
+		end
+	end
+end)]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="BoolValue" referent="RBX5">
@@ -366,16 +373,16 @@ end)</ProtectedString>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Tweener</string>
-				<ProtectedString name="Source">
-local Frame = script.Parent
+				<string name="ScriptGuid">{6C88E072-2A5C-4124-ADA2-CA8FFC5F3D57}</string>
+				<ProtectedString name="Source"><![CDATA[local Frame = script.Parent
 
 game.Debris:AddItem(Frame.Parent, 2)
 
-Frame:TweenPosition(UDim2.new(0.2, 0, 0.8, -128), &apos;Out&apos;, &apos;Quad&apos;, 0.5, true, function()
-&#9;wait(1)
-&#9;Frame:TweenPosition(UDim2.new(0, -150, 1, 20), &apos;Out&apos;, &apos;Quad&apos;, 0.5, true)
+Frame:TweenPosition(UDim2.new(0.2, 0, 0.8, -128), 'Out', 'Quad', 0.5, true, function()
+	wait(1)
+	Frame:TweenPosition(UDim2.new(0, -150, 1, 20), 'Out', 'Quad', 0.5, true)
 end)
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="LocalScript" referent="RBX7">
@@ -383,187 +390,189 @@ end)
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">ChalkDrawing</string>
-				<ProtectedString name="Source">
-local DRAW_RANGE = 40
+				<string name="ScriptGuid">{8C2BD33F-A384-4C18-951B-3C6B4E607F6F}</string>
+				<ProtectedString name="Source"><![CDATA[local DRAW_RANGE = 40
 
 local Tool = script.Parent
 local Equipped = false
 
 Tool.Equipped:connect(function(mouse)
-&#9;Equipped = true
-&#9;local MouseDown = false
-&#9;local Character = Tool.Parent
-&#9;local Torso = Character:WaitForChild(&apos;Torso&apos;)
-&#9;--
-&#9;mouse.KeyDown:connect(function(key)
-&#9;&#9;if key:upper() == &apos;Q&apos; then
-&#9;&#9;&#9;Tool.DrawMode.Value = not Tool.DrawMode.Value
-&#9;&#9;end
-&#9;end)
-&#9;--
-&#9;local function makePart()
-&#9;&#9;local part = Instance.new(&apos;Part&apos;)
-&#9;&#9;part.Name = &apos;ChalkEffect&apos;
-&#9;&#9;part.FormFactor = &apos;Custom&apos;
-&#9;&#9;part.TopSurface = &apos;Smooth&apos;
-&#9;&#9;part.BottomSurface = &apos;Smooth&apos;
-&#9;&#9;part.BrickColor = BrickColor.new(&apos;White&apos;)
-&#9;&#9;part.Anchored = true
-&#9;&#9;part.CanCollide = false
-&#9;&#9;game.Debris:AddItem(part, 30)
-&#9;&#9;return part
-&#9;end
-&#9;--
-&#9;local function linearFactor(arr, ai, bi)
-&#9;&#9;if bi-ai &lt;= 2 then return 1 end
-&#9;&#9;--
-&#9;&#9;local a, b, c = arr[ai], arr[bi], arr[math.floor((ai+bi)/2)]
-&#9;&#9;local edge1 = (b - a).unit
-&#9;&#9;local edge2 = (b - c).unit
-&#9;&#9;--
-&#9;&#9;local at = c
-&#9;&#9;local norm = edge1:Cross(edge2).unit
-&#9;&#9;--
-&#9;&#9;for i = ai+1, bi-1 do
-&#9;&#9;&#9;local p = arr[i]
+	Equipped = true
+	local MouseDown = false
+	local Character = Tool.Parent
+	local Torso = Character:WaitForChild('HumanoidRootPart')
+	--
+	mouse.KeyDown:connect(function(key)
+		if key:upper() == 'Q' then
+			Tool.DrawMode.Value = not Tool.DrawMode.Value
+		end
+	end)
+	--
+	local function makePart()
+		local part = Instance.new('Part')
+		part.Name = 'ChalkEffect'
+		part.FormFactor = 'Custom'
+		part.TopSurface = 'Smooth'
+		part.BottomSurface = 'Smooth'
+		part.BrickColor = BrickColor.new('White')
+		part.Anchored = true
+		part.CanCollide = false
+		game.Debris:AddItem(part, 30)
+		return part
+	end
+	--
+	local function linearFactor(arr, ai, bi)
+		if bi-ai <= 2 then return 1 end
+		--
+		local a, b, c = arr[ai], arr[bi], arr[math.floor((ai+bi)/2)]
+		local edge1 = (b - a).unit
+		local edge2 = (b - c).unit
+		--
+		local at = c
+		local norm = edge1:Cross(edge2).unit
+		--
+		for i = ai+1, bi-1 do
+			local p = arr[i]
 
-&#9;&#9;&#9;-- check for being in the plane
-&#9;&#9;&#9;local planesep = (p - at):Dot(norm)
-&#9;&#9;&#9;if planesep &gt; 0.01 then
-&#9;&#9;&#9;&#9;return 0
-&#9;&#9;&#9;end 
+			-- check for being in the plane
+			local planesep = (p - at):Dot(norm)
+			if planesep > 0.01 then
+				return 0
+			end 
 
-&#9;&#9;&#9;-- check for linearity
-&#9;&#9;&#9;local sep = p - a
-&#9;&#9;&#9;local proj = edge1 * sep:Dot(edge1)
-&#9;&#9;&#9;local dist = (sep-proj).magnitude
-&#9;&#9;&#9;if dist &gt; 0.1 then
-&#9;&#9;&#9;&#9;return 0
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;&#9;--
-&#9;&#9;return 1
-&#9;end
-&#9;--
-&#9;mouse.Button1Down:connect(function()
-&#9;&#9;MouseDown = true
-&#9;&#9;--
-&#9;&#9;if not Tool.DrawMode.Value then return end
-&#9;&#9;--
-&#9;&#9;local atArray = {}
-&#9;&#9;local lastPart = nil
-&#9;&#9;--
-&#9;&#9;function commitPart(a, b)
-&#9;&#9;&#9;local sep = (b-a).magnitude
-&#9;&#9;&#9;lastPart.Size = Vector3.new(0.2,0.2,sep)
-&#9;&#9;&#9;lastPart.CFrame = CFrame.new(a, b) * CFrame.new(0, 0, -sep/2)
-&#9;&#9;&#9;--
-&#9;&#9;&#9;lastPart = makePart()
-&#9;&#9;&#9;lastPart.Parent = Character
-&#9;&#9;&#9;lastPart.Size = Vector3.new(0.2,0.2,0.2)
-&#9;&#9;&#9;lastPart.CFrame = CFrame.new(b, b+(b-a))
-&#9;&#9;end
-&#9;&#9;--
-&#9;&#9;while MouseDown and Equipped and Tool.DrawMode.Value do
-&#9;&#9;&#9;if mouse.Target and 
-&#9;&#9;&#9;   (mouse.Hit.p - Torso.Position).magnitude &lt; DRAW_RANGE and
-&#9;&#9;&#9;   not (mouse.Target.Parent and mouse.Target.Parent:FindFirstChild(&apos;Humanoid&apos;)) 
-&#9;&#9;&#9;then
-&#9;&#9;&#9;&#9;if #atArray == 0 or (mouse.Hit.p - atArray[#atArray]).magnitude &gt; 0.2 then
-&#9;&#9;&#9;&#9;&#9;if #atArray &gt; 0 and (mouse.Hit.p - atArray[#atArray]).magnitude &gt; 2 then
-&#9;&#9;&#9;&#9;&#9;&#9;-- &quot;jumped&quot;, stop drawing
-&#9;&#9;&#9;&#9;&#9;&#9;-- stop drawing, make the last line a linear segment
-&#9;&#9;&#9;&#9;&#9;&#9;commitPart(atArray[1], atArray[#atArray])
-&#9;&#9;&#9;&#9;&#9;&#9;lastPart:Destroy()
-&#9;&#9;&#9;&#9;&#9;&#9;atArray = {}&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;atArray[#atArray+1] = mouse.Hit.p
-&#9;&#9;&#9;&#9;&#9;&#9;if #atArray == 1 then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastPart = makePart()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastPart.Parent = Character
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastPart.Size = Vector3.new(0.2, 0.2, 0.2)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastPart.CFrame = CFrame.new(atArray[1])
-&#9;&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;local lastStartPoint = 1
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i = 2, #atArray do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;if linearFactor(atArray, lastStartPoint, i) &lt; 0.5 then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- Roll back and draw the line between the last start point and the last index,
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- and make the last index the last start point.
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;commitPart(atArray[lastStartPoint], atArray[i-1])
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastStartPoint = i-1
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if lastStartPoint ~= #atArray then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;local sep = (atArray[lastStartPoint]-atArray[#atArray]).magnitude
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastPart.Size = Vector3.new(0.2, 0.2, sep)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;lastPart.CFrame = CFrame.new(atArray[lastStartPoint], atArray[#atArray])*
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;                  CFrame.new(0, 0, -sep/2)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;--
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;-- kill entiries up to the last start point
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;for i = 1, lastStartPoint-1 do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;table.remove(atArray, 1)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;elseif (mouse.Hit.p - atArray[#atArray]).magnitude &gt; 0.1 then
-&#9;&#9;&#9;&#9;&#9;-- no new point
-&#9;&#9;&#9;&#9;&#9;-- assume remains linear (lastStartPoint = 1 --&gt; mouse.Hit)
-&#9;&#9;&#9;&#9;&#9;local sep = (atArray[1]-mouse.Hit.p).magnitude
-&#9;&#9;&#9;&#9;&#9;lastPart.Size = Vector3.new(0.2, 0.2, sep)
-&#9;&#9;&#9;&#9;&#9;lastPart.CFrame = CFrame.new(atArray[1], mouse.Hit.p)*CFrame.new(0, 0, -sep/2)&#9;&#9;&#9;&#9;&#9;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;elseif #atArray &gt; 0 then
-&#9;&#9;&#9;&#9;-- stop drawing, make the last line a linear segment
-&#9;&#9;&#9;&#9;commitPart(atArray[1], atArray[#atArray])
-&#9;&#9;&#9;&#9;lastPart:Destroy()
-&#9;&#9;&#9;&#9;atArray = {}
-&#9;&#9;&#9;end
-&#9;&#9;&#9;--
-&#9;&#9;&#9;wait()
-&#9;&#9;end
-&#9;&#9;-- if we have uncommitted stuff then commit it
-&#9;&#9;if #atArray &gt; 1 then
-&#9;&#9;&#9;commitPart(atArray[1], atArray[#atArray])
-&#9;&#9;end
-&#9;&#9;if lastPart then
-&#9;&#9;&#9;lastPart:Destroy()
-&#9;&#9;end
-&#9;end)
-&#9;mouse.Button1Up:connect(function()
-&#9;&#9;MouseDown = false
-&#9;end)
+			-- check for linearity
+			local sep = p - a
+			local proj = edge1 * sep:Dot(edge1)
+			local dist = (sep-proj).magnitude
+			if dist > 0.1 then
+				return 0
+			end
+		end
+		--
+		return 1
+	end
+	--
+	mouse.Button1Down:connect(function()
+		MouseDown = true
+		--
+		if not Tool.DrawMode.Value then return end
+		--
+		local atArray = {}
+		local lastPart = nil
+		--
+		function commitPart(a, b)
+			local Camera = game:GetService("Workspace").CurrentCamera
+			local sep = (b-a).magnitude
+			lastPart.Size = Vector3.new(0.2,0.2,sep)
+			lastPart.CFrame = CFrame.new(a, b) * CFrame.new(0, 0, -sep/2)
+			--
+			lastPart = makePart()
+			lastPart.Parent = Camera
+			lastPart.Size = Vector3.new(0.2,0.2,0.2)
+			lastPart.CFrame = CFrame.new(b, b+(b-a))
+		end
+		--
+		while MouseDown and Equipped and Tool.DrawMode.Value do
+			if mouse.Target and 
+			   (mouse.Hit.p - Torso.Position).magnitude < DRAW_RANGE and
+			   not (mouse.Target.Parent and mouse.Target.Parent:FindFirstChild('Humanoid')) 
+			then
+				local Camera = game:GetService("Workspace").CurrentCamera
+				if #atArray == 0 or (mouse.Hit.p - atArray[#atArray]).magnitude > 0.2 then
+					if #atArray > 0 and (mouse.Hit.p - atArray[#atArray]).magnitude > 2 then
+						-- "jumped", stop drawing
+						-- stop drawing, make the last line a linear segment
+						commitPart(atArray[1], atArray[#atArray])
+						lastPart:Destroy()
+						atArray = {}					
+					else
+						atArray[#atArray+1] = mouse.Hit.p
+						if #atArray == 1 then
+							lastPart = makePart()
+							lastPart.Parent = Camera
+							lastPart.Size = Vector3.new(0.2, 0.2, 0.2)
+							lastPart.CFrame = CFrame.new(atArray[1])
+						else
+							local lastStartPoint = 1
+							for i = 2, #atArray do
+								if linearFactor(atArray, lastStartPoint, i) < 0.5 then
+									-- Roll back and draw the line between the last start point and the last index,
+									-- and make the last index the last start point.
+									commitPart(atArray[lastStartPoint], atArray[i-1])
+									lastStartPoint = i-1
+								end
+							end
+							--
+							if lastStartPoint ~= #atArray then
+								local sep = (atArray[lastStartPoint]-atArray[#atArray]).magnitude
+								lastPart.Size = Vector3.new(0.2, 0.2, sep)
+								lastPart.CFrame = CFrame.new(atArray[lastStartPoint], atArray[#atArray])*
+								                  CFrame.new(0, 0, -sep/2)
+							end
+							--
+							-- kill entiries up to the last start point
+							for i = 1, lastStartPoint-1 do
+								table.remove(atArray, 1)
+							end
+						end
+					end
+				elseif (mouse.Hit.p - atArray[#atArray]).magnitude > 0.1 then
+					-- no new point
+					-- assume remains linear (lastStartPoint = 1 --> mouse.Hit)
+					local sep = (atArray[1]-mouse.Hit.p).magnitude
+					lastPart.Size = Vector3.new(0.2, 0.2, sep)
+					lastPart.CFrame = CFrame.new(atArray[1], mouse.Hit.p)*CFrame.new(0, 0, -sep/2)					
+				end
+			elseif #atArray > 0 then
+				-- stop drawing, make the last line a linear segment
+				commitPart(atArray[1], atArray[#atArray])
+				lastPart:Destroy()
+				atArray = {}
+			end
+			--
+			wait()
+		end
+		-- if we have uncommitted stuff then commit it
+		if #atArray > 1 then
+			commitPart(atArray[1], atArray[#atArray])
+		end
+		if lastPart then
+			lastPart:Destroy()
+		end
+	end)
+	mouse.Button1Up:connect(function()
+		MouseDown = false
+	end)
 end)
 
 Tool.Unequipped:connect(function()
-&#9;Equipped = false
-end)</ProtectedString>
+	Equipped = false
+end)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX8">
+		<Item class="Camera" referent="RBX7F068E67DE5C4E9D9A1FCB9439FE4F1E">
 			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>28.8996124</X>
+					<Y>68.5451584</Y>
+					<Z>35.9755402</Z>
+					<R00>-0.0387223475</R00>
+					<R01>-0.0366698392</R01>
+					<R02>0.99857688</R02>
+					<R10>1.16415336e-010</R10>
+					<R11>0.999326408</R11>
+					<R12>0.0366973616</R12>
+					<R20>-0.999250054</R20>
+					<R21>0.00142100814</R21>
+					<R22>-0.038696263</R22>
+				</CoordinateFrame>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>27.8811131</X>
-					<Y>69.5563736</Y>
-					<Z>34.5048027</Z>
-					<R00>-0.416587889</R00>
-					<R01>-0.26281321</R01>
-					<R02>0.870278001</R02>
-					<R10>-1.4901163e-008</R10>
-					<R11>0.95730108</R11>
-					<R12>0.289093047</R12>
-					<R20>-0.909095526</R20>
-					<R21>0.120432645</R21>
-					<R22>-0.398799956</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
+				<float name="FieldOfView">40</float>
 				<CoordinateFrame name="Focus">
-					<X>24.4000015</X>
-					<Y>68.4000015</Y>
-					<Z>36.1000023</Z>
+					<X>24.4060135</X>
+					<Y>68.3800201</Y>
+					<Z>36.1496735</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -574,6 +583,8 @@ end)</ProtectedString>
 					<R21>0</R21>
 					<R22>1</R22>
 				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
 				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
