@@ -429,8 +429,10 @@ function ManagePower()
 	if (Power >= 0 and Power <= Kills.MaxValue) then
 		Tool.TextureId = (BaseUrl .. IconImages[Power + 1])
 	end
-	DamageValues.Slash = (DamageValues.Upgrade.Min + (DamageValues.Upgrade.Max - DamageValues.Upgrade.Min) * (Power / Kills.MaxValue))
-	DamageValues.Lunge = 2 * (DamageValues.Upgrade.Min  + (DamageValues.Upgrade.Max - DamageValues.Upgrade.Min) * (Power / Kills.MaxValue))
+	local DmgInc = (DamageValues.Upgrade.Min + (DamageValues.Upgrade.Max - DamageValues.Upgrade.Min) * (Power / Kills.MaxValue))
+	DamageValues.SlashDamage = DmgInc
+	DamageValues.LungeDamage = (2 * DmgInc)
+	print(DamageValues.SlashDamage)
 	MakeGhostly(0.2 + ((Power / Kills.MaxValue) * 0.8))
 end
 
@@ -523,7 +525,7 @@ function Blow(Hit)
 	end
 	local character = Hit.Parent
 	local humanoid = character:FindFirstChild("Humanoid")
-	if not humanoid then
+	if not humanoid or humanoid.Health == 0 then
 		return
 	end
 	local player = Players:GetPlayerFromCharacter(character)
@@ -533,6 +535,7 @@ function Blow(Hit)
 	UntagHumanoid(humanoid)
 	TagHumanoid(humanoid, Player)
 	humanoid:TakeDamage(Damage)
+	print(Damage)
 	if humanoid.Health <= 0 then
 		Kills.Value = (Kills.Value + 1)
 		ManagePower()
