@@ -38,9 +38,9 @@
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.0393069983</X>
-					<Y>17.1500435</Y>
-					<Z>21.8830452</Z>
+					<X>-0.0593070015</X>
+					<Y>17.2400436</Y>
+					<Z>21.8530445</Z>
 					<R00>0.942641675</R00>
 					<R01>-0.00692729652</R01>
 					<R02>0.333734363</R02>
@@ -52,6 +52,7 @@
 					<R22>0.942438662</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<int name="CollisionGroupId">0</int>
 				<PhysicalProperties name="CustomPhysicalProperties">
 					<CustomPhysics>false</CustomPhysics>
 				</PhysicalProperties>
@@ -164,296 +165,6 @@ Tool.Changed:connect(OnChanged)]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Script" referent="RBX0F25F92F6A844E06B5E478EA842F016E">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">Script</string>
-				<string name="ScriptGuid">{5F191ED6-6D38-4A6C-B39C-4E35E42E82D6}</string>
-				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild("Handle")
-
-Players = game:GetService("Players")
-Debris = game:GetService("Debris")
-
-RbxUtility = LoadLibrary("RbxUtility")
-Create = RbxUtility.Create
-
-BaseUrl = "http://www.roblox.com/asset/?id="
-
-MultiModule = require(724373258)
-
-Sounds = {
-	Release = Handle:WaitForChild("Release"),
-}
-
-MeshData = {
-	Body = "688996288",
-	Arm = "688996066",
-	TextureId = "688996728",
-}
-
-for i, v in pairs(MeshData) do
-	MeshData[i] = (BaseUrl .. v)
-end
-
-BasePart = Create("Part"){
-	Material = Enum.Material.Plastic,
-	Shape = Enum.PartType.Block,
-	TopSurface = Enum.SurfaceType.Smooth,
-	BottomSurface = Enum.SurfaceType.Smooth,
-	FormFactor = Enum.FormFactor.Custom,
-	Size = Vector3.new(0.2, 0.2, 0.2),
-	Locked = true,
-	CanCollide = true,
-	Anchored = false,
-}
-
-Body = BasePart:Clone()
-Body.Name = "Body"
-Body.Size = Vector3.new(1.25, 0.5, 2.375)
-Body.CanCollide = false
-BodyMesh = Create("SpecialMesh"){
-	Name = "Mesh",
-	MeshType = Enum.MeshType.FileMesh,
-	MeshId = MeshData.Body,
-	TextureId = MeshData.TextureId,
-	Scale = Vector3.new(1.2, 1.2, 1.2),
-	VertexColor = Vector3.new(1, 1, 1),
-	Offset = Vector3.new(0, 0, 0),
-	Parent = Body,
-}
-Arm = BasePart:Clone()
-Arm.Name = "Arm"
-Arm.Size = Vector3.new(0.75, 0.5, 2)
-Arm.CanCollide = false
-ArmMesh = Create("SpecialMesh"){
-	Name = "Mesh",
-	MeshType = Enum.MeshType.FileMesh,
-	MeshId = MeshData.Arm,
-	TextureId = MeshData.TextureId,
-	Scale = Vector3.new(1.2, 1.2, 1.2),
-	VertexColor = Vector3.new(1, 1, 1),
-	Offset = Vector3.new(0, 0, 0),
-	Parent = Arm,
-}
-Weld = Create("Weld"){
-	Name = "Attachment",
-	Part0 = Handle,
-	Part1 = Body,
-	C0 = (CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)),
-	C1 = (CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)),
-	Parent = Body,
-}
-Motor = Create("Motor"){
-	Name = "Release",
-	Part0 = Body,
-	Part1 = Arm,
-	C0 = (CFrame.new(0, 0.575, -0.24) * CFrame.Angles(0, -(math.pi / 2), 0)),
-	C1 = (CFrame.new(0, -0.125, -0.775) * CFrame.Angles(0, -(math.pi / 2), 0)),
-	CurrentAngle = 0,
-	DesiredAngle = 0,
-	MaxVelocity = 0.1,
-	Parent = Body,
-}
-
-Gravity = 196.20
-
-BombReady = true
-ToolEquipped = false
-
-Remotes = Tool:WaitForChild("Remotes")
-
-ServerControl = (Remotes:FindFirstChild("ServerControl") or Create("RemoteFunction"){
-	Name = "ServerControl",
-	Parent = Remotes,
-})
-
-ClientControl = (Remotes:FindFirstChild("ClientControl") or Create("RemoteFunction"){
-	Name = "ClientControl",
-	Parent = Remotes,
-})
-
-Tool.Enabled = true
-
-function CreateBomb()
-	if not ToolEquipped or not CheckIfAlive() or not ArmCopy or not ArmCopy.Parent then
-		return
-	end
-	for i, v in pairs(Tool:GetChildren()) do
-		if v:IsA("BasePart") and v.Name == "Bomb" then
-			v:Destroy()
-		end
-	end
-	if BombCopy and BombCopy.Parent then
-		BombCopy:Destroy()
-	end
-	local Bomb = EggFunctions.CraftEgg()
-	BombCopy = Bomb:Clone()
-	BombWeldCopy = BombCopy.BombWeld
-	BombWeldCopy.Part0 = ArmCopy
-	BombWeldCopy.Part1 = BombCopy
-	BombWeldCopy.Parent = BombCopy
-	BombCopy.Parent = Tool
-end
-
-function ReadyCatapult(MakeNew)
-	for i, v in pairs(Tool:GetChildren()) do
-		if v:IsA("BasePart") and v ~= Handle then
-			v:Destroy()
-		end
-	end
-	if MakeNew then
-		BodyCopy = Body:Clone()
-		ArmCopy = Arm:Clone()
-		
-		Release = BodyCopy.Release
-		Release.Part0 = BodyCopy
-		Release.Part1 = ArmCopy
-		
-		local Attachment = BodyCopy.Attachment
-		Attachment.Part0 = Handle
-		Attachment.Part1 = BodyCopy
-		
-		BodyCopy.Parent = Tool
-		ArmCopy.Parent = Tool
-	end
-end
-
-function CheckIfAlive()
-	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
-end
-
-function Activated()
-	local MouseData = InvokeClient("MouseData")
-	if not MouseData or not MouseData.Position then
-		return
-	end
-	if not Tool.Enabled or not CheckIfAlive() or not ToolEquipped or not BombReady then
-		return
-	end
-	if not ArmCopy or not ArmCopy.Parent or not Release or not Release.Parent then
-		return
-	end
-	if not EggFunctions.CanLaunch() then
-		return
-	end
-	Tool.Enabled = false
-	BombReady = false
-	Sounds.Release.Pitch = (math.random(900, 1200) * 0.001)
-	Sounds.Release:Play()
-	Release.DesiredAngle = (math.random(500, 750) * 0.001)
-	if BombCopy and BombCopy.Parent then
-		Spawn(function()
-			local MaxPower = EggFunctions.MaxPower
-			local CurrentBomb = BombCopy
-			BombCopy = nil
-			local SpawnPos = CurrentBomb.Position
-			local TargetPos = MouseData.Position
-			
-			local Direction = (TargetPos - SpawnPos)
-			Direction = (Direction - Direction.unit * 5)
-			
-			local DeltaXZSquared = ((Direction.X ^ 2) + (Direction.Z ^ 2))
-			local DeltaXZ = math.sqrt(DeltaXZSquared)
-			local DeltaY = Direction.Y
-			local Alpha = (math.random() * math.pi / 4 + math.pi / 8)
-			local Numerator = (-0.5 * Gravity * DeltaXZSquared)
-			local Denominator = (math.cos(Alpha) * math.cos(Alpha) * (DeltaY - math.tan(Alpha) * DeltaXZ))
-			if Denominator == 0 then
-				return
-			end
-			local MissileSpeed = math.sqrt(Numerator / Denominator)
-			if MissileSpeed > MaxPower or tostring(MissileSpeed) == "-1.#IND" or tostring(MissileSpeed) == "1.#INF" then
-				MissileSpeed = MaxPower
-			end
-			
-			local VectorXZ = (MissileSpeed * math.cos(Alpha))
-			local VectorY = (MissileSpeed * math.sin(Alpha))
-			local VectorX = (VectorXZ * Direction.X / DeltaXZ)
-			local VectorZ = (VectorXZ * Direction.Z / DeltaXZ)
-			
-			if BombWeldCopy and BombWeldCopy.Parent then
-				BombWeldCopy:Destroy()
-			end
-			
-			CurrentBomb.CanCollide = true
-			CurrentBomb.Velocity = Vector3.new(VectorX, VectorY, VectorZ)
-			
-			EggFunctions.LaunchEgg(CurrentBomb)
-			
-		end)
-	end
-	Delay(0.75, (function()
-		Release.DesiredAngle = 0
-	end))
-	EggFunctions.Reload()
-	CreateBomb()
-	BombReady = true
-	Tool.Enabled = true
-end
-
-function Equipped()
-	Character = Tool.Parent
-	Humanoid = Character:FindFirstChild("Humanoid")
-	Player = Players:GetPlayerFromCharacter(Character)
-	if not CheckIfAlive() then
-		return
-	end
-	EggData = MultiModule.GetTable({Key = "EggLauncher", Player = Player, Tool = Tool})
-	if not EggData then
-		return
-	end
-	EggFunctions = EggData.GetData({Player = Player, Tool = Tool})
-	if not EggFunctions then
-		return
-	end
-	ToolEquipped = true
-	Spawn(function()
-		ReadyCatapult(true)
-		if BombReady then
-			CreateBomb()
-		end
-	end)
-end
-
-function Unequipped()
-	Spawn(function()
-		ReadyCatapult(true)
-	end)
-	ToolEquipped = false
-end
-
-function InvokeClient(Mode, Value)
-	local ClientReturn = nil
-	pcall(function()
-		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
-	end)
-	return ClientReturn
-end
-
-function OnServerInvoke(player, mode, value)
-	if player ~= Player or not ToolEquipped or not CheckIfAlive() then
-		return
-	end
-end
-
-ServerControl.OnServerInvoke = OnServerInvoke
-
-Delay(0, (function()
-	if ToolEquipped then
-		return
-	end
-	ReadyCatapult(true)
-end))
-
-Tool.Activated:connect(Activated)
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
-			</Properties>
-		</Item>
 		<Item class="Part" referent="RBX4D10A1634411459AA91A0C157638D7DF">
 			<Properties>
 				<bool name="Anchored">false</bool>
@@ -467,9 +178,9 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>-0.0393069983</X>
-					<Y>17.1500435</Y>
-					<Z>21.8830452</Z>
+					<X>-0.0593070015</X>
+					<Y>17.2400436</Y>
+					<Z>21.8530445</Z>
 					<R00>0.942641675</R00>
 					<R01>-0.00692729652</R01>
 					<R02>0.333734363</R02>
@@ -481,6 +192,7 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 					<R22>0.942438662</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
+				<int name="CollisionGroupId">0</int>
 				<PhysicalProperties name="CustomPhysicalProperties">
 					<CustomPhysics>false</CustomPhysics>
 				</PhysicalProperties>
@@ -636,9 +348,9 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.13439177</X>
-					<Y>17.8609962</Y>
-					<Z>22.3735561</Z>
+					<X>0.114391766</X>
+					<Y>17.9509964</Y>
+					<Z>22.3435555</Z>
 					<R00>0.942641675</R00>
 					<R01>-0.00692729652</R01>
 					<R02>0.333734363</R02>
@@ -650,6 +362,7 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 					<R22>0.942438662</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
+				<int name="CollisionGroupId">0</int>
 				<PhysicalProperties name="CustomPhysicalProperties">
 					<CustomPhysics>false</CustomPhysics>
 				</PhysicalProperties>
@@ -733,9 +446,9 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 				<token name="BottomSurfaceInput">0</token>
 				<int name="BrickColor">194</int>
 				<CoordinateFrame name="CFrame">
-					<X>0.275362968</X>
-					<Y>17.9947891</Y>
-					<Z>22.7716465</Z>
+					<X>0.255362958</X>
+					<Y>18.0847893</Y>
+					<Z>22.7416458</Z>
 					<R00>0.942641675</R00>
 					<R01>0.28555879</R01>
 					<R02>0.172866374</R02>
@@ -747,6 +460,7 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 					<R22>0.48816061</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
+				<int name="CollisionGroupId">0</int>
 				<PhysicalProperties name="CustomPhysicalProperties">
 					<CustomPhysics>true</CustomPhysics>
 					<Density>0.699999988</Density>
@@ -857,29 +571,29 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX559CDECB00AB4A8E88E594B35D67C1BD">
+		<Item class="Camera" referent="RBXF774391532D94E3B9EBC125E0D1D9C63">
 			<Properties>
 				<CoordinateFrame name="CFrame">
-					<X>-3.04385591</X>
-					<Y>18.2372131</Y>
-					<Z>20.4011765</Z>
-					<R00>-0.405034602</R00>
-					<R01>0.218091086</R01>
-					<R02>-0.887909472</R02>
-					<R10>-0</R10>
-					<R11>0.971134424</R11>
-					<R12>0.238533035</R12>
-					<R20>0.914301395</R20>
-					<R21>0.0966141298</R21>
-					<R22>-0.393343002</R22>
+					<X>-2.27202368</X>
+					<Y>18.2018948</Y>
+					<Z>21.120657</Z>
+					<R00>-0.302374721</R00>
+					<R01>0.289797544</R01>
+					<R02>-0.908067703</R02>
+					<R10>-7.4505806e-009</R10>
+					<R11>0.952662706</R11>
+					<R12>0.304029435</R12>
+					<R20>0.953189135</R20>
+					<R21>0.0919308215</R21>
+					<R22>-0.288061112</R22>
 				</CoordinateFrame>
 				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
-				<float name="FieldOfView">40</float>
+				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>-0.912873268</X>
-					<Y>17.6647339</Y>
-					<Z>21.3451996</Z>
+					<X>-0.455888033</X>
+					<Y>17.5938358</Y>
+					<Z>21.6967793</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -893,111 +607,6 @@ Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 				<bool name="HeadLocked">true</bool>
 				<float name="HeadScale">1</float>
 				<string name="Name">ThumbnailCamera</string>
-			</Properties>
-		</Item>
-		<Item class="LocalScript" referent="RBXF6343F6A24884F388B6C7E2404795334">
-			<Properties>
-				<bool name="Disabled">false</bool>
-				<Content name="LinkedSource"><null></null></Content>
-				<string name="Name">LocalScript</string>
-				<string name="ScriptGuid">{45275B74-8733-4BF9-94B6-8EAAEBEF88C6}</string>
-				<ProtectedString name="Source"><![CDATA[--Made by Luckymaxer
-
-Tool = script.Parent
-Handle = Tool:WaitForChild("Handle")
-
-Players = game:GetService("Players")
-UserInputService = game:GetService("UserInputService")
-
-Animations = {}
-
-Remotes = Tool:WaitForChild("Remotes")
-ServerControl = Remotes:WaitForChild("ServerControl")
-ClientControl = Remotes:WaitForChild("ClientControl")
-
-ToolEquipped = false
-
-function SetAnimation(mode, value)
-	if not ToolEquipped or not CheckIfAlive() or not mode or not value then
-		return
-	end
-	if mode == "PlayAnimation" then
-		for i, v in pairs(Animations) do
-			if v.Animation == value.Animation then
-				v.AnimationTrack:Stop()
-				table.remove(Animations, i)
-			end
-		end
-		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
-		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack})
-		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
-	elseif mode == "StopAnimation" and value then
-		for i, v in pairs(Animations) do
-			if v.Animation == value.Animation then
-				v.AnimationTrack:Stop()
-				table.remove(Animations, i)
-			end
-		end
-	end
-end
-
-function CheckIfAlive()
-	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
-end
-
-function Equipped(Mouse)
-	Character = Tool.Parent
-	Humanoid = Character:FindFirstChild("Humanoid")
-	Torso = Character:FindFirstChild("HumanoidRootPart")
-	Player = Players:GetPlayerFromCharacter(Character)
-	if not CheckIfAlive() then
-		return
-	end
-	PlayerMouse = Mouse
-	ToolEquipped = true
-end
-
-function Unequipped()
-	ToolEquipped = false
-	for i, v in pairs(Animations) do
-		if v and v.AnimationTrack then
-			v.AnimationTrack:Stop()
-		end
-	end
-	Animations = {}
-end
-
-function InvokeServer(mode, value)
-	local ServerReturn
-	pcall(function()
-		ServerReturn = ServerControl:InvokeServer(mode, value)
-	end)
-	return ServerReturn
-end
-
-function OnClientInvoke(mode, value)
-	if not mode or not ToolEquipped or not CheckIfAlive() then
-		return
-	end
-	if mode == "PlayAnimation" then
-		SetAnimation("PlayAnimation", value)
-	elseif mode == "StopAnimation" and value then
-		SetAnimation("StopAnimation", value)
-	elseif mode == "MouseData" then
-		if UserInputService.GamepadEnabled then --Gamepad usability
-			local Distance = {Min = 15, Max = 25}
-			local Height = {Min = 5, Max = 8}
-			return {Position = ((Torso.CFrame + Torso.CFrame.lookVector * (math.random((Distance.Min * 1000), (Distance.Max * 1000)) * 0.001)).p + Vector3.new(0, (math.random((Height.Min * 1000), (Height.Max * 1000)) * 0.001), 0)), Target = nil}
-		else
-			return ((PlayerMouse and {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}) or nil)
-		end
-	end
-end
-
-ClientControl.OnClientInvoke = OnClientInvoke
-
-Tool.Equipped:connect(Equipped)
-Tool.Unequipped:connect(Unequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
