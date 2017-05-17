@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX2251A7066D5143F0ADA357AB09D9D794">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,164 +19,171 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">PortalGun</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=34312296</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX1">
+		<Item class="LocalScript" referent="RBXD3D97FD2CC6A4044B0BA3E22707BD3BD">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">Local Gui</string>
-				<ProtectedString name="Source">local Tool = script.Parent;
+				<string name="ScriptGuid"></string>
+				<ProtectedString name="Source"><![CDATA[local Tool = script.Parent;
 
 enabled = true
 function onButton1Down(mouse)
-&#9;if not enabled then
-&#9;&#9;return
-&#9;end
+	if not enabled then
+		return
+	end
 
-&#9;enabled = false
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunWaitCursor.png&quot;
+	enabled = false
+	mouse.Icon = "rbxasset://textures\\GunWaitCursor.png"
 
-&#9;wait(1)
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;enabled = true
+	wait(1)
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	enabled = true
 
 end
 
 function onEquippedLocal(mouse)
 
-&#9;if mouse == nil then
-&#9;&#9;print(&quot;Mouse not found&quot;)
-&#9;&#9;return 
-&#9;end
+	if mouse == nil then
+		print("Mouse not found")
+		return 
+	end
 
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
 end
 
 
 Tool.Equipped:connect(onEquippedLocal)
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX2">
+		<Item class="Script" referent="RBXDC619A72BDBE47EAB9532E73DC5D552B">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">PortalShoot</string>
-				<ProtectedString name="Source">Tool = script.Parent
+				<string name="ScriptGuid">{E0850FD9-2517-4DEA-B172-09E6E23E1694}</string>
+				<ProtectedString name="Source"><![CDATA[Tool = script.Parent
 local workPortals = nil
 
 function fire(v)
 
-&#9;Tool.Handle.Fire:play()
-&#9;local touched = false
+	Tool.Handle.Fire:play()
+	local touched = false
 
-&#9;local vCharacter = Tool.Parent
-&#9;local vPlayer = game.Players:playerFromCharacter(vCharacter)
+	local vCharacter = Tool.Parent
+	local vPlayer = game.Players:playerFromCharacter(vCharacter)
+	
+	local Torso = Tool.Parent:FindFirstChild("Torso") or Tool.Parent:FindFirstChild("UpperTorso")
+	local rightShoulder = Torso:FindFirstChild'Right Shoulder' or Tool.Parent.RightUpperArm.RightShoulder	
+	
+	rightShoulder.DesiredAngle = 3.6
+	rightShoulder.MaxVelocity = 0.5
 
-&#9;Tool.Parent.Torso[&quot;Right Shoulder&quot;].DesiredAngle = 3.6
-&#9;Tool.Parent.Torso[&quot;Right Shoulder&quot;].MaxVelocity = 0.5
+	local missile = Instance.new("Part")
 
-&#9;local missile = Instance.new(&quot;Part&quot;)
+	local m = Tool.Mesh:Clone()	
+	m.Parent = missile
 
-&#9;local m = Tool.Mesh:Clone()&#9;
-&#9;m.Parent = missile
+	local spawnPos = vCharacter.PrimaryPart.Position
 
-&#9;local spawnPos = vCharacter.PrimaryPart.Position
+	spawnPos  = spawnPos + (v * 8)
 
-&#9;spawnPos  = spawnPos + (v * 8)
+	missile.CFrame = CFrame.new(spawnPos, spawnPos + v)
+	missile.Position = spawnPos
+	missile.Size = Vector3.new(1,1,1)
+	missile.Velocity = v * 80
+	missile.BrickColor = BrickColor.new(23)
+	missile.Shape = 0
+	missile.BottomSurface = 0
+	missile.TopSurface = 0
+	missile.Name = "Portal"
+	missile.Elasticity = 0
+	missile.Reflectance = 0
+	missile.Friction = .4
 
-&#9;missile.CFrame = CFrame.new(spawnPos, spawnPos + v)
-&#9;missile.Position = spawnPos
-&#9;missile.Size = Vector3.new(1,1,1)
-&#9;missile.Velocity = v * 80
-&#9;missile.BrickColor = BrickColor.new(23)
-&#9;missile.Shape = 0
-&#9;missile.BottomSurface = 0
-&#9;missile.TopSurface = 0
-&#9;missile.Name = &quot;Portal&quot;
-&#9;missile.Elasticity = 0
-&#9;missile.Reflectance = 0
-&#9;missile.Friction = .4
+	local force = Instance.new("BodyForce")
+	force.force = Vector3.new(0,64,0)
+	force.Parent = missile
 
-&#9;local force = Instance.new(&quot;BodyForce&quot;)
-&#9;force.force = Vector3.new(0,102,0)
-&#9;force.Parent = missile
+	local script = Tool.PortalScript:clone()
+	script.Parent = missile
+	script.Disabled = false
 
-&#9;local script = Tool.PortalScript:clone()
-&#9;script.Parent = missile
-&#9;script.Disabled = false
+	local creator_tag = Instance.new("ObjectValue")
+	creator_tag.Value = vPlayer
+	creator_tag.Name = "creator"
+	creator_tag.Parent = missile
 
-&#9;local creator_tag = Instance.new(&quot;ObjectValue&quot;)
-&#9;creator_tag.Value = vPlayer
-&#9;creator_tag.Name = &quot;creator&quot;
-&#9;creator_tag.Parent = missile
+	local portalSound = Instance.new("Sound")
+	portalSound.SoundId = "http://www.roblox.com/asset/?id=34320976"
+	portalSound.Parent = missile
 
-&#9;local portalSound = Instance.new(&quot;Sound&quot;)
-&#9;portalSound.SoundId = &quot;http://www.roblox.com/asset/?id=34320976&quot;
-&#9;portalSound.Parent = missile
+	missile.Parent = workPortals
 
-&#9;missile.Parent = workPortals
-
-&#9;local con = missile.Touched:connect(function(part)
-&#9;&#9;if part and part.Parent then
-&#9;&#9;&#9;if part.Parent:FindFirstChild(&quot;Humanoid&quot;) == nil and not touched then
-&#9;&#9;&#9;&#9;updatePortals(missile)
-&#9;&#9;&#9;&#9;touched = true
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end)
-&#9;wait(3)
-&#9;con:disconnect()
-&#9;if not touched then
-&#9;&#9;print(&quot;removed&quot;)
-&#9;&#9;missile:Destroy()
-&#9;end
+	local con = missile.Touched:connect(function(part)
+		if part and part.Parent then
+			if part.Parent:FindFirstChild("Humanoid") == nil and not touched then
+				updatePortals(missile)
+				touched = true
+			end
+		end
+	end)
+	wait(3)
+	con:disconnect()
+	if not touched then
+		print("removed")
+		missile:Destroy()
+	end
 
 end
 
 function updatePortals(missile) --Fix implemented by Luckymaxer
-&#9;local portals = {}
-&#9;for i, v in pairs(workPortals:GetChildren()) do
-&#9;&#9;if v:IsA(&quot;BasePart&quot;) then
-&#9;&#9;&#9;table.insert(portals, v)
-&#9;&#9;end
-&#9;end
-&#9;if #portals &gt; 2 then
-&#9;&#9;for i, v in pairs(portals) do
-&#9;&#9;&#9;if #portals &gt; 2 and i &lt; (#portals - 1) then
-&#9;&#9;&#9;&#9;v:Destroy()
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	local portals = {}
+	for i, v in pairs(workPortals:GetChildren()) do
+		if v:IsA("BasePart") then
+			table.insert(portals, v)
+		end
+	end
+	if #portals > 2 then
+		for i, v in pairs(portals) do
+			if #portals > 2 and i < (#portals - 1) then
+				v:Destroy()
+			end
+		end
+	end
 end
 
 
 Tool.Enabled = true
 function onActivated()
 
-&#9;--[[if not Tool.Enabled then
-&#9;&#9;return
-&#9;end
+	--[[if not Tool.Enabled then
+		return
+	end
 
-&#9;Tool.Enabled = false]]
+	Tool.Enabled = false]]
 
-&#9;local character = Tool.Parent;
-&#9;local humanoid = character.Humanoid
-&#9;if humanoid == nil then
-&#9;&#9;print(&quot;Humanoid not found&quot;)
-&#9;&#9;return 
-&#9;end
+	local character = Tool.Parent;
+	local humanoid = character.Humanoid
+	if humanoid == nil then
+		print("Humanoid not found")
+		return 
+	end
 
-&#9;local targetPos = humanoid.TargetPoint
-&#9;local lookAt = (targetPos - character.Head.Position).unit
+	local targetPos = humanoid.TargetPoint
+	local lookAt = (targetPos - character.Head.Position).unit
 
-&#9;fire(lookAt)
+	fire(lookAt)
 
-&#9;--Tool.Enabled = true
+	--Tool.Enabled = true
 end
 
 
@@ -184,26 +191,26 @@ script.Parent.Activated:connect(onActivated)
 
 function onEquipped()
 
-&#9;workPortals = Instance.new(&quot;Model&quot;)
-&#9;workPortals.Name = Tool.Parent.Name ..&quot;Portals&quot;
-&#9;workPortals.Parent = game.Workspace
+	workPortals = Instance.new("Model")
+	workPortals.Name = Tool.Parent.Name .."Portals"
+	workPortals.Parent = game.Workspace
 
-&#9;local portalValue = Instance.new(&quot;BoolValue&quot;)
-&#9;portalValue.Name = &quot;Portaling&quot;
-&#9;portalValue.Parent = workPortals
+	local portalValue = Instance.new("BoolValue")
+	portalValue.Name = "Portaling"
+	portalValue.Parent = workPortals
 
 end
 
 function onUnequipped()
-&#9;workPortals:Destroy()
+	workPortals:Destroy()
 end
 
 Tool.Equipped:connect(onEquipped)
 Tool.Unequipped:connect(onUnequipped)
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX3">
+		<Item class="Part" referent="RBX5C7D72C108014F73B81D84B31D99CB3B">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -230,6 +237,9 @@ Tool.Unequipped:connect(onUnequipped)
 					<R22>0.699764013</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -271,7 +281,7 @@ Tool.Unequipped:connect(onUnequipped)
 					<Z>2</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX4">
+			<Item class="SpecialMesh" referent="RBX85E68FA6AB1F4C5BA6F1A11FAE7FCDB7">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -296,18 +306,24 @@ Tool.Unequipped:connect(onUnequipped)
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX5">
+			<Item class="Sound" referent="RBX57DD049738C84BC2A55E9E0BFBEDB579">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Fire</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=34320952</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="SpecialMesh" referent="RBX6">
+		<Item class="SpecialMesh" referent="RBX9A1F946F4E674D009FF34F5EF79D941C">
 			<Properties>
 				<token name="LODX">2</token>
 				<token name="LODY">2</token>
@@ -332,129 +348,94 @@ Tool.Unequipped:connect(onUnequipped)
 				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX7">
+		<Item class="Script" referent="RBX1B8FE87C03DA44349F510BCC6E76195B">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">PortalScript</string>
-				<ProtectedString name="Source">local beam = script.Parent
+				<string name="ScriptGuid">{E2EF58D8-06A3-49F6-8090-BCA0DB1AD435}</string>
+				<ProtectedString name="Source"><![CDATA[local beam = script.Parent
 local first = true
 
 function setUpPortal(part)
 
-&#9;if part.Parent:FindFirstChild(&quot;Humanoid&quot;) then
-&#9;&#9;beam:Destroy()
-&#9;end
+	if part.Parent:FindFirstChild("Humanoid") then
+		beam:Destroy()
+	end
 
-&#9;beam.Mesh.MeshId = &quot;http://www.roblox.com/asset/?id=3270017&quot;
-&#9;beam.Mesh.TextureId = &quot;http://www.roblox.com/asset/?id=3270066&quot;
-&#9;beam.Mesh.Scale = Vector3.new(10,10,10)
-&#9;beam.Anchored = true
-&#9;beam.CanCollide = false
+	beam.Mesh.MeshId = "http://www.roblox.com/asset/?id=3270017"
+	beam.Mesh.TextureId = "http://www.roblox.com/asset/?id=3270066"
+	beam.Mesh.Scale = Vector3.new(10,10,10)
+	beam.Anchored = true
+	beam.CanCollide = false
 
-&#9;for i = 1, 3 do
-&#9;&#9;local fireOne = Instance.new(&quot;Fire&quot;)
-&#9;&#9;fireOne.Color = Color3.new(0,0,0)
-&#9;&#9;if i == 1 then
-&#9;&#9;&#9;fireOne.SecondaryColor = Color3.new(100/255,0,0)
-&#9;&#9;elseif i == 2 then
-&#9;&#9;&#9;fireOne.SecondaryColor = Color3.new(0,100/255,0)
-&#9;&#9;else
-&#9;&#9;&#9;fireOne.SecondaryColor = Color3.new(0,0,100/255)
-&#9;&#9;end
-&#9;&#9;fireOne.Heat = 0
-&#9;&#9;fireOne.Size = 15
-&#9;&#9;fireOne.Parent = beam
-&#9;end
+	for i = 1, 3 do
+		local fireOne = Instance.new("Fire")
+		fireOne.Color = Color3.new(0,0,0)
+		if i == 1 then
+			fireOne.SecondaryColor = Color3.new(100/255,0,0)
+		elseif i == 2 then
+			fireOne.SecondaryColor = Color3.new(0,100/255,0)
+		else
+			fireOne.SecondaryColor = Color3.new(0,0,100/255)
+		end
+		fireOne.Heat = 0
+		fireOne.Size = 15
+		fireOne.Parent = beam
+	end
 
-&#9;local xFactor = part.Position.x/math.abs(part.Position.x + part.Position.z)
-&#9;local zFactor = part.Position.z/math.abs(part.Position.x + part.Position.z)
+	local xFactor = part.Position.x/math.abs(part.Position.x + part.Position.z)
+	local zFactor = part.Position.z/math.abs(part.Position.x + part.Position.z)
 
-&#9;local weld = Instance.new(&quot;Weld&quot;)
-&#9;weld.Part0 = beam
-&#9;weld.Parent = beam
-&#9;weld.Part1 = game:GetService(&quot;Workspace&quot;).Terrain
-&#9;weld.C0 = CFrame.new(beam.Position - part.Position)
-&#9;weld.C1 = CFrame.new(beam.Position,part.Position)
+	local weld = Instance.new("Weld")
+	weld.Part0 = beam
+	weld.Parent = beam
+	weld.Part1 = game:GetService("Workspace").Terrain
+	weld.C0 = CFrame.new(beam.Position - part.Position)
+	weld.C1 = CFrame.new(beam.Position,part.Position)
 end
 
 function findOtherPortal(part)
-&#9;stuff = beam.Parent:GetChildren()
-&#9;for i = 1, #stuff do
-&#9;&#9;if stuff[i].className == &quot;Part&quot; and stuff[i] ~= beam then
-&#9;&#9;&#9;return stuff[i]
-&#9;&#9;end
-&#9;end
-&#9;return nil
+	stuff = beam.Parent:GetChildren()
+	for i = 1, #stuff do
+		if stuff[i].className == "Part" and stuff[i] ~= beam then
+			return stuff[i]
+		end
+	end
+	return nil
 end
 
 function jumpPortal(part) --Fix implemented by Luckymaxer
-&#9;if part and part.Parent then
-&#9;&#9;local human = part.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if human then
-&#9;&#9;&#9;local otherPortal = findOtherPortal(part)
-&#9;&#9;&#9;if otherPortal == nil then return end
-&#9;&#9;&#9;if otherPortal:FindFirstChild(&quot;PortalScript&quot;) == nil then return end
-&#9;&#9;&#9;beam.Parent.Portaling.Value = true
-&#9;&#9;&#9;part.Parent:MoveTo(otherPortal.Position + (beam.CFrame.lookVector.unit * -5))
-&#9;&#9;&#9;otherPortal.Sound:Play()
-&#9;&#9;&#9;wait(1)
-&#9;&#9;&#9;beam.Parent.Portaling.Value = false
-&#9;&#9;end
-&#9;end
+	if part and part.Parent then
+		local human = part.Parent:FindFirstChild("Humanoid")
+		if human then
+			local otherPortal = findOtherPortal(part)
+			if otherPortal == nil then return end
+			if otherPortal:FindFirstChild("PortalScript") == nil then return end
+			beam.Parent.Portaling.Value = true
+			part.Parent:MoveTo(otherPortal.Position + (beam.CFrame.lookVector.unit * -5))
+			otherPortal.Sound:Play()
+			wait(1)
+			beam.Parent.Portaling.Value = false
+		end
+	end
 end
 
 function onTouched(part)
-&#9;if part and part.Parent then
-&#9;&#9;if first then
-&#9;&#9;&#9;first = false
-&#9;&#9;&#9;setUpPortal(part)
-&#9;&#9;else
-&#9;&#9;&#9;if beam.Parent.Portaling.Value == false then
-&#9;&#9;&#9;&#9;jumpPortal(part)
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
+	if part and part.Parent then
+		if first then
+			first = false
+			setUpPortal(part)
+		else
+			if beam.Parent.Portaling.Value == false then
+				jumpPortal(part)
+			end
+		end
+	end
 end
 
 beam.Touched:connect(onTouched)
-</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX8">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>-36.5585442</X>
-					<Y>8.06042576</Y>
-					<Z>66.1336212</Z>
-					<R00>0.701086879</R00>
-					<R01>-0.0539932474</R01>
-					<R02>0.711028814</R02>
-					<R10>-3.72529074e-009</R10>
-					<R11>0.997129261</R11>
-					<R12>0.0757187977</R12>
-					<R20>-0.713075936</R20>
-					<R21>-0.0530854575</R21>
-					<R22>0.699074149</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>-37.6875343</X>
-					<Y>7.94019747</Y>
-					<Z>65.023613</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
