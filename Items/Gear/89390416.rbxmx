@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX46321B2A06184D969C5152704C31EE9F">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,13 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Arachnix Drone</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88569826</url></Content>
 			<string name="ToolTip">Arachnix Drone</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXC3444B689CD643D19AE0A0BAEA8FFB27">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -50,6 +52,10 @@
 					<R22>-1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<int name="CollisionGroupId">0</int>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -91,7 +97,7 @@
 					<Z>2</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX600AEF4F7A044F8C8CC36F22C4115974">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,200 +122,244 @@
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Attachment" referent="RBX3C96E918A1CB49849B93255FF94FFECA">
+				<Properties>
+					<CoordinateFrame name="CFrame">
+						<X>0</X>
+						<Y>-0.25</Y>
+						<Z>0</Z>
+						<R00>0</R00>
+						<R01>0</R01>
+						<R02>-1</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>1</R20>
+						<R21>0</R21>
+						<R22>0</R22>
+					</CoordinateFrame>
+					<string name="Name">RightGripAttachment</string>
+					<bool name="Visible">false</bool>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX3">
+		<Item class="Script" referent="RBXECB8679E2F384673A1E82BAEE7690EA9">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<string name="ScriptGuid">{1A6453F7-ADF2-4AE5-AFCA-BCE9FB442D2F}</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by StarWars
+local Debris = game:GetService("Debris")
+
+local Tool = script.Parent
+local Handle = Tool.Handle
+
+local Player = nil
+local Humanoid = nil
+
+local OnCoolDown = false
+
+local COOL_DOWN = 14
+local AMOUNT_OF_DRONES = 9
+
+local function CreateDrone()
+	local Model = Instance.new("Model")
+	Model.Name = "Arachnix Drone"
+	local DronePart = Handle:Clone()
+	DronePart.Name = "Torso"
+	DronePart.Friction = 0.2
+	DronePart.Transparency = 0 
+	DronePart.CanCollide = true
+	DronePart.CFrame = CFrame.new()
+	local RandomDirection = Vector3.new((math.random() - 0.5) * 15, (math.random()- 0.5) * 5, (math.random() - 0.5) * 15)
+	DronePart.Position = Handle.Position + RandomDirection
+	DronePart.Velocity = RandomDirection
+	DronePart.Parent = Model
+	local Head = Instance.new("Part")
+	Head.Name = "Head"
+	Head.Transparency = 1
+	Head.Size = Vector3.new(0, 0, 0)
+	Head.Parent = Model
+	local Weld = Instance.new("Weld")
+	Weld.Name = "Neck"
+	Weld.Part0 = DronePart
+	Weld.Part1 = Head
+	Weld.Parent = DronePart
+	local Humanoid = Instance.new("Humanoid")
+	Humanoid.MaxHealth = 5
+	Humanoid.Health = 5
+	Humanoid.WalkSpeed = 20
+	Humanoid.Parent = Model
+	local CreatorObject = Instance.new("ObjectValue")
+	CreatorObject.Name = "creator"
+	CreatorObject.Value = Player
+	CreatorObject.Parent = Model
+	local DroneScript = script.DroneScript:Clone()
+	DroneScript.Parent = Model
+	DroneScript.Disabled = false
+	
+	Debris:AddItem(Model, 20)
+	Model.Parent = workspace
+	DronePart.Position = Handle.Position + RandomDirection
+end
+
+local function OnActivated()
+	if OnCoolDown then return end
+	if not Player then return end
+	if not Humanoid then return end
+	if Humanoid.Health == 0 then return end
+	
+	OnCoolDown = true
+	Handle.Transparency = 1
+	for i = 1, AMOUNT_OF_DRONES do 
+		CreateDrone()
+	end
+	wait(COOL_DOWN)
+	OnCoolDown = false
+end
+
+local function OnEquipped()
+	Player = game.Players:GetPlayerFromCharacter(Tool.Parent)
+	Humanoid = Tool.Parent:FindFirstChildOfClass("Humanoid")
+end
+
+local function OnUnequipped()
+	Player = nil
+	Humanoid = nil
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Unequipped:connect(OnUnequipped)
+Tool.Activated:connect(OnActivated)]]></ProtectedString>
+			</Properties>
+			<Item class="Script" referent="RBX408673572F5147F2A6B71C93B5BD7644">
+				<Properties>
+					<bool name="Disabled">true</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">DroneScript</string>
+					<string name="ScriptGuid">{79C04BFD-15B0-4DF3-ADEE-CE185723C153}</string>
+					<ProtectedString name="Source"><![CDATA[--Rescripted by StarWars
+local Drone = script.Parent
+
+local DAMAGE = 2
+
+local Alive = true
+
+local Head = Drone:WaitForChild("Head")
+local Humanoid = Drone:WaitForChild("Humanoid")
+local Torso = Drone:WaitForChild("Torso")
+local Creator = Drone:WaitForChild("creator")
+
+local function FindNearestTarget()
+	local Closest = 1000
+	local Target = nil
+	for _, v in pairs(workspace:GetChildren()) do
+		if v and v:IsA("Model") and v.Name ~= Drone.Name then
+			local TargetHumanoid = v:FindFirstChildOfClass("Humanoid")
+			local TargetTorso = v:FindFirstChild("Torso") or v:FindFirstChild("UpperTorso")
+			if TargetHumanoid and TargetHumanoid.Health > 0 then
+				local TargetPlayer = game.Players:GetPlayerFromCharacter(v)
+				if Creator.Value ~= TargetPlayer then
+					local Distance = (TargetTorso.Position - Torso.Position).Magnitude
+					if Distance < Closest then
+						Target = TargetTorso
+						Closest = Distance
+					end
+				end
+			end
+		end
+	end
+	
+	return Target
+end
+
+Torso.Touched:connect(function(hit)
+	if hit and hit.Parent and hit.Parent.Name ~= Drone.Name and Alive then
+		local HitHumanoid = hit.Parent:FindFirstChildOfClass("Humanoid")
+		if HitHumanoid then
+			local HitPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
+			if Creator.Value ~= HitPlayer then
+				HitHumanoid:TakeDamage(DAMAGE)
+			end
+		end
+	end
+end)
+
+Humanoid.HealthChanged:connect(function(health)
+	if Humanoid then
+		if Humanoid.Health <= 0 then
+			Alive = false
+			if Torso then
+				Humanoid:Destroy()
+				local NewFire = Instance.new("Fire")
+				NewFire.Parent = Torso
+				if Head then
+					Head:Destroy()
+				end
+				wait(2)
+			end
+			Drone:Destroy()
+		end
+	else
+		Alive = false
+		Drone:Destroy()
+	end
+end)
+
+while Alive do
+	local Target = FindNearestTarget()
+	if Target then
+		local RandomPoint = Target.Position + Vector3.new((math.random() - 0.5) * 5, (math.random() - 0.5) * 5, (math.random() - 0.5) * 5)
+		Humanoid:MoveTo(RandomPoint, Target)
+		if math.random() < 0.25 then
+			Humanoid.Jump = true
+		end
+	end
+	
+	wait(0.5 + math.random())
+end]]></ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX45265EBF8CAC4086A7F0D4FEF1BE8FF8">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Stickmasterluke
+				<string name="ScriptGuid">{69EDB155-25E9-4844-83FE-9D56B3F4B184}</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by StarWars
+local Player = game.Players.LocalPlayer
+local COOL_DOWN = 20
+local LastClick = 0
 
-
-sp=script.Parent
-
-check=true
-
-debris=game:GetService(&quot;Debris&quot;)
-cooldown=14
-amount=9
-
-function onEquipped(mouse)
-&#9;equipped=true
-&#9;local plr=game.Players.LocalPlayer
-&#9;if mouse~=nil and plr~=nil then
-&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;local chr=sp.Parent
-&#9;&#9;&#9;if chr and check then
-&#9;&#9;&#9;&#9;local t=chr:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;local h=chr:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;if t and h and h.Health&gt;0 then
-&#9;&#9;&#9;&#9;&#9;check=false
-&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;&#9;&#9;&#9;sp.Handle.Transparency=1
-&#9;&#9;&#9;&#9;&#9;for i=1,amount do
-&#9;&#9;&#9;&#9;&#9;&#9;local m=Instance.new(&quot;Model&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;m.Name=&quot;Arachnix Drone&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;local p=sp.Handle:clone()
-&#9;&#9;&#9;&#9;&#9;&#9;p.Friction=.2
-&#9;&#9;&#9;&#9;&#9;&#9;p.Name=&quot;Torso&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.Transparency=0
-&#9;&#9;&#9;&#9;&#9;&#9;p.CanCollide=true
-&#9;&#9;&#9;&#9;&#9;&#9;p.CFrame=CFrame.new()
-&#9;&#9;&#9;&#9;&#9;&#9;local rd=Vector3.new((math.random()-.5)*15,(math.random()-.5)*5,(math.random()-.5)*15)
-&#9;&#9;&#9;&#9;&#9;&#9;p.Position=sp.Handle.Position+rd
-&#9;&#9;&#9;&#9;&#9;&#9;p.Velocity=rd
-&#9;&#9;&#9;&#9;&#9;&#9;p.Parent=m
-&#9;&#9;&#9;&#9;&#9;&#9;local he=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;he.Name=&quot;Head&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;he.formFactor=&quot;Custom&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;he.Transparency=1
-&#9;&#9;&#9;&#9;&#9;&#9;he.Size=Vector3.new(0,0,0)
-&#9;&#9;&#9;&#9;&#9;&#9;he.Parent=m
-&#9;&#9;&#9;&#9;&#9;&#9;local w=Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;w.Name=&quot;Neck&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;w.Part0=p
-&#9;&#9;&#9;&#9;&#9;&#9;w.Part1=he
-&#9;&#9;&#9;&#9;&#9;&#9;w.Parent=p
-&#9;&#9;&#9;&#9;&#9;&#9;local h=Instance.new(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;h.MaxHealth=5
-&#9;&#9;&#9;&#9;&#9;&#9;h.Health=5
-&#9;&#9;&#9;&#9;&#9;&#9;h.WalkSpeed=20
-&#9;&#9;&#9;&#9;&#9;&#9;h.Parent=m
-&#9;&#9;&#9;&#9;&#9;&#9;local ct=Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;ct.Value=game.Players.LocalPlayer
-&#9;&#9;&#9;&#9;&#9;&#9;ct.Name=&quot;creator&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;ct.Parent=m
-&#9;&#9;&#9;&#9;&#9;&#9;local s=script.Script:clone()
-&#9;&#9;&#9;&#9;&#9;&#9;s.Parent=m
-&#9;&#9;&#9;&#9;&#9;&#9;s.Disabled=false
-&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(m,20)
-&#9;&#9;&#9;&#9;&#9;&#9;m.Parent=game.Workspace
-&#9;&#9;&#9;&#9;&#9;&#9;p.Position=sp.Handle.Position+rd
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;wait(cooldown)
-&#9;&#9;&#9;&#9;&#9;sp.Handle.Transparency=0
-&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;&#9;&#9;&#9;check=true
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
+local function OnEquipped(mouse)
+	if mouse then
+		if tick() - COOL_DOWN > LastClick then
+			mouse.Icon = "rbxasset://textures\\GunWaitCursor.png"
+			wait(LastClick - (tick() - COOL_DOWN))
+			mouse.Icon="rbxasset://textures\\GunCursor.png"
+		else
+			mouse.Icon="rbxasset://textures\\GunCursor.png"
+		end
+		
+		mouse.Button1Up:connect(function()
+			if tick() - COOL_DOWN > LastClick and mouse.Target and mouse.Hit then
+				local Character = Player.Character
+				if Character then
+					local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+					if Humanoid and Humanoid.Health > 0 then
+						LastClick = tick()
+						mouse.Icon = "rbxasset://textures\\GunWaitCursor.png"
+					end
+				end
+			end
+		end)
+	end
 end
 
-function onUnequipped()
-&#9;equipped=false
-end
-
-sp.Equipped:connect(onEquipped)
-sp.Unequipped:connect(onUnequipped)
-
-</ProtectedString>
+script.Parent.Equipped:connect(OnEquipped)]]></ProtectedString>
 			</Properties>
-			<Item class="Script" referent="RBX4">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">Script</string>
-					<ProtectedString name="Source">--Made by Stickmasterluke
-
-
-sp=script.Parent
-
-
-damage=2
-
-alive=true
-
-function waitfor(a,b)
-&#9;while a:FindFirstChild(b)==nil do
-&#9;&#9;wait()
-&#9;end
-&#9;return a:FindFirstChild(b)
-end
-
-head=waitfor(sp,&quot;Head&quot;)
-hum=waitfor(sp,&quot;Humanoid&quot;)
-torso=waitfor(sp,&quot;Torso&quot;)
-ct=waitfor(sp,&quot;creator&quot;)
-
-
-torso.Touched:connect(function(hit)
-&#9;if hit and hit.Parent and hit.Parent.Name~=sp.Name and alive then
-&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if h~=nil then
-&#9;&#9;&#9;local plr=game.Players:GetPlayerFromCharacter(hit.Parent)
-&#9;&#9;&#9;if plr then
-&#9;&#9;&#9;&#9;if plr==ct.Value then
-&#9;&#9;&#9;&#9;&#9;return
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;h:TakeDamage(damage)
-&#9;&#9;end
-&#9;end
-end)
-
-hum.Changed:connect(function(prop)
-&#9;if hum then
-&#9;&#9;if hum.Health&lt;=0 then
-&#9;&#9;&#9;alive=false
-&#9;&#9;&#9;if torso then
-&#9;&#9;&#9;&#9;hum:remove()
-&#9;&#9;&#9;&#9;local f=Instance.new(&quot;Fire&quot;)
-&#9;&#9;&#9;&#9;f.Parent=torso
-&#9;&#9;&#9;&#9;if head then
-&#9;&#9;&#9;&#9;&#9;head:remove()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;wait(2)
-&#9;&#9;&#9;end
-&#9;&#9;&#9;sp:remove()
-&#9;&#9;end
-&#9;else
-&#9;&#9;alive=false
-&#9;&#9;sp:remove()
-&#9;end
-end)
-
-while alive do
-&#9;closest=1000
-&#9;target=nil
-&#9;for i,v in ipairs(game.Workspace:GetChildren()) do&#9;&#9;&#9;&#9;--targets every thing named humanoid that is in a model in workspace and is not another drone
-&#9;&#9;if v and v.className==&quot;Model&quot; and v.Name~=sp.Name then
-&#9;&#9;&#9;local t=v:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;local h=v:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;if t~=nil and h~=nil and h.Health&gt;0 then
-&#9;&#9;&#9;&#9;safe=false
-&#9;&#9;&#9;&#9;local plr=game.Players:GetPlayerFromCharacter(v)
-&#9;&#9;&#9;&#9;if plr then
-&#9;&#9;&#9;&#9;&#9;if plr==ct.Value then
-&#9;&#9;&#9;&#9;&#9;&#9;safe=true
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;if not safe then
-&#9;&#9;&#9;&#9;&#9;local mag=(t.Position-torso.Position).magnitude
-&#9;&#9;&#9;&#9;&#9;if mag&lt;closest then
-&#9;&#9;&#9;&#9;&#9;&#9;target=t
-&#9;&#9;&#9;&#9;&#9;&#9;closest=mag
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;if target then
-&#9;&#9;point=target.Position+Vector3.new((math.random()-.5)*5,(math.random()-.5)*5,(math.random()-.5)*5)
-&#9;&#9;--hum.WalkToPoint=point
-&#9;&#9;hum:MoveTo(point,target)
-&#9;&#9;if math.random()&lt;.25 then
-&#9;&#9;&#9;hum.Jump=true
-&#9;&#9;end
-&#9;end
-&#9;wait(.5+math.random())
-end
-
-
-</ProtectedString>
-				</Properties>
-			</Item>
 		</Item>
 	</Item>
 </roblox>
