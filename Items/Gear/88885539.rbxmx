@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX9349546DE0074CA5B7DAF3C798550941">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,13 @@
 				<R21>-0.104528464</R21>
 				<R22>-0.290770113</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">Tactical Airstrike</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88743128</url></Content>
 			<string name="ToolTip">Call in an airstrike on a designated location.</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBX054744F1973046478B32FF42096A9326">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -50,6 +52,9 @@
 					<R22>0.290770113</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -91,7 +96,7 @@
 					<Z>0.400000006</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX507D81AD763F4A54A984D8DAF802E90C">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,408 +121,446 @@
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX3">
+			<Item class="Sound" referent="RBX1540254F834E464B8A21FCA1153ADC25">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">Sound</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>http://www.roblox.com/asset/?id=88858815</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Attachment" referent="RBXA4C234DACBCC473CA2F76D640E475471">
+				<Properties>
+					<CoordinateFrame name="CFrame">
+						<X>-0.400000006</X>
+						<Y>-0.5</Y>
+						<Z>0</Z>
+						<R00>-0.939692259</R00>
+						<R01>9.79106403e-007</R01>
+						<R02>0.342021137</R02>
+						<R10>-0.0298081823</R10>
+						<R11>0.99619472</R11>
+						<R12>-0.0818998963</R12>
+						<R20>-0.3407197</R20>
+						<R21>-0.0871557295</R21>
+						<R22>-0.936116457</R22>
+					</CoordinateFrame>
+					<string name="Name">RightGripAttachment</string>
+					<bool name="Visible">false</bool>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="Script" referent="RBX02B85BF8A06E4129B070867D4741F0FC">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<string name="ScriptGuid">{CA1EAAED-0852-489E-867F-781667995C7C}</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by StarWars
+local Tool = script.Parent
+local Airstrike = require(script.Airstrike)
+
+local COOL_DOWN = 20
+
+local LastStrike = 0
+
+local OnMouseClickEvent = Instance.new("RemoteEvent")
+OnMouseClickEvent.Name = "OnMouseClick"
+OnMouseClickEvent.OnServerEvent:connect(function(player, location)
+	if tick() - LastStrike > COOL_DOWN then
+		LastStrike = tick()
+		Airstrike:Spawn(player, location)
+	end
+end)
+OnMouseClickEvent.Parent = Tool]]></ProtectedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBX56D016B31F744A93A13CD09A41C89CA5">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Airstrike</string>
+					<string name="ScriptGuid">{83BCE7A0-287A-4E87-AEE3-1844445965CD}</string>
+					<ProtectedString name="Source"><![CDATA[--Created by StarWars
+local Airstrike = {}
+
+local Jet = require(script.Jet)
+
+function Airstrike:Spawn(player, location)
+	local LocationPart = Instance.new("Part")
+	LocationPart.Name = "Effect"
+	LocationPart.Anchored = true
+	LocationPart.CanCollide = false
+	LocationPart.Size = Vector3.new(0, 0, 0)
+	LocationPart.BrickColor = BrickColor.new("Lime green")
+	LocationPart.CFrame = CFrame.new(location) * CFrame.Angles(math.pi/2, 0, 0)
+	local Mesh = Instance.new("SpecialMesh")
+	Mesh.MeshId = "rbxassetid://3270017"
+	Mesh.Scale = Vector3.new(40, 40, 1)
+	Mesh.Parent = LocationPart
+	
+	game:GetService("Debris"):AddItem(LocationPart, 5)
+	LocationPart.Parent = workspace
+	spawn(function()
+		while LocationPart and LocationPart.Transparency < 1 do
+			LocationPart.Transparency = LocationPart.Transparency + 0.025
+			wait(0.15)
+		end
+		
+		if LocationPart then
+			LocationPart:Destroy()
+		end
+	end)
+	
+	local NewJet = Jet.new(player, location)
+	NewJet:Fly()
+end
+
+return Airstrike]]></ProtectedString>
+				</Properties>
+				<Item class="ModuleScript" referent="RBXADA42F47471B45B9B704370954E6CCA1">
+					<Properties>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">Jet</string>
+						<string name="ScriptGuid">{71EF28B0-3593-4332-A456-50237981F808}</string>
+						<ProtectedString name="Source"><![CDATA[--Created by StarWars
+local Bomb = require(script.Bomb)
+
+local Jet = {}
+Jet.__index = Jet
+
+local JET_HEIGHT = 200
+local JET_DISTANCE = 2000
+local JET_SPEED = 300
+local JET_DROP_RANGE = 550
+
+local GRAVITY = workspace.Gravity
+local WAIT_TIME = 1/60
+
+local function CreateJet(player, location)
+	local Model = Instance.new("Model")
+	Model.Name = "F22 Bombing Jet"
+	local Part = Instance.new("Part")
+	Part.Locked = true
+	Part.Name = "Torso"
+	Part.Transparency = 0
+	Part.CanCollide = true
+	Part.TopSurface = Enum.SurfaceType.Smooth
+	Part.BottomSurface = Enum.SurfaceType.Smooth
+	Part.Size = Vector3.new(20, 5, 20)
+	Part.CFrame = CFrame.new(location + Vector3.new(0, JET_HEIGHT, 0)) * CFrame.Angles(0, math.pi*2*math.random(), 0) * CFrame.new(0, 0, JET_DISTANCE)
+	Part.Parent = Model
+	
+	local Mesh = Instance.new("SpecialMesh")
+	Mesh.MeshId = "rbxassetid://88775328"
+	Mesh.TextureId = "rbxassetid://88775716"
+	Mesh.Scale = Vector3.new(10, 10, 10)
+	Mesh.Parent = Part
+	
+	local Smoke = Instance.new("Smoke")
+	Smoke.RiseVelocity = 20
+	Smoke.Parent = Part
+	
+	local HeadPart = Instance.new("Part")
+	HeadPart.Locked = true
+	HeadPart.Name = "Head"
+	HeadPart.Transparency = 1
+	HeadPart.Size = Vector3.new(0, 0, 0)
+	HeadPart.Parent = Model
+	
+	local BodyForce = Instance.new("BodyForce")
+	BodyForce.Force = Vector3.new(0, (Part:GetMass() + HeadPart:GetMass())*GRAVITY, 0)
+	BodyForce.Parent = Part
+	
+	local Weld = Instance.new("Weld")
+	Weld.Name = "Neck"
+	Weld.Part0 = Part
+	Weld.Part1 = HeadPart
+	Weld.Parent = Part
+	
+	local Humanoid = Instance.new("Humanoid")
+	Humanoid.MaxHealth = 5
+	Humanoid.Health = 5
+	Humanoid.WalkSpeed = 0
+	Humanoid.Sit = true
+	Humanoid.Parent = Model
+	
+	local JetSound = Instance.new("Sound")
+	JetSound.Name = "JetScream"
+	JetSound.SoundId = "rbxassetid://88862455"
+	JetSound.Volume = 0.6
+	game:GetService("Debris"):AddItem(JetSound, 10)
+	JetSound.Parent = workspace
+	delay(2, function()
+		JetSound:Play()
+	end)
+	
+	local Velocity = ((location + Vector3.new(0, JET_HEIGHT, 0)) - Part.Position).Unit*JET_SPEED
+	Part.Velocity = Velocity
+	HeadPart.Velocity = Velocity	
+
+	Model.Parent = workspace
+	
+	return Model
+end
+
+local function CreateExplosion(jet)
+	local Explosion = Instance.new("Explosion")
+	Explosion.Position = jet.Model.Torso.Position
+	Explosion.BlastPressure = 0
+	Explosion.BlastRadius = 15
+	Explosion.ExplosionType = Enum.ExplosionType.CratersAndDebris
+	Explosion.Parent = workspace
+	
+	local Fire = Instance.new("Fire")
+	Fire.Size = 100
+	Fire.Heat = 100
+	Fire.Parent = jet.Model.Torso
+	
+	if jet.Model.Head then
+		jet.Model.Head:Destroy()
+	end
+	
+	jet.Model.Torso.Velocity = jet.Model.Torso.Velocity + Vector3.new((math.random()-.5)*50,(math.random()-.5)*50,(math.random()-.5)*50)
+	wait(3)
+	if jet.Model.Torso then
+		jet.Model.Torso.Transparency = 1
+		jet.Model.Torso.Velocity = jet.Model.Torso.Velocity + Vector3.new((math.random()-.5)*50,(math.random()-.5)*50,(math.random()-.5)*50)
+	end
+	wait(3)
+end
+
+function Jet.new(player, location)
+	local self = {}
+	setmetatable(self, Jet)
+	
+	self.Model = CreateJet(player, location)	
+	delay(20, function()
+		self.Alive = false
+		self.Model:Destroy()
+	end)
+	self.Creator = player
+	self.TargetLocation = location
+	self.Alive = true
+	self.Bombs = 3
+	
+	self.Model.Humanoid.HealthChanged:connect(function(health)
+		if self.Alive then
+			if self.Model.Humanoid then
+				if self.Model.Humanoid.Health <= 0 then
+					self.Alive = false
+					if self.Model.Torso then
+						self.Model.Humanoid:Destroy()
+						CreateExplosion(self.Model.Torso.Position)
+					end
+					self.Model:Destroy()
+				end
+			else
+				self.Alive = false
+				self.Model:Destroy()
+			end
+		end
+	end)
+	
+	return self
+end
+
+function Jet:Fly()
+	spawn(function()
+		while self.Alive do
+			if self.Model.Torso then
+				if self.Bombs > 0 then
+					if (self.Model.Torso.Position - self.TargetLocation).Magnitude < JET_DROP_RANGE then
+						self.Bombs = self.Bombs - 1
+						Bomb.new(self)
+					end
+				end
+			end
+			wait(.25)
+		end
+	end)
+	while self.Alive do
+		if self.Model.Torso then
+			if self.Bombs > 0 then
+				self.Model.Torso.Velocity = ((self.TargetLocation + Vector3.new(0, JET_HEIGHT, 0)) - self.Model.Torso.Position).Unit * self.Model.Torso.Velocity.Magnitude
+			else
+				self.Model.Torso.Velocity = self.Model.Torso.Velocity + Vector3.new(0, 10, 0)
+			end
+			self.Model.Torso.CFrame = CFrame.new(self.Model.Torso.Position, self.Model.Torso.Position + self.Model.Torso.Velocity)
+		end
+		wait(WAIT_TIME)
+	end
+end
+
+return Jet]]></ProtectedString>
+					</Properties>
+					<Item class="ModuleScript" referent="RBX722BB842BAE84351A98651244C3F2DED">
+						<Properties>
+							<Content name="LinkedSource"><null></null></Content>
+							<string name="Name">Bomb</string>
+							<string name="ScriptGuid">{CB4DF79F-D419-41C9-923B-B732E655AD70}</string>
+							<ProtectedString name="Source"><![CDATA[--Created by StarWars
+local Bomb = {}
+Bomb.__index = Bomb
+
+local BLAST_RADIUS = 19
+local BLAST_PRESSURE = 2*10^6
+
+local CreatorValue = Instance.new("ObjectValue")
+CreatorValue.Name = "creator"
+
+local function CreateBomb(jet)
+	local BombPart = Instance.new("Part")
+	BombPart.Name = "Effect"
+	BombPart.Size = Vector3.new(3, 3, 10) * 0.5
+	BombPart.CanCollide = false
+	BombPart.CFrame = jet.Model.Torso.CFrame
+	BombPart.Velocity = jet.Model.Torso.Velocity
+	
+	local Mesh = Instance.new("SpecialMesh")
+	Mesh.MeshId = "rbxassetid://88782666"
+	Mesh.TextureId = "rbxassetid://88782631"
+	Mesh.Scale = Vector3.new(6, 6, 6)
+	Mesh.Parent = BombPart
+	
+	local Sound = Instance.new("Sound")
+	Sound.SoundId = "rbxasset://sounds/collide.wav"
+	Sound.Volume = 1
+	Sound.Pitch = 0.75
+	Sound.Parent = BombPart
+	
+	game:GetService("Debris"):AddItem(BombPart, 10)
+	BombPart.Parent = workspace	
+	
+	return BombPart
+end
+
+local function Explode(bomb)
+	if not bomb.Exploded then
+		bomb.Exploded = true
+		bomb.Model.Anchored = true
+		bomb.Model.Transparency = 1
+		local Sound = bomb.Model:FindFirstChild("Sound")
+		if Sound then
+			Sound:Play()
+		end
+		
+		local Explosion = Instance.new("Explosion")
+		Explosion.Position = bomb.Model.Position
+		Explosion.BlastPressure = BLAST_PRESSURE
+		Explosion.BlastRadius = BLAST_RADIUS
+		Explosion.ExplosionType = Enum.ExplosionType.CratersAndDebris
+		Explosion.Hit:connect(function(hit)
+			if bomb.Creator and (hit.Name == "Head" or hit.Name == "HumanoidRootPart") then
+				local Humanoid = hit.Parent:FindFirstChild("Humanoid")
+				if Humanoid then
+					for _, v in ipairs(Humanoid:GetChildren()) do
+						if v.Name == "creator" then
+							v:Destroy()
+						end
+					end
+					local NewCreator = CreatorValue:Clone()
+					NewCreator.Value = bomb.Creator
+					NewCreator.Parent = Humanoid
+				end
+			end
+		end)
+		Explosion.Parent = workspace
+		wait(0.5)
+		if bomb.Model and bomb.Model.Parent ~= nil then
+			bomb.Model:Destroy()
+		end
+	end
+end
+
+function Bomb.new(jet)
+	local self = {}
+	setmetatable(self, Bomb)
+	
+	self.Model = CreateBomb(jet)
+	self.Creator = jet.Creator
+	self.Exploded = false
+	
+	self.Model.Touched:connect(function(hit)
+		if hit and hit.Parent then
+			if hit.Name ~= "Effect" and hit.Parent.Name ~= "F22 Bombing Jet" then
+				Explode(self)
+			end
+		end
+	end)
+	
+	return self
+end
+
+return Bomb]]></ProtectedString>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="LocalScript" referent="RBX3769A467E2D94733BE8D38DBCB2E1CB3">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalScript</string>
-				<ProtectedString name="Source">--Made by Stickmasterluke
+				<string name="ScriptGuid">{3C785308-A892-4149-A6D6-CEA494921F84}</string>
+				<ProtectedString name="Source"><![CDATA[--Rescripted by StarWars
+local Player = game.Players.LocalPlayer
 
+local COOL_DOWN = 20
+local TALKING_GRIP = CFrame.new(0.121005774, -1.07626426, 1.151003, -0.571957648, 0.032301072, -0.819646955, 0.0999610648, 0.994521916, -0.0305611696, 0.814169705, -0.0994124785, -0.572053254)
+local HOLDING_GRIP = CFrame.new(-0.329237193, -0.576264262, 0.157275885, -0.29237175, 0, -0.956304729, 0.0999610648, 0.994521916, -0.0305611696, 0.951066017, -0.104528464, -0.290770113)
 
-sp=script.Parent
+local Tool = script.Parent
+local OnMouseClickEvent = Tool:WaitForChild("OnMouseClick")
 
+local LastStrike = 0
 
-cooldown=20
-jetheight=200
-jetdistance=2000
-jetspeed=300
-
-
-debris=game:GetService(&quot;Debris&quot;)
-location=Vector3.new(0,0,0)
-check=true
-marked=false
-
-talkinggrip=CFrame.new(0.121005774, -1.07626426, 1.151003, -0.571957648, 0.032301072, -0.819646955, 0.0999610648, 0.994521916, -0.0305611696, 0.814169705, -0.0994124785, -0.572053254)
-holdinggrip=CFrame.new(-0.329237193, -0.576264262, 0.157275885, -0.29237175, 0, -0.956304729, 0.0999610648, 0.994521916, -0.0305611696, 0.951066017, -0.104528464, -0.290770113)
-
-function waitfor(parent,name)
-&#9;while parent:FindFirstChild(name)==nil do
-&#9;&#9;wait()
-&#9;end
-&#9;return parent:FindFirstChild(name)
+function OnEquipped(mouse)
+	if tick() - COOL_DOWN < LastStrike then
+		mouse.Icon="rbxasset://textures\\GunWaitCursor.png"
+		wait(LastStrike-(tick()-COOL_DOWN))
+		mouse.Icon="rbxasset://textures\\GunCursor.png"
+	else
+		mouse.Icon="rbxasset://textures\\GunCursor.png"
+	end	
+	mouse.Button1Down:connect(function()
+		if tick() - LastStrike > COOL_DOWN and mouse.Target and mouse.Hit then
+			local Location = mouse.Hit.p
+			local Character = Tool.Parent
+			if Character then
+				local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+				local Humanoid = Character:FindFirstChild("Humanoid")
+				if HumanoidRootPart and Humanoid and Humanoid.Health > 0 then
+					LastStrike = tick()
+					mouse.Icon = "rbxasset://textures\\GunWaitCursor.png"
+					Tool.Grip = TALKING_GRIP
+					local Sound = Tool.Handle:FindFirstChild("Sound")
+					if Sound then
+						Sound:Play()
+					end
+					OnMouseClickEvent:FireServer(Location)
+					wait(5)
+					Sound = Tool.Handle:FindFirstChild("Sound")
+					if Sound then
+						Sound:Stop()
+					end
+					Tool.Grip = HOLDING_GRIP
+					wait(COOL_DOWN - 5)
+					mouse.Icon = "rbxasset://textures\\GunCursor.png"
+				end
+			end
+		end
+	end)
 end
 
-laststrike=waitfor(sp,&quot;LastStrike&quot;)
-
-function onEquipped(mouse)
-&#9;equipped=true
-&#9;local plr=game.Players.LocalPlayer
-&#9;sp.Grip=holdinggrip
-&#9;if mouse~=nil and plr~=nil then
-&#9;&#9;if tick()-cooldown&lt;laststrike.Value then
-&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;&#9;wait(laststrike.Value-(tick()-cooldown))
-&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;else
-&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;end
-&#9;&#9;mouse.Button1Down:connect(function()
-&#9;&#9;&#9;if tick()-cooldown&gt;laststrike.Value and mouse.Target and mouse.Target~=nil and mouse.Hit then
-&#9;&#9;&#9;&#9;location=mouse.Hit.p
-&#9;&#9;&#9;&#9;local chr=sp.Parent
-&#9;&#9;&#9;&#9;if chr and check then
-&#9;&#9;&#9;&#9;&#9;local t=chr:FindFirstChild(&quot;Torso&quot;)
-&#9;&#9;&#9;&#9;&#9;local h=chr:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;&#9;if t and h and h.Health&gt;0 then
-&#9;&#9;&#9;&#9;&#9;&#9;check=false
-&#9;&#9;&#9;&#9;&#9;&#9;laststrike.Value=tick()
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunWaitCursor.png&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;sp.Grip=talkinggrip
-&#9;&#9;&#9;&#9;&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;Sound&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;if sound~=nil then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;sound:Play()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-
-&#9;&#9;&#9;&#9;&#9;&#9;local tp=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;tp.Transparency=.5
-&#9;&#9;&#9;&#9;&#9;&#9;tp.Name=&quot;Effect&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;tp.Anchored=true
-&#9;&#9;&#9;&#9;&#9;&#9;tp.CanCollide=false
-&#9;&#9;&#9;&#9;&#9;&#9;tp.Size=Vector3.new(0,0,0)
-&#9;&#9;&#9;&#9;&#9;&#9;tp.BrickColor=BrickColor.new(&quot;Lime green&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;tp.CFrame=CFrame.new(location)*CFrame.Angles(math.pi/2,0,0)
-&#9;&#9;&#9;&#9;&#9;&#9;local me=Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;me.MeshId=&quot;http://www.roblox.com/asset/?id=3270017&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;me.Scale=Vector3.new(40,40,1)
-&#9;&#9;&#9;&#9;&#9;&#9;me.Parent=tp
-&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(tp,5)
-&#9;&#9;&#9;&#9;&#9;&#9;tp.Parent=game.Workspace
-&#9;&#9;&#9;&#9;&#9;&#9;delay(0,function()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;while tp and tp.Transparency&lt;1 do
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;tp.Transparency=tp.Transparency+.025
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;wait(.15)
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;if tp then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;tp:remove()
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;end)
-
-&#9;&#9;&#9;&#9;&#9;&#9;local m=Instance.new(&quot;Model&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;m.Name=&quot;F22 Bombing Jet&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;local p=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;p.Locked=true
-&#9;&#9;&#9;&#9;&#9;&#9;p.Name=&quot;Torso&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.Transparency=0
-&#9;&#9;&#9;&#9;&#9;&#9;p.CanCollide=true
-&#9;&#9;&#9;&#9;&#9;&#9;p.TopSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.BottomSurface=&quot;Smooth&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.formFactor=&quot;Custom&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;p.Size=Vector3.new(20,5,20)
-&#9;&#9;&#9;&#9;&#9;&#9;p.CFrame=CFrame.new(location+Vector3.new(0,jetheight,0))*CFrame.Angles(0,math.pi*2*math.random(),0)*CFrame.new(0,0,jetdistance)
-&#9;&#9;&#9;&#9;&#9;&#9;p.Parent=m
-
-&#9;&#9;&#9;&#9;&#9;&#9;local mesh=Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;mesh.MeshId=&quot;http://www.roblox.com/asset/?id=88775328&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;mesh.TextureId=&quot;http://www.roblox.com/asset/?id=88775716&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;mesh.Scale=Vector3.new(10,10,10)
-&#9;&#9;&#9;&#9;&#9;&#9;mesh.Parent=p
-
-&#9;&#9;&#9;&#9;&#9;&#9;local smoke=Instance.new(&quot;Smoke&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;smoke.RiseVelocity=20
-&#9;&#9;&#9;&#9;&#9;&#9;smoke.Parent=p
-
-&#9;&#9;&#9;&#9;&#9;&#9;local he=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;he.Locked=true
-&#9;&#9;&#9;&#9;&#9;&#9;he.Name=&quot;Head&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;he.formFactor=&quot;Custom&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;he.Transparency=1
-&#9;&#9;&#9;&#9;&#9;&#9;he.Size=Vector3.new(0,0,0)
-&#9;&#9;&#9;&#9;&#9;&#9;he.Parent=m
-
-&#9;&#9;&#9;&#9;&#9;&#9;local bf=Instance.new(&quot;BodyForce&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;bf.force=Vector3.new(0,(p:GetMass()+he:GetMass())*196.2,0)
-&#9;&#9;&#9;&#9;&#9;&#9;bf.Parent=p
-
-&#9;&#9;&#9;&#9;&#9;&#9;local w=Instance.new(&quot;Weld&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;w.Name=&quot;Neck&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;w.Part0=p
-&#9;&#9;&#9;&#9;&#9;&#9;w.Part1=he
-&#9;&#9;&#9;&#9;&#9;&#9;w.Parent=p
-
-&#9;&#9;&#9;&#9;&#9;&#9;local h=Instance.new(&quot;Humanoid&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;h.MaxHealth=5
-&#9;&#9;&#9;&#9;&#9;&#9;h.Health=5
-&#9;&#9;&#9;&#9;&#9;&#9;h.WalkSpeed=0
-&#9;&#9;&#9;&#9;&#9;&#9;h.Sit=true
-&#9;&#9;&#9;&#9;&#9;&#9;h.Parent=m
-
-&#9;&#9;&#9;&#9;&#9;&#9;local tl=Instance.new(&quot;Vector3Value&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;tl.Name=&quot;TargetLocation&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;tl.Value=location
-&#9;&#9;&#9;&#9;&#9;&#9;tl.Parent=m
-
-&#9;&#9;&#9;&#9;&#9;&#9;local ct=Instance.new(&quot;ObjectValue&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;ct.Value=game.Players.LocalPlayer
-&#9;&#9;&#9;&#9;&#9;&#9;ct.Name=&quot;creator&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;ct.Parent=m
-
-&#9;&#9;&#9;&#9;&#9;&#9;local s=script.Script:clone()
-&#9;&#9;&#9;&#9;&#9;&#9;s.Parent=m
-&#9;&#9;&#9;&#9;&#9;&#9;s.Disabled=false
-
-&#9;&#9;&#9;&#9;&#9;&#9;local vel=((location+Vector3.new(0,jetheight,0))-p.Position).unit*jetspeed
-&#9;&#9;&#9;&#9;&#9;&#9;p.Velocity=vel
-&#9;&#9;&#9;&#9;&#9;&#9;he.Velocity=vel
-
-&#9;&#9;&#9;&#9;&#9;&#9;debris:AddItem(m,20)
-&#9;&#9;&#9;&#9;&#9;&#9;m.Parent=game.Workspace
-
-&#9;&#9;&#9;&#9;&#9;&#9;wait(5)
-&#9;&#9;&#9;&#9;&#9;&#9;local sound=sp.Handle:FindFirstChild(&quot;Sound&quot;)
-&#9;&#9;&#9;&#9;&#9;&#9;if sound~=nil then
-&#9;&#9;&#9;&#9;&#9;&#9;&#9;sound:Stop()
-&#9;&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;&#9;sp.Grip=holdinggrip
-&#9;&#9;&#9;&#9;&#9;&#9;wait(cooldown-5)
-&#9;&#9;&#9;&#9;&#9;&#9;mouse.Icon=&quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;&#9;&#9;&#9;&#9;&#9;check=true
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end)
-&#9;end
-end
-
-function onUnequipped()
-&#9;equipped=false
-end
-
-sp.Equipped:connect(onEquipped)
-sp.Unequipped:connect(onUnequipped)
-
-
-</ProtectedString>
-			</Properties>
-			<Item class="Script" referent="RBX5">
-				<Properties>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">Script</string>
-					<ProtectedString name="Source">--Made by Stickmasterluke
-
-
-sp=script.Parent
-
-
-jetheight=150
-
-bombs=3
-droprange=450
-
-
-alive=true
-debris=game:GetService(&quot;Debris&quot;)
-
-function waitfor(a,b)
-&#9;while a:FindFirstChild(b)==nil do
-&#9;&#9;wait()
-&#9;end
-&#9;return a:FindFirstChild(b)
-end
-
-head=waitfor(sp,&quot;Head&quot;)
-hum=waitfor(sp,&quot;Humanoid&quot;)
-torso=waitfor(sp,&quot;Torso&quot;)
-ct=waitfor(sp,&quot;creator&quot;)
-tl=waitfor(sp,&quot;TargetLocation&quot;)
-
-torso.Touched:connect(function(hit)
-&#9;if hit and hit.Parent and hit.Parent~=sp and hit.Name~=&quot;Effect&quot; then
-&#9;&#9;if hum then
-&#9;&#9;&#9;hum.Health=0
-&#9;&#9;end
-&#9;end
-end)
-
-delay(0,function()
-&#9;local jsound=Instance.new(&quot;Sound&quot;)
-&#9;jsound.Name=&quot;JetScream&quot;
-&#9;jsound.SoundId=&quot;http://www.roblox.com/asset/?id=88862455&quot;
-&#9;jsound.Volume=.6
-&#9;debris:AddItem(jsound,10)
-&#9;jsound.Parent=game.Workspace
-&#9;wait(2)
-&#9;jsound:Play()
-end)
-
-hum.Changed:connect(function(prop)
-&#9;if alive then
-&#9;&#9;if hum then
-&#9;&#9;&#9;if hum.Health&lt;=0 then
-&#9;&#9;&#9;&#9;alive=false
-&#9;&#9;&#9;&#9;if torso then
-&#9;&#9;&#9;&#9;&#9;hum:remove()
-&#9;&#9;&#9;&#9;&#9;local e=Instance.new(&quot;Explosion&quot;)
-&#9;&#9;&#9;&#9;&#9;e.Position=torso.Position
-&#9;&#9;&#9;&#9;&#9;e.BlastPressure=0
-&#9;&#9;&#9;&#9;&#9;e.BlastRadius=15
-&#9;&#9;&#9;&#9;&#9;e.ExplosionType=2
-&#9;&#9;&#9;&#9;&#9;e.Parent=game.Workspace
-&#9;&#9;&#9;&#9;&#9;local f=Instance.new(&quot;Fire&quot;)
-&#9;&#9;&#9;&#9;&#9;f.Size=100
-&#9;&#9;&#9;&#9;&#9;f.Heat=100
-&#9;&#9;&#9;&#9;&#9;f.Parent=torso
-&#9;&#9;&#9;&#9;&#9;if head then
-&#9;&#9;&#9;&#9;&#9;&#9;head:remove()
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;torso.Velocity=torso.Velocity+Vector3.new((math.random()-.5)*50,(math.random()-.5)*50,(math.random()-.5)*50)
-&#9;&#9;&#9;&#9;&#9;wait(3)
-&#9;&#9;&#9;&#9;&#9;if torso then
-&#9;&#9;&#9;&#9;&#9;&#9;torso.Transparency=1
-&#9;&#9;&#9;&#9;&#9;&#9;torso.Velocity=torso.Velocity+Vector3.new((math.random()-.5)*50,(math.random()-.5)*50,(math.random()-.5)*50)
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;&#9;wait(3)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;sp:remove()
-&#9;&#9;&#9;end
-&#9;&#9;else
-&#9;&#9;&#9;alive=false
-&#9;&#9;&#9;sp:remove()
-&#9;&#9;end
-&#9;end
-end)
-
-while alive do
-&#9;if torso and tl then
-&#9;&#9;if bombs&gt;0 then
-&#9;&#9;&#9;if (torso.Position-tl.Value).magnitude&lt;droprange then
-&#9;&#9;&#9;&#9;bombs=bombs-1
-&#9;&#9;&#9;&#9;local b=Instance.new(&quot;Part&quot;)
-&#9;&#9;&#9;&#9;b.Name=&quot;Effect&quot;
-&#9;&#9;&#9;&#9;b.formFactor=&quot;Custom&quot;
-&#9;&#9;&#9;&#9;b.Size=Vector3.new(3,3,10)*.5
-&#9;&#9;&#9;&#9;b.CanCollide=false
-&#9;&#9;&#9;&#9;b.CFrame=torso.CFrame
-&#9;&#9;&#9;&#9;b.Velocity=torso.Velocity
-&#9;&#9;&#9;&#9;ct:clone().Parent=b
-&#9;&#9;&#9;&#9;local s=script.Script:clone()
-&#9;&#9;&#9;&#9;s.Parent=b
-&#9;&#9;&#9;&#9;s.Disabled=false
-&#9;&#9;&#9;&#9;local so=Instance.new(&quot;Sound&quot;)
-&#9;&#9;&#9;&#9;so.SoundId=&quot;rbxasset://sounds/collide.wav&quot;
-&#9;&#9;&#9;&#9;so.Volume=1
-&#9;&#9;&#9;&#9;so.Pitch=.75
-&#9;&#9;&#9;&#9;so.Parent=b
-&#9;&#9;&#9;&#9;local mesh=Instance.new(&quot;SpecialMesh&quot;)
-&#9;&#9;&#9;&#9;mesh.MeshId=&quot;http://www.roblox.com/asset/?id=88782666&quot;
-&#9;&#9;&#9;&#9;mesh.TextureId=&quot;http://www.roblox.com/asset/?id=88782631&quot;
-&#9;&#9;&#9;&#9;mesh.Scale=Vector3.new(6,6,6)
-&#9;&#9;&#9;&#9;mesh.Parent=b
-&#9;&#9;&#9;&#9;debris:AddItem(b,10)
-&#9;&#9;&#9;&#9;b.Parent=game.Workspace
-&#9;&#9;&#9;end
-&#9;&#9;&#9;torso.Velocity=((tl.Value+Vector3.new(0,jetheight,0))-torso.Position).unit*torso.Velocity.magnitude
-&#9;&#9;else
-&#9;&#9;&#9;torso.Velocity=torso.Velocity+Vector3.new(0,10,0)
-&#9;&#9;end
-&#9;&#9;torso.CFrame=CFrame.new(torso.Position,torso.Position+torso.Velocity)
-&#9;end
-&#9;wait(.25)
-end
-
-
-</ProtectedString>
-				</Properties>
-				<Item class="Script" referent="RBX6">
-					<Properties>
-						<bool name="Disabled">true</bool>
-						<Content name="LinkedSource"><null></null></Content>
-						<string name="Name">Script</string>
-						<ProtectedString name="Source">--Stickmasterluke
-
-
-sp=script.Parent
-
-
-blastRadius=19
-blastPressure=2*10^6
-
-exploded=false
-
-
-function damaged(hit)
-&#9;local ct=sp:FindFirstChild(&quot;creator&quot;)
-&#9;if ct.Value~=nil and (hit.Name==&quot;Head&quot; or hit.Name==&quot;Torso&quot;) then
-&#9;&#9;local h=hit.Parent:FindFirstChild(&quot;Humanoid&quot;)
-&#9;&#9;if h~=nil then
-&#9;&#9;&#9;for i,v in ipairs(h:GetChildren()) do
-&#9;&#9;&#9;&#9;if v.Name==&quot;creator&quot; then
-&#9;&#9;&#9;&#9;&#9;v:remove()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;&#9;ct:clone().Parent=h
-&#9;&#9;end
-&#9;end
-end
-
-function explode()
-&#9;if not exploded then
-&#9;&#9;exploded=true
-&#9;&#9;sp.Anchored=true
-&#9;&#9;sp.Transparency=1
-&#9;&#9;local s=sp:FindFirstChild(&quot;Sound&quot;)
-&#9;&#9;if s~=nil then
-&#9;&#9;&#9;s:Play()
-&#9;&#9;end
-&#9;&#9;local e=Instance.new(&quot;Explosion&quot;)
-&#9;&#9;e.Position=sp.Position
-&#9;&#9;e.BlastPressure=blastPressure
-&#9;&#9;e.BlastRadius=blastRadius
-&#9;&#9;e.ExplosionType=2
-&#9;&#9;e.Hit:connect(damaged)
-&#9;&#9;e.Parent=game.Workspace
-&#9;&#9;wait(.5)
-&#9;&#9;if sp and sp~=nil and sp.Parent~=nil then
-&#9;&#9;&#9;sp:remove()
-&#9;&#9;end
-&#9;end
-end
-
-
-sp.Touched:connect(function(hit)
-&#9;if hit and hit.Parent then
-&#9;&#9;if hit.Name~=&quot;Effect&quot; and hit.Parent.Name~=&quot;F22 Bombing Jet&quot; then
-&#9;&#9;&#9;explode()
-&#9;&#9;end
-&#9;end
-end)
-
-
-
-
-
-
-</ProtectedString>
-					</Properties>
-				</Item>
-			</Item>
-		</Item>
-		<Item class="NumberValue" referent="RBX7">
-			<Properties>
-				<string name="Name">LastStrike</string>
-				<double name="Value">0</double>
+Tool.Equipped:connect(OnEquipped)]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
