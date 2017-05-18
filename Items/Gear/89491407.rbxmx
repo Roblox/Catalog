@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX111E53C6A56B4A4789F2F6C374B4ECB4">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,214 +19,195 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">ZombieBomb</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=89391516</url></Content>
 			<string name="ToolTip"></string>
 		</Properties>
-		<Item class="LocalScript" referent="RBX1">
+		<Item class="LocalScript" referent="RBXF8255133485A422AA7438B45EAB843AF">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">LocalMain</string>
-				<ProtectedString name="Source">local Tool = script.Parent
+				<string name="ScriptGuid">{EE56A711-AF05-4699-BB02-D1445AD3C81F}</string>
+				<ProtectedString name="Source"><![CDATA[-- // Updated for R15 avatars by StarWars
+
+local Tool = script.Parent
 local Character;
 local Player;
 
+local Humanoid = nil
+
 local RELOAD_TIME = 13
 
-------------------------------------------
-local function WaitFor(parent)
-&#9;return setmetatable({}, {
-&#9;&#9;__index = function(tb, child)
-&#9;&#9;&#9;return function()
-&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
-&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
-&#9;&#9;&#9;end
-&#9;&#9;end;
-&#9;})
-end
-----------------------------------------
+local Handle = Tool:WaitForChild("Handle")
+local NextFireAt = Tool:WaitForChild("NextFireAt")
+local ThrowSound = Handle:WaitForChild("ThrowSound")
 
-local Handle = WaitFor(Tool).Handle()
-local NextFireAt = WaitFor(Tool).NextFireAt()
-local ThrowSound = WaitFor(Handle).ThrowSound()
+local GrenadeScript = Tool:WaitForChild("GrenadeScript")
 
-local GrenadeScript = WaitFor(Tool).GrenadeScript()
+local Animations = {
+	Throw = Tool:WaitForChild("ThrowAnim");	
+	R15Throw = Tool:WaitForChild("R15ThrowAnim")
+}
+
+local ThrowAnimation = nil
 
 local function Now()
-&#9;return game.Workspace.DistributedGameTime
+	return game.Workspace.DistributedGameTime
 end
 
 ---------------------------------------------
 
 local Velocity = 120
-function computeLaunchAngle(dx, dy, grav)&#9;
-&#9;-- This function is nasty or what? :P 
-&#9;-- There are ways to solve launch angle of a projectile given a point in 3D space 
-&#9;-- This one solves for tan(theta) 
-&#9;&#9;
-&#9;-- Simplify the distance formula of a projectile 
-&#9;local g = math.abs(grav)
-&#9;local inRoot = (Velocity * Velocity * Velocity * Velocity) - (g * ((g * dx * dx) + (2 * dy * Velocity * Velocity)))
-&#9;if inRoot &lt;= 0 then
-&#9;&#9;return 0.25 * math.pi
-&#9;end
-&#9;local root = math.sqrt(inRoot)
-&#9;local inATan1 = ((Velocity * Velocity) + root) / (g*dx)
+function computeLaunchAngle(dx, dy, grav)	
+	-- This function is nasty or what? :P 
+	-- There are ways to solve launch angle of a projectile given a point in 3D space 
+	-- This one solves for tan(theta) 
+		
+	-- Simplify the distance formula of a projectile 
+	local g = math.abs(grav)
+	local inRoot = (Velocity * Velocity * Velocity * Velocity) - (g * ((g * dx * dx) + (2 * dy * Velocity * Velocity)))
+	if inRoot <= 0 then
+		return 0.25 * math.pi
+	end
+	local root = math.sqrt(inRoot)
+	local inATan1 = ((Velocity * Velocity) + root) / (g*dx)
 
-&#9;local inATan2 = ((Velocity * Velocity) - root) / (g*dx)
-&#9;local a1 = math.atan(inATan1)
-&#9;local a2 = math.atan(inATan2)
-&#9;if a1 &lt; a2 then return a1 end
-&#9;return a2
+	local inATan2 = ((Velocity * Velocity) - root) / (g*dx)
+	local a1 = math.atan(inATan1)
+	local a2 = math.atan(inATan2)
+	if a1 < a2 then return a1 end
+	return a2
 end
 
 ---------------------------------------------
 
-local HoldAnim, ThrowAnim;
 
 Tool.Equipped:connect(function(mouse)
-&#9;Character = Tool.Parent
-&#9;Player = game.Players:GetPlayerFromCharacter(Character)
+	Character = Tool.Parent
+	Player = game.Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:WaitForChild("Humanoid")
 
-&#9;local HoldAnimSrc = WaitFor(Tool).HoldAnim()
-&#9;HoldAnimSrc.AnimationId = &apos;http://www.roblox.com/asset/?id=88743592&apos;
-&#9;local ThrowAnimSrc = WaitFor(Tool).ThrowAnim()
-&#9;ThrowAnimSrc.AnimationId = &apos;http://www.roblox.com/asset/?id=88743566&apos;
+	if Humanoid then
+		if Humanoid.RigType == Enum.HumanoidRigType.R15 then
+			ThrowAnimation = Humanoid:LoadAnimation(Animations["R15Throw"])
+		elseif Humanoid.RigType == Enum.HumanoidRigType.R6 then
+			ThrowAnimation = Humanoid:LoadAnimation(Animations["Throw"])
+		end
+	end
 
-&#9;HoldAnim = Character.Humanoid:LoadAnimation(HoldAnimSrc)
-&#9;ThrowAnim = Character.Humanoid:LoadAnimation(ThrowAnimSrc)
+	--setup first anim / cursor cycle
+	if Now() > NextFireAt.Value then
+		Handle.Transparency = 0
+		mouse.Icon = 'rbxasset://textures\\GunCursor.png'
+	else
+		Handle.Transparency = 1
+		delay(NextFireAt.Value - Now(), function()
+			mouse.Icon = 'rbxasset://textures\\GunWaitCursor.png'
+			Handle.Transparency = 0
+		end)
+	end
 
-&#9;--setup first anim / cursor cycle
-&#9;if Now() &gt; NextFireAt.Value then
-&#9;&#9;Handle.Transparency = 0
-&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
-&#9;&#9;HoldAnim:Play()
-&#9;else
-&#9;&#9;Handle.Transparency = 1
-&#9;&#9;Delay(NextFireAt.Value - Now(), function()
-&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
-&#9;&#9;&#9;Handle.Transparency = 0
-&#9;&#9;&#9;HoldAnim:Play()
-&#9;&#9;end)
-&#9;end
+	mouse.Button1Down:connect(function()
+		--we track the reload time like this so that the player can't fire faster with
+		--rapid dis / re-equipping, which will actually be common usage with this gear.	
+		
+		if Now() > NextFireAt.Value then
+			NextFireAt.Value = Now() + RELOAD_TIME
+			--
+			local gr = Handle:Clone()
+			gr.CanCollide = false
+			local sc = GrenadeScript:Clone()
+			sc.Parent = gr
+			sc.Disabled = false
+			sc:WaitForChild("creator").Value = Player
 
-&#9;mouse.Button1Down:connect(function()
-&#9;&#9;--we track the reload time like this so that the player can&apos;t fire faster with
-&#9;&#9;--rapid dis / re-equipping, which will actually be common usage with this gear.
-&#9;&#9;if Now() &gt; NextFireAt.Value then
-&#9;&#9;&#9;NextFireAt.Value = Now() + RELOAD_TIME
-&#9;&#9;&#9;--
-&#9;&#9;&#9;local gr = Handle:Clone()
-&#9;&#9;&#9;gr.CanCollide = false
-&#9;&#9;&#9;local sc = GrenadeScript:Clone()
-&#9;&#9;&#9;sc.Parent = gr
-&#9;&#9;&#9;sc.Disabled = false
-&#9;&#9;&#9;WaitFor(sc).creator().Value = Player
+			--calc velocity
+			local toTarget = mouse.Hit.p - gr.Position
+			local dy = toTarget.y
+			toTarget = Vector3.new(toTarget.x, 0, toTarget.z)
+			local dx = toTarget.magnitude
+			toTarget = toTarget.unit
 
-&#9;&#9;&#9;--calc velocity
-&#9;&#9;&#9;local toTarget = mouse.Hit.p - gr.Position
-&#9;&#9;&#9;local dy = toTarget.y
-&#9;&#9;&#9;toTarget = Vector3.new(toTarget.x, 0, toTarget.z)
-&#9;&#9;&#9;local dx = toTarget.magnitude
-&#9;&#9;&#9;toTarget = toTarget.unit
+			Velocity = math.min(120, 40 + dx)
 
-&#9;&#9;&#9;Velocity = math.min(120, 40 + dx)
+			local theta = computeLaunchAngle(dx, dy, 196.2)
 
-&#9;&#9;&#9;local theta = computeLaunchAngle(dx, dy, 196.2)
+			local vY = math.sin(theta)*Velocity
+			local vX = toTarget.x * math.cos(theta) * Velocity
+			local vZ = toTarget.z * math.cos(theta) * Velocity
 
-&#9;&#9;&#9;local vY = math.sin(theta)*Velocity
-&#9;&#9;&#9;local vX = toTarget.x * math.cos(theta) * Velocity
-&#9;&#9;&#9;local vZ = toTarget.z * math.cos(theta) * Velocity
+			gr.CanCollide = false
+			delay(0.1, function()
+				gr.CanCollide = true
+			end)
+			gr.Velocity = Vector3.new(vX, vY, vZ)
+			gr.Parent = game.Workspace
 
-&#9;&#9;&#9;gr.CanCollide = false
-&#9;&#9;&#9;Delay(0.1, function()
-&#9;&#9;&#9;&#9;gr.CanCollide = true
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;gr.Velocity = Vector3.new(vX, vY, vZ)
-&#9;&#9;&#9;gr.Parent = game.Workspace
+			--play sound / anim
+			ThrowSound:Play()
+			ThrowAnimation:Play(0, 1, 1)
 
-&#9;&#9;&#9;--play sound / anim
-&#9;&#9;&#9;ThrowSound:Play()
-&#9;&#9;&#9;HoldAnim:Stop(0)
-&#9;&#9;&#9;ThrowAnim:Play(0,1,1)
-
-&#9;&#9;&#9;--reload
-&#9;&#9;&#9;Handle.Transparency = 1
-&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunWaitCursor.png&apos;
-&#9;&#9;&#9;wait(RELOAD_TIME)
-&#9;&#9;&#9;HoldAnim:Play()
-&#9;&#9;&#9;Handle.Transparency = 0
-&#9;&#9;&#9;mouse.Icon = &apos;rbxasset://textures\\GunCursor.png&apos;
-&#9;&#9;end
-&#9;end)
+			--reload
+			Handle.Transparency = 1
+			mouse.Icon = 'rbxasset://textures\\GunWaitCursor.png'
+			wait(RELOAD_TIME)
+			Handle.Transparency = 0
+			mouse.Icon = 'rbxasset://textures\\GunCursor.png'
+		end
+	end)
 end)
 
 Tool.Unequipped:connect(function()
-&#9;if ThrowSound then
-&#9;&#9;ThrowSound:Stop()
-&#9;end
-&#9;if ThrowAnim then
-&#9;&#9;ThrowAnim:Stop()
-&#9;end
-&#9;if HoldAnim then
-&#9;&#9;HoldAnim:Stop()
-&#9;end
-end)</ProtectedString>
+	if ThrowSound then
+		ThrowSound:Stop()
+	end
+	
+	if ThrowAnimation then
+		ThrowAnimation:Stop()
+		ThrowAnimation = nil
+	end
+end)]]></ProtectedString>
 			</Properties>
 		</Item>
-		<Item class="NumberValue" referent="RBX2">
+		<Item class="NumberValue" referent="RBX75B57978AE0B45FBB55FF7DC0E41A0AA">
 			<Properties>
 				<string name="Name">NextFireAt</string>
 				<double name="Value">0</double>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX3">
+		<Item class="Script" referent="RBX0CED38F0E67749618B86BFF1DD316ABE">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">GrenadeScript</string>
-				<ProtectedString name="Source">local RbxUtility = LoadLibrary(&apos;RbxUtility&apos;)
+				<string name="ScriptGuid">{E202BF36-D957-4FE0-86E4-1BE0711992B1}</string>
+				<ProtectedString name="Source"><![CDATA[-- // Updated for R15 avatars by StarWars
+
+local RbxUtility = LoadLibrary('RbxUtility')
 local Create = RbxUtility.Create
 
-------------------------------------------
-local function WaitFor(parent)
-&#9;return setmetatable({}, {
-&#9;&#9;__index = function(tb, child)
-&#9;&#9;&#9;return function()
-&#9;&#9;&#9;&#9;while not parent:FindFirstChild(child) do 
-&#9;&#9;&#9;&#9;&#9;parent.ChildAdded:wait()
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;return parent:FindFirstChild(child)&#9;&#9;&#9;
-&#9;&#9;&#9;end
-&#9;&#9;end;
-&#9;})
-end
-----------------------------------------
-
 local Grenade = script.Parent
-local creator = WaitFor(script).creator()
+local creator = script:WaitForChild("creator")
 
 local EFFECT_RADIUS = 10
 
---game.Debris:AddItem(Grenade, 30)
-
 local function FindHumanoid(part)
-&#9;return (part.Parent or game):FindFirstChild(&apos;Humanoid&apos;) or
-&#9;       ((part.Parent or game).Parent or game):FindFirstChild(&apos;Humanoid&apos;)
+	return (part.Parent or game):FindFirstChild('Humanoid') or
+	       ((part.Parent or game).Parent or game):FindFirstChild('Humanoid')
 end
 
---wait for us to hit something that isn&apos;t a humanoid and is cancollide
+--wait for us to hit something that isn't a humanoid and is cancollide
 do
-&#9;local hitSomethingEvent = Instance.new(&apos;BindableEvent&apos;)
-&#9;Grenade.Touched:connect(function(part)
-&#9;&#9;if part.CanCollide and not FindHumanoid(part) then
-&#9;&#9;&#9;hitSomethingEvent:Fire()
-&#9;&#9;end
-&#9;end)
-&#9;hitSomethingEvent.Event:wait()
+	local hitSomethingEvent = Instance.new('BindableEvent')
+	Grenade.Touched:connect(function(part)
+		if part.CanCollide and not FindHumanoid(part) then
+			hitSomethingEvent:Fire()
+		end
+	end)
+	hitSomethingEvent.Event:wait()
 end
 
 
@@ -241,97 +222,100 @@ local EffectAt = Grenade.Position
 
 local ZombieHands = {}
 for i = 1, 10 do
-&#9;--find an location to put the hand at.
-&#9;local at = EffectAt + Vector3.new(math.random(-EFFECT_RADIUS,EFFECT_RADIUS),
-&#9;                                  0,
-&#9;                                  math.random(-EFFECT_RADIUS,EFFECT_RADIUS))
-&#9;local foundSpot;
-&#9;local ignoreList = {}
-&#9;local ray = Ray.new(at+Vector3.new(0, 20, 0), Vector3.new(0,-999,0))
-&#9;while true do
-&#9;&#9;local hit, at = game.Workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
-&#9;&#9;if hit then
-&#9;&#9;&#9;if not hit.CanCollide or FindHumanoid(hit) then
-&#9;&#9;&#9;&#9;ignoreList[#ignoreList+1] = hit
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;foundSpot = at
-&#9;&#9;&#9;&#9;break
-&#9;&#9;&#9;end
-&#9;&#9;else
-&#9;&#9;&#9;break
-&#9;&#9;end
-&#9;end
+	--find an location to put the hand at.
+	local at = EffectAt + Vector3.new(math.random(-EFFECT_RADIUS,EFFECT_RADIUS),
+	                                  0,
+	                                  math.random(-EFFECT_RADIUS,EFFECT_RADIUS))
+	local foundSpot;
+	local ignoreList = {}
+	local ray = Ray.new(at+Vector3.new(0, 20, 0), Vector3.new(0,-999,0))
+	while true do
+		local hit, at = game.Workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+		if hit then
+			if not hit.CanCollide or FindHumanoid(hit) then
+				ignoreList[#ignoreList+1] = hit
+			else
+				foundSpot = at
+				break
+			end
+		else
+			break
+		end
+	end
 
-&#9;if foundSpot then
-&#9;&#9;--found a spot to place a hand at
-&#9;&#9;local hand = {}
-&#9;&#9;hand.CFrame = CFrame.new(foundSpot)*CFrame.Angles(0, 2*math.random()*math.pi, 0)
+	if foundSpot then
+		--found a spot to place a hand at
+		local hand = {}
+		hand.CFrame = CFrame.new(foundSpot)*CFrame.Angles(0, 2*math.random()*math.pi, 0)
 
-&#9;&#9;--make a bunch of bits of &quot;earth&quot; around the hand
-&#9;&#9;hand.EarthBits = {}
-&#9;&#9;for i = 1, 3 do
-&#9;&#9;&#9;local bit = {}
-&#9;&#9;&#9;bit.Part = Create&apos;Part&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;EarthBit&apos;;
-&#9;&#9;&#9;&#9;Anchored = true;
-&#9;&#9;&#9;&#9;CanCollide = false;
-&#9;&#9;&#9;&#9;FormFactor = &apos;Custom&apos;;
-&#9;&#9;&#9;&#9;Size = Vector3.new(1 + math.random(),0.4,1+math.random());
-&#9;&#9;&#9;&#9;BrickColor = BrickColor.new(217);
-&#9;&#9;&#9;}
-&#9;&#9;&#9;bit.C0 = CFrame.Angles(0, math.pi*2/3*i + math.random()*0.1, 0)
-&#9;&#9;&#9;bit.C1 = CFrame.new(0, 0, 0.5)
-&#9;&#9;&#9;hand.EarthBits[i] = bit
-&#9;&#9;end
+		--make a bunch of bits of "earth" around the hand
+		hand.EarthBits = {}
+		for i = 1, 3 do
+			local bit = {}
+			bit.Part = Create'Part'{
+				Name = 'EarthBit';
+				Anchored = true;
+				CanCollide = false;
+				TopSurface = Enum.SurfaceType.Smooth;
+				BottomSurface = Enum.SurfaceType.Smooth;
+				Material = Enum.Material.Concrete;
+				FormFactor = 'Custom';
+				Size = Vector3.new(1 + math.random(),0.4,1+math.random());
+				BrickColor = BrickColor.new(217);
+			}
+			bit.C0 = CFrame.Angles(0, math.pi*2/3*i + math.random()*0.1, 0)
+			bit.C1 = CFrame.new(0, 0, 0.5)
+			hand.EarthBits[i] = bit
+		end
 
-&#9;&#9;--make the part
-&#9;&#9;hand.Part = Create&apos;Part&apos;{
-&#9;&#9;&#9;Name = &apos;ZombieHand&apos;;
-&#9;&#9;&#9;Anchored = true;
-&#9;&#9;&#9;CanCollide = false;
-&#9;&#9;&#9;FormFactor = &apos;Custom&apos;;
-&#9;&#9;&#9;Size = Vector3.new(2,1,1);
-&#9;&#9;&#9;--
-&#9;&#9;&#9;Create&apos;SpecialMesh&apos;{
-&#9;&#9;&#9;&#9;Name = &apos;Mesh&apos;;
-&#9;&#9;&#9;&#9;MeshId = &apos;http://www.roblox.com/asset/?id=89391425&apos;;
-&#9;&#9;&#9;&#9;TextureId = &apos;http://www.roblox.com/asset/?id=89391492&apos;;
-&#9;&#9;&#9;&#9;Scale = Vector3.new(3,3,3);
-&#9;&#9;&#9;};
-&#9;&#9;}
+		--make the part
+		hand.Part = Create'Part'{
+			Name = 'ZombieHand';
+			Anchored = true;
+			CanCollide = false;
+			FormFactor = 'Custom';
+			Size = Vector3.new(2,1,1);
+			--
+			Create'SpecialMesh'{
+				Name = 'Mesh';
+				MeshId = 'http://www.roblox.com/asset/?id=89391425';
+				TextureId = 'http://www.roblox.com/asset/?id=89391492';
+				Scale = Vector3.new(3,3,3);
+			};
+		}
 
-&#9;&#9;--make some other data for the hand
-&#9;&#9;hand.Level = 0
-&#9;&#9;hand.Mode = &apos;Rise&apos; --Rise / Search / Fall
-&#9;&#9;hand.Caught = nil
-&#9;&#9;hand.A = math.random()
-&#9;&#9;hand.Delay = math.random()
-&#9;&#9;ZombieHands[hand] = true
-&#9;end
+		--make some other data for the hand
+		hand.Level = 0
+		hand.Mode = 'Rise' --Rise / Search / Fall
+		hand.Caught = nil
+		hand.A = math.random()
+		hand.Delay = math.random()
+		ZombieHands[hand] = true
+	end
 end
 
 
 --set up touched handling for hands
 for hand, _ in pairs(ZombieHands) do
-&#9;hand.Part.Touched:connect(function(part)
-&#9;&#9;local hum = FindHumanoid(part)
-&#9;&#9;if hum then
-&#9;&#9;&#9;hand.Mode = &apos;Fall&apos;
-&#9;&#9;&#9;hand.Caught = hum
-&#9;&#9;&#9;--tag
-&#9;&#9;&#9;local tag = creator:Clone()
-&#9;&#9;&#9;tag.Parent = hum
-&#9;&#9;&#9;game.Debris:AddItem(tag, 3)
-&#9;&#9;end
-&#9;end)
+	hand.Part.Touched:connect(function(part)
+		local hum = FindHumanoid(part)
+		if hum then
+			hand.Mode = 'Fall'
+			hand.Caught = hum
+			--tag
+			local tag = creator:Clone()
+			tag.Parent = hum
+			game.Debris:AddItem(tag, 3)
+		end
+	end)
 end
 
 
 --9 seconds in we should start all of the hands falling
-Delay(9, function()
-&#9;for hand, _ in pairs(ZombieHands) do
-&#9;&#9;hand.Mode = &apos;Fall&apos;
-&#9;end
+delay(9, function()
+	for hand, _ in pairs(ZombieHands) do
+		hand.Mode = 'Fall'
+	end
 end)
 
 
@@ -339,105 +323,105 @@ end)
 local StartTime = tick()
 local LastTime = StartTime
 while true do
-&#9;local Now = tick()
-&#9;local dt = Now-LastTime
-&#9;LastTime = Now
-&#9;local Elapsed = Now-StartTime
+	local Now = tick()
+	local dt = Now-LastTime
+	LastTime = Now
+	local Elapsed = Now-StartTime
 
-&#9;--end after 10 seconds
-&#9;if Elapsed &gt; 10 then break end
-&#9;
-&#9;--
-&#9;for hand, _ in pairs(ZombieHands) do
-&#9;&#9;local Elapsed = Elapsed - hand.Delay
-&#9;&#9;if Elapsed &gt; 0 then
+	--end after 10 seconds
+	if Elapsed > 10 then break end
+	
+	--
+	for hand, _ in pairs(ZombieHands) do
+		local Elapsed = Elapsed - hand.Delay
+		if Elapsed > 0 then
 
-&#9;&#9;&#9;--place the hand
-&#9;&#9;&#9;hand.Part.Parent = Grenade
-&#9;&#9;&#9;hand.Part.CFrame = hand.CFrame * 
-&#9;&#9;&#9;                   CFrame.Angles(math.sin(Elapsed+hand.A)*0.5, 0, math.sin(Elapsed)*0.5) *
-&#9;&#9;&#9;                   CFrame.new(0, hand.Level-1.2, 0) *
-&#9;&#9;&#9;                   CFrame.Angles(math.pi/2, -math.pi/2, 0) *
-&#9;&#9;&#9;                   CFrame.new(0, 0, -0.4)
+			--place the hand
+			hand.Part.Parent = Grenade
+			hand.Part.CFrame = hand.CFrame * 
+			                   CFrame.Angles(math.sin(Elapsed+hand.A)*0.5, 0, math.sin(Elapsed)*0.5) *
+			                   CFrame.new(0, hand.Level-1.2, 0) *
+			                   CFrame.Angles(math.pi/2, -math.pi/2, 0) *
+			                   CFrame.new(0, 0, -0.4)
 
-&#9;&#9;&#9;--first, rise or fall the hand
-&#9;&#9;&#9;if hand.Mode == &apos;Rise&apos; then
-&#9;&#9;&#9;&#9;hand.Level = math.min(2, hand.Level + dt*2)
-&#9;&#9;&#9;&#9;if hand.Level &gt;= 2 then
-&#9;&#9;&#9;&#9;&#9;hand.Mode = &apos;Search&apos;
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;elseif hand.Mode == &apos;Fall&apos; then
-&#9;&#9;&#9;&#9;hand.Level = math.max(0, hand.Level - dt*2)
-&#9;&#9;&#9;&#9;if hand.Level &lt;= 0 then
-&#9;&#9;&#9;&#9;&#9;ZombieHands[hand] = nil
-&#9;&#9;&#9;&#9;&#9;hand.Part:Destroy()
+			--first, rise or fall the hand
+			if hand.Mode == 'Rise' then
+				hand.Level = math.min(2, hand.Level + dt*2)
+				if hand.Level >= 2 then
+					hand.Mode = 'Search'
+				end
+			elseif hand.Mode == 'Fall' then
+				hand.Level = math.max(0, hand.Level - dt*2)
+				if hand.Level <= 0 then
+					ZombieHands[hand] = nil
+					hand.Part:Destroy()
 
-&#9;&#9;&#9;&#9;&#9;--make sure we kill the caught
-&#9;&#9;&#9;&#9;&#9;if hand.Caught then
-&#9;&#9;&#9;&#9;&#9;&#9;hand.Caught:TakeDamage(hand.Caught.Health)
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
+					--make sure we kill the caught
+					if hand.Caught then
+						hand.Caught:TakeDamage(hand.Caught.Health)
+					end
+				end
 
-&#9;&#9;&#9;&#9;--if it captured something then drag it down
-&#9;&#9;&#9;&#9;if hand.Caught then
-&#9;&#9;&#9;&#9;&#9;local torso = hand.Caught.Parent:FindFirstChild(&apos;Torso&apos;)
-&#9;&#9;&#9;&#9;&#9;if torso then
-&#9;&#9;&#9;&#9;&#9;&#9;torso.Anchored = true
-&#9;&#9;&#9;&#9;&#9;&#9;torso.CFrame = CFrame.new(0,-dt*4,0)*torso.CFrame
-&#9;&#9;&#9;&#9;&#9;&#9;hand.Caught:TakeDamage(2)
-&#9;&#9;&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;&#9;&#9;hand.Caught:TakeDamage(hand.Caught.Health)
-&#9;&#9;&#9;&#9;&#9;&#9;hand.Caught = nil
-&#9;&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;else
-&#9;&#9;&#9;&#9;--nothing to do
-&#9;&#9;&#9;end
+				--if it captured something then drag it down
+				if hand.Caught then
+					local torso = hand.Caught.Parent:FindFirstChild('HumanoidRootPart')
+					if torso then
+						torso.Anchored = true
+						torso.CFrame = CFrame.new(0,-dt*4,0)*torso.CFrame
+						hand.Caught:TakeDamage(2)
+					else
+						hand.Caught:TakeDamage(hand.Caught.Health)
+						hand.Caught = nil
+					end
+				end
+			else
+				--nothing to do
+			end
 
-&#9;&#9;&#9;--now if it&apos;s just started rising move the dirt bits
-&#9;&#9;&#9;if Elapsed &lt; 0.8 then
-&#9;&#9;&#9;&#9;local T = Elapsed/0.8
-&#9;&#9;&#9;&#9;for _, bit in pairs(hand.EarthBits) do
-&#9;&#9;&#9;&#9;&#9;bit.Part.Parent = Grenade
-&#9;&#9;&#9;&#9;&#9;bit.Part.CFrame = hand.CFrame * bit.C0 * 
-&#9;&#9;&#9;&#9;&#9;                  CFrame.Angles(T*0.3, 0, 0) * CFrame.new(0, 0.2+0.2*T, T*0.5) *   
-&#9;&#9;&#9;&#9;&#9;                  bit.C1
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
+			--now if it's just started rising move the dirt bits
+			if Elapsed < 0.8 then
+				local T = Elapsed/0.8
+				for _, bit in pairs(hand.EarthBits) do
+					bit.Part.Parent = Grenade
+					bit.Part.CFrame = hand.CFrame * bit.C0 * 
+					                  CFrame.Angles(T*0.3, 0, 0) * CFrame.new(0, 0.2+0.2*T, T*0.5) *   
+					                  bit.C1
+				end
+			end
 
-&#9;&#9;&#9;--
-&#9;&#9;&#9;if hand.Mode == &apos;Fall&apos; then
-&#9;&#9;&#9;&#9;for _, bit in pairs(hand.EarthBits) do
-&#9;&#9;&#9;&#9;&#9;bit.Part.Transparency = 1-(hand.Level/2)
-&#9;&#9;&#9;&#9;end
-&#9;&#9;&#9;end
-&#9;&#9;end
-&#9;end
-&#9;--
-&#9;wait()
+			--
+			if hand.Mode == 'Fall' then
+				for _, bit in pairs(hand.EarthBits) do
+					bit.Part.Transparency = 1-(hand.Level/2)
+				end
+			end
+		end
+	end
+	--
+	wait()
 end
 
 --kill any remaining caught players
 for hand, _ in pairs(ZombieHands) do
-&#9;if hand.Caught then
-&#9;&#9;hand.Caught:TakeDamage(hand.Caught.Health)
-&#9;end
+	if hand.Caught then
+		hand.Caught:TakeDamage(hand.Caught.Health)
+	end
 end
 
 
 --destroy us. All of our stuff has been parented to the grenade so this will do cleanup
 Grenade:Destroy()
 
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
-			<Item class="ObjectValue" referent="RBX4">
+			<Item class="ObjectValue" referent="RBXB8CE157FA8BF4B8394C35674146708A0">
 				<Properties>
 					<string name="Name">creator</string>
 					<Ref name="Value">null</Ref>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX5">
+		<Item class="Part" referent="RBX566084D02740463E8A4281CEAA3F8E7A">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -464,6 +448,10 @@ Grenade:Destroy()
 					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<int name="CollisionGroupId">0</int>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -505,7 +493,7 @@ Grenade:Destroy()
 					<Z>1</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX6">
+			<Item class="SpecialMesh" referent="RBX6D2E605DBC9A48DB86010C82D9A62B42">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -530,73 +518,69 @@ Grenade:Destroy()
 					</Vector3>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX7">
+			<Item class="Sound" referent="RBXB3D91FBD966A460587AB34DDB9A234D9">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">ExplodeSound</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxasset://sounds/collide.wav</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">1</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX8">
+			<Item class="Sound" referent="RBXD844090F19104586968483FCE262B928">
 				<Properties>
+					<float name="EmitterSize">10</float>
 					<bool name="Looped">false</bool>
 					<string name="Name">ThrowSound</string>
-					<float name="Pitch">1</float>
 					<bool name="PlayOnRemove">false</bool>
+					<float name="PlaybackSpeed">1</float>
+					<bool name="Playing">false</bool>
+					<token name="RollOffMode">0</token>
+					<Ref name="SoundGroup">null</Ref>
 					<Content name="SoundId"><url>rbxasset://sounds//swordslash.wav</url></Content>
+					<double name="TimePosition">0</double>
 					<float name="Volume">0.699999988</float>
+					<float name="xmlRead_MaxDistance_3">10000</float>
+				</Properties>
+			</Item>
+			<Item class="Attachment" referent="RBX41B8845CB7D8412CAEDC12AE512CD363">
+				<Properties>
+					<CoordinateFrame name="CFrame">
+						<X>0.25</X>
+						<Y>0</Y>
+						<Z>-0.5</Z>
+						<R00>0</R00>
+						<R01>0</R01>
+						<R02>1</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>-0</R12>
+						<R20>-1</R20>
+						<R21>0</R21>
+						<R22>0</R22>
+					</CoordinateFrame>
+					<string name="Name">RightGripAttachment</string>
+					<bool name="Visible">false</bool>
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBX9">
+		<Item class="Animation" referent="RBXB05F1FB3AB544F708E1E15452F7FE6B4">
 			<Properties>
-				<Content name="AnimationId"><null></null></Content>
-				<string name="Name">HoldAnim</string>
+				<Content name="AnimationId"><url>rbxassetid://782862782</url></Content>
+				<string name="Name">R15ThrowAnim</string>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX10">
+		<Item class="Animation" referent="RBXE3201A0778F041638A1B4F4E1E362DC8">
 			<Properties>
-				<Content name="AnimationId"><null></null></Content>
+				<Content name="AnimationId"><url>rbxassetid://88743566</url></Content>
 				<string name="Name">ThrowAnim</string>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX11">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>21.5664635</X>
-					<Y>65.7826385</Y>
-					<Z>12.7552633</Z>
-					<R00>-0.168287486</R00>
-					<R01>-0.0117691634</R01>
-					<R02>-0.985667706</R02>
-					<R10>-0</R10>
-					<R11>0.999928772</R11>
-					<R12>-0.0119394436</R12>
-					<R20>0.985738039</R20>
-					<R21>-0.00200925884</R21>
-					<R22>-0.168275476</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>23</X>
-					<Y>65.8000031</Y>
-					<Z>13</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
 			</Properties>
 		</Item>
 	</Item>
