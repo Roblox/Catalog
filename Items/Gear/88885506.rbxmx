@@ -1,7 +1,7 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX0">
+	<Item class="Tool" referent="RBX3D1855EE9CA04A398470C752496B5EC6">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -19,11 +19,13 @@
 				<R21>0</R21>
 				<R22>1</R22>
 			</CoordinateFrame>
+			<bool name="ManualActivationOnly">false</bool>
 			<string name="Name">SpySatellite</string>
+			<bool name="RequiresHandle">true</bool>
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=88761349 </url></Content>
 			<string name="ToolTip">Spy on your enemies</string>
 		</Properties>
-		<Item class="Part" referent="RBX1">
+		<Item class="Part" referent="RBXEB197F86AC6A4F0EA0EFF6C84943634B">
 			<Properties>
 				<bool name="Anchored">false</bool>
 				<float name="BackParamA">-0.5</float>
@@ -50,6 +52,9 @@
 					<R22>1</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
 				<float name="Elasticity">0.5</float>
 				<float name="Friction">0.300000012</float>
 				<float name="FrontParamA">-0.5</float>
@@ -91,7 +96,7 @@
 					<Z>1.64999998</Z>
 				</Vector3>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX2">
+			<Item class="SpecialMesh" referent="RBX7D7B77D799A64E26926F829088DF6592">
 				<Properties>
 					<token name="LODX">2</token>
 					<token name="LODY">2</token>
@@ -116,23 +121,50 @@
 					</Vector3>
 				</Properties>
 			</Item>
+			<Item class="Attachment" referent="RBXA8D2FBC411194D9881F2AA55AD564D38">
+				<Properties>
+					<CoordinateFrame name="CFrame">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0.824999988</Z>
+						<R00>0</R00>
+						<R01>0</R01>
+						<R02>-1</R02>
+						<R10>0</R10>
+						<R11>1</R11>
+						<R12>0</R12>
+						<R20>1</R20>
+						<R21>0</R21>
+						<R22>0</R22>
+					</CoordinateFrame>
+					<string name="Name">RightGripAttachment</string>
+					<bool name="Visible">false</bool>
+				</Properties>
+			</Item>
 		</Item>
-		<Item class="Sound" referent="RBX3">
+		<Item class="Sound" referent="RBX34C1FCAA442A4D7496D80B638CE86A40">
 			<Properties>
+				<float name="EmitterSize">10</float>
 				<bool name="Looped">false</bool>
 				<string name="Name">Sound</string>
-				<float name="Pitch">1</float>
 				<bool name="PlayOnRemove">false</bool>
+				<float name="PlaybackSpeed">1</float>
+				<bool name="Playing">false</bool>
+				<token name="RollOffMode">0</token>
+				<Ref name="SoundGroup">null</Ref>
 				<Content name="SoundId"><url>http://www.roblox.com/asset/?id=88541303 </url></Content>
+				<double name="TimePosition">0</double>
 				<float name="Volume">0.5</float>
+				<float name="xmlRead_MaxDistance_3">10000</float>
 			</Properties>
 		</Item>
-		<Item class="LocalScript" referent="RBX4">
+		<Item class="LocalScript" referent="RBXEA8278CA219C47E5849E6AD509F5A423">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">SpyTool</string>
-				<ProtectedString name="Source">--Edited by QS
+				<string name="ScriptGuid">{7BE04BDB-46D6-4B8B-8819-F7352C3695F3}</string>
+				<ProtectedString name="Source"><![CDATA[--Edited by QS
 local height = 300
 local zoomLevels = 7
 
@@ -148,159 +180,123 @@ local satellitePosition
 local camPartCopy
 local zoom = 0
 
-local camPart = Instance.new(&quot;Part&quot;)
+local camPart = Instance.new("Part")
 camPart.Anchored = true
 camPart.Transparency = 1
 camPart.CanCollide = false
 
 function castRay(startpos,vec,length,ignore)
-&#9;local hit,endpos2 = game.Workspace:FindPartOnRay(Ray.new(startpos,vec*length),ignore)
-&#9;return hit, endpos2
+	local hit,endpos2 = game.Workspace:FindPartOnRay(Ray.new(startpos,vec*length),ignore)
+	return hit, endpos2
 end
 
 function activateSatellite(mouse)
-&#9;local notfound = true
-&#9;if spyTool:FindFirstChild(&quot;Sound&quot;) then
-&#9;&#9;spyTool.Sound:Play()
-&#9;end
-&#9;if not theCam then
-&#9;&#9;--first activation create the camerea
-&#9;&#9;theCam = game.Workspace.CurrentCamera
-&#9;&#9;print(theCam.CameraType)
-&#9;&#9;local startVector = ((theCam.CoordinateFrame.p - Head.CFrame.p)*Vector3.new(1,0,1)).unit
-&#9;&#9;satellitePosition = Head.Position + Vector3.new(0,height,0) - startVector*60
-&#9;&#9;zoom = 0
-&#9;&#9;if Head then
-&#9;&#9;&#9;camPartCopy = spyTool.Handle:Clone()
-&#9;&#9;&#9;camPartCopy.Mesh.Scale = Vector3.new(1,1,1)
-&#9;&#9;&#9;camPartCopy.Anchored = false
-&#9;&#9;&#9;camPartCopy.CanCollide = false
-&#9;&#9;&#9;local bv = Instance.new(&quot;BodyVelocity&quot;)
-&#9;&#9;&#9;--camPartCopy.CFrame = CFrame.Angles(0,0,math.pi/2) * camPartCopy.CFrame 
-&#9;&#9;&#9;bv.Parent = camPartCopy
-&#9;&#9;&#9;bv.velocity = Vector3.new(0,70,0)
-&#9;&#9;&#9;delay(4.5, function() 
-&#9;&#9;&#9;&#9;if bv and camPartCopy then 
-&#9;&#9;&#9;&#9;&#9;bv:Destroy() 
-&#9;&#9;&#9;&#9;&#9;camPartCopy.Anchored = true  --Anchor it in the sky after it flies for a bit.  
-&#9;&#9;&#9;&#9;end 
-&#9;&#9;&#9;end)
-&#9;&#9;&#9;--camPartCopy.CFrame = CFrame.new(satellitePosition)
-&#9;&#9;&#9;camPartCopy.Parent = Head  --Descendant of character so it dies if player dies
-&#9;&#9;&#9;game:GetService(&quot;Debris&quot;):AddItem(camPartCopy,60)
-&#9;&#9;&#9;theCam.CameraType = &quot;Track&quot;
-&#9;&#9;&#9;theCam.CameraSubject = camPartCopy
-&#9;&#9;&#9;
-&#9;&#9;&#9;--theCam.CoordinateFrame = CFrame.new(satellitePosition + Vector3.new(0,50,0) - startVector*15, satellitePosition)
-&#9;&#9;&#9;--theCam.Focus = CFrame.new(satellitePosition)
-&#9;&#9;&#9;theCam.FieldOfView = 80
-&#9;&#9;end
-&#9;else
-&#9;&#9;--Clicked so zoom in on click
-&#9;&#9;if mouse and satellitePosition then
-&#9;&#9;&#9;theCam.CameraType = &quot;Scriptable&quot;
-&#9;&#9;&#9;if zoom &lt; zoomLevels then
-&#9;&#9;&#9;&#9;zoom = zoom +1
-&#9;&#9;&#9;end
-&#9;&#9;&#9;local lookTarget = mouse.Hit
-&#9;&#9;&#9;if camPartCopy then satellitePosition = camPartCopy.Position end
-&#9;&#9;&#9;local hit, endpos = castRay(satellitePosition, (lookTarget.p-satellitePosition).unit, height+75, spyTool)
-&#9;&#9;&#9;if not hit then endpos = mouse.Hit.p end
-&#9;&#9;&#9;local lookVec = (endpos - satellitePosition)
-&#9;&#9;&#9;local zoomDistance = math.min((zoom-.5) * 27, lookVec.magnitude - 40) --Must be at least 40 studs away from target
-&#9;&#9;&#9;local zoomPosition = satellitePosition + lookVec.unit * zoomDistance
-&#9;&#9;&#9;theCam.Focus = CFrame.new(endpos)
+	local notfound = true
+	if spyTool:FindFirstChild("Sound") then
+		spyTool.Sound:Play()
+	end
+	if not theCam then
+		--first activation create the camerea
+		theCam = game.Workspace.CurrentCamera
+		print(theCam.CameraType)
+		local startVector = ((theCam.CoordinateFrame.p - Head.CFrame.p)*Vector3.new(1,0,1)).unit
+		satellitePosition = Head.Position + Vector3.new(0,height,0) - startVector*60
+		zoom = 0
+		if Head then
+			camPartCopy = spyTool.Handle:Clone()
+			camPartCopy.Mesh.Scale = Vector3.new(1,1,1)
+			camPartCopy.Anchored = false
+			camPartCopy.CanCollide = false
+			local bv = Instance.new("BodyVelocity")
+			--camPartCopy.CFrame = CFrame.Angles(0,0,math.pi/2) * camPartCopy.CFrame 
+			bv.Parent = camPartCopy
+			bv.velocity = Vector3.new(0,70,0)
+			delay(4.5, function() 
+				if bv and camPartCopy then 
+					bv:Destroy() 
+					camPartCopy.Anchored = true  --Anchor it in the sky after it flies for a bit.  
+				end 
+			end)
+			--camPartCopy.CFrame = CFrame.new(satellitePosition)
+			camPartCopy.Parent = Head  --Descendant of character so it dies if player dies
+			game:GetService("Debris"):AddItem(camPartCopy,60)
+			theCam.CameraType = "Track"
+			theCam.CameraSubject = camPartCopy
+			
+			--theCam.CoordinateFrame = CFrame.new(satellitePosition + Vector3.new(0,50,0) - startVector*15, satellitePosition)
+			--theCam.Focus = CFrame.new(satellitePosition)
+			theCam.FieldOfView = 80
+		end
+	else
+		--Clicked so zoom in on click
+		if mouse and satellitePosition then
+			theCam.CameraType = "Scriptable"
+			if zoom < zoomLevels then
+				zoom = zoom +1
+			end
+			local lookTarget = mouse.Hit
+			if camPartCopy then satellitePosition = camPartCopy.Position end
+			local hit, endpos = castRay(satellitePosition, (lookTarget.p-satellitePosition).unit, height+75, spyTool)
+			if not hit then endpos = mouse.Hit.p end
+			local lookVec = (endpos - satellitePosition)
+			local zoomDistance = math.min((zoom-.5) * 27, lookVec.magnitude - 40) --Must be at least 40 studs away from target
+			local zoomPosition = satellitePosition + lookVec.unit * zoomDistance
+			theCam.Focus = CFrame.new(endpos)
 
-&#9;&#9;&#9;local camPartCopy = camPart:Clone()
-&#9;&#9;&#9;camPartCopy.CFrame = lookTarget
-&#9;&#9;&#9;--game:GetService(&quot;Debris&quot;):AddItem(camPartCopy,5)
-&#9;&#9;&#9;theCam.CameraSubject = camPartCopy
-&#9;&#9;&#9;theCam.FieldOfView = 70 - (zoom/zoomLevels * 50)
+			local camPartCopy = camPart:Clone()
+			camPartCopy.CFrame = lookTarget
+			--game:GetService("Debris"):AddItem(camPartCopy,5)
+			theCam.CameraSubject = camPartCopy
+			theCam.FieldOfView = 70 - (zoom/zoomLevels * 50)
 
-&#9;&#9;&#9;theCam.CoordinateFrame = CFrame.new(zoomPosition, endpos)
-&#9;&#9;end
-&#9;end
+			theCam.CoordinateFrame = CFrame.new(zoomPosition, endpos)
+		end
+	end
 end
 
 function resetCamera()
-&#9;if theCam then 
-&#9;&#9;theCam.CameraType = &quot;Custom&quot;
-&#9;&#9;vChar = spyTool.Parent
-&#9;&#9;if vChar and vChar:FindFirstChild(&quot;Humanoid&quot;) then
-&#9;&#9;&#9;theCam.CameraSubject = vChar.Humanoid
-&#9;&#9;end
-&#9;&#9;if camPartCopy then camPartCopy:Destroy() end
-&#9;&#9;theCam.FieldOfView = 70.000000488294
-&#9;&#9;--theCam:Destroy()
-&#9;&#9;theCam = nil
-&#9;end
+	if theCam then 
+		theCam.CameraType = "Custom"
+		vChar = spyTool.Parent
+		if vChar and vChar:FindFirstChild("Humanoid") then
+			theCam.CameraSubject = vChar.Humanoid
+		end
+		if camPartCopy then camPartCopy:Destroy() end
+		theCam.FieldOfView = 70.000000488294
+		--theCam:Destroy()
+		theCam = nil
+	end
 end
 
 function onEquipped(mouse)
-&#9;mouse.Icon = &quot;rbxasset://textures\\GunCursor.png&quot;
-&#9;vChar = spyTool.Parent
-&#9;Torso = vChar:FindFirstChild(&quot;Torso&quot;)
-&#9;Head = vChar:FindFirstChild(&quot;Head&quot;)
-&#9;RightArm = vChar:FindFirstChild(&quot;Right Arm&quot;)
-&#9;local Humanoid = vChar:FindFirstChild(&quot;Humanoid&quot;)
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	vChar = spyTool.Parent
+	Torso = vChar:FindFirstChild("Torso")
+	Head = vChar:FindFirstChild("Head")
+	RightArm = vChar:FindFirstChild("Right Arm")
+	local Humanoid = vChar:FindFirstChild("Humanoid")
 
-&#9;local cam = game.Workspace.CurrentCamera
-&#9;mouse.Button1Down:connect(function() activateSatellite(mouse) end)
+	local cam = game.Workspace.CurrentCamera
+	mouse.Button1Down:connect(function() activateSatellite(mouse) end)
 
-&#9;mouse.KeyDown:connect(function(key)
-&#9;&#9;key = string.lower(key)
-&#9;&#9;if key == &quot;x&quot; then
-&#9;&#9;&#9;resetCamera()
-&#9;&#9;end
-&#9;end)
+	mouse.KeyDown:connect(function(key)
+		key = string.lower(key)
+		if key == "x" then
+			resetCamera()
+		end
+	end)
 
 end
 
 function onUnequipped()
-&#9;resetCamera()
-&#9;equipAnim:Stop()
+	resetCamera()
+	equipAnim:Stop()
 end
 
 
 
 spyTool.Equipped:connect(onEquipped)
-spyTool.Unequipped:connect(onUnequipped)</ProtectedString>
-			</Properties>
-		</Item>
-		<Item class="Camera" referent="RBX5">
-			<Properties>
-				<Ref name="CameraSubject">null</Ref>
-				<token name="CameraType">0</token>
-				<CoordinateFrame name="CoordinateFrame">
-					<X>125.558594</X>
-					<Y>2.5637269</Y>
-					<Z>-4.62960529</Z>
-					<R00>-0.829031944</R00>
-					<R01>-0.445413291</R01>
-					<R02>0.338102371</R02>
-					<R10>1.4901163e-008</R10>
-					<R11>0.604616523</R11>
-					<R12>0.796516716</R12>
-					<R20>-0.559201419</R20>
-					<R21>0.660337806</R21>
-					<R22>-0.501246333</R22>
-				</CoordinateFrame>
-				<float name="FieldOfView">70</float>
-				<CoordinateFrame name="Focus">
-					<X>124.654999</X>
-					<Y>0.434997231</Y>
-					<Z>-3.2900002</Z>
-					<R00>1</R00>
-					<R01>0</R01>
-					<R02>0</R02>
-					<R10>0</R10>
-					<R11>1</R11>
-					<R12>0</R12>
-					<R20>0</R20>
-					<R21>0</R21>
-					<R22>1</R22>
-				</CoordinateFrame>
-				<string name="Name">ThumbnailCamera</string>
+spyTool.Unequipped:connect(onUnequipped)]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
