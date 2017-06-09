@@ -15,4 +15,4 @@ If you have a question about this project, [file an issue](https://github.com/Ro
 
 Copyright 2017 Roblox Corporation
 
-This work is licensed under the Apache License, Version 2.0. See the [LICENSE](https://github.com/Roblox/Catalog/blob/master/LICENSE) file for more details.
+This work is licensed under the Apache License, Version 2.0. See the [LICENSE](https://github.com/Roblox/Catalog/blob/master/LICENSE.txt) file for more details.
