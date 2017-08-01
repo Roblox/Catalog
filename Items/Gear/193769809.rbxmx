@@ -262,9 +262,24 @@ local Tool = script.Parent
 local Handle = Tool:WaitForChild(&quot;Handle&quot;)
 local Remote = Tool:WaitForChild(&quot;Remote&quot;)
 local Sound = Handle:WaitForChild(&quot;Sound&quot;)
+local Debris = game:GetService(&quot;Debris&quot;)
+
+function onEquip()
+&#9;local Gyro = Handle:FindFirstChild(&quot;FallRight&quot;)
+&#9;if Gyro then
+&#9;&#9;Gyro:Destroy()
+&#9;end
+end
 
 function onUnequip()
-&#9;Sound:Stop()
+&#9;if Tool.Parent:IsA(&quot;Backpack&quot;) then
+&#9;&#9;Sound:Stop()
+&#9;elseif not getPlayer() then
+&#9;&#9;local Gyro = Instance.new(&quot;BodyGyro&quot;)
+&#9;&#9;Gyro.Name = &quot;FallRight&quot;
+&#9;&#9;Gyro.Parent = Handle
+&#9;&#9;Debris:AddItem(Gyro, 3)
+&#9;end
 end
 
 function onActivate()
@@ -303,7 +318,8 @@ function onRemote(player, func, ...)
 end
 
 Remote.OnServerEvent:connect(onRemote)
-Tool.Unequipped:connect(onUnequip)</ProtectedString>
+Tool.Unequipped:connect(onUnequip)
+Tool.Equipped:connect(onEquip)</ProtectedString>
 			</Properties>
 		</Item>
 		<Item class="Camera" referent="RBXF7EFD1B9DCFF4C3A8A5C76E90B650138">
