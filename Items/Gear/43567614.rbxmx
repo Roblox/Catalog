@@ -448,7 +448,6 @@ for i, v in pairs({Sounds.Connect, Sounds.Hit}) do
 	Sound.Parent = BaseGrappleHook
 end
 
-Gravity = 196.20
 Rate = (1 / 60)
 
 MaxDistance = 200
@@ -532,7 +531,7 @@ function DisconnectGrappleHook(KeepBodyObjects)
 		end
 	end
 	if CheckIfAlive() and not KeepBodyObjects then
-		for i, v in pairs(Torso:GetChildren()) do
+		for i, v in pairs(HumanoidRootPart:GetChildren()) do
 			if string.find(string.lower(v.ClassName), string.lower("Body")) then
 				v:Destroy()
 			end
@@ -547,7 +546,7 @@ function TryToConnect()
 		DisconnectGrappleHook()
 		return
 	end
-	local DistanceApart = (Torso.Position - GrappleHook.Position).Magnitude
+	local DistanceApart = (HumanoidRootPart.Position - GrappleHook.Position).Magnitude
 	if DistanceApart > MaxDistance then
 		DisconnectGrappleHook()
 		return
@@ -596,7 +595,7 @@ function TryToConnect()
 			ConnectSound:Play()
 		end
 		
-		for i, v in pairs(Torso:GetChildren()) do
+		for i, v in pairs(HumanoidRootPart:GetChildren()) do
 			if string.find(string.lower(v.ClassName), string.lower("Body")) then
 				v:Destroy()
 			end
@@ -610,13 +609,13 @@ function TryToConnect()
 			P = 3000,
 			maxForce = Vector3.new(1000000, 1000000, 1000000),
 			position = TargetPosition,
-			Parent = Torso,
+			Parent = HumanoidRootPart,
 		}
 		
 		local BodyGyro = Create("BodyGyro"){
 			maxTorque = Vector3.new(math.huge, math.huge, math.huge),
-			cframe = CFrame.new(Torso.Position, Vector3.new(GrappleCFrame.p.X, Torso.Position.Y, GrappleCFrame.p.Z)),
-			Parent = Torso,
+			cframe = CFrame.new(HumanoidRootPart.Position, Vector3.new(GrappleCFrame.p.X, HumanoidRootPart.Position.Y, GrappleCFrame.p.Z)),
+			Parent = HumanoidRootPart,
 		}
 	
 		Spawn(function()
@@ -633,8 +632,12 @@ function CheckIfGrappleHookAlive()
 	return (((GrappleHook and GrappleHook.Parent --[[and Rope and Rope.Parent]]) and true) or false)
 end
 
+function CheckIfForceAlive()
+	return (((Force and Force.Parent and Force.Parent == GrappleHook) and true) or false)
+end
+
 function CheckIfAlive()
-	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Torso and Torso.Parent and Player and Player.Parent) and true) or false)
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and HumanoidRootPart and HumanoidRootPart.Parent and Player and Player.Parent) and true) or false)
 end
 
 function Activated()
@@ -663,10 +666,13 @@ function Activated()
 	Mesh.MeshId = Meshes.Grapple
 	GrappleHook = BaseGrappleHook:Clone()
 	GrappleHook.CFrame = (CFrame.new((Handle.Position + (MousePosition - Handle.Position).Unit * 5), MousePosition) * CFrame.Angles(0, 0, 0))
-	local Weight = 70
-	GrappleHook.Velocity = (GrappleHook.CFrame.lookVector * Weight)
-	local Force = Create("BodyForce"){
-		force = Vector3.new(0, Weight, 0),
+	local Speed = 20
+	local Fall = 7
+	local Mass = GrappleHook:GetMass()
+	Gravity = Workspace.Gravity
+	GrappleHook.Velocity = (GrappleHook.CFrame.lookVector * (Speed / Mass)) + Handle.Velocity
+	Force = Create("BodyForce"){
+		Force = Vector3.new(0, ((Gravity * Mass) - Fall), 0),
 		Parent = GrappleHook,
 	}
 	GrappleHook.Parent = Tool
@@ -680,6 +686,9 @@ function Activated()
 	Spawn(function()
 		while CheckIfGrappleHookAlive() and ToolEquipped and CheckIfAlive() do
 			AdjustRope()
+			if Workspace.Gravity ~= Gravity and CheckIfForceAlive() then
+				Force.Force = Vector3.new(0, ((Workspace.Gravity * GrappleHook:GetMass()) - Fall), 0)
+			end
 			Spawn(function()
 				if not Connected then
 					TryToConnect()
@@ -695,7 +704,7 @@ end
 function Equipped(Mouse)
 	Character = Tool.Parent
 	Humanoid = Character:FindFirstChild("Humanoid")
-	Torso = Character:FindFirstChild("Torso")
+	HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
 	Player = Players:GetPlayerFromCharacter(Character)
 	if not CheckIfAlive() then
 		return
